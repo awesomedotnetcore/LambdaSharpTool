@@ -49,7 +49,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     if(settings == null) {
                         return;
                     }
-                    settings.Tier = tierOption.Value();
+
+                    // NOTE: `--tier` is optional for the `info` command; so we replicate it here without the error reporting
+                    settings.Tier = tierOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP_TIER");
                     await Info(
                         settings,
                         GetGitShaValue(Directory.GetCurrentDirectory(), showWarningOnFailure: false),
