@@ -133,45 +133,50 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 }
 
                 // initialize AWS profile
-                (string AccountId, string Region)? awsAccount = null;
-                if(requireAwsProfile) {
-                    awsAccount = await InitializeAwsProfile(
-                        awsProfileOption.Value(),
-                        awsAccountIdOption.Value(),
-                        awsRegionOption.Value()
-                    );
-                }
-                if(HasErrors) {
+                try {
+                    (string AccountId, string Region)? awsAccount = null;
+                    if(requireAwsProfile) {
+                        awsAccount = await InitializeAwsProfile(
+                            awsProfileOption.Value(),
+                            awsAccountIdOption.Value(),
+                            awsRegionOption.Value()
+                        );
+                    }
+                    if(HasErrors) {
+                        return null;
+                    }
+
+                    // create AWS clients
+                    var ssmClient = new AmazonSimpleSystemsManagementClient();
+                    var cfClient = new AmazonCloudFormationClient();
+                    var kmsClient = new AmazonKeyManagementServiceClient();
+                    var s3Client = new AmazonS3Client();
+
+                    // initialize LambdaSharp deployment values
+                    var runtimeVersion = runtimeVersionOption.Value();
+                    var deploymentBucketName = deploymentBucketNameOption.Value();
+                    var deploymentNotificationTopicArn = deploymentNotificationTopicArnOption.Value();
+
+                    // create a settings entry for each module filename
+                    return new Settings {
+                        ToolVersion = Version,
+                        ToolProfile = toolProfile,
+                        ToolProfileExplicitlyProvided = toolProfileOption.HasValue(),
+                        RuntimeVersion = (runtimeVersion != null) ? VersionInfo.Parse(runtimeVersion) : null,
+                        Tier = tier,
+                        AwsRegion = awsAccount.GetValueOrDefault().Region,
+                        AwsAccountId = awsAccount.GetValueOrDefault().AccountId,
+                        DeploymentBucketName = deploymentBucketName,
+                        DeploymentNotificationsTopicArn = deploymentNotificationTopicArn,
+                        SsmClient = ssmClient,
+                        CfClient = cfClient,
+                        KmsClient = kmsClient,
+                        S3Client = s3Client
+                    };
+                } catch(AmazonClientException e) when(e.Message == "No RegionEndpoint or ServiceURL configured") {
+                    AddError("AWS profile configuration is missing a region specifier");
                     return null;
                 }
-
-                // create AWS clients
-                var ssmClient = new AmazonSimpleSystemsManagementClient();
-                var cfClient = new AmazonCloudFormationClient();
-                var kmsClient = new AmazonKeyManagementServiceClient();
-                var s3Client = new AmazonS3Client();
-
-                // initialize LambdaSharp deployment values
-                var runtimeVersion = runtimeVersionOption.Value();
-                var deploymentBucketName = deploymentBucketNameOption.Value();
-                var deploymentNotificationTopicArn = deploymentNotificationTopicArnOption.Value();
-
-                // create a settings entry for each module filename
-                return new Settings {
-                    ToolVersion = Version,
-                    ToolProfile = toolProfile,
-                    ToolProfileExplicitlyProvided = toolProfileOption.HasValue(),
-                    RuntimeVersion = (runtimeVersion != null) ? VersionInfo.Parse(runtimeVersion) : null,
-                    Tier = tier,
-                    AwsRegion = awsAccount.GetValueOrDefault().Region,
-                    AwsAccountId = awsAccount.GetValueOrDefault().AccountId,
-                    DeploymentBucketName = deploymentBucketName,
-                    DeploymentNotificationsTopicArn = deploymentNotificationTopicArn,
-                    SsmClient = ssmClient,
-                    CfClient = cfClient,
-                    KmsClient = kmsClient,
-                    S3Client = s3Client
-                };
             };
         }
 
