@@ -144,44 +144,6 @@ if [ $? -ne 0 ]; then
     exit $?
 fi
 
-# Deploy the λ# Demos
-
-dotnet lash deploy \
-    Demos/Demo \
-    Demos/BadModule
-if [ $? -ne 0 ]; then
-    exit $?
-fi
-
-# Deploy all λ# Sample Modules
-
-dotnet lash build \
-    Samples/AlexaSample \
-    Samples/ApiSample \
-    Samples/DynamoDBSample \
-    Samples/KinesisSample \
-    Samples/MacroSample \
-    Samples/S3Sample \
-    Samples/ScheduleSample \
-    Samples/SlackCommandSample \
-    Samples/SnsSample \
-    Samples/SqsSample
-if [ $? -ne 0 ]; then
-    exit $?
-fi
-
-dotnet lash deploy \
-    Samples/AlexaSample/bin/manifest.json \
-    Samples/ApiSample/bin/manifest.json \
-    Samples/DynamoDBSample/bin/manifest.json \
-    Samples/KinesisSample/bin/manifest.json \
-    Samples/MacroSample/bin/manifest.json \
-    Samples/S3Sample/bin/manifest.json \
-    Samples/ScheduleSample/bin/manifest.json \
-    Samples/SlackCommandSample/bin/manifest.json \
-    Samples/SnsSample/bin/manifest.json \
-    Samples/SqsSample/bin/manifest.json
-
 # Create a Default λ# Module and Deploy it
 
 # mkdir Test$SUFFIX
