@@ -95,3 +95,16 @@ The <code>Variables</code> section contains a collection of nested variables. To
     Type: AWS::S3::Bucket
     Allow: Full
 ```
+
+### Request access to AWS Rekognition
+
+```yaml
+- Var: RekognitionService
+  Description: Permissions required for using AWS Rekognition
+  Value: "*"
+  Resource:
+    Allow:
+      - "rekognition:DetectFaces"
+      - "rekognition:IndexFaces"
+      - "rekognition:SearchFacesByImage"
+```

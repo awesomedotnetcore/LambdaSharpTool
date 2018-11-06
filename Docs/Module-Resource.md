@@ -68,7 +68,7 @@ The <code>Properties</code> section cannot be specified for referenced resources
 <dd>
 The <code>Type</code> attribute identifies the AWS resource type that is being declared. For example, <code>AWS::SNS::Topic</code> declares an SNS topic. For a list of all resource types, see <a href="https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html">AWS Resource Types Reference</a>.
 
-<i>Required</i>: Yes
+<i>Required</i>: Conditional. The <code>Type</code> attribute is required for new resources and when using the λ# shorthand notation in the <code>Allow</code> attribute. The <code>Type</code> attribute can be omitted for referenced resources that only list native IAM permissions in their <code>Allow</code> attribute.
 
 <i>Type</i>: String
 </dd>
