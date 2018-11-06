@@ -31,7 +31,7 @@ The `encrypt` command is used to encrypt sensitive information using a managed e
 
 __Using Powershell/Bash:__
 ```bash
-dotnet lash encrypt --tier Demo "My private API key"
+dotnet lash encrypt --tier Sandbox "My private API key"
 ```
 
 Output:

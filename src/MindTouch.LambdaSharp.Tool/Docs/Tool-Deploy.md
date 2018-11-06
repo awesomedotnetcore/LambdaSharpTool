@@ -83,7 +83,7 @@ dotnet lash deploy
 Output:
 ```
 MindTouch LambdaSharp CLI (v0.4.0.1-RC1) - Deploy LambdaSharp module
-Readying module for deployment tier 'Demo'
+Readying module for deployment tier 'Sandbox'
 
 Compiling module: Module.yml
 Building function RecordMessage [netcoreapp2.1, Release]
@@ -102,9 +102,9 @@ Publishing module: Demo
 => Uploading function: s3://lambdasharp-bucket-name/Modules/Demo/Assets/function_SlackCommand_8207022C95970006F597FF6060366C34.zip
 => Uploading template: s3://lambdasharp-bucket-name/Modules/Demo/Assets/cloudformation_v1.0_F2E9DA098FB8B0EB118F5839947467A6.json
 => Uploading manifest: s3://lambdasharp-bucket-name/Modules/Demo/Assets/manifest_v1.0_F2E9DA098FB8B0EB118F5839947467A6.json
-Deploying stack: Demo-Demo [Demo]
-=> Stack creation initiated for Demo-Demo
-CREATE_IN_PROGRESS                  AWS::CloudFormation::Stack                              Demo-Demo (User Initiated)
+Deploying stack: Sandbox-Demo [Demo]
+=> Stack creation initiated for Sandbox-Demo
+CREATE_IN_PROGRESS                  AWS::CloudFormation::Stack                              Sandbox-Demo (User Initiated)
 CREATE_IN_PROGRESS                  AWS::ApiGateway::RestApi                                ModuleRestApi
 CREATE_IN_PROGRESS                  AWS::SNS::Topic                                         SnsTopic
 CREATE_IN_PROGRESS                  AWS::IAM::Role                                          CloudWatchLogsRole
@@ -114,13 +114,13 @@ CREATE_IN_PROGRESS                  AWS::ApiGateway::UsagePlan                  
 CREATE_COMPLETE                     AWS::ApiGateway::UsagePlan                              UsagePlan
 CREATE_IN_PROGRESS                  Custom::LambdaSharpRegisterFunction                     RecordMessageRegistration (Resource creation Initiated)
 CREATE_COMPLETE                     Custom::LambdaSharpRegisterFunction                     RecordMessageRegistration
-CREATE_COMPLETE                     AWS::CloudFormation::Stack                              Demo-Demo
+CREATE_COMPLETE                     AWS::CloudFormation::Stack                              Sandbox-Demo
 => Stack creation finished (finished: 2018-10-26 17:50:26)
 Stack output values:
 => ModuleName: Demo
 => ModuleVersion: 1.0
-=> The topic that the lambda function subscribes to record messages: arn:aws:sns:us-east-1:123456789012:Demo-Demo-SnsTopic-NEWOC7GZD51
-=> The topic that the lambda function subscribes to record messages: arn:aws:sns:us-east-1:123456789012:Demo-Demo-SnsTopic-NEWOC7GZD51
+=> The topic that the lambda function subscribes to record messages: arn:aws:sns:us-east-1:123456789012:Sandbox-Demo-SnsTopic-NEWOC7GZD51
+=> The topic that the lambda function subscribes to record messages: arn:aws:sns:us-east-1:123456789012:Sandbox-Demo-SnsTopic-NEWOC7GZD51
 
 Done (duration: 00:01:55.2782614)
 ```
@@ -135,15 +135,15 @@ dotnet lash deploy Demo/bin/manifest.json
 Output:
 ```
 MindTouch LambdaSharp CLI (v0.4.0.1-RC1) - Deploy LambdaSharp module
-Readying module for deployment tier 'Demo'
+Readying module for deployment tier 'Sandbox'
 Publishing module: Demo
 => Uploading function: s3://lambdasharp-bucket-name/Modules/Demo/Assets/function_RecordMessage_4E05BDFA74DAC87A05165A4D5B609B39.zip
 => Uploading function: s3://lambdasharp-bucket-name/Modules/Demo/Assets/function_SlackCommand_8207022C95970006F597FF6060366C34.zip
 => Uploading template: s3://lambdasharp-bucket-name/Modules/Demo/Assets/cloudformation_v1.0_F2E9DA098FB8B0EB118F5839947467A6.json
 => Uploading manifest: s3://lambdasharp-bucket-name/Modules/Demo/Assets/manifest_v1.0_F2E9DA098FB8B0EB118F5839947467A6.json
-Deploying stack: Demo-Demo [Demo]
-=> Stack creation initiated for Demo-Demo
-CREATE_IN_PROGRESS                  AWS::CloudFormation::Stack                              Demo-Demo (User Initiated)
+Deploying stack: Sandbox-Demo [Demo]
+=> Stack creation initiated for Sandbox-Demo
+CREATE_IN_PROGRESS                  AWS::CloudFormation::Stack                              Sandbox-Demo (User Initiated)
 CREATE_IN_PROGRESS                  AWS::SNS::Topic                                         SnsTopic
 CREATE_IN_PROGRESS                  AWS::DynamoDB::Table                                    MessageTable
 CREATE_IN_PROGRESS                  AWS::ApiGateway::RestApi                                ModuleRestApi
@@ -151,13 +151,13 @@ CREATE_IN_PROGRESS                  AWS::ApiGateway::RestApi                    
 CREATE_IN_PROGRESS                  AWS::ApiGateway::UsagePlan                              UsagePlan (Resource creation Initiated)
 CREATE_COMPLETE                     AWS::ApiGateway::UsagePlan                              UsagePlan
 CREATE_COMPLETE                     AWS::Lambda::Permission                                 RecordMessageSnsTopicSnsPermission
-CREATE_COMPLETE                     AWS::CloudFormation::Stack                              Demo-Demo
+CREATE_COMPLETE                     AWS::CloudFormation::Stack                              Sandbox-Demo
 => Stack creation finished (finished: 2018-10-26 18:54:43)
 Stack output values:
 => ModuleName: Demo
 => ModuleVersion: 1.0
-=> The topic that the lambda function subscribes to record messages: arn:aws:sns:us-east-1:123456789012:Demo-Demo-SnsTopic-101QRCI4FPHD9
-=> The topic that the lambda function subscribes to record messages: arn:aws:sns:us-east-1:123456789012:Demo-Demo-SnsTopic-101QRCI4FPHD9
+=> The topic that the lambda function subscribes to record messages: arn:aws:sns:us-east-1:123456789012:Sandbox-Demo-SnsTopic-101QRCI4FPHD9
+=> The topic that the lambda function subscribes to record messages: arn:aws:sns:us-east-1:123456789012:Sandbox-Demo-SnsTopic-101QRCI4FPHD9
 
 Done (duration: 00:01:21.7651019)
 ```

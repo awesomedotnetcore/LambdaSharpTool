@@ -28,7 +28,7 @@ dotnet lash config
 
 Finally, a deployment tier must be initialized with the λ# runtime.
 ```bash
-dotnet lash init --tier Demo
+dotnet lash init --tier Sandbox
 ```
 
 ## Deploy your First λ# Module

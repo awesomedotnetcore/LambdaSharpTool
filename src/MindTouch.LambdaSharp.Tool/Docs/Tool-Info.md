@@ -27,11 +27,11 @@ The `info` command is used to show information about the current CLI profile, λ
 
 ## Examples
 
-### Show information for Default profile and Demo tier
+### Show information for Default profile and Sandbox tier
 
 __Using Powershell/Bash:__
 ```bash
-dotnet lash info --tier Demo
+dotnet lash info --tier Sandbox
 ```
 
 Output:
@@ -41,9 +41,9 @@ LambdaSharp CLI
     Profile: Default
     Version: 0.4.0.1-RC1
     Module Deployment S3 Bucket: lambdasharp-bucket-name
-    Module Deployment Notifications Topic: arn:aws:sns:us-west-2:************:LambdaSharpTool-Demo-DeploymentNotificationTopic-1V8UD7UQVW3KD
+    Module Deployment Notifications Topic: arn:aws:sns:us-west-2:************:LambdaSharpTool-Sandbox-DeploymentNotificationTopic-1V8UD7UQVW3KD
 LambdaSharp Deployment Tier
-    Name: Demo
+    Name: Sandbox
     Runtime Version: 0.4.0.1-RC1
 Git SHA: dd84a2a4b87dcf2e4a802b79d12c489c30836623
 AWS

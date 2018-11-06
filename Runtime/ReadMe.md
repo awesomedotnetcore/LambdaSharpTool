@@ -62,7 +62,7 @@ The λ# CLI can be configured for multiple CLI profiles using the `--cli-profile
 
 __Using Powershell/Bash:__
 ```bash
-dotnet lash init --tier Demo
+dotnet lash init --tier Sandbox
 ```
 
 __NOTE:__ This step must to be repeated for each deployment tier (e.g. `Test`, `Stage`, `Prod`, etc.).
@@ -71,7 +71,7 @@ Run the `list` command to confirm that all λ# modules were deployed successfull
 
 __Using Powershell/Bash:__
 ```bash
-dotnet lash list --tier Demo
+dotnet lash list --tier Sandbox
 ```
 
 The following text should appear (or similar):
@@ -84,7 +84,7 @@ LambdaSharpRegistrar          [UPDATE_COMPLETE]     2018-10-25 13:58:56
 LambdaSharpS3Subscriber       [UPDATE_COMPLETE]     2018-10-25 13:59:47
 LambdaSharpS3PackageLoader    [UPDATE_COMPLETE]     2018-10-25 14:00:20
 
-Found 4 modules for deployment tier 'Demo'
+Found 4 modules for deployment tier 'Sandbox'
 ```
 
 ## Optional: λ# Environment Variables
@@ -95,12 +95,12 @@ The following environment variables are checked when their corresponding options
 
 __Using PowerShell:__
 ```powershell
-New-Variable -Name LAMBDASHARP_TIER -Value Demo
+New-Variable -Name LAMBDASHARP_TIER -Value Sandbox
 ```
 
 __Using Bash:__
 ```bash
-export LAMBDASHARP_TIER=Demo
+export LAMBDASHARP_TIER=Sandbox
 ```
 
 ## Optional: Customize LambdaSharp Settings

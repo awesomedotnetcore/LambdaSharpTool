@@ -47,8 +47,8 @@ Configuring a new profile for LambdaSharp CLI
 CLI profile name: [Default]
 Existing S3 bucket name for module deployments (blank value creates new bucket):
 Existing SNS topic ARN for CloudFormation notifications (empty value creates new bucket):
-=> Stack creation initiated for LambdaSharpTool-Demo
-CREATE_IN_PROGRESS                  AWS::CloudFormation::Stack                              LambdaSharpTool-Demo (User Initiated)
+=> Stack creation initiated for LambdaSharpTool-Default
+CREATE_IN_PROGRESS                  AWS::CloudFormation::Stack                              LambdaSharpTool-Default (User Initiated)
 CREATE_IN_PROGRESS                  AWS::SSM::Parameter                                     VersionSsmParameter
 CREATE_IN_PROGRESS                  AWS::S3::Bucket                                         DeploymentBucket
 CREATE_IN_PROGRESS                  AWS::SNS::Topic                                         DeploymentNotificationTopic
@@ -56,7 +56,7 @@ CREATE_IN_PROGRESS                  AWS::SNS::Topic                             
 CREATE_IN_PROGRESS                  AWS::SSM::Parameter                                     DeploymentBucketNameSsmParameter
 CREATE_IN_PROGRESS                  AWS::SSM::Parameter                                     DeploymentBucketNameSsmParameter (Resource creation Initiated)
 CREATE_COMPLETE                     AWS::SSM::Parameter                                     DeploymentBucketNameSsmParameter
-CREATE_COMPLETE                     AWS::CloudFormation::Stack                              LambdaSharpTool-Demo
+CREATE_COMPLETE                     AWS::CloudFormation::Stack                              LambdaSharpTool-Default
 => Stack creation finished (finished: 2018-10-25 21:23:05)
 
 Done (duration: 00:00:40.0739292)
@@ -66,25 +66,25 @@ Done (duration: 00:00:40.0739292)
 
 __Using Powershell/Bash:__
 ```bash
-dotnet lash config --cli-profile Demo --module-s3-bucket-name="" --cloudformation-notifications-topic=""
+dotnet lash config --cli-profile Team --module-s3-bucket-name="" --cloudformation-notifications-topic=""
 ```
 
 Output:
 ```
 MindTouch LambdaSharp CLI (v0.4.0.1-RC1) - Configure LambdaSharp CLI
 Configuring a new profile for LambdaSharp CLI
-Creating CLI profile: Demo
+Creating CLI profile: Team
 Creating new S3 bucket
 Creating new SNS topic for CloudFormation notifications
-=> Stack creation initiated for LambdaSharpTool-Demo
-CREATE_IN_PROGRESS                  AWS::CloudFormation::Stack                              LambdaSharpTool-Demo (User Initiated)
+=> Stack creation initiated for LambdaSharpTool-Team
+CREATE_IN_PROGRESS                  AWS::CloudFormation::Stack                              LambdaSharpTool-Team (User Initiated)
 CREATE_IN_PROGRESS                  AWS::SNS::Topic                                         DeploymentNotificationTopic
 CREATE_IN_PROGRESS                  AWS::SSM::Parameter                                     StackNameSsmParameter
 ...
 CREATE_IN_PROGRESS                  AWS::SSM::Parameter                                     DeploymentBucketNameSsmParameter
 CREATE_IN_PROGRESS                  AWS::SSM::Parameter                                     DeploymentBucketNameSsmParameter (Resource creation Initiated)
 CREATE_COMPLETE                     AWS::SSM::Parameter                                     DeploymentBucketNameSsmParameter
-CREATE_COMPLETE                     AWS::CloudFormation::Stack                              LambdaSharpTool-Demo
+CREATE_COMPLETE                     AWS::CloudFormation::Stack                              LambdaSharpTool-Team
 => Stack creation finished (finished: 2018-10-25 22:05:20)
 
 Done (duration: 00:00:36.3661853)

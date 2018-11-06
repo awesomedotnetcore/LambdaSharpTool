@@ -43,16 +43,16 @@ The `init` command is used to both initialize a new deployment tier and update a
 
 __Using Powershell/Bash:__
 ```bash
-dotnet lash init --tier Demo
+dotnet lash init --tier Sandbox
 ```
 
 Output:
 ```
 MindTouch LambdaSharp CLI (v0.4.0.1-RC1) - Initialize LambdaSharp deployment tier
-Creating new deployment tier 'Demo'
-Deploying stack: Demo-LambdaSharp [LambdaSharp]
-=> Stack creation initiated for Demo-LambdaSharp
-CREATE_IN_PROGRESS                  AWS::CloudFormation::Stack                              Demo-LambdaSharp (User Initiated)
+Creating new deployment tier 'Sandbox'
+Deploying stack: Sandbox-LambdaSharp [LambdaSharp]
+=> Stack creation initiated for Sandbox-LambdaSharp
+CREATE_IN_PROGRESS                  AWS::CloudFormation::Stack                              Sandbox-LambdaSharp (User Initiated)
 CREATE_IN_PROGRESS                  AWS::SQS::Queue                                         DeadLetterQueue
 CREATE_IN_PROGRESS                  AWS::SQS::Queue                                         DeadLetterQueue (Resource creation Initiated)
 CREATE_IN_PROGRESS                  AWS::KMS::Key                                           DefaultSecretKey
@@ -60,10 +60,10 @@ CREATE_IN_PROGRESS                  AWS::KMS::Key                               
 CREATE_IN_PROGRESS                  AWS::Logs::SubscriptionFilter                           ResourceHandlerLogGroupSubscription (Resource creation Initiated)
 CREATE_COMPLETE                     AWS::Logs::SubscriptionFilter                           ResourceHandlerLogGroupSubscription
 CREATE_COMPLETE                     AWS::Lambda::Permission                                 ResourceHandlerCustomResourceTopicSnsPermission
-CREATE_COMPLETE                     AWS::CloudFormation::Stack                              Demo-LambdaSharpS3PackageLoader
+CREATE_COMPLETE                     AWS::CloudFormation::Stack                              Sandbox-LambdaSharpS3PackageLoader
 => Stack creation finished (finished: 2018-10-26 12:55:34)
 Stack output values:
-=> Custom resource for for deploying packages to S3 buckets: arn:aws:sns:us-west-2:254924790709:Demo-LambdaSharpS3PackageLoader-CustomResourceTopic-1LKRGDWA8M5XV
+=> Custom resource for for deploying packages to S3 buckets: arn:aws:sns:us-west-2:254924790709:Sandbox-LambdaSharpS3PackageLoader-CustomResourceTopic-1LKRGDWA8M5XV
 => ModuleName: LambdaSharpS3PackageLoader
 => ModuleVersion: 0.4
 

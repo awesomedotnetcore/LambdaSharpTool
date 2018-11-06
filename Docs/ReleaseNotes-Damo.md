@@ -67,7 +67,7 @@ dotnet lash config
 
 Initializing a deployment tier has been streamlined into a single command, which deploys the λ# runtime modules from a public bucket. Alternatively, for λ# contributors, the CLI can deploy a locally compiled version of the λ# runtime modules.
 ```bash
-dotnet lash init --tier Demo
+dotnet lash init --tier Sandbox
 ```
 
 For complete instructions and options, check out the updated [setup documentation](../Runtime/).

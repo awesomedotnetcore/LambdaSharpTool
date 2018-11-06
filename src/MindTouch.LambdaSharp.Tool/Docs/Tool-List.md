@@ -28,7 +28,7 @@ The `list` command is used to list all deployed modules on a deployment tier.
 
 __Using Powershell/Bash:__
 ```bash
-dotnet lash list --tier Demo
+dotnet lash list --tier Sandbox
 ```
 
 Output:
@@ -41,7 +41,7 @@ LambdaSharpRegistrar          [UPDATE_COMPLETE]     2018-10-25 13:58:56
 LambdaSharpS3Subscriber       [UPDATE_COMPLETE]     2018-10-25 13:59:47
 LambdaSharpS3PackageLoader    [UPDATE_COMPLETE]     2018-10-25 14:00:20
 
-Found 4 modules for deployment tier 'Demo'
+Found 4 modules for deployment tier 'Sandbox'
 
 Done (duration: 00:00:01.7553089)
 ```
