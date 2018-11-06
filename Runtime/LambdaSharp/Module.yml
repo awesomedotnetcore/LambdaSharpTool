@@ -21,7 +21,7 @@ Module: LambdaSharp
 Version: 0.4-RC1
 Description: LambdaSharp Runtime
 Pragmas:
-  - no-tier-version-check
+  - no-runtime-version-check
   - no-lambdasharp-dependencies
   - no-module-registration
 
