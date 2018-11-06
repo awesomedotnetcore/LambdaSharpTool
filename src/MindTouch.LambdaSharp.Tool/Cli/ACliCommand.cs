@@ -135,22 +135,26 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 // initialize AWS profile
                 try {
                     (string AccountId, string Region)? awsAccount = null;
+                    IAmazonSimpleSystemsManagement ssmClient = null;
+                    IAmazonCloudFormation cfClient = null;
+                    IAmazonKeyManagementService kmsClient = null;
+                    IAmazonS3 s3Client = null;
                     if(requireAwsProfile) {
                         awsAccount = await InitializeAwsProfile(
                             awsProfileOption.Value(),
                             awsAccountIdOption.Value(),
                             awsRegionOption.Value()
                         );
+
+                        // create AWS clients
+                        ssmClient = new AmazonSimpleSystemsManagementClient();
+                        cfClient = new AmazonCloudFormationClient();
+                        kmsClient = new AmazonKeyManagementServiceClient();
+                        s3Client = new AmazonS3Client();
                     }
                     if(HasErrors) {
                         return null;
                     }
-
-                    // create AWS clients
-                    var ssmClient = new AmazonSimpleSystemsManagementClient();
-                    var cfClient = new AmazonCloudFormationClient();
-                    var kmsClient = new AmazonKeyManagementServiceClient();
-                    var s3Client = new AmazonS3Client();
 
                     // initialize LambdaSharp deployment values
                     var runtimeVersion = runtimeVersionOption.Value();
