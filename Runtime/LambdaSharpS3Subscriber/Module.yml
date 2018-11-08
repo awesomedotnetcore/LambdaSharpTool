@@ -18,7 +18,7 @@
 # limitations under the License.
 
 Module: LambdaSharpS3Subscriber
-Version: 0.4-RC1
+Version: 0.4-RC2
 Description: LambdaSharp S3 Lambda Function Subscriber
 
 Outputs:

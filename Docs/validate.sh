@@ -131,7 +131,7 @@ dotnet tool install \
     --global \
     --add-source $LAMBDASHARP/src/MindTouch.LambdaSharp.Tool/ \
     MindTouch.LambdaSharp.Tool \
-    --version 0.4.0.1-RC1
+    --version 0.4-RC2
 if [ $? -ne 0 ]; then
     exit $?
 fi

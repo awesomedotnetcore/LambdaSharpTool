@@ -1,4 +1,4 @@
-# λ# - Damo (v0.4.0.1-RC1) - 2018-11-02
+# λ# - Damo (v0.4-RC2) - 2018-11-07
 
 > Damo was a Pythagorean philosopher said by many to have been the daughter of Pythagoras and Theano. [(Wikipedia)](https://en.wikipedia.org/wiki/Damo_(philosopher))
 
@@ -57,7 +57,7 @@ With the addition of new sections to the module definition, and with an eye towa
 
 The λ# CLI is now a global dotnet tool, which makes it trivial to install. No more need to check-out the [LambdaSharpTool GitHub repository](https://github.com/LambdaSharp/LambdaSharpTool) for creating modules unless to contribute to it.
 ```bash
-dotnet tool install -g MindTouch.LambdaSharp.Tool --version 0.4-RC1
+dotnet tool install -g MindTouch.LambdaSharp.Tool --version 0.4-RC2
 ```
 
 As part of the λ# CLI setup procedure, the CLI must be configured for the AWS account. The configuration step creates a profile and resources required to deploy λ# modules. The profile information is stored in the AWS Parameter Store so that it can be shared with team members. Multiple CLI profiles can be configured when needed.

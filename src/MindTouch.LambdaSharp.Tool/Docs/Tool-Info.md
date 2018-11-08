@@ -36,15 +36,15 @@ dotnet lash info --tier Sandbox
 
 Output:
 ```
-MindTouch LambdaSharp CLI (v0.4.0.1-RC1) - Show LambdaSharp information
+MindTouch LambdaSharp CLI (v0.4-RC2) - Show LambdaSharp information
 LambdaSharp CLI
     Profile: Default
-    Version: 0.4.0.1-RC1
+    Version: 0.4-RC2
     Module Deployment S3 Bucket: lambdasharp-bucket-name
     Module Deployment Notifications Topic: arn:aws:sns:us-west-2:************:LambdaSharpTool-Sandbox-DeploymentNotificationTopic-1V8UD7UQVW3KD
 LambdaSharp Deployment Tier
     Name: Sandbox
-    Runtime Version: 0.4.0.1-RC1
+    Runtime Version: 0.4-RC2
 Git SHA: dd84a2a4b87dcf2e4a802b79d12c489c30836623
 AWS
     Region: us-west-2

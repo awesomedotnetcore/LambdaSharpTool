@@ -4,7 +4,7 @@
 
 # Set version SUFFIX
 LAMBDASHARP_PREFIX=0.4
-LAMBDASHARP_SUFFIX=RC1
+LAMBDASHARP_SUFFIX=RC2
 
 update() {
     rm bin/Release/*.nupkg

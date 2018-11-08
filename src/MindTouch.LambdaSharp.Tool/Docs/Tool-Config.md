@@ -42,7 +42,7 @@ dotnet lash config
 
 Output:
 ```
-MindTouch LambdaSharp CLI (v0.4.0.1-RC1) - Configure LambdaSharp CLI
+MindTouch LambdaSharp CLI (v0.4-RC2) - Configure LambdaSharp CLI
 Configuring a new profile for LambdaSharp CLI
 CLI profile name: [Default]
 Existing S3 bucket name for module deployments (blank value creates new bucket):
@@ -71,7 +71,7 @@ dotnet lash config --cli-profile Team --module-s3-bucket-name="" --cloudformatio
 
 Output:
 ```
-MindTouch LambdaSharp CLI (v0.4.0.1-RC1) - Configure LambdaSharp CLI
+MindTouch LambdaSharp CLI (v0.4-RC2) - Configure LambdaSharp CLI
 Configuring a new profile for LambdaSharp CLI
 Creating CLI profile: Team
 Creating new S3 bucket
