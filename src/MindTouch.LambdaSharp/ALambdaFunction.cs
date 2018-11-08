@@ -112,8 +112,9 @@ namespace MindTouch.LambdaSharp {
                 // check if function needs to be initialized
                 if(!_initialized) {
                     try {
-                        LogInfo("start function initialization");
+                        LogInfo("initialize function configuration");
                         await InitializeAsync(_envSource, context);
+                        LogInfo("start function initialization");
                         await InitializeAsync(_appConfig);
                         LogInfo("end function initialization");
                         _initialized = true;

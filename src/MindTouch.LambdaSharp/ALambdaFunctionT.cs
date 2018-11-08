@@ -40,6 +40,7 @@ namespace MindTouch.LambdaSharp {
         //--- Methods ---
         public override async Task<object> ProcessMessageStreamAsync(Stream stream, ILambdaContext context) {
             var message = DeserializeJson<TRequest>(stream);
+            LogInfo($"deserialized stream as {typeof(TRequest)}");
             return await ProcessMessageAsync(message, context);
         }
     }
