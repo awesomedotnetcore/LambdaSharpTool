@@ -379,36 +379,32 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
             }
 
+            // add interface for presenting inputs
+            _stack.AddTemplateMetadata("AWS::CloudFormation::Interface", new Dictionary<string, object> {
+                ["ParameterLabels"] = _module.GetAllParameters().OfType<AInputParameter>().ToDictionary(input => input.ResourceName, input => new Dictionary<string, object> {
+                    ["default"] = input.Label
+                }),
+                ["ParameterGroups"] = _module.GetAllParameters().OfType<AInputParameter>()
+                    .GroupBy(input => input.Section)
+                    .Select(section => new Dictionary<string, object> {
+                        ["Label"] = new Dictionary<string, string> {
+                            ["default"] = section.Key
+                        },
+                        ["Parameters"] = section.Select(input => input.ResourceName).ToList()
+                    }
+                )
+            });
+
+            // add module manifest
+            _stack.AddTemplateMetadata("LambdaSharp::Manifest", new Dictionary<string, object> {
+                ["Version"] = "2018-10-22",
+                ["ModuleName"] = _module.Name,
+                ["ModuleVersion"] = _module.Version.ToString(),
+                ["Pragmas"] = _module.Pragmas
+            });
+
             // generate JSON template
             var template = new JsonStackSerializer().Serialize(_stack);
-
-            // NOTE (2018-10-14, bjorg): Humidifier doesn't support adding the Metadata section yet; so
-            //  we have to do by deserializing the document, adding it manually, and then serialize everything again.
-
-            // add interface for presenting inputs
-            var json = JsonConvert.DeserializeObject<Dictionary<string, object>>(template);
-            json.Add("Metadata", new Dictionary<string, object> {
-                ["AWS::CloudFormation::Interface"] = new Dictionary<string, object> {
-                    ["ParameterLabels"] = _module.GetAllParameters().OfType<AInputParameter>().ToDictionary(input => input.ResourceName, input => new Dictionary<string, object> {
-                        ["default"] = input.Label
-                    }),
-                    ["ParameterGroups"] = _module.GetAllParameters().OfType<AInputParameter>()
-                        .GroupBy(input => input.Section)
-                        .Select(section => new Dictionary<string, object> {
-                            ["Label"] = new Dictionary<string, string> {
-                                ["default"] = section.Key
-                            },
-                            ["Parameters"] = section.Select(input => input.ResourceName).ToList()
-                        }
-                    )
-                },
-                ["LambdaSharp::Manifest"] = new Dictionary<string, object> {
-                    ["ModuleName"] = _module.Name,
-                    ["ModuleVersion"] = _module.Version.ToString(),
-                    ["Pragmas"] = _module.Pragmas
-                }
-            });
-            template = JsonConvert.SerializeObject(json, Formatting.Indented);
             return template;
 
             // local functions

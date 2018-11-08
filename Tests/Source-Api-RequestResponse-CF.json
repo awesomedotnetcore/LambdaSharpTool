@@ -1011,6 +1011,7 @@
       ]
     },
     "LambdaSharp::Manifest": {
+      "Version": "2018-10-22",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
       "Pragmas": []
