@@ -642,12 +642,12 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
                 // runtime module doesn't expect a deployment tier to exist
                 if(!forceDeploy && !manifest.HasPragma("no-runtime-version-check")) {
-                    AddError("could not determine the LambdaSharp runtime version", new LambdaSharpDeploymentTierSetupException(settings.Tier));
+                    AddError("could not determine the LambdaSharp runtime version; use --force-deploy to proceed anyway", new LambdaSharpDeploymentTierSetupException(settings.Tier));
                     return false;
                 }
             } else if(!settings.ToolVersion.IsCompatibleWith(settings.RuntimeVersion)) {
                 if(!forceDeploy) {
-                    AddError($"LambdaSharp CLI (v{settings.ToolVersion}) and runtime (v{settings.RuntimeVersion}) versions do not match", new LambdaSharpDeploymentTierSetupException(settings.Tier));
+                    AddError($"LambdaSharp CLI (v{settings.ToolVersion}) and runtime (v{settings.RuntimeVersion}) versions do not match; use --force-deploy to proceed anyway");
                     return false;
                 }
             }
