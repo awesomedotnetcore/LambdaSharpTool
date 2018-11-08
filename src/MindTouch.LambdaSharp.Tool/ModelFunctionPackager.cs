@@ -38,17 +38,6 @@ namespace MindTouch.LambdaSharp.Tool {
         //--- Constants ---
         private const string GITSHAFILE = "gitsha.txt";
 
-        //--- Class Methods ---
-        private static bool VersionMatch(string expected, string actual) {
-            if(!actual.StartsWith(expected, StringComparison.Ordinal)) {
-                return false;
-            }
-            var suffix = actual.Substring(expected.Length);
-            return (suffix == "")
-                || suffix.StartsWith(".", StringComparison.Ordinal)
-                || suffix.StartsWith("-", StringComparison.Ordinal);
-        }
-
         //--- Constructors ---
         public ModelFunctionPackager(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
 
@@ -86,10 +75,12 @@ namespace MindTouch.LambdaSharp.Tool {
         ) {
 
             // identify folder for function
-            var folderName = new[] { function.Function, $"{module.Module}.{function.Function}" }
-                .FirstOrDefault(name => Directory.Exists(Path.Combine(Settings.WorkingDirectory, name)));
+            var folderName = new[] {
+                function.Function,
+                $"{module.Module}.{function.Function}"
+            }.FirstOrDefault(name => Directory.Exists(Path.Combine(Settings.WorkingDirectory, name)));
             if(folderName == null) {
-                AddError($"could not locate function directory for {function.Function}");
+                AddError($"could not locate function directory");
                 return;
             }
 
@@ -102,14 +93,42 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
             }
 
-            // determine the function type
-            var folderPath = Path.Combine(Settings.WorkingDirectory, folderName);
-            if(File.Exists(Path.Combine(folderPath, $"{folderName}.csproj"))) {
-                ProcessDotNet(module, function, version, skipCompile, skipAssemblyValidation, gitsha, buildConfiguration, folderPath, Path.Combine(folderPath, $"{folderName}.csproj"));
-            } else if(File.Exists(Path.Combine(folderPath, "index.js"))) {
-                ProcessJavascript(module, function, version, skipCompile, skipAssemblyValidation, gitsha, buildConfiguration, folderPath, Path.Combine(folderPath, "index.js"));
-            } else {
-                AddError("could not location the function implementation");
+            // determine the function project
+            var projectPath = function.Project ?? new [] {
+                Path.Combine(Settings.WorkingDirectory, folderName, $"{folderName}.csproj"),
+                Path.Combine(Settings.WorkingDirectory, folderName, "index.js")
+            }.FirstOrDefault(path => File.Exists(path));
+            if(projectPath == null) {
+                AddError("could not locate the function project");
+                return;
+            }
+            switch(Path.GetExtension(projectPath).ToLowerInvariant()) {
+            case ".csproj":
+                ProcessDotNet(
+                    module,
+                    function,
+                    version,
+                    skipCompile,
+                    skipAssemblyValidation,
+                    gitsha,
+                    buildConfiguration,
+                    projectPath
+                );
+                break;
+            case ".js":
+                ProcessJavascript(
+                    module,
+                    function,
+                    version,
+                    skipCompile,
+                    skipAssemblyValidation,
+                    gitsha,
+                    buildConfiguration,
+                    projectPath
+                );
+                break;
+            default:
+                AddError("could not determine the function language");
                 return;
             }
         }
@@ -122,7 +141,6 @@ namespace MindTouch.LambdaSharp.Tool {
             bool skipAssemblyValidation,
             string gitsha,
             string buildConfiguration,
-            string projectFolder,
             string project
         ) {
             function.Language = "csharp";
@@ -326,7 +344,6 @@ namespace MindTouch.LambdaSharp.Tool {
             bool skipAssemblyValidation,
             string gitsha,
             string buildConfiguration,
-            string projectFolder,
             string project
         ) {
             function.Language = "javascript";
@@ -345,7 +362,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 return;
             }
             Console.WriteLine($"=> Building function {function.Function} [{function.Runtime}]");
-            function.PackagePath = CreatePackage(function.Function, gitsha, projectFolder);
+            function.PackagePath = CreatePackage(function.Function, gitsha, Path.GetDirectoryName(project));
         }
 
         private string CreatePackage(string functionName, string gitsha, string folder) {
