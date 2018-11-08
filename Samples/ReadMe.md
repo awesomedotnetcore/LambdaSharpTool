@@ -6,6 +6,7 @@ Please refer to the [Folder Structure Documentation](../Docs/FolderStructure.md)
 
 1. [Alexa Skill Example](AlexaSample/)
 1. [API Gateway Example](ApiSample/)
+1. [CloudFormation Custom Resource Example](CustomResourceSample/)
 1. [CloudFormation Macro Example](MacroSample/)
 1. [CloudWatch Schedule Event Example](ScheduleSample/)
 1. [DynamoDB Stream Example](DynamoDBSample/)

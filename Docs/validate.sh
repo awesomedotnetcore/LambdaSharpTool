@@ -52,6 +52,7 @@ fi
 lash build \
     Samples/AlexaSample \
     Samples/ApiSample \
+    Samples/CustomResourceSample \
     Samples/DynamoDBSample \
     Samples/KinesisSample \
     Samples/MacroSample \
@@ -67,6 +68,7 @@ fi
 lash deploy \
     Samples/AlexaSample/bin/manifest.json \
     Samples/ApiSample/bin/manifest.json \
+    Samples/CustomResourceSample/manifest.json \
     Samples/DynamoDBSample/bin/manifest.json \
     Samples/KinesisSample/bin/manifest.json \
     Samples/MacroSample/bin/manifest.json \
