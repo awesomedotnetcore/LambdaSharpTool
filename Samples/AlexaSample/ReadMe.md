@@ -14,6 +14,12 @@ Optionally, the `Alexa` attribute can specify an Alexa Skill ID to restrict invo
 Module: AlexaSample
 Description: A sample module using an Alexa skill
 
+Inputs:
+
+  - Parameter: AlexaSkillID
+    Description: Alexa Skill ID
+    Default: "*"
+
 Functions:
 
   - Function: MyFunction
@@ -21,7 +27,7 @@ Functions:
     Memory: 128
     Timeout: 30
     Sources:
-      - Alexa: "*"
+      - Alexa: !Ref AlexaSkillID
 ```
 
 ## Function Code
