@@ -231,6 +231,16 @@
                   ]
                 },
                 {
+                  "Sid": "RekognitionService",
+                  "Effect": "Allow",
+                  "Action": [
+                    "rekognition:DetectFaces",
+                    "rekognition:IndexFaces",
+                    "rekognition:SearchFacesByImage"
+                  ],
+                  "Resource": "*"
+                },
+                {
                   "Sid": "SecretsDecryption",
                   "Effect": "Allow",
                   "Action": [
