@@ -15,4 +15,4 @@ dotnet tool install \
     --global \
     --add-source $LAMBDASHARP/src/MindTouch.LambdaSharp.Tool/ \
     MindTouch.LambdaSharp.Tool \
-    --version 0.4-RC2
+    --version 0.4

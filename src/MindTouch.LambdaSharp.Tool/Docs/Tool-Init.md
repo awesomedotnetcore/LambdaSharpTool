@@ -48,7 +48,7 @@ dotnet lash init --tier Sandbox
 
 Output:
 ```
-MindTouch LambdaSharp CLI (v0.4-RC2) - Initialize LambdaSharp deployment tier
+MindTouch LambdaSharp CLI (v0.4) - Initialize LambdaSharp deployment tier
 Creating new deployment tier 'Sandbox'
 Deploying stack: Sandbox-LambdaSharp [LambdaSharp]
 => Stack creation initiated for Sandbox-LambdaSharp
