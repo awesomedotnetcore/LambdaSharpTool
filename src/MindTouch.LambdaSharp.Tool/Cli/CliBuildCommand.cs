@@ -448,14 +448,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 Console.WriteLine($"Compiling module: {Path.GetRelativePath(Directory.GetCurrentDirectory(), moduleSource)}");
                 var source = await File.ReadAllTextAsync(moduleSource);
 
-                // preprocess file
-                var tokenStream = new ModelPreprocessor(settings, moduleSource).Preprocess(source, selector);
-                if(HasErrors) {
-                    return false;
-                }
-
                 // parse yaml module definition
-                var parsedModule = new ModelParser(settings, moduleSource).Parse(tokenStream);
+                var parsedModule = new ModelParser(settings, moduleSource).Parse(source, selector);
                 if(HasErrors) {
                     return false;
                 }
