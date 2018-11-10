@@ -28,18 +28,18 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         //--- Properties ---
         public string Name { get; set; }
         public string Description { get; set; }
-        public IList<AFunctionSource> Sources { get; set; }
-        public string S3Location { get; set; }
+        public string Memory { get; set; }
+        public string Timeout { get; set; }
+        public string Project { get; set; }
         public string Handler { get; set; }
         public string Runtime { get; set; }
         public string Language { get; set; }
-        public string Memory { get; set; }
-        public string Timeout { get; set; }
         public string ReservedConcurrency { get; set; }
         public FunctionVpc VPC;
         public IDictionary<string, object> Environment { get; set; }
-        public string PackagePath { get; set; }
+        public IList<AFunctionSource> Sources { get; set; }
         public IList<object> Pragmas { get; set; }
+        public string PackagePath { get; set; }
         public bool HasFunctionRegistration => !HasPragma("no-function-registration");
 
         //--- Methods ---

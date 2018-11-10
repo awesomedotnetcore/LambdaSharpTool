@@ -25,31 +25,31 @@ using System.Linq;
 using System.IO;
 using System.IO.Compression;
 using System.Security.Cryptography;
-using MindTouch.LambdaSharp.Tool.Model.AST;
-using MindTouch.LambdaSharp.Tool.Internal;
 using System.Text;
+using MindTouch.LambdaSharp.Tool.Internal;
+using MindTouch.LambdaSharp.Tool.Model;
 
 namespace MindTouch.LambdaSharp.Tool {
 
     public class ModelFilesPackager : AModelProcessor {
 
         //--- Fields ---
-        private ModuleNode _module;
+        private Module _module;
 
         //--- Constructors ---
         public ModelFilesPackager(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
 
         //--- Methods ---
-        public void Process(ModuleNode module) {
+        public void Process(Module module) {
             _module = module;
-            foreach(var parameter in module.Variables.Where(p => p.Package != null)) {
-                AtLocation(parameter.Var, () => {
+            foreach(var parameter in module.Parameters.OfType<PackageParameter>()) {
+                AtLocation(parameter.Name, () => {
                     ProcessParameter(parameter);
                 });
             }
         }
 
-        private void ProcessParameter(ParameterNode parameter) {
+        private void ProcessParameter(PackageParameter parameter) {
             var files = new List<string>();
             AtLocation("Package", () => {
 
@@ -57,7 +57,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 string folder;
                 string filePattern;
                 SearchOption searchOption;
-                var packageFiles = Path.Combine(Settings.WorkingDirectory, parameter.Files);
+                var packageFiles = Path.Combine(Settings.WorkingDirectory, parameter.SourceFilepath);
                 if((packageFiles.EndsWith("/", StringComparison.Ordinal) || Directory.Exists(packageFiles))) {
                     folder = Path.GetFullPath(packageFiles);
                     filePattern = "*";
@@ -85,13 +85,13 @@ namespace MindTouch.LambdaSharp.Tool {
                             }
                         }
                     }
-                    package = Path.Combine(Settings.OutputDirectory, $"package_{parameter.Var}_{md5.ComputeHash(bytes.ToArray()).ToHexString()}.zip");
+                    package = Path.Combine(Settings.OutputDirectory, $"package_{parameter.Name}_{md5.ComputeHash(bytes.ToArray()).ToHexString()}.zip");
                 }
 
                 // create zip package
-                Console.WriteLine($"=> Building {parameter.Var} package");
+                Console.WriteLine($"=> Building {parameter.Name} package");
                 if(Directory.Exists(Settings.OutputDirectory)) {
-                    foreach(var file in Directory.GetFiles(Settings.OutputDirectory, $"package_{parameter.Var}*.zip")) {
+                    foreach(var file in Directory.GetFiles(Settings.OutputDirectory, $"package_{parameter.Name}*.zip")) {
                         try {
                             File.Delete(file);
                         } catch { }

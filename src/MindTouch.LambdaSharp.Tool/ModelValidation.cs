@@ -215,7 +215,6 @@ namespace MindTouch.LambdaSharp.Tool {
                     Validate(int.TryParse(function.Memory, out _), "invalid Memory value");
                     Validate(function.Timeout != null, "missing Name attribute");
                     Validate(int.TryParse(function.Timeout, out _), "invalid Timeout value");
-                    Validate(function.PackagePath == null, "'PackagePath' is reserved for internal use");
                     function.Sources = function.Sources ?? new List<FunctionSourceNode>();
                     function.Environment = function.Environment ?? new Dictionary<string, object>();
                     function.VPC = function.VPC ?? new Dictionary<string, object>();

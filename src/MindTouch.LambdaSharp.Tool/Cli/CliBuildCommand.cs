@@ -448,23 +448,27 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 Console.WriteLine($"Compiling module: {Path.GetRelativePath(Directory.GetCurrentDirectory(), moduleSource)}");
                 var source = await File.ReadAllTextAsync(moduleSource);
 
-                // parse yaml module definition
-                var parsedModule = new ModelParser(settings, moduleSource).Parse(source, selector);
+                // parse yaml to module AST
+                var moduleAst = new ModelParser(settings, moduleSource).Parse(source, selector);
                 if(HasErrors) {
                     return false;
                 }
 
-                // validate module
-                new ModelValidation(settings, moduleSource).Process(parsedModule);
+                // validate module AST
+                new ModelValidation(settings, moduleSource).Process(moduleAst);
                 if(HasErrors) {
                     return false;
                 }
 
-                // TODO (2018-10-04, bjorg): refactor all model processing to use the strict model instead of the parsed model
+                // convert module definition
+                var module = new ModelConverter(settings, moduleSource).Process(moduleAst);
+                if(HasErrors) {
+                    return false;
+                }
 
                 // package all functions
                 new ModelFunctionPackager(settings, moduleSource).Process(
-                    parsedModule,
+                    module,
                     settings.ToolVersion,
                     skipCompile: skipFunctionBuild,
                     skipAssemblyValidation: skipAssemblyValidation,
@@ -473,13 +477,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 );
 
                 // package all files
-                new ModelFilesPackager(settings, moduleSource).Process(parsedModule);
-
-                // compile module definition
-                var module = new ModelConverter(settings, moduleSource).Process(parsedModule);
-                if(HasErrors) {
-                    return false;
-                }
+                new ModelFilesPackager(settings, moduleSource).Process(module);
 
                 // resolve all parameter references
                 new ModelReferenceResolver(settings, moduleSource).Resolve(module);

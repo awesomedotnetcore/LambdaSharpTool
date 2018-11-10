@@ -31,12 +31,6 @@ namespace MindTouch.LambdaSharp.Tool {
     using Fn = Humidifier.Fn;
     using Condition = Humidifier.Condition;
 
-    public class ModelParserException : Exception {
-
-        //--- Constructors ---
-        public ModelParserException(string message) : base(message) { }
-    }
-
     public class ModelConverter : AModelProcessor {
 
         //--- Constants ---
@@ -474,7 +468,7 @@ namespace MindTouch.LambdaSharp.Tool {
                             Description = parameter.Description,
                             DestinationBucketParameterName = parameter.Bucket,
                             DestinationKeyPrefix = parameter.Prefix ?? "",
-                            PackagePath = parameter.PackagePath,
+                            SourceFilepath = parameter.Files,
                             Reference = FnGetAtt(resourceName, "Url")
                         };
                     } else if(parameter.Value != null) {
@@ -640,16 +634,18 @@ namespace MindTouch.LambdaSharp.Tool {
                 return new Function {
                     Name = function.Function,
                     Description = function.Description,
-                    Sources = AtLocation("Sources", () => function.Sources?.Select(source => ConvertFunctionSource(function, ++eventIndex, source)).Where(evt => evt != null).ToList(), null) ?? new List<AFunctionSource>(),
-                    PackagePath = function.PackagePath,
+                    Memory = function.Memory,
+                    Timeout = function.Timeout,
+                    Project = function.Project,
                     Handler = function.Handler,
                     Runtime = function.Runtime,
                     Language = function.Language,
-                    Memory = function.Memory,
-                    Timeout = function.Timeout,
                     ReservedConcurrency = function.ReservedConcurrency,
                     VPC = vpc,
+
+                    // TODO (2018-11-10, bjorg): don't put generator logic into the converter
                     Environment = function.Environment.ToDictionary(kv => "STR_" + kv.Key.Replace("::", "_").ToUpperInvariant(), kv => kv.Value) ?? new Dictionary<string, object>(),
+                    Sources = AtLocation("Sources", () => function.Sources?.Select(source => ConvertFunctionSource(function, ++eventIndex, source)).Where(evt => evt != null).ToList(), null) ?? new List<AFunctionSource>(),
                     Pragmas = function.Pragmas
                 };
             }, null);

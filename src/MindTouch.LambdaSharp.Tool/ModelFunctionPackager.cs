@@ -26,10 +26,10 @@ using System.IO;
 using System.IO.Compression;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
-using System.Xml.Linq;
-using MindTouch.LambdaSharp.Tool.Model.AST;
-using MindTouch.LambdaSharp.Tool.Internal;
 using System.Text;
+using System.Xml.Linq;
+using MindTouch.LambdaSharp.Tool.Internal;
+using MindTouch.LambdaSharp.Tool.Model;
 
 namespace MindTouch.LambdaSharp.Tool {
 
@@ -42,7 +42,7 @@ namespace MindTouch.LambdaSharp.Tool {
         public ModelFunctionPackager(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
 
         public void Process(
-            ModuleNode module,
+            Module module,
             VersionInfo version,
             bool skipCompile,
             bool skipAssemblyValidation,
@@ -50,7 +50,7 @@ namespace MindTouch.LambdaSharp.Tool {
             string buildConfiguration
         ) {
             foreach(var function in module.Functions) {
-                AtLocation(function.Function, () => {
+                AtLocation(function.Name, () => {
                     Process(
                         module,
                         function,
@@ -65,8 +65,8 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         private void Process(
-            ModuleNode module,
-            FunctionNode function,
+            Module module,
+            Function function,
             VersionInfo version,
             bool skipCompile,
             bool skipAssemblyValidation,
@@ -76,8 +76,8 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // identify folder for function
             var folderName = new[] {
-                function.Function,
-                $"{module.Module}.{function.Function}"
+                function.Name,
+                $"{module.Name}.{function.Name}"
             }.FirstOrDefault(name => Directory.Exists(Path.Combine(Settings.WorkingDirectory, name)));
             if(folderName == null) {
                 AddError($"could not locate function directory");
@@ -86,7 +86,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // delete old packages
             if(Directory.Exists(Settings.OutputDirectory)) {
-                foreach(var file in Directory.GetFiles(Settings.OutputDirectory, $"function_{function.Function}*.zip")) {
+                foreach(var file in Directory.GetFiles(Settings.OutputDirectory, $"function_{function.Name}*.zip")) {
                     try {
                         File.Delete(file);
                     } catch { }
@@ -134,8 +134,8 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         private void ProcessDotNet(
-            ModuleNode module,
-            FunctionNode function,
+            Module module,
+            Function function,
             VersionInfo version,
             bool skipCompile,
             bool skipAssemblyValidation,
@@ -226,13 +226,13 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
             }
             if(skipCompile) {
-                function.PackagePath = $"{function.Function}-NOCOMPILE.zip";
+                function.PackagePath = $"{function.Name}-NOCOMPILE.zip";
                 return;
             }
 
             // dotnet tools have to be run from the project folder; otherwise specialized tooling is not picked up from the .csproj file
             var projectDirectory = Path.Combine(Settings.WorkingDirectory, projectName);
-            Console.WriteLine($"=> Building function {function.Function} [{targetFramework}, {buildConfiguration}]");
+            Console.WriteLine($"=> Building function {function.Name} [{targetFramework}, {buildConfiguration}]");
 
             // restore project dependencies
             if(!DotNetRestore(projectDirectory)) {
@@ -241,7 +241,7 @@ namespace MindTouch.LambdaSharp.Tool {
             }
 
             // compile project
-            var dotnetOutputPackage = Path.Combine(Settings.OutputDirectory, function.Function + ".zip");
+            var dotnetOutputPackage = Path.Combine(Settings.OutputDirectory, function.Name + ".zip");
             if(!DotNetLambdaPackage(targetFramework, buildConfiguration, dotnetOutputPackage, projectDirectory)) {
                 AddError("`dotnet lambda package` command failed");
                 return;
@@ -268,7 +268,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         return;
                     }
                 }
-                function.PackagePath = CreatePackage(function.Function, gitsha, tempDirectory);
+                function.PackagePath = CreatePackage(function.Name, gitsha, tempDirectory);
             } finally {
                 if(Directory.Exists(tempDirectory)) {
                     try {
@@ -337,8 +337,8 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         private void ProcessJavascript(
-            ModuleNode module,
-            FunctionNode function,
+            Module module,
+            Function function,
             VersionInfo version,
             bool skipCompile,
             bool skipAssemblyValidation,
@@ -358,11 +358,11 @@ namespace MindTouch.LambdaSharp.Tool {
                 function.Runtime = "nodejs8.10";
             }
             if(skipCompile) {
-                function.PackagePath = $"{function.Function}-NOCOMPILE.zip";
+                function.PackagePath = $"{function.Name}-NOCOMPILE.zip";
                 return;
             }
-            Console.WriteLine($"=> Building function {function.Function} [{function.Runtime}]");
-            function.PackagePath = CreatePackage(function.Function, gitsha, Path.GetDirectoryName(project));
+            Console.WriteLine($"=> Building function {function.Name} [{function.Runtime}]");
+            function.PackagePath = CreatePackage(function.Name, gitsha, Path.GetDirectoryName(project));
         }
 
         private string CreatePackage(string functionName, string gitsha, string folder) {
