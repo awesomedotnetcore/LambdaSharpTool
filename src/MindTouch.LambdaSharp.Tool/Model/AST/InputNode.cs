@@ -20,11 +20,47 @@
  */
 
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MindTouch.LambdaSharp.Tool.Model.AST {
 
     public class InputNode {
+
+        //--- Class Fields ---
+        public readonly static Dictionary<string, Func<InputNode, bool>> FieldCheckers = new Dictionary<string, Func<InputNode, bool>> {
+            ["Parameter"] = input => input.Parameter != null,
+            ["Default"] = input => input.Default != null,
+            ["ConstraintDescription"] = input => input.ConstraintDescription != null,
+            ["AllowedPattern"] = input => input.AllowedPattern != null,
+            ["AllowedValues"] = input => input.AllowedValues != null,
+            ["MaxLength"] = input => input.MaxLength != null,
+            ["MaxValue"] = input => input.MaxValue != null,
+            ["MinLength"] = input => input.MinLength != null,
+            ["MinValue"] = input => input.MinValue != null,
+            ["Resource"] = input => input.Resource != null,
+            ["Import"] = input => input.Import != null,
+
+            // composite checkers
+            ["Resource.Properties"] = input => input.Resource?.Properties?.Any() == true
+        };
+
+        public static readonly Dictionary<string, IEnumerable<string>> FieldCombinations = new Dictionary<string, IEnumerable<string>> {
+            ["Parameter"] = new[] {
+                "Default",
+                "ConstraintDescription",
+                "AllowedPattern",
+                "AllowedValues",
+                "MaxLength",
+                "MaxValue",
+                "MinLength",
+                "MinValue",
+                "Resource",
+                "Resource.Properties"
+            },
+            ["Import"] = new[] { "Resource" }
+        };
 
         //--- Properties ---
 
@@ -51,6 +87,5 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         // cross-module reference
         public string Import { get; set; }
         // public ResourceNode Resource { get; set; }
-        // public string Type { get; set; }
    }
 }

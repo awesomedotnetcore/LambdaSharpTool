@@ -19,12 +19,46 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using YamlDotNet.Serialization;
 
 namespace MindTouch.LambdaSharp.Tool.Model.AST {
 
     public class ParameterNode {
+
+        //--- Class Fields ---
+        public readonly static Dictionary<string, Func<ParameterNode, bool>> FieldCheckers = new Dictionary<string, Func<ParameterNode, bool>> {
+            ["Var"] = parameter => parameter.Var != null,
+            ["Value"] = parameter => parameter.Value != null,
+            ["Resource"] = parameter => parameter.Resource != null,
+            ["Secret"] = parameter => parameter.Secret != null,
+            ["EncryptionContext"] = parameter => parameter.EncryptionContext != null,
+            ["Package"] = parameter => parameter.Package != null,
+            ["Files"] = parameter => parameter.Files != null,
+            ["Bucket"] = parameter => parameter.Bucket != null,
+            ["Prefix"] = parameter => parameter.Prefix != null,
+
+            // composite checkers
+            ["Var.Value"] = parameter => parameter.Value != null,
+            ["Var.Secret"] = parameter => parameter.Secret != null,
+            ["Var.Resource"] = parameter => (parameter.Value == null) && (parameter.Secret == null) && (parameter.Resource != null),
+            ["Var.Variables"] = parameter =>
+                (parameter.Value == null)
+                && (parameter.Secret == null)
+                && (parameter.Resource == null)
+                && (parameter.Variables?.Any() == true),
+            ["Resource.Properties"] = input => input.Resource?.Properties?.Any() == true
+        };
+
+        public static readonly Dictionary<string, IEnumerable<string>> FieldCombinations = new Dictionary<string, IEnumerable<string>> {
+            ["Var.Value"] = new[] { "Var", "Value", "Resource" },
+            ["Var.Secret"] = new[] { "Var", "Secret", "EncryptionContext" },
+            ["Var.Resource"] = new[] { "Var", "Resource", "Resource.Properties" },
+            ["Var.Variables"] = new[] { "Var" },
+            ["Package"] = new[] { "Files", "Bucket", "Prefix" }
+        };
 
         //--- Properties ---
 

@@ -20,9 +20,28 @@
  */
 
 
+using System;
+using System.Collections.Generic;
+
 namespace MindTouch.LambdaSharp.Tool.Model.AST {
 
     public class OutputNode {
+
+        //--- Class Fields ---
+        public readonly static Dictionary<string, Func<OutputNode, bool>> FieldCheckers = new Dictionary<string, Func<OutputNode, bool>> {
+            ["Export"] = output => output.Export != null,
+            ["Value"] = output => output.Value != null,
+            ["CustomResource"] = output => output.CustomResource != null,
+            ["Handler"] = output => output.Handler != null,
+            ["Macro"] = output => output.Macro != null,
+            ["Handler"] = output => output.Handler != null
+        };
+
+        public static readonly Dictionary<string, IEnumerable<string>> FieldCombinations = new Dictionary<string, IEnumerable<string>> {
+            ["Export"] = new[] { "Value" },
+            ["CustomResource"] = new[] { "Handler" },
+            ["Macro"] = new[] { "Handler" }
+        };
 
         //--- Properties ---
 
