@@ -33,8 +33,7 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
             ["Value"] = output => output.Value != null,
             ["CustomResource"] = output => output.CustomResource != null,
             ["Handler"] = output => output.Handler != null,
-            ["Macro"] = output => output.Macro != null,
-            ["Handler"] = output => output.Handler != null
+            ["Macro"] = output => output.Macro != null
         };
 
         public static readonly Dictionary<string, IEnumerable<string>> FieldCombinations = new Dictionary<string, IEnumerable<string>> {
