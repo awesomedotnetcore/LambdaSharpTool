@@ -38,5 +38,31 @@ namespace MindTouch.LambdaSharp.Tool.Internal {
 
         public static string ToHexString(this IEnumerable<byte> bytes)
             => string.Concat(bytes.Select(x => x.ToString("X2")));
+
+        public static string PascalCaseToLabel(string name) {
+            var builder = new StringBuilder();
+            var isUppercase = true;
+            foreach(var c in name) {
+                if(char.IsDigit(c)) {
+                    if(!isUppercase) {
+                        builder.Append(' ');
+                    }
+                    isUppercase = true;
+                    builder.Append(c);
+                } else if(char.IsLetter(c)) {
+                    if(isUppercase) {
+                        isUppercase = char.IsUpper(c);
+                        builder.Append(c);
+                    } else {
+                        if(isUppercase = char.IsUpper(c)) {
+                            builder.Append(' ');
+                        }
+                        builder.Append(c);
+                    }
+                }
+            }
+            return builder.ToString();
+        }
+
     }
 }

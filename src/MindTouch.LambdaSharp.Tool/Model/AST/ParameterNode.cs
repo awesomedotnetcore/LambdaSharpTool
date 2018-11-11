@@ -41,22 +41,23 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
             ["Prefix"] = parameter => parameter.Prefix != null,
 
             // composite checkers
-            ["Var.Value"] = parameter => parameter.Value != null,
+            ["Var.Value"] = parameter => (parameter.Value != null) && (parameter.Resource == null),
             ["Var.Secret"] = parameter => parameter.Secret != null,
-            ["Var.Resource"] = parameter => (parameter.Value == null) && (parameter.Secret == null) && (parameter.Resource != null),
-            ["Var.Variables"] = parameter =>
+            ["Var.Reference"] = parameter => (parameter.Value != null) && (parameter.Resource != null),
+            ["Var.Resource"] = parameter => (parameter.Value == null) && (parameter.Resource != null),
+            ["Var.Empty"] = parameter =>
                 (parameter.Value == null)
                 && (parameter.Secret == null)
-                && (parameter.Resource == null)
-                && (parameter.Variables?.Any() == true),
+                && (parameter.Resource == null),
             ["Resource.Properties"] = input => input.Resource?.Properties?.Any() == true
         };
 
         public static readonly Dictionary<string, IEnumerable<string>> FieldCombinations = new Dictionary<string, IEnumerable<string>> {
-            ["Var.Value"] = new[] { "Var", "Value", "Resource" },
+            ["Var.Value"] = new[] { "Var", "Value" },
             ["Var.Secret"] = new[] { "Var", "Secret", "EncryptionContext" },
+            ["Var.Reference"] = new[] { "Var", "Value", "Resource" },
             ["Var.Resource"] = new[] { "Var", "Resource", "Resource.Properties" },
-            ["Var.Variables"] = new[] { "Var" },
+            ["Var.Empty"] = new[] { "Var" },
             ["Package"] = new[] { "Files", "Bucket", "Prefix" }
         };
 
