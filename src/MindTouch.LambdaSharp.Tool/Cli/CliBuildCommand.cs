@@ -460,8 +460,19 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     return false;
                 }
 
-                // convert module definition
-                var module = new ModelConverter(settings, moduleSource).Process(moduleAst);
+                new ModelAugmenter(settings, moduleSource).Augment(moduleAst);
+                if(HasErrors) {
+                    return false;
+                }
+
+                // convert module AST to model
+                var module = new ModelConverter2(settings, moduleSource).Process(moduleAst);
+                if(HasErrors) {
+                    return false;
+                }
+
+                // resolve all references
+                new ModelReferenceResolver(settings, moduleSource).Resolve(module);
                 if(HasErrors) {
                     return false;
                 }
@@ -478,12 +489,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
                 // package all files
                 new ModelFilesPackager(settings, moduleSource).Process(module);
-
-                // resolve all parameter references
-                new ModelReferenceResolver(settings, moduleSource).Resolve(module);
-                if(HasErrors) {
-                    return false;
-                }
 
                 // generate & save cloudformation template
                 var template = new ModelGenerator(settings, moduleSource).Generate(module);

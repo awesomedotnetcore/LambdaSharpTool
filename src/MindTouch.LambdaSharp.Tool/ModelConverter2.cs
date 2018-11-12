@@ -85,8 +85,49 @@ namespace MindTouch.LambdaSharp.Tool {
             AddToList("Variables", parameters, module.Variables, (index, parameter) => ConvertParameter(index, parameter));
             AddToList("Functions", functions, module.Functions, ConvertFunction);
 
-            // TODO: resolve scopes
+            // add default secrets key that is imported from the input parameters
+            if(!_module.HasPragma("no-lambdasharp-dependencies")) {
+                _module.Secrets.Add(_module.GetParameter("LambdaSharp::DefaultSecretKeyArn").Reference);
+            }
 
+            // resolve scopes
+            foreach(var parameter in _module.GetAllParameters()) {
+                if(parameter.Scope.Contains("*")) {
+                    parameter.Scope = parameter.Scope
+                        .Where(scope => scope != "*")
+                        .Union(_module.Functions.Select(item => item.Name))
+                        .Distinct()
+                        .OrderBy(item => item)
+                        .ToList();
+                }
+            }
+
+            // resolve outputs
+            foreach(var output in outputs.OfType<ExportOutput>()) {
+                if(output.Value == null) {
+
+                    // NOTE: if no value is provided, we expect the export name to correspond to a
+                    //  parameter name; if it does, we export the ARN value of that parameter; in
+                    //  addition, we assume its description if none is provided.
+
+                    var parameter = _module.Parameters.FirstOrDefault(p => p.Name == output.Name);
+                    if(parameter == null) {
+                        AddError("could not find matching variable");
+                        output.Value = "<BAD>";
+                    } else if(parameter is AInputParameter) {
+
+                        // input parameters are always expected to be in ARN format
+                        output.Value = FnRef(parameter.Name);
+                    } else {
+                        output.Value = ResourceMapping.GetArnReference((parameter as AResourceParameter)?.Resource?.Type, parameter.ResourceName);
+                    }
+
+                    // only set the description if the value was not set
+                    if(output.Description == null) {
+                        output.Description = parameter.Description;
+                    }
+                }
+            }
             return _module;
         }
 
@@ -115,7 +156,10 @@ namespace MindTouch.LambdaSharp.Tool {
             case "Parameter":
                 return AtLocation(input.Parameter, () => CreateParameter(input), null);
             case "Import":
-                return AtLocation(input.Import, () => CreateImport(input), null);
+                return AtLocation<AParameter>(input.Import, () => {
+                    CreateImport(input);
+                    return null;;
+                }, null);
             }
             return null;
         }
@@ -230,13 +274,8 @@ namespace MindTouch.LambdaSharp.Tool {
             return null;
 
             // local functions
-            List<AParameter> ConvertParameters() {
-                return AtLocation("Variables", () => {
-                    var results = new List<AParameter>();
-                    AddToList("Variables", results, parameter.Variables, (i, p) => ConvertParameter(i, p, resourceName));
-                    return results;
-                }, new List<AParameter>());
-            }
+            List<AParameter> ConvertParameters()
+                => AddToList("Variables", new List<AParameter>(), parameter.Variables, (i, p) => ConvertParameter(i, p, resourceName));
         }
 
         private Resource ConvertResource(IList<object> resourceReferences, ResourceNode resource) {
@@ -444,33 +483,10 @@ namespace MindTouch.LambdaSharp.Tool {
             var type = DeterminNodeType("output", index, output, OutputNode.FieldCheckers, OutputNode.FieldCombinations, new[] { "Export", "CustomResource", "Macro" });
             switch(type) {
             case "Export":
-                return AtLocation(output.Export, () => {
-                    var value = output.Value;
-                    var description = output.Description;
-                    if(value == null) {
-
-
-                        // NOTE: if no value is provided, we expect the export name to correspond to a
-                        //  parameter name; if it does, we export the ARN value of that parameter; in
-                        //  addition, we assume its description if none is provided.
-
-                        var parameter = _module.Parameters.First(p => p.Name == output.Export);
-                        if(parameter is AInputParameter) {
-
-                            // input parameters are always expected to be in ARN format
-                            value = FnRef(parameter.Name);
-                        } else {
-                            value = ResourceMapping.GetArnReference((parameter as AResourceParameter)?.Resource?.Type, parameter.ResourceName);
-                        }
-                        if(description == null) {
-                            description = parameter.Description;
-                        }
-                    }
-                    return new ExportOutput {
-                        Name = output.Export,
-                        Description = description,
-                        Value = value
-                    };
+                return AtLocation(output.Export, () => new ExportOutput {
+                    Name = output.Export,
+                    Description = output.Description,
+                    Value = output.Value
                 }, null);
             case "CustomResource":
                 return AtLocation(output.CustomResource, () => new CustomResourceHandlerOutput {
@@ -529,7 +545,7 @@ namespace MindTouch.LambdaSharp.Tool {
             return result;
         }
 
-        private AParameter CreateImport(InputNode input) {
+        private void CreateImport(InputNode input) {
             var parts = input.Import.Split("::", 2);
             var moduleName = parts[0];
             var exportName = parts[1];
@@ -569,7 +585,9 @@ namespace MindTouch.LambdaSharp.Tool {
                 // set AInputParamete fields
                 Type = input.Type,
                 Section = input.Section ?? "Module Settings",
-                Label = input.Label ?? input.Import,
+
+                // TODO (2018-11-11, bjorg): do we really want to use the cross-module reference when converting to a label?
+                Label = input.Label ?? StringEx.PascalCaseToLabel(input.Import),
                 NoEcho = input.NoEcho
             };
 
@@ -578,9 +596,6 @@ namespace MindTouch.LambdaSharp.Tool {
                 result.Resource = ConvertResource(new List<object> { result.Reference }, input.Resource);
             }
             parentParameter.Parameters.Add(result);
-
-            // always return null since import parameter is added via a parent node
-            return null;
         }
 
         private string DeterminNodeType<T>(
@@ -612,7 +627,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     // good to go
                     break;
                 default:
-                    AddError($"ambiguous {label} type");
+                    AddError($"ambiguous {label} type: {string.Join(", ", matches.Select(kv => kv.Key))}");
                     return null;
                 }
 
@@ -634,20 +649,20 @@ namespace MindTouch.LambdaSharp.Tool {
             }, null);
         }
 
-        private void AddToList<TFrom, TTo>(string location, List<TTo> results, IEnumerable<TFrom> values, Func<int, TFrom, TTo> convert) {
+        private List<TTo> AddToList<TFrom, TTo>(string location, List<TTo> results, IEnumerable<TFrom> values, Func<int, TFrom, TTo> convert) {
+            if(values?.Any() != true) {
+                return results;
+            }
             AtLocation(location, () => {
                 var index = 0;
                 foreach(var value in values) {
-                    try {
-                        var result = convert(++index, value);
-                        if(result != null) {
-                            results.Add(result);
-                        }
-                    } catch(Exception e) {
-                        AddError(e);
+                    var result = convert(++index, value);
+                    if(result != null) {
+                        results.Add(result);
                     }
                 }
             });
+            return results;
         }
     }
 }
