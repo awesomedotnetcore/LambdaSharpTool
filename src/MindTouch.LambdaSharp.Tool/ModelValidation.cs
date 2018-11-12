@@ -461,7 +461,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 // good to go
                 break;
             default:
-                AddError($"ambiguous {type} type");
+                AddError($"ambiguous {type} type: {string.Join(", ", matches.Select(kv => kv.Key))}");
                 return;
             }
             var match = matches.First();

@@ -48,7 +48,8 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
             ["Var.Empty"] = parameter =>
                 (parameter.Value == null)
                 && (parameter.Secret == null)
-                && (parameter.Resource == null),
+                && (parameter.Resource == null)
+                && (parameter.Package == null),
             ["Resource.Properties"] = input => input.Resource?.Properties?.Any() == true
         };
 

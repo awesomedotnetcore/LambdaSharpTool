@@ -33,6 +33,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public VersionInfo Version { get; set; }
         public string Description { get; set; }
         public IList<object> Pragmas { get; set; }
+
+        // TODO (2018-11-10, bjorg): there is no reason for this to have object type
         public IList<object> Secrets { get; set; }
         public IList<AParameter> Parameters { get; set; }
         public IList<Function> Functions { get; set; }
