@@ -129,15 +129,20 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         //--- Properties ---
-        public Settings Settings { get => _settings; }
+        public Settings Settings => _settings;
+        public string LocationPath => string.Join("/", _locations.Reverse());
 
         //--- Methods ---
         protected void AtLocation(string location, Action action) {
             try {
                 _locations.Push(location);
                 action();
+            } catch(ModelLocationException) {
+
+                // exception already has location; don't re-wrap it
+                throw;
             } catch(Exception e) {
-                AddError(e);
+                throw new ModelLocationException(LocationPath, _sourceFilename, e);
             } finally {
                 _locations.Pop();
             }
@@ -147,9 +152,12 @@ namespace MindTouch.LambdaSharp.Tool {
             try {
                 _locations.Push(location);
                 return function();
+            } catch(ModelLocationException) {
+
+                // exception already has location; don't re-wrap it
+                throw;
             } catch(Exception e) {
-                AddError(e);
-                return onErrorReturn;
+                throw new ModelLocationException(LocationPath, _sourceFilename, e);
             } finally {
                 _locations.Pop();
             }
@@ -165,7 +173,7 @@ namespace MindTouch.LambdaSharp.Tool {
             var text = new StringBuilder();
             text.Append(message);
             if(_locations.Any()) {
-                text.Append($" @ {string.Join("/", _locations.Reverse())}");
+                text.Append($" @ {LocationPath}");
             }
             if(_sourceFilename != null) {
                 text.Append($" [{_sourceFilename}]");
