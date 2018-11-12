@@ -29,13 +29,15 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
 
         //--- Properties ---
         public string Module { get; set; }
-        public string Version { get; set; }
+        public string Version { get; set; } = "1.0";
         public string Description { get; set; }
-        public IList<object> Pragmas { get; set; }
-        public IList<string> Secrets { get; set; }
-        public IList<InputNode> Inputs { get; set; }
-        public IList<OutputNode> Outputs { get; set; }
-        public IList<ParameterNode> Variables { get; set; }
-        public IList<FunctionNode> Functions { get; set; }
+        public IList<object> Pragmas { get; set; } = new List<object>();
+        public IList<string> Secrets { get; set; } = new List<string>();
+        public IList<ModuleDeclareNode> Declare { get; set; } = new List<ModuleDeclareNode>();
+        public IList<InputNode> Inputs { get; set; } = new List<InputNode>();
+        public IList<OutputNode> Outputs { get; set; } = new List<OutputNode>();
+        public IList<ParameterNode> Variables { get; set; } = new List<ParameterNode>();
+        public IList<FunctionNode> Functions { get; set; } = new List<FunctionNode>();
+        public bool HasPragma(string pragma) => Pragmas?.Contains(pragma) == true;
     }
 }

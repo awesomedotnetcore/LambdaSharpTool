@@ -38,8 +38,8 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         public string Language { get; set; }
         public string ReservedConcurrency { get; set; }
         public Dictionary<string, object> VPC { get; set; }
-        public Dictionary<string, object> Environment { get; set; }
-        public IList<FunctionSourceNode> Sources { get; set; }
-        public IList<object> Pragmas { get; set; }
+        public Dictionary<string, object> Environment { get; set; } = new Dictionary<string, object>();
+        public IList<FunctionSourceNode> Sources { get; set; } = new List<FunctionSourceNode>();
+        public IList<object> Pragmas { get; set; } = new List<object>();
    }
 }

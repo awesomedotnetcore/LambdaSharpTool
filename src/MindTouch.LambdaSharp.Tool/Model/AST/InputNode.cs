@@ -68,7 +68,7 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         public string Section { get; set; }
         public string Label { get; set; }
         public string Description { get; set; }
-        public string Type { get; set; }
+        public string Type { get; set; } = "String";
         public object Scope { get; set; }
         public bool? NoEcho { get; set; }
 
