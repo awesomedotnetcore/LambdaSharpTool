@@ -17,7 +17,7 @@ The `info` command is used to show information about the current CLI profile, λ
 <dt><code>--cli-profile|-CLI &lt;NAME&gt;</code></dt>
 <dd>(optional) Use a specific LambdaSharp CLI profile (default: Default)</dd>
 
-<dt><code>--aws-profile|-P &lt;NAME&gt;</code></dt>
+<dt><code>--aws-profile|-AWS|-P &lt;NAME&gt;</code></dt>
 <dd>(optional) Use a specific AWS profile from the AWS credentials file</dd>
 
 <dt><code>--verbose|-V:&lt;LEVEL&gt;</code></dt>

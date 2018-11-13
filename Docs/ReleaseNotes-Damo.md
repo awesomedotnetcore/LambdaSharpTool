@@ -1,4 +1,4 @@
-# λ# - Damo (v0.4.0.1) - 2018-11-12
+# λ# - Damo (v0.4.0.2) - 2018-11-13
 
 > Damo was a Pythagorean philosopher said by many to have been the daughter of Pythagoras and Theano. [(Wikipedia)](https://en.wikipedia.org/wiki/Damo_(philosopher))
 
@@ -477,6 +477,12 @@ This method serializes an object into a JSON string using the built-in AWS Lambd
 * Lambda CloudWatch Logs are now configured to self-delete log stream entries after seven (7) days. In addition, the log group is now deleted when the function is deleted during module tear-down.
 
 ## Fixes
+
+### (v0.4.0.2) - 2018-11-13
+* [Fixed issue where λ# bucket was not properly used during `init` deployment.]()
+* [Fixed issue where AWS profile was only set via `AWS_PROFILE` environment variable. Now `AWS_DEFAULT_PROFILE` is also set.]()
+* [Fixed issue where `config` did not default to `LAMBDASHARP_PROFILE` value when configuring a new CLI profile.]()
+* [Fixed issue where λ# Runtime module used an unsupported domain name pattern for S3 buckets in `us-east-1` region.]()
 
 ### (v0.4.0.1) - 2018-11-12
 * [Fixed an issue where file packages did not get the correct name.](https://github.com/LambdaSharp/LambdaSharpTool/issues/57)

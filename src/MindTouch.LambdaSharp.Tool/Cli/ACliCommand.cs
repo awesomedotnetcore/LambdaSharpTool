@@ -54,6 +54,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
                 // select an alternate AWS profile by setting the AWS_PROFILE environment variable
                 Environment.SetEnvironmentVariable("AWS_PROFILE", awsProfile);
+                Environment.SetEnvironmentVariable("AWS_DEFAULT_PROFILE", awsProfile);
             }
 
             // determine default AWS region
@@ -92,7 +93,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             }
             var toolProfileOption = cmd.Option("--cli-profile|-CLI <NAME>", "(optional) Use a specific LambdaSharp CLI profile (default: Default)", CommandOptionType.SingleValue);
             if(requireAwsProfile) {
-                awsProfileOption = cmd.Option("--aws-profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
+                awsProfileOption = cmd.Option("--aws-profile|-AWS|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
             }
             var verboseLevelOption = cmd.Option("--verbose|-V:<LEVEL>", "(optional) Show verbose output (0=quiet, 1=normal, 2=detailed, 3=exceptions)", CommandOptionType.SingleOrNoValue);
 
