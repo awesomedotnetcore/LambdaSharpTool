@@ -479,10 +479,10 @@ This method serializes an object into a JSON string using the built-in AWS Lambd
 ## Fixes
 
 ### (v0.4.0.2) - 2018-11-13
-* [Fixed issue where λ# bucket was not properly used during `init` deployment.]()
-* [Fixed issue where AWS profile was only set via `AWS_PROFILE` environment variable. Now `AWS_DEFAULT_PROFILE` is also set.]()
-* [Fixed issue where `config` did not default to `LAMBDASHARP_PROFILE` value when configuring a new CLI profile.]()
-* [Fixed issue where λ# Runtime module used an unsupported domain name pattern for S3 buckets in `us-east-1` region.]()
+* [Fixed issue where λ# bucket discovery incorrectly defaulted back to the original bucket during deployment.](https://github.com/LambdaSharp/LambdaSharpTool/issues/60)
+* [Fixed issue where AWS profile was only set via `AWS_PROFILE` environment variable. Now `AWS_DEFAULT_PROFILE` is also set.](https://github.com/LambdaSharp/LambdaSharpTool/issues/61)
+* [Fixed issue where `config` did not default to `LAMBDASHARP_PROFILE` value when configuring a new CLI profile.](https://github.com/LambdaSharp/LambdaSharpTool/issues/62)
+* [Fixed issue where λ# Runtime module used a multi-region domain name pattern for S3 buckets that was incompatible with the `us-east-1` region.](https://github.com/LambdaSharp/LambdaSharpTool/issues/63)
 
 ### (v0.4.0.1) - 2018-11-12
 * [Fixed an issue where file packages did not get the correct name.](https://github.com/LambdaSharp/LambdaSharpTool/issues/57)
