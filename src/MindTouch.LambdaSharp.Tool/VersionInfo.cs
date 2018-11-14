@@ -21,9 +21,11 @@
 
 
 using System;
+using Newtonsoft.Json;
 
 namespace MindTouch.LambdaSharp.Tool {
 
+    [JsonConverter(typeof(VersionInfoConverter))]
     public class VersionInfo : IComparable<VersionInfo>, IEquatable<VersionInfo> {
 
         //--- Class Methods ---
@@ -155,5 +157,18 @@ namespace MindTouch.LambdaSharp.Tool {
             // when Major version is 0, we rely on Minor and Build to match
             return ((Minor == other.Minor) && (Math.Max(0, Version.Build) == Math.Max(0, other.Version.Build)));
         }
+    }
+
+    public class VersionInfoConverter : JsonConverter {
+
+        //--- Methods ---
+        public override bool CanConvert(Type objectType)
+            => objectType == typeof(VersionInfo);
+
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+            => VersionInfo.Parse((string)reader.Value);
+
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+            => writer.WriteValue(value.ToString());
     }
 }
