@@ -46,11 +46,50 @@ namespace MindTouch.LambdaSharp.Tool {
 
         //--- Methods ---
         public void Resolve(Module module) {
+
+            // resolve scopes
+            foreach(var parameter in module.GetAllParameters()) {
+                if(parameter.Scope.Contains("*")) {
+                    parameter.Scope = parameter.Scope
+                        .Where(scope => scope != "*")
+                        .Union(module.Functions.Select(item => item.Name))
+                        .Distinct()
+                        .OrderBy(item => item)
+                        .ToList();
+                }
+            }
+
+            // resolve outputs
+            foreach(var output in module.Outputs.OfType<ExportOutput>()) {
+                if(output.Value == null) {
+
+                    // NOTE: if no value is provided, we expect the export name to correspond to a
+                    //  parameter name; if it does, we export the ARN value of that parameter; in
+                    //  addition, we assume its description if none is provided.
+
+                    var parameter = module.Parameters.FirstOrDefault(p => p.Name == output.Name);
+                    if(parameter == null) {
+                        AddError("could not find matching variable");
+                        output.Value = "<BAD>";
+                    } else if(parameter is AInputParameter) {
+
+                        // input parameters are always expected to be in ARN format
+                        output.Value = FnRef(parameter.Name);
+                    } else {
+                        output.Value = ResourceMapping.GetArnReference((parameter as AResourceParameter)?.Resource?.Type, parameter.ResourceName);
+                    }
+
+                    // only set the description if the value was not set
+                    if(output.Description == null) {
+                        output.Description = parameter.Description;
+                    }
+                }
+            }
+
+            // resolve all inter-parameter references
             var functionNames = new HashSet<string>(module.Functions.Select(function => function.Name));
             var freeParameters = new Dictionary<string, AParameter>();
             var boundParameters = new Dictionary<string, AParameter>();
-
-            // resolve all inter-parameter references
             AtLocation("Variables", () => {
                 DiscoverParameters(module.Parameters);
 

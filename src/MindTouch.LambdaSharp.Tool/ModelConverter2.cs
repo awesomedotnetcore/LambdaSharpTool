@@ -73,61 +73,12 @@ namespace MindTouch.LambdaSharp.Tool {
                 Functions = functions
             };
 
-            // append the version to the module description
-            if(_module.Description != null) {
-                _module.Description = _module.Description.TrimEnd() + $" (v{module.Version})";
-            }
-
             // convert collections
             AddToList("Secrets", secrets, module.Secrets, ConvertSecret);
             AddToList("Inputs", parameters, module.Inputs, ConvertInput);
             AddToList("Outputs", outputs, module.Outputs, ConvertOutput);
             AddToList("Variables", parameters, module.Variables, (index, parameter) => ConvertParameter(index, parameter));
             AddToList("Functions", functions, module.Functions, ConvertFunction);
-
-            // add default secrets key that is imported from the input parameters
-            if(!_module.HasPragma("no-lambdasharp-dependencies")) {
-                _module.Secrets.Add(_module.GetParameter("LambdaSharp::DefaultSecretKeyArn").Reference);
-            }
-
-            // resolve scopes
-            foreach(var parameter in _module.GetAllParameters()) {
-                if(parameter.Scope.Contains("*")) {
-                    parameter.Scope = parameter.Scope
-                        .Where(scope => scope != "*")
-                        .Union(_module.Functions.Select(item => item.Name))
-                        .Distinct()
-                        .OrderBy(item => item)
-                        .ToList();
-                }
-            }
-
-            // resolve outputs
-            foreach(var output in outputs.OfType<ExportOutput>()) {
-                if(output.Value == null) {
-
-                    // NOTE: if no value is provided, we expect the export name to correspond to a
-                    //  parameter name; if it does, we export the ARN value of that parameter; in
-                    //  addition, we assume its description if none is provided.
-
-                    var parameter = _module.Parameters.FirstOrDefault(p => p.Name == output.Name);
-                    if(parameter == null) {
-                        AddError("could not find matching variable");
-                        output.Value = "<BAD>";
-                    } else if(parameter is AInputParameter) {
-
-                        // input parameters are always expected to be in ARN format
-                        output.Value = FnRef(parameter.Name);
-                    } else {
-                        output.Value = ResourceMapping.GetArnReference((parameter as AResourceParameter)?.Resource?.Type, parameter.ResourceName);
-                    }
-
-                    // only set the description if the value was not set
-                    if(output.Description == null) {
-                        output.Description = parameter.Description;
-                    }
-                }
-            }
             return _module;
         }
 
