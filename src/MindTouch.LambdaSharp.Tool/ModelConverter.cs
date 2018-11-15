@@ -76,8 +76,8 @@ namespace MindTouch.LambdaSharp.Tool {
             AddToList("Secrets", secrets, module.Secrets, ConvertSecret);
             AddToList("Inputs", resources, module.Inputs, ConvertInput);
             AddToList("Outputs", outputs, module.Outputs, ConvertOutput);
-            AddToList("Variables", resources, module.Variables, (index, parameter) => ConvertParameter(index, parameter));
-            AddToList("Functions", resources, module.Functions, ConvertFunction);
+            AddToList("Variables", _module, module.Variables, (index, parameter) => ConvertParameter(index, parameter));
+            AddToList("Functions", _module, module.Functions, ConvertFunction);
             return _module;
         }
 

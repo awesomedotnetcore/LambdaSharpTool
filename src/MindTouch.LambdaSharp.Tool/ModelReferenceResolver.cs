@@ -89,11 +89,16 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
             }
 
+            // update dependencies
+            foreach(var parameter in module.GetAllResources().OfType<AResourceParameter>().Where(p => p.Resource?.DependsOn?.Any() == true)) {
+                parameter.Resource.DependsOn = parameter.Resource.DependsOn.Select(dependency => module.GetResource(dependency).ResourceName).ToList();
+            }
+
             // resolve all inter-parameter references
-            var freeParameters = new Dictionary<string, AParameter>();
-            var boundParameters = new Dictionary<string, AParameter>();
+            var freeParameters = new Dictionary<string, AResource>();
+            var boundParameters = new Dictionary<string, AResource>();
             AtLocation("Variables", () => {
-                DiscoverParameters(module.Resources.OfType<AParameter>());
+                DiscoverParameters(module.Resources);
 
                 // resolve parameter variables via substitution
                 while(ResolveParameters(boundParameters.ToList()));
@@ -186,7 +191,7 @@ namespace MindTouch.LambdaSharp.Tool {
             });
 
             // local functions
-            void DiscoverParameters(IEnumerable<AParameter> parameters) {
+            void DiscoverParameters(IEnumerable<AResource> parameters) {
                 if(parameters == null) {
                     return;
                 }
@@ -205,6 +210,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         case PackageParameter _:
                         case SecretParameter _:
                         case InputParameter _:
+                        case Function _:
                             freeParameters[parameter.ResourceName] = parameter;
                             DebugWriteLine($"FREE => {parameter.ResourceName}");
                             break;
@@ -227,7 +233,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
             }
 
-            bool ResolveParameters(IEnumerable<KeyValuePair<string, AParameter>> parameters) {
+            bool ResolveParameters(IEnumerable<KeyValuePair<string, AResource>> parameters) {
                 if(parameters == null) {
                     return false;
                 }
@@ -430,17 +436,9 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
                 key = key.Replace("::", "");
 
-                // check if key is referring to a function
-                if(functionNames.Contains(key)) {
-                    found = (attribute != null)
-                        ? FnGetAtt(key, attribute)
-                        : FnRef(key);
-                    return true;
-                }
-
                 // see if the requested key can be resolved using a free parameter
                 found = null;
-                if(freeParameters.TryGetValue(key, out AParameter freeParameter)) {
+                if(freeParameters.TryGetValue(key, out AResource freeParameter)) {
                     switch(freeParameter) {
                     case ValueParameter _:
                     case SecretParameter _:
