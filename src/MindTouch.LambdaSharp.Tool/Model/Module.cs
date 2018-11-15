@@ -22,11 +22,19 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using MindTouch.LambdaSharp.Tool.Internal;
+using Newtonsoft.Json;
 using YamlDotNet.Serialization;
 
 namespace MindTouch.LambdaSharp.Tool.Model {
 
-    public class Module {
+    public interface IResourceCollection {
+
+        //--- Methods ---
+        void AddResource(AResource resource);
+    }
+
+    public class Module : IResourceCollection {
 
         //--- Properties ---
         public string Name { get; set; }
@@ -36,40 +44,46 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         // TODO (2018-11-10, bjorg): there is no reason for this to have object type
         public IList<object> Secrets { get; set; }
-        public IList<AParameter> Parameters { get; set; }
-        public IList<Function> Functions { get; set; }
+        public IList<AResource> Resources { get; set; }
         public IList<AOutput> Outputs { get; set; }
+        public IDictionary<string, object> Conditions  { get; set; }
+        public IList<Humidifier.Statement> ResourceStatements { get; set; } = new List<Humidifier.Statement>();
+
+        [JsonIgnore]
         public bool HasModuleRegistration => !HasPragma("no-module-registration");
+
+        [JsonIgnore]
+        public IEnumerable<Function> Functions => GetAllResources().OfType<Function>();
 
         //--- Methods ---
         public bool HasPragma(string pragma) => Pragmas?.Contains(pragma) == true;
 
-        public AParameter GetParameter(string parameterName) {
+        public AResource GetResource(string name) {
 
             // drill down into the parameters collection
-            var parts = parameterName.Split("::");
-            AParameter current = null;
-            var parameters = Parameters;
+            var parts = name.Split("::");
+            AResource current = null;
+            var parameters = Resources;
             foreach(var part in parts) {
                 current = parameters?.FirstOrDefault(p => p.Name == part);
                 if(current == null) {
                     break;
                 }
-                parameters = current.Parameters;
+                parameters = current.Resources;
             }
-            return current ?? throw new KeyNotFoundException(parameterName);
+            return current ?? throw new KeyNotFoundException(name);
         }
 
-        public IEnumerable<AParameter> GetAllParameters() {
-            var stack = new Stack<IEnumerator<AParameter>>();
-            stack.Push(Parameters.GetEnumerator());
+        public IEnumerable<AResource> GetAllResources() {
+            var stack = new Stack<IEnumerator<AResource>>();
+            stack.Push(Resources.GetEnumerator());
             try {
                 while(stack.Any()) {
                     var top = stack.Peek();
                     if(top.MoveNext()) {
                         yield return top.Current;
-                        if(top.Current.Parameters?.Any() == true) {
-                            stack.Push(top.Current.Parameters.GetEnumerator());
+                        if(top.Current.Resources.Any()) {
+                            stack.Push(top.Current.Resources.GetEnumerator());
                         }
                     } else {
                         stack.Pop();
@@ -87,5 +101,71 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 }
             }
         }
-     }
+
+        public InputParameter AddImportParameter(
+            string import,
+            string type = null,
+            IList<string> scope = null,
+            string description = null,
+            string section = null,
+            string label = null,
+            bool? noEcho = null
+        ) {
+            var parts = import.Split("::", 2);
+            var exportModule = parts[0];
+            var exportName = parts[1];
+
+            // find or create parent collection node
+            var parentParameter = Resources.FirstOrDefault(p => p.Name == exportModule);
+            if(parentParameter == null) {
+                parentParameter = new ValueParameter {
+                    Name = exportModule,
+                    Description = $"{exportModule} cross-module references",
+                    Reference = ""
+                };
+                AddResource(parentParameter);
+            }
+
+            // create imported input
+            var result = new InputParameter {
+                Name = exportName,
+                Default = "$" + import,
+                ConstraintDescription = "must either be a cross-module import reference or a non-blank value",
+                AllowedPattern =  @"^.+$",
+
+                // set AParameter fields
+                Scope = scope ?? new List<string>(),
+                Description = description,
+
+                // set AInputParamete fields
+                Type = type ?? "String",
+                Section = section ?? "Module Settings",
+
+                // TODO (2018-11-11, bjorg): do we really want to use the cross-module reference when converting to a label?
+                Label = label ?? StringEx.PascalCaseToLabel(import),
+                NoEcho = noEcho
+            };
+            parentParameter.AddResource(result);
+
+            // add conditional expression
+            var condition = $"{result.ResourceName}IsImport";
+            result.Reference = AModelProcessor.FnIf(
+                condition,
+                AModelProcessor.FnImportValue(AModelProcessor.FnSub("${DeploymentPrefix}${Import}", new Dictionary<string, object> {
+                    ["Import"] = AModelProcessor.FnSelect("1", AModelProcessor.FnSplit("$", AModelProcessor.FnRef(result.ResourceName)))
+                })),
+                AModelProcessor.FnRef(result.ResourceName)
+            );
+            Conditions.Add(condition, AModelProcessor.FnEquals(AModelProcessor.FnSelect("0", AModelProcessor.FnSplit("$", AModelProcessor.FnRef(result.ResourceName))), ""));
+            return result;
+        }
+
+        public void AddResource(AResource resource) {
+            resource.ResourceName = resource.Name;
+            if(Resources == null) {
+                Resources = new List<AResource>();
+            }
+            Resources.Add(resource);
+        }
+    }
 }

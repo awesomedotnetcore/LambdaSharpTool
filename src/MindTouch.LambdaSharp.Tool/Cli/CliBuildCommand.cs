@@ -460,19 +460,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     return false;
                 }
 
-                new ModelAugmenter(settings, moduleSource).Augment(moduleAst);
-                if(HasErrors) {
-                    return false;
-                }
-
                 // convert module AST to model
-                var module = new ModelConverter2(settings, moduleSource).Process(moduleAst);
-                if(HasErrors) {
-                    return false;
-                }
-
-                // resolve all references
-                new ModelReferenceResolver(settings, moduleSource).Resolve(module);
+                var module = new ModelConverter(settings, moduleSource).Process(moduleAst);
                 if(HasErrors) {
                     return false;
                 }
@@ -490,6 +479,19 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 // package all files
                 new ModelFilesPackager(settings, moduleSource).Process(module);
 
+                // augment module definitions
+                new ModelAugmenter(settings, moduleSource).Augment(module);
+                if(HasErrors) {
+                    return false;
+                }
+File.WriteAllText("module.json", JsonConvert.SerializeObject(module, Formatting.Indented));
+
+                // resolve all references
+                new ModelReferenceResolver(settings, moduleSource).Resolve(module);
+                if(HasErrors) {
+                    return false;
+                }
+
                 // generate & save cloudformation template
                 var template = new ModelGenerator(settings, moduleSource).Generate(module);
                 if(HasErrors) {
@@ -506,7 +508,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     .Where(f => f.PackagePath != null)
                     .Select(f => Path.GetRelativePath(settings.OutputDirectory, f.PackagePath))
                     .ToList();
-                var packages = module.Parameters.OfType<PackageParameter>()
+                var packages = module.Resources.OfType<PackageParameter>()
                     .Select(p => Path.GetRelativePath(settings.OutputDirectory, p.PackagePath))
                     .ToList();
                 var manifest = new ModuleManifest {

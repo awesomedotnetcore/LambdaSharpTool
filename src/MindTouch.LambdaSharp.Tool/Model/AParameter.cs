@@ -24,15 +24,26 @@ using System.Collections.Generic;
 
 namespace MindTouch.LambdaSharp.Tool.Model {
 
-    public abstract class AParameter {
+    public abstract class AResource : IResourceCollection {
 
         //--- Properties ---
         public string Name { get; set; }
         public string Description { get; set; }
-        public IList<string> Scope { get; set; }
-        public IList<AParameter> Parameters { get; set; }
         public string ResourceName { get; set; }
-        public object Reference;
+        public object Reference { get; set; }
+        public IList<AResource> Resources { get; set; } = new List<AResource>();
+
+        //--- Methods ---
+        public void AddResource(AResource resource) {
+            resource.ResourceName = ResourceName + resource.Name;
+            Resources.Add(resource);
+        }
+    }
+
+    public abstract class AParameter : AResource {
+
+        //--- Properties ---
+        public IList<string> Scope { get; set; } = new string[0];
     }
 
     public class SecretParameter : AParameter {
@@ -63,18 +74,13 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
     public class CloudFormationResourceParameter : AResourceParameter { }
 
-    public abstract class AInputParameter : AResourceParameter {
+    public class InputParameter : AResourceParameter {
 
         //--- Properties ---
         public string Section { get; set; }
         public string Label { get; set; }
         public bool? NoEcho { get; set; }
-        public string Type { get; set; }
-    }
-
-    public class ValueInputParameter : AInputParameter {
-
-        //--- Properties ---
+        public string Type { get; set; } = "String";
         public string Default { get; set; }
         public string ConstraintDescription { get; set; }
         public string AllowedPattern { get; set; }
@@ -85,9 +91,31 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public int? MinValue { get; set; }
     }
 
-    public class ImportInputParameter : AInputParameter {
+    public class Function : AResource {
 
         //--- Properties ---
-        public string Import { get; set; }
-    }
+        public string Memory { get; set; }
+        public string Timeout { get; set; }
+        public string Project { get; set; }
+        public string Handler { get; set; }
+        public string Runtime { get; set; }
+        public string Language { get; set; }
+        public string ReservedConcurrency { get; set; }
+        public FunctionVpc VPC;
+        public IDictionary<string, object> Environment { get; set; }
+        public IList<AFunctionSource> Sources { get; set; }
+        public IList<object> Pragmas { get; set; }
+        public string PackagePath { get; set; }
+        public bool HasFunctionRegistration => !HasPragma("no-function-registration");
+
+        //--- Methods ---
+        public bool HasPragma(string pragma) => Pragmas?.Contains(pragma) == true;
+   }
+
+   public class FunctionVpc {
+
+       //--- Properties ---
+       public object SubnetIds { get; set; }
+       public object SecurityGroupIds { get; set; }
+   }
 }

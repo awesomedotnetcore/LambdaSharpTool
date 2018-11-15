@@ -34,6 +34,8 @@ namespace MindTouch.LambdaSharp.Tool {
         protected const string CLOUDFORMATION_ID_PATTERN = "[a-zA-Z][a-zA-Z0-9]*";
 
         //--- Class Methods ---
+
+        // TODO (2018-11-14): move these functions to their own class
         public static object FnGetAtt(string logicalNameOfResource, string attributeName)
             => new Dictionary<string, object> {
                 ["Fn::GetAtt"] = new List<object> {
@@ -113,6 +115,38 @@ namespace MindTouch.LambdaSharp.Tool {
                 ["Fn::Split"] = new List<object> {
                     delimiter,
                     sourceString
+                }
+            };
+
+        public static object FnEquals(object left, object right)
+            => new Dictionary<string, object> {
+                ["Fn::Equals"] = new List<object> {
+                    left,
+                    right
+                }
+            };
+
+        public static object FnAnd(params object[] values)
+            => new Dictionary<string, object> {
+                ["Fn::And"] = values.ToList()
+            };
+
+        public static object FnOr(params object[] values)
+            => new Dictionary<string, object> {
+                ["Fn::Or"] = values.ToList()
+            };
+
+        public static object FnNot(object value)
+            => new Dictionary<string, object> {
+                ["Fn::Not"] = new List<object> {
+                    value
+                }
+            };
+
+        public static object FnCondition(string condition)
+            => new Dictionary<string, object> {
+                ["Condition"] = new List<object> {
+                    condition
                 }
             };
 

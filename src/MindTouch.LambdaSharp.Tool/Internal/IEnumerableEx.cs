@@ -23,7 +23,7 @@ using System;
 using System.Collections.Generic;
 
 namespace MindTouch.LambdaSharp.Tool.Internal {
-    
+
     public static class IEnumerableEx {
 
         //--- Extension Methods ---

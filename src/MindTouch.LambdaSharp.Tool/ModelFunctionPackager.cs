@@ -49,7 +49,7 @@ namespace MindTouch.LambdaSharp.Tool {
             string gitsha,
             string buildConfiguration
         ) {
-            foreach(var function in module.Functions) {
+            foreach(var function in module.Resources.OfType<Function>()) {
                 AtLocation(function.Name, () => {
                     Process(
                         module,

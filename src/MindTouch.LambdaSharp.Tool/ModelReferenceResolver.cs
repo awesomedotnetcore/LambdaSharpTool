@@ -48,11 +48,14 @@ namespace MindTouch.LambdaSharp.Tool {
         public void Resolve(Module module) {
 
             // resolve scopes
-            foreach(var parameter in module.GetAllParameters()) {
-                if(parameter.Scope.Contains("*")) {
+            var functionNames = new HashSet<string>(module.Resources.OfType<Function>().Select(function => function.Name));
+            foreach(var parameter in module.GetAllResources().OfType<AParameter>()) {
+                if(parameter.Scope == null) {
+                    parameter.Scope = new List<string>();
+                } else if(parameter.Scope.Contains("*")) {
                     parameter.Scope = parameter.Scope
                         .Where(scope => scope != "*")
-                        .Union(module.Functions.Select(item => item.Name))
+                        .Union(functionNames)
                         .Distinct()
                         .OrderBy(item => item)
                         .ToList();
@@ -67,11 +70,11 @@ namespace MindTouch.LambdaSharp.Tool {
                     //  parameter name; if it does, we export the ARN value of that parameter; in
                     //  addition, we assume its description if none is provided.
 
-                    var parameter = module.Parameters.FirstOrDefault(p => p.Name == output.Name);
+                    var parameter = module.Resources.FirstOrDefault(p => p.Name == output.Name);
                     if(parameter == null) {
                         AddError("could not find matching variable");
                         output.Value = "<BAD>";
-                    } else if(parameter is AInputParameter) {
+                    } else if(parameter is InputParameter) {
 
                         // input parameters are always expected to be in ARN format
                         output.Value = FnRef(parameter.Name);
@@ -87,42 +90,41 @@ namespace MindTouch.LambdaSharp.Tool {
             }
 
             // resolve all inter-parameter references
-            var functionNames = new HashSet<string>(module.Functions.Select(function => function.Name));
             var freeParameters = new Dictionary<string, AParameter>();
             var boundParameters = new Dictionary<string, AParameter>();
             AtLocation("Variables", () => {
-                DiscoverParameters(module.Parameters);
+                DiscoverParameters(module.Resources.OfType<AParameter>());
 
                 // resolve parameter variables via substitution
                 while(ResolveParameters(boundParameters.ToList()));
 
                 // report circular dependencies, if any
-                ReportUnresolvedParameters(module.Parameters);
-                if(Settings.HasErrors) {
-                    return;
-                }
+                ReportUnresolvedParameters(module.Resources.OfType<AParameter>());
             });
+            if(Settings.HasErrors) {
+                return;
+            }
 
             // resolve references in input resource properties
-            AtLocation("Inputs", () => {
-                foreach(var parameter in module.GetAllParameters()
-                    .OfType<AInputParameter>()
+            AtLocation("Inputs", (Action)(() => {
+                foreach(var parameter in module.GetAllResources()
+                    .OfType<InputParameter>()
                     .Where(p => p.Resource?.Properties != null)
                 ) {
-                    AtLocation(parameter.Name, () => {
-                        AtLocation("Resource", () => {
-                            AtLocation("Properties", () => {
-                                parameter.Resource.Properties = parameter.Resource.Properties.ToDictionary(kv => kv.Key, kv => Substitute(kv.Value, ReportMissingReference));
-                            });
-                        });
-                    });
+                    AtLocation((string)parameter.Name, (Action)(() => {
+                        AtLocation("Resource", (Action)(() => {
+                            AtLocation("Properties", (Action)(() => {
+                                parameter.Resource.Properties = parameter.Resource.Properties.ToDictionary(kv => (string)kv.Key, kv => Substitute(kv.Value, ReportMissingReference));
+                            }));
+                        }));
+                    }));
                 }
-            });
+            }));
 
             // resolve references in resource properties
             AtLocation("Variables", () => {
-                foreach(var parameter in module.GetAllParameters()
-                    .Where(p => !(p is AInputParameter))
+                foreach(var parameter in module.GetAllResources()
+                    .Where(p => !(p is InputParameter))
                     .OfType<AResourceParameter>()
                     .Where(p => p.Resource?.Properties != null)
                 ) {
@@ -158,7 +160,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // resolve references in functions
             AtLocation("Functions", () => {
-                foreach(var function in module.Functions) {
+                foreach(var function in module.Resources.OfType<Function>()) {
                     AtLocation(function.Name, () => {
                         function.Environment = function.Environment.ToDictionary(kv => kv.Key, kv => Substitute(kv.Value));
 
@@ -189,35 +191,39 @@ namespace MindTouch.LambdaSharp.Tool {
                     return;
                 }
                 foreach(var parameter in parameters) {
-                    switch(parameter) {
-                    case ValueParameter valueParameter:
-                        if(valueParameter.Reference is string) {
+                    try {
+                        switch(parameter) {
+                        case ValueParameter valueParameter:
+                            if(valueParameter.Reference is string) {
+                                freeParameters[parameter.ResourceName] = parameter;
+                                DebugWriteLine($"FREE => {parameter.ResourceName}");
+                            } else {
+                                boundParameters[parameter.ResourceName] = parameter;
+                                DebugWriteLine($"BOUND => {parameter.ResourceName}");
+                            }
+                            break;
+                        case PackageParameter _:
+                        case SecretParameter _:
+                        case InputParameter _:
                             freeParameters[parameter.ResourceName] = parameter;
-DebugWriteLine($"FREE => {parameter.ResourceName}");
-                        } else {
-                            boundParameters[parameter.ResourceName] = parameter;
-DebugWriteLine($"BOUND => {parameter.ResourceName}");
+                            DebugWriteLine($"FREE => {parameter.ResourceName}");
+                            break;
+                        case AResourceParameter resourceParameter:
+                            if(resourceParameter.Resource.ResourceReferences.All(value => value is string)) {
+                                freeParameters[parameter.ResourceName] = parameter;
+                                DebugWriteLine($"FREE => {parameter.ResourceName}");
+                            } else {
+                                boundParameters[parameter.ResourceName] = parameter;
+                                DebugWriteLine($"BOUND => {parameter.ResourceName}");
+                            }
+                            break;
+                        default:
+                            throw new ApplicationException($"unrecognized parameter type: {parameter?.GetType().ToString() ?? "null"}");
                         }
-                        break;
-                    case PackageParameter _:
-                    case SecretParameter _:
-                    case AInputParameter inputParameter:
-                        freeParameters[parameter.ResourceName] = parameter;
-DebugWriteLine($"FREE => {parameter.ResourceName}");
-                        break;
-                    case AResourceParameter resourceParameter:
-                        if(resourceParameter.Resource.ResourceReferences.All(value => value is string)) {
-                            freeParameters[parameter.ResourceName] = parameter;
-DebugWriteLine($"FREE => {parameter.ResourceName}");
-                        } else {
-                            boundParameters[parameter.ResourceName] = parameter;
-DebugWriteLine($"BOUND => {parameter.ResourceName}");
-                        }
-                        break;
-                    default:
-                        throw new ApplicationException($"unrecognized parameter type: {parameter?.GetType().ToString() ?? "null"}");
+                    } catch(Exception e) {
+                        throw new ApplicationException($"error while processing '{parameter?.ResourceName ?? "???"}'", e);
                     }
-                    DiscoverParameters(parameter.Parameters);
+                    DiscoverParameters(parameter.Resources.OfType<AParameter>());
                 }
             }
 
@@ -261,7 +267,7 @@ DebugWriteLine($"BOUND => {parameter.ResourceName}");
                             // promote bound variable to free variable
                             freeParameters[parameter.ResourceName] = parameter;
                             boundParameters.Remove(parameter.ResourceName);
-DebugWriteLine($"RESOLVED => {parameter.ResourceName} = {Newtonsoft.Json.JsonConvert.SerializeObject(parameter.Reference)}");
+                            DebugWriteLine($"RESOLVED => {parameter.ResourceName} = {Newtonsoft.Json.JsonConvert.SerializeObject(parameter.Reference)}");
                         }
 
                         // local functions
@@ -277,7 +283,7 @@ DebugWriteLine($"RESOLVED => {parameter.ResourceName} = {Newtonsoft.Json.JsonCon
                     return;
                 }
                 foreach(var parameter in parameters) {
-                    AtLocation(parameter.Name, () => {
+                    AtLocation(parameter.Name, (Action)(() => {
                         switch(parameter) {
                         case ValueParameter valueParameter:
                             Substitute(valueParameter.Reference, ReportMissingReference);
@@ -290,15 +296,15 @@ DebugWriteLine($"RESOLVED => {parameter.ResourceName} = {Newtonsoft.Json.JsonCon
                         case CloudFormationResourceParameter _:
                         case PackageParameter _:
                         case SecretParameter _:
-                        case AInputParameter _:
+                        case InputParameter _:
 
                             // nothing to do
                             break;
                         default:
                             throw new InvalidOperationException($"cannot check unresolved references for this type: {parameter?.GetType()}");
                         }
-                        ReportUnresolvedParameters(parameter.Parameters);
-                    });
+                        ReportUnresolvedParameters(parameter.Resources.OfType<AParameter>());
+                    }));
                 }
             }
 
@@ -326,7 +332,7 @@ DebugWriteLine($"RESOLVED => {parameter.ResourceName} = {Newtonsoft.Json.JsonCon
                             if(TrySubstitute(refKey, null, out object found)) {
                                 return found ?? map;
                             }
-DebugWriteLine($"NOT FOUND => {refKey}");
+                            DebugWriteLine($"NOT FOUND => {refKey}");
                             missing?.Invoke(refKey);
                             return map;
                         }
@@ -342,7 +348,7 @@ DebugWriteLine($"NOT FOUND => {refKey}");
                             if(TrySubstitute(getAttKey, getAttAttribute, out object found)) {
                                 return found ?? map;
                             }
-DebugWriteLine($"NOT FOUND => {getAttKey}");
+                            DebugWriteLine($"NOT FOUND => {getAttKey}");
                             missing?.Invoke(getAttKey);
                             return map;
                         }
@@ -386,7 +392,7 @@ DebugWriteLine($"NOT FOUND => {getAttKey}");
                                         subArgs.Add(argName, found);
                                         return "${" + argName + "}";
                                     }
-DebugWriteLine($"NOT FOUND => {name[0]}");
+                                    DebugWriteLine($"NOT FOUND => {name[0]}");
                                     missing?.Invoke(name[0]);
                                 }
                                 return matchText;
@@ -412,7 +418,7 @@ DebugWriteLine($"NOT FOUND => {name[0]}");
                 default:
 
                     // nothing further to substitute
-DebugWriteLine($"FINAL => {value} [{value.GetType()}]");
+                    DebugWriteLine($"FINAL => {value} [{value.GetType()}]");
                     return value;
                 }
             }
@@ -423,19 +429,6 @@ DebugWriteLine($"FINAL => {value} [{value.GetType()}]");
                     return true;
                 }
                 key = key.Replace("::", "");
-
-                // TODO (2018-10-30, bjorg): avoid this hack by properly declaring these resources instead
-                switch(key) {
-                case "ModuleRestApi":
-                case "ModuleRestApiStage":
-                case "ModuleRestApiAccount":
-                    found = (attribute != null)
-                        ? FnGetAtt(key, attribute)
-                        : FnRef(key);
-                    return true;
-                default:
-                    break;
-                }
 
                 // check if key is referring to a function
                 if(functionNames.Contains(key)) {
@@ -453,10 +446,9 @@ DebugWriteLine($"FINAL => {value} [{value.GetType()}]");
                     case SecretParameter _:
                     case PackageParameter _:
                     case ReferencedResourceParameter _:
-                    case ValueInputParameter _:
-                    case ImportInputParameter _:
+                    case InputParameter _:
                         if(attribute != null) {
-                            AddError($"reference '{key}' must resolved to a CloudFormation resource to be used with an Fn::GetAtt expression");
+                            AddError($"reference '{key}' must resolve to a CloudFormation resource to be used with an Fn::GetAtt expression");
                         }
                         found = freeParameter.Reference;
                         break;
@@ -466,8 +458,9 @@ DebugWriteLine($"FINAL => {value} [{value.GetType()}]");
                             : freeParameter.Reference;
                         break;
                     }
+                    return true;
                 }
-                return found != null;
+                return false;
             }
         }
     }

@@ -154,7 +154,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                         dictionary[typeName + "_"] = value;
                     }
                 }
-                resourceTemplate = (Humidifier.Resource)JsonConvert.DeserializeObject(JsonConvert.SerializeObject(properties), type);
+                resourceTemplate = (Humidifier.Resource)JsonConvert.DeserializeObject(JsonConvert.SerializeObject(properties, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }), type);
             }
 
             // determine how we can get the ARN for the resource, which is used when we grant IAM permissions
