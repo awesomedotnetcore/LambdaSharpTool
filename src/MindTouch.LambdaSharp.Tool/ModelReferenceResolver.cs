@@ -36,7 +36,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
         //--- Class Methods ---
         private static void DebugWriteLine(string format) {
-#if false
+#if true
             Console.WriteLine(format);
 #endif
         }
@@ -104,7 +104,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 while(ResolveParameters(boundParameters.ToList()));
 
                 // report circular dependencies, if any
-                ReportUnresolvedParameters(module.Resources.OfType<AParameter>());
+                ReportUnresolvedParameters(module.Resources);
             });
             if(Settings.HasErrors) {
                 return;
@@ -167,7 +167,7 @@ namespace MindTouch.LambdaSharp.Tool {
             AtLocation("Functions", () => {
                 foreach(var function in module.Resources.OfType<Function>()) {
                     AtLocation(function.Name, () => {
-                        function.Environment = function.Environment.ToDictionary(kv => kv.Key, kv => Substitute(kv.Value));
+                        function.Environment = (IDictionary<string, object>)Substitute(function.Environment, ReportMissingReference);
 
                         // update VPC information
                         if(function.VPC != null) {
@@ -180,7 +180,7 @@ namespace MindTouch.LambdaSharp.Tool {
                             switch(source) {
                             case AlexaSource alexaSource:
                                 if(alexaSource.EventSourceToken != null) {
-                                    alexaSource.EventSourceToken = Substitute(alexaSource.EventSourceToken);
+                                    alexaSource.EventSourceToken = Substitute(alexaSource.EventSourceToken, ReportMissingReference);
                                 }
                                 break;
                             }
@@ -229,7 +229,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     } catch(Exception e) {
                         throw new ApplicationException($"error while processing '{parameter?.ResourceName ?? "???"}'", e);
                     }
-                    DiscoverParameters(parameter.Resources.OfType<AParameter>());
+                    DiscoverParameters(parameter.Resources);
                 }
             }
 
@@ -284,7 +284,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 return progress;
             }
 
-            void ReportUnresolvedParameters(IEnumerable<AParameter> parameters) {
+            void ReportUnresolvedParameters(IEnumerable<AResource> parameters) {
                 if(parameters == null) {
                     return;
                 }
@@ -299,17 +299,24 @@ namespace MindTouch.LambdaSharp.Tool {
                                 Substitute(item, ReportMissingReference);
                             }
                             break;
+                        case Function function:
+                            function.Environment = (IDictionary<string, object>)Substitute(function.Environment, ReportMissingReference);
+                            break;
+                        case InputParameter inputParameter:
+                            if(inputParameter.Reference != null) {
+                                inputParameter.Reference = Substitute(inputParameter.Reference, ReportMissingReference);
+                            }
+                            break;
                         case CloudFormationResourceParameter _:
                         case PackageParameter _:
                         case SecretParameter _:
-                        case InputParameter _:
 
                             // nothing to do
                             break;
                         default:
                             throw new InvalidOperationException($"cannot check unresolved references for this type: {parameter?.GetType()}");
                         }
-                        ReportUnresolvedParameters(parameter.Resources.OfType<AParameter>());
+                        ReportUnresolvedParameters(parameter.Resources);
                     }));
                 }
             }
@@ -424,7 +431,6 @@ namespace MindTouch.LambdaSharp.Tool {
                 default:
 
                     // nothing further to substitute
-                    DebugWriteLine($"FINAL => {value} [{value.GetType()}]");
                     return value;
                 }
             }

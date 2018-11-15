@@ -233,5 +233,24 @@ namespace MindTouch.LambdaSharp.Tool {
             }
             return result;
         }
-   }
+
+        protected Resource CreateResource(string type, IDictionary<string, object> properties, string condition = null, IList<string> dependsOn = null) {
+
+            // convert properties to a dictionary
+            var dictionary = properties ?? new Dictionary<string, object>();
+
+            // check if the service token needs to be added for custom resources
+            if(!type.StartsWith("AWS::") && !type.StartsWith("Custom::") && !dictionary.ContainsKey("ServiceToken")) {
+                dictionary["ServiceToken"] = AModelProcessor.FnImportValue(AModelProcessor.FnSub($"${{DeploymentPrefix}}CustomResource-{type}"));
+                type = "Custom::" + type.Replace("::", "");
+            }
+            return new Resource {
+                Type = type,
+                Properties = dictionary,
+                ResourceReferences = new object[0],
+                DependsOn = dependsOn ?? new string[0],
+                Condition = condition
+            };
+        }
+    }
 }

@@ -31,7 +31,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
     public interface IResourceCollection {
 
         //--- Methods ---
-        void AddResource(AResource resource);
+        AResource AddResource(AResource resource);
     }
 
     public class Module : IResourceCollection {
@@ -160,12 +160,13 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             return result;
         }
 
-        public void AddResource(AResource resource) {
+        public AResource AddResource(AResource resource) {
             resource.ResourceName = resource.Name;
             if(Resources == null) {
                 Resources = new List<AResource>();
             }
             Resources.Add(resource);
+            return resource;
         }
     }
 }

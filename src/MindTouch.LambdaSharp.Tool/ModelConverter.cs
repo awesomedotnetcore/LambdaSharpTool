@@ -104,10 +104,13 @@ namespace MindTouch.LambdaSharp.Tool {
             var type = DeterminNodeType("input", index, input, InputNode.FieldCheckers, InputNode.FieldCombinations, new[] { "Parameter", "Import" });
             switch(type) {
             case "Parameter":
-                return AtLocation(input.Parameter, () => CreateParameter(input), null);
+                return AtLocation<AParameter>(input.Parameter, () => {
+                    AddInput(input);
+                    return null;
+                }, null);
             case "Import":
                 return AtLocation<AParameter>(input.Import, () => {
-                    CreateImport(input);
+                    AddImport(input);
                     return null;;
                 }, null);
             }
@@ -461,7 +464,7 @@ namespace MindTouch.LambdaSharp.Tool {
             return null;
         }
 
-        private AParameter CreateParameter(InputNode input) {
+        private void AddInput(InputNode input) {
 
             // create regular input
             var result = new InputParameter {
@@ -487,6 +490,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 Label = input.Label ?? StringEx.PascalCaseToLabel(input.Parameter),
                 NoEcho = input.NoEcho
             };
+            _module.AddResource(result);
 
             // check if a resource definition is associated with the input statement
             if(input.Resource != null) {
@@ -499,10 +503,9 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
                 result.Resource = ConvertResource(new List<object> { result.Reference }, input.Resource);
             }
-            return result;
         }
 
-        private void CreateImport(InputNode input) {
+        private void AddImport(InputNode input) {
             var result = _module.AddImportParameter(
                 import: input.Import,
                 type: input.Type,

@@ -60,24 +60,6 @@ namespace MindTouch.LambdaSharp.Tool {
             public bool? ApiKeyRequired { get; set; }
         }
 
-        private Resource CreateResource(string type, IDictionary<string, object> properties, IList<string> dependsOn = null) {
-
-            // convert properties to a dictionary
-            var dictionary = properties ?? new Dictionary<string, object>();
-
-            // check if the service token needs to be added for custom resources
-            if(!type.StartsWith("AWS::") && !type.StartsWith("Custom::") && !dictionary.ContainsKey("ServiceToken")) {
-                dictionary["ServiceToken"] = AModelProcessor.FnImportValue(AModelProcessor.FnSub($"${{DeploymentPrefix}}CustomResource-{type}"));
-                type = "Custom::" + type.Replace("::", "");
-            }
-            return new Resource {
-                Type = type,
-                Properties = dictionary,
-                ResourceReferences = new object[0],
-                DependsOn = dependsOn ?? new string[0]
-            };
-        }
-
         //--- Fields ---
         private List<ApiRoute> _apiGatewayRoutes;
 

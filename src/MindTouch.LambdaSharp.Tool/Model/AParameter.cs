@@ -34,9 +34,10 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public IList<AResource> Resources { get; set; } = new List<AResource>();
 
         //--- Methods ---
-        public void AddResource(AResource resource) {
+        public AResource AddResource(AResource resource) {
             resource.ResourceName = ResourceName + resource.Name;
             Resources.Add(resource);
+            return resource;
         }
     }
 

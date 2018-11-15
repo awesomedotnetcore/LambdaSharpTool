@@ -318,7 +318,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     )) {
                         throw new NotImplementedException($"resource type is not supported: {resource.Type}");
                     }
-                    _stack.Add(resourceName, resourceTemplate, dependsOn: resource.DependsOn.ToArray());
+                    _stack.Add(resourceName, resourceTemplate, condition: resource.Condition, dependsOn: resource.DependsOn.ToArray());
 
                     // add permissions for resource
                     if((resource.Allow?.Any() == true) && (resourceAsStatementFn != null)) {
