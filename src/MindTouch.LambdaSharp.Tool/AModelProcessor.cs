@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using MindTouch.LambdaSharp.Tool.Model;
+using MindTouch.LambdaSharp.Tool.Model.AST;
 
 namespace MindTouch.LambdaSharp.Tool {
 
@@ -84,6 +85,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
             };
         }
+
         public static object FnRef(string reference)
             => new Dictionary<string, object> {
                 ["Ref"] = reference
@@ -164,6 +166,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
         //--- Properties ---
         public Settings Settings => _settings;
+        public string SourceFilename => _sourceFilename;
         public string LocationPath => string.Join("/", _locations.Reverse());
 
         //--- Methods ---
@@ -234,23 +237,36 @@ namespace MindTouch.LambdaSharp.Tool {
             return result;
         }
 
-        protected Resource CreateResource(string type, IDictionary<string, object> properties, string condition = null, IList<string> dependsOn = null) {
+        protected Resource CreateResource(ResourceNode resource, string condition = null) {
+            return CreateResource(resource.Type, resource.Properties, condition, resource.DependsOn);
+        }
 
-            // convert properties to a dictionary
-            var dictionary = properties ?? new Dictionary<string, object>();
+        protected Resource CreateResource(string awsType, IDictionary<string, object> properties, string condition = null, object dependsOn = null) {
+            properties = properties ?? new Dictionary<string, object>();
 
             // check if the service token needs to be added for custom resources
-            if(!type.StartsWith("AWS::") && !type.StartsWith("Custom::") && !dictionary.ContainsKey("ServiceToken")) {
-                dictionary["ServiceToken"] = AModelProcessor.FnImportValue(AModelProcessor.FnSub($"${{DeploymentPrefix}}CustomResource-{type}"));
-                type = "Custom::" + type.Replace("::", "");
+            if(!awsType.StartsWith("AWS::") && !awsType.StartsWith("Custom::") && !properties.ContainsKey("ServiceToken")) {
+                properties["ServiceToken"] = AModelProcessor.FnImportValue(AModelProcessor.FnSub($"${{DeploymentPrefix}}CustomResource-{awsType}"));
+                awsType = "Custom::" + awsType.Replace("::", "");
             }
             return new Resource {
-                Type = type,
-                Properties = dictionary,
-                ResourceReferences = new object[0],
-                DependsOn = dependsOn ?? new string[0],
+                Type = awsType,
+                Properties = properties,
+                DependsOn = ConvertToStringList(dependsOn),
                 Condition = condition
             };
+        }
+
+        protected void ForEach<T>(string location, IEnumerable<T> values, Action<int, T> action) {
+            if(values?.Any() != true) {
+                return;
+            }
+            AtLocation(location, () => {
+                var index = 0;
+                foreach(var value in values) {
+                    action(++index, value);
+                }
+            });
         }
     }
 }

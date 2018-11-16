@@ -27,8 +27,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         //--- Properties ---
         public string Type { get; set; }
-        public IList<object> ResourceReferences { get; set; }
-        public IList<string> Allow { get; set; }
         public IDictionary<string, object> Properties { get; set; }
         public IList<string> DependsOn { get; set; }
         public string Condition { get; set; }

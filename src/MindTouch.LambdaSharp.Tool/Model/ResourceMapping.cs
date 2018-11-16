@@ -172,8 +172,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 // DynamoDB resources must be granted permissions on the table AND the stream AND the index
                 resourceAsStatementFn = new object[] {
                     arnReference,
-                    AModelProcessor.FnJoin("/", new List<object> { arnReference, "stream/*" }),
-                    AModelProcessor.FnJoin("/", new List<object> { arnReference, "index/*" })
+                    AModelProcessor.FnJoin("/", new List<object> { arnReference, "stream", "*" }),
+                    AModelProcessor.FnJoin("/", new List<object> { arnReference, "index", "*" })
                 };
                 break;
             default:

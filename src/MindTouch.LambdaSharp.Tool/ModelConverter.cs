@@ -38,7 +38,7 @@ namespace MindTouch.LambdaSharp.Tool {
         private const string CUSTOM_RESOURCE_PREFIX = "Custom::";
 
         //--- Fields ---
-        private Module _module;
+        private ModuleBuilder _module;
 
         //--- Constructors ---
         public ModelConverter(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
@@ -58,79 +58,70 @@ namespace MindTouch.LambdaSharp.Tool {
         private Module Convert(ModuleNode module) {
 
             // initialize module
-            var secrets = new List<object>();
-            var resources = new List<AResource>();
-            var outputs = new List<AOutput>();
-            _module = new Module {
+            _module = new ModuleBuilder(Settings, SourceFilename, new Module {
                 Name = module.Module,
                 Version = VersionInfo.Parse(module.Version),
-                Description = module.Description,
-                Pragmas = module.Pragmas,
-                Secrets = secrets,
-                Resources = resources,
-                Outputs = outputs,
-                Conditions = new Dictionary<string, object>()
-            };
+                Description = module.Description
+            });
 
             // convert collections
-            AddToList("Secrets", secrets, module.Secrets, ConvertSecret);
-            AddToList("Inputs", resources, module.Inputs, ConvertInput);
-            AddToList("Outputs", outputs, module.Outputs, ConvertOutput);
-            AddToList("Variables", _module, module.Variables, (index, parameter) => ConvertParameter(index, parameter));
-            AddToList("Functions", _module, module.Functions, ConvertFunction);
-            return _module;
+            ForEach("Secrets", module.Secrets, (index, secret) => {
+                AtLocation($"[{index}]", () => _module.AddSecret(secret));
+            });
+            ForEach("Inputs", module.Inputs, ConvertInput);
+            ForEach("Outputs", module.Outputs, ConvertOutput);
+            ForEach("Variables", module.Variables, (index, parameter) => ConvertParameter(parent: null, index: index, parameter: parameter));
+            ForEach("Functions",  module.Functions, ConvertFunction);
+            return _module.ToModule();
         }
 
-        private object ConvertSecret(int index, string secret) {
-            return AtLocation($"[{index}]", () => {
-                if(secret.StartsWith("arn:")) {
-
-                    // decryption keys provided with their ARN can be added as is; no further steps required
-                    return secret;
-                }
-
-                // assume key name is an alias and resolve it to its ARN
-                try {
-                    var response = Settings.KmsClient.DescribeKeyAsync(secret).Result;
-                    return response.KeyMetadata.Arn;
-                } catch(Exception e) {
-                    AddError($"failed to resolve key alias: {secret}", e);
-                    return null;
-                }
-            }, null);
-        }
-
-        private AParameter ConvertInput(int index, InputNode input) {
+        private void ConvertInput(int index, InputNode input) {
             var type = DeterminNodeType("input", index, input, InputNode.FieldCheckers, InputNode.FieldCombinations, new[] { "Parameter", "Import" });
             switch(type) {
             case "Parameter":
-                return AtLocation<AParameter>(input.Parameter, () => {
-                    AddInput(input);
-                    return null;
-                }, null);
+                AtLocation(input.Parameter, () => _module.AddInput(
+                    input.Parameter,
+                    input.Description,
+                    input.Type,
+                    input.Section,
+                    input.Label,
+                    input.Scope,
+                    input.NoEcho,
+                    input.Default,
+                    input.ConstraintDescription,
+                    input.AllowedPattern,
+                    input.AllowedValues,
+                    input.MaxLength,
+                    input.MaxValue,
+                    input.MinLength,
+                    input.MinValue,
+                    input.Resource?.Type,
+                    input.Resource?.Allow,
+                    input.Resource?.Properties
+
+                ));
+                break;
             case "Import":
-                return AtLocation<AParameter>(input.Import, () => {
-                    AddImport(input);
-                    return null;;
-                }, null);
+                AtLocation(input.Import, () => _module.AddImport(
+                    input.Import,
+                    input.Description,
+                    input.Type,
+                    input.Section,
+                    input.Label,
+                    input.Scope,
+                    input.NoEcho,
+                    input.Resource?.Type,
+                    input.Resource?.Allow
+                ));
+                break;
             }
-            return null;
         }
 
-        private List<string> ConvertScope(object scope) {
-            return AtLocation("Scope", () => {
-                return (scope == null)
-                    ? new List<string>()
-                    : ConvertToStringList(scope);
-            }, new List<string>());
-        }
-
-        private AParameter ConvertParameter(
+        private void ConvertParameter(
+            AResource parent,
             int index,
-            ParameterNode parameter,
-            string resourcePrefix = ""
+            ParameterNode parameter
         ) {
-            var resourceName = resourcePrefix + parameter.Var;
             var type = DeterminNodeType("variable", index, parameter, ParameterNode.FieldCheckers, ParameterNode.FieldCombinations, new[] {
                 "Var.Resource",
                 "Var.Reference",
@@ -139,165 +130,143 @@ namespace MindTouch.LambdaSharp.Tool {
                 "Var.Empty",
                 "Package"
             });
-            AParameter result = null;
             switch(type) {
             case "Var.Resource":
 
                 // managed resource
-                result = AtLocation(parameter.Var, () => {
-                    var reference = (parameter.Resource.ArnAttribute != null)
-                        ? FnGetAtt(resourceName, parameter.Resource.ArnAttribute)
-                        : ResourceMapping.GetArnReference(parameter.Resource.Type, resourceName);
-                    return new CloudFormationResourceParameter {
-                        Scope = ConvertScope(parameter.Scope),
+                AtLocation(parameter.Var, () => {
+
+                    // create managed resource entry
+                    var result = _module.AddEntry(parent, new CloudFormationResourceParameter {
                         Name = parameter.Var,
-                        ResourceName = resourceName,
                         Description = parameter.Description,
-                        Resource = ConvertResource(new List<object>(), parameter.Resource),
-                        Reference = reference
-                    };
-                }, null);
+                        Resource = CreateResource(parameter.Resource)
+                    });
+
+                    // register managed resource reference
+                    var reference = (parameter.Resource.ArnAttribute != null)
+                        ? FnGetAtt(result.ResourceName, parameter.Resource.ArnAttribute)
+                        : ResourceMapping.GetArnReference(parameter.Resource.Type, result.ResourceName);
+                    _module.AddVariable(result.FullName, reference, parameter.Scope);
+
+                    // request managed resource grants
+                    _module.AddGrant(result.LogicalId, parameter.Resource.Type, reference, parameter.Resource.Allow);
+
+                    // recurse
+                    ConvertParameters(result);
+                });
                 break;
             case "Var.Reference":
 
                 // existing resource
-                result = AtLocation(parameter.Var, () => {
-                    var resource = ConvertResource((parameter.Value as IList<object>) ?? new List<object> { parameter.Value }, parameter.Resource);
-                    return new ReferencedResourceParameter {
-                        Scope = ConvertScope(parameter.Scope),
+                AtLocation(parameter.Var, () => {
+
+                    // create exiting resource entry
+                    var result = _module.AddEntry(parent, new ReferencedResourceParameter {
                         Name = parameter.Var,
-                        ResourceName = resourceName,
-                        Description = parameter.Description,
-                        Resource = resource,
-                        Reference = FnJoin(",", resource.ResourceReferences)
-                    };
-                }, null);
+                        Description = parameter.Description
+                    });
+
+                    // register new resource reference
+                    _module.AddVariable(result.FullName, parameter.Value, parameter.Scope);
+
+                    // request existing resource grants
+                    _module.AddGrant(result.LogicalId, parameter.Resource.Type, parameter.Value, parameter.Resource.Allow);
+
+                    // recurse
+                    ConvertParameters(result);
+                });
                 break;
             case "Var.Value":
 
-                // plain value
-                result = AtLocation(parameter.Var, () => new ValueParameter {
-                    Scope = ConvertScope(parameter.Scope),
-                    Name = parameter.Var,
-                    ResourceName = resourceName,
-                    Description = parameter.Description,
-                    Reference = (parameter.Value is IList<object> values)
-                        ? FnJoin(",", values)
-                        : parameter.Value
-                }, null);
+                // literal value
+                AtLocation(parameter.Var, () => {
+
+                    // create literal value entry
+                    var result = _module.AddEntry(parent, new ValueParameter {
+                        Name = parameter.Var,
+                        Description = parameter.Description
+                    });
+
+                    // register literal value reference
+                    var reference = (parameter.Value is IList<object> values)
+                            ? FnJoin(",", values)
+                            : parameter.Value;
+                    _module.AddVariable(result.FullName, reference, parameter.Scope);
+
+                    // recurse
+                    ConvertParameters(result);
+                });
                 break;
             case "Var.Secret":
 
                 // encrypted value
-                result = AtLocation(parameter.Var, () => new SecretParameter {
-                    Scope = ConvertScope(parameter.Scope),
-                    Name = parameter.Var,
-                    ResourceName = resourceName,
-                    Description = parameter.Description,
-                    Secret = parameter.Secret,
-                    EncryptionContext = parameter.EncryptionContext,
-                    Reference = parameter.Secret
-                }, null);
+                AtLocation(parameter.Var, () => {
+
+                    // create encrypted value entry
+                    var result = _module.AddEntry(parent, new SecretParameter {
+                        Name = parameter.Var,
+                        Description = parameter.Description,
+                        Secret = parameter.Secret,
+                        EncryptionContext = parameter.EncryptionContext
+                    });
+
+                    // register encrypted value reference
+                    _module.AddVariable(result.FullName, parameter.Value, parameter.Scope);
+
+                    // recurse
+                    ConvertParameters(result);
+                });
                 break;
             case "Var.Empty":
 
-                // empty node
-                result = AtLocation(parameter.Var, () => new ValueParameter {
-                    Scope = ConvertScope(parameter.Scope),
-                    Name = parameter.Var,
-                    ResourceName = resourceName,
-                    Description = parameter.Description,
-                    Reference = ""
-                }, null);
+                // empty entry
+                AtLocation(parameter.Var, () => {
+
+                    // create empty entry
+                    var result = _module.AddEntry(parent, new ValueParameter {
+                        Name = parameter.Var,
+                        Description = parameter.Description
+                    });
+
+                    // register empty entry reference
+                    _module.AddVariable(result.FullName, "", parameter.Scope);
+
+                    // recurse
+                    ConvertParameters(result);
+                });
                 break;
             case "Package":
 
-                // package value
-                result = AtLocation(parameter.Package, () => new PackageParameter {
-                    Scope = ConvertScope(parameter.Scope),
-                    Name = parameter.Package,
-                    ResourceName = resourceName,
-                    Description = parameter.Description,
-                    DestinationBucketParameterName = parameter.Bucket,
-                    DestinationKeyPrefix = parameter.Prefix ?? "",
-                    SourceFilepath = parameter.Files,
-                    Reference = FnGetAtt(resourceName, "Url")
-                }, null);
+                // package resource
+                AtLocation(parameter.Var, () => {
+
+                    // create package resource entry
+                    var result = _module.AddEntry(parent, new PackageParameter {
+                        Name = parameter.Package,
+                        Description = parameter.Description,
+                        DestinationBucketParameterName = parameter.Bucket,
+                        DestinationKeyPrefix = parameter.Prefix ?? "",
+                        SourceFilepath = parameter.Files
+                    });
+
+                    // register package resource reference
+                    _module.AddVariable(result.FullName, FnGetAtt(result.FullName, "Url"), parameter.Scope);
+
+                    // recurse
+                    ConvertParameters(result);
+                });
                 break;
-            default:
-                return null;
             }
-            ConvertParameters();
-            return result;
 
             // local functions
-            void ConvertParameters() {
-                if(result != null) {
-                    AddToList("Variables", result, parameter.Variables, (i, p) => ConvertParameter(i, p, resourceName));
-                }
+            void ConvertParameters(AResource result) {
+                ForEach("Variables", parameter.Variables, (i, p) => ConvertParameter(result, i, p));
             }
         }
 
-        private Resource ConvertResource(IList<object> resourceReferences, ResourceNode resource) {
-
-            // parse resource allowed operations
-            var allowList = new List<string>();
-            AtLocation("Resource", () => {
-                if(resource.Allow != null) {
-                    AtLocation("Allow", () => {
-                        allowList.AddRange(ConvertToStringList(resource.Allow));
-
-                        // resolve shorthands and de-duplicated statements
-                        var allowSet = new HashSet<string>();
-                        foreach(var allowStatement in allowList) {
-                            if(allowStatement == "None") {
-
-                                // nothing to do
-                            } else if(allowStatement.Contains(':')) {
-
-                                // AWS permission statements always contain a `:` (e.g `ssm:GetParameter`)
-                                allowSet.Add(allowStatement);
-                            } else if(ResourceMapping.TryResolveAllowShorthand(resource.Type, allowStatement, out IList<string> allowedList)) {
-                                foreach(var allowed in allowedList) {
-                                    allowSet.Add(allowed);
-                                }
-                            } else {
-                                AddError($"could not find IAM mapping for short-hand '{allowStatement}' on AWS type '{resource.Type}'");
-                            }
-                        }
-                        allowList = allowSet.OrderBy(text => text).ToList();
-                    });
-                }
-
-                // check if custom resource needs a service token to be imported
-                AtLocation("Type", () => {
-                    if(!resource.Type.StartsWith("AWS::", StringComparison.Ordinal)) {
-                        var customResourceName = resource.Type.StartsWith(CUSTOM_RESOURCE_PREFIX, StringComparison.Ordinal)
-                            ? resource.Type.Substring(CUSTOM_RESOURCE_PREFIX.Length)
-                            : resource.Type;
-                        if(resource.Properties == null) {
-                            resource.Properties = new Dictionary<string, object>();
-                        }
-                        if(!resource.Properties.ContainsKey("ServiceToken")) {
-                            resource.Properties["ServiceToken"] = FnImportValue(FnSub($"${{DeploymentPrefix}}CustomResource-{customResourceName}"));
-                        }
-
-                        // convert type name to a custom AWS resource type
-                        resource.Type = "Custom::" + customResourceName;
-                    }
-                });
-            });
-            return new Resource {
-                Type = resource.Type,
-                ResourceReferences = resourceReferences,
-                Allow = allowList,
-                Properties = resource.Properties,
-                DependsOn = ConvertToStringList(resource.DependsOn)
-            };
-        }
-
-        private Function ConvertFunction(int index, FunctionNode function) {
-            return AtLocation(function.Function ?? $"[{index}]", () => {
+        private void ConvertFunction(int index, FunctionNode function) {
+            AtLocation(function.Function ?? $"[{index}]", () => {
 
                 // append the version to the function description
                 if(function.Description != null) {
@@ -322,9 +291,9 @@ namespace MindTouch.LambdaSharp.Tool {
                     }
                 }
 
-                // create function
+                // create function entry
                 var eventIndex = 0;
-                return new Function {
+                var result = _module.AddEntry(new Function {
                     Name = function.Function,
                     Description = function.Description,
                     Memory = function.Memory,
@@ -340,8 +309,11 @@ namespace MindTouch.LambdaSharp.Tool {
                     Environment = function.Environment.ToDictionary(kv => "STR_" + kv.Key.Replace("::", "_").ToUpperInvariant(), kv => kv.Value) ?? new Dictionary<string, object>(),
                     Sources = AtLocation("Sources", () => function.Sources?.Select(source => ConvertFunctionSource(function, ++eventIndex, source)).Where(evt => evt != null).ToList(), null) ?? new List<AFunctionSource>(),
                     Pragmas = function.Pragmas
-                };
-            }, null);
+                });
+
+                // register function reference
+                _module.AddVariable(result.FullName, FnRef(result.ResourceName));
+            });
         }
 
         private AFunctionSource ConvertFunctionSource(FunctionNode function, int index, FunctionSourceNode source) {
@@ -439,86 +411,18 @@ namespace MindTouch.LambdaSharp.Tool {
             return null;
         }
 
-        private AOutput ConvertOutput(int index, OutputNode output) {
+        private void ConvertOutput(int index, OutputNode output) {
             var type = DeterminNodeType("output", index, output, OutputNode.FieldCheckers, OutputNode.FieldCombinations, new[] { "Export", "CustomResource", "Macro" });
             switch(type) {
             case "Export":
-                return AtLocation(output.Export, () => new ExportOutput {
-                    Name = output.Export,
-                    Description = output.Description,
-                    Value = output.Value
-                }, null);
+                AtLocation(output.Export, () => _module.AddExport(output.Export, output.Description, output.Value));
+                break;
             case "CustomResource":
-                return AtLocation(output.CustomResource, () => new CustomResourceHandlerOutput {
-                    CustomResourceName = output.CustomResource,
-                    Description = output.Description,
-                    Handler = output.Handler
-                }, null);
+                AtLocation(output.CustomResource, () => _module.AddCustomResource(output.CustomResource, output.Description, output.Handler));
+                break;
             case "Macro":
-                return AtLocation(output.Macro, () => new MacroOutput {
-                    Macro = output.Macro,
-                    Description = output.Description,
-                    Handler = output.Handler
-                }, null);
-            }
-            return null;
-        }
-
-        private void AddInput(InputNode input) {
-
-            // create regular input
-            var result = new InputParameter {
-                Name = input.Parameter,
-                ResourceName = input.Parameter,
-                Reference = FnRef(input.Parameter),
-                Default = input.Default,
-                ConstraintDescription = input.ConstraintDescription,
-                AllowedPattern = input.AllowedPattern,
-                AllowedValues = input.AllowedValues,
-                MaxLength = input.MaxLength,
-                MaxValue = input.MaxValue,
-                MinLength = input.MinLength,
-                MinValue = input.MinValue,
-
-                // set AParameter fields
-                Scope = ConvertScope(input.Scope),
-                Description = input.Description,
-
-                // set AInputParamete fields
-                Type = input.Type ?? "String",
-                Section = input.Section ?? "Module Settings",
-                Label = input.Label ?? StringEx.PascalCaseToLabel(input.Parameter),
-                NoEcho = input.NoEcho
-            };
-            _module.AddResource(result);
-
-            // check if a resource definition is associated with the input statement
-            if(input.Resource != null) {
-                if(input.Default != null) {
-                    result.Reference = FnIf(
-                        $"{result.Name}Created",
-                        ResourceMapping.GetArnReference(input.Resource.Type, $"{result.Name}CreatedInstance"),
-                        FnRef(result.Name)
-                    );
-                }
-                result.Resource = ConvertResource(new List<object> { result.Reference }, input.Resource);
-            }
-        }
-
-        private void AddImport(InputNode input) {
-            var result = _module.AddImportParameter(
-                import: input.Import,
-                type: input.Type,
-                scope: ConvertScope(input.Scope),
-                description: input.Description,
-                section: input.Section,
-                label: input.Label,
-                noEcho: input.NoEcho
-            );
-
-            // check if a resource definition is associated with the import statement
-            if(input.Resource != null) {
-                result.Resource = ConvertResource(new List<object> { result.Reference }, input.Resource);
+                AtLocation(output.Macro, () => _module.AddMacro(output.Macro, output.Description, output.Handler));
+                break;
             }
         }
 
@@ -571,36 +475,6 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
                 return match.Key;
             }, null);
-        }
-
-        private void AddToList<TFrom>(string location, IResourceCollection resources, IEnumerable<TFrom> values, Func<int, TFrom, AResource> convert) {
-            if(values?.Any() != true) {
-                return;
-            }
-            AtLocation(location, () => {
-                var index = 0;
-                foreach(var value in values) {
-                    var result = convert(++index, value);
-                    if(result != null) {
-                        resources.AddResource(result);
-                    }
-                }
-            });
-        }
-
-        private void AddToList<TFrom, TTo>(string location, IList<TTo> resources, IEnumerable<TFrom> values, Func<int, TFrom, TTo> convert) {
-            if(values?.Any() != true) {
-                return;
-            }
-            AtLocation(location, () => {
-                var index = 0;
-                foreach(var value in values) {
-                    var result = convert(++index, value);
-                    if(result != null) {
-                        resources.Add(result);
-                    }
-                }
-            });
         }
     }
 }

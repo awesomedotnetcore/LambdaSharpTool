@@ -48,12 +48,10 @@ namespace MindTouch.LambdaSharp.Tool {
         public void Resolve(Module module) {
 
             // resolve scopes
-            var functionNames = new HashSet<string>(module.Resources.OfType<Function>().Select(function => function.Name));
-            foreach(var parameter in module.GetAllResources().OfType<AParameter>()) {
-                if(parameter.Scope == null) {
-                    parameter.Scope = new List<string>();
-                } else if(parameter.Scope.Contains("*")) {
-                    parameter.Scope = parameter.Scope
+            var functionNames = new HashSet<string>(module.Resources.OfType<Function>().Select(function => function.FullName));
+            foreach(var variable in module.Variables.Values) {
+                if(variable.Scope.Contains("*")) {
+                    variable.Scope = variable.Scope
                         .Where(scope => scope != "*")
                         .Union(functionNames)
                         .Distinct()
@@ -79,7 +77,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         // input parameters are always expected to be in ARN format
                         output.Value = FnRef(parameter.Name);
                     } else {
-                        output.Value = ResourceMapping.GetArnReference((parameter as AResourceParameter)?.Resource?.Type, parameter.ResourceName);
+                        output.Value = ResourceMapping.GetArnReference((parameter as AResourceParameter)?.Resource?.Type, parameter.FullName);
                     }
 
                     // only set the description if the value was not set
@@ -89,181 +87,125 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
             }
 
-            // update dependencies
-            foreach(var parameter in module.GetAllResources().OfType<AResourceParameter>().Where(p => p.Resource?.DependsOn?.Any() == true)) {
-                parameter.Resource.DependsOn = parameter.Resource.DependsOn.Select(dependency => module.GetResource(dependency).ResourceName).ToList();
-            }
-
-            // resolve all inter-parameter references
-            var freeParameters = new Dictionary<string, AResource>();
-            var boundParameters = new Dictionary<string, AResource>();
-            AtLocation("Variables", () => {
-                DiscoverParameters(module.Resources);
-
-                // resolve parameter variables via substitution
-                while(ResolveParameters(boundParameters.ToList()));
-
-                // report circular dependencies, if any
-                ReportUnresolvedParameters(module.Resources);
-            });
+            // resolve all inter-variable references
+            var freeVariables = new Dictionary<string, ModuleVariable>();
+            var boundVariables = new Dictionary<string, ModuleVariable>();
+            DiscoverVariables();
+            ResolveVariables();
+            ReportUnresolvedVariables();
             if(Settings.HasErrors) {
                 return;
             }
 
-            // resolve references in input resource properties
-            AtLocation("Inputs", (Action)(() => {
-                foreach(var parameter in module.GetAllResources()
-                    .OfType<InputParameter>()
-                    .Where(p => p.Resource?.Properties != null)
-                ) {
-                    AtLocation((string)parameter.Name, (Action)(() => {
-                        AtLocation("Resource", (Action)(() => {
-                            AtLocation("Properties", (Action)(() => {
-                                parameter.Resource.Properties = parameter.Resource.Properties.ToDictionary(kv => (string)kv.Key, kv => Substitute(kv.Value, ReportMissingReference));
-                            }));
-                        }));
-                    }));
-                }
-            }));
-
             // resolve references in resource properties
-            AtLocation("Variables", () => {
-                foreach(var parameter in module.GetAllResources()
-                    .Where(p => !(p is InputParameter))
-                    .OfType<AResourceParameter>()
-                    .Where(p => p.Resource?.Properties != null)
-                ) {
-                    AtLocation(parameter.Name, () => {
-                        AtLocation("Resource", () => {
-                            AtLocation("Properties", () => {
-                                parameter.Resource.Properties = parameter.Resource.Properties.ToDictionary(kv => kv.Key, kv => Substitute(kv.Value, ReportMissingReference));
-                            });
-                        });
-                    });
-                }
-            });
+            foreach(var parameter in module.GetAllResources()
+                .OfType<AResourceParameter>()
+                .Where(p => p.Resource?.Properties != null)
+            ) {
+                parameter.Resource.Properties = (IDictionary<string, object>)Substitute(parameter.Resource.Properties, ReportMissingReference);
+            }
 
             // resolve references in output values
-            AtLocation("Outputs", () => {
-                foreach(var output in module.Outputs) {
-                    switch(output) {
-                    case ExportOutput exportOutput:
-                        AtLocation(exportOutput.Name, () => {
-                            exportOutput.Value = Substitute(exportOutput.Value, ReportMissingReference);
-                        });
-                        break;
-                    case CustomResourceHandlerOutput _:
-                    case MacroOutput _:
+            foreach(var output in module.Outputs) {
+                switch(output) {
+                case ExportOutput exportOutput:
+                    exportOutput.Value = ResolveResourceNamesToLogicalIds(Substitute(exportOutput.Value, ReportMissingReference));
+                    break;
+                case CustomResourceHandlerOutput _:
+                case MacroOutput _:
 
-                        // nothing to do
-                        break;
-                    default:
-                        throw new InvalidOperationException($"cannot resolve references for this type: {output?.GetType()}");
-                    }
-                }
-            });
-
-            // resolve references in functions
-            AtLocation("Functions", () => {
-                foreach(var function in module.Resources.OfType<Function>()) {
-                    AtLocation(function.Name, () => {
-                        function.Environment = (IDictionary<string, object>)Substitute(function.Environment, ReportMissingReference);
-
-                        // update VPC information
-                        if(function.VPC != null) {
-                            function.VPC.SecurityGroupIds = Substitute(function.VPC.SecurityGroupIds);
-                            function.VPC.SubnetIds = Substitute(function.VPC.SubnetIds);
-                        }
-
-                        // update function sources
-                        foreach(var source in function.Sources) {
-                            switch(source) {
-                            case AlexaSource alexaSource:
-                                if(alexaSource.EventSourceToken != null) {
-                                    alexaSource.EventSourceToken = Substitute(alexaSource.EventSourceToken, ReportMissingReference);
-                                }
-                                break;
-                            }
-
-                        }
-                    });
-                }
-            });
-
-            // local functions
-            void DiscoverParameters(IEnumerable<AResource> parameters) {
-                if(parameters == null) {
-                    return;
-                }
-                foreach(var parameter in parameters) {
-                    try {
-                        switch(parameter) {
-                        case ValueParameter valueParameter:
-                            if(valueParameter.Reference is string) {
-                                freeParameters[parameter.ResourceName] = parameter;
-                                DebugWriteLine($"FREE => {parameter.ResourceName}");
-                            } else {
-                                boundParameters[parameter.ResourceName] = parameter;
-                                DebugWriteLine($"BOUND => {parameter.ResourceName}");
-                            }
-                            break;
-                        case PackageParameter _:
-                        case SecretParameter _:
-                        case InputParameter _:
-                        case Function _:
-                            freeParameters[parameter.ResourceName] = parameter;
-                            DebugWriteLine($"FREE => {parameter.ResourceName}");
-                            break;
-                        case AResourceParameter resourceParameter:
-                            if(resourceParameter.Resource.ResourceReferences.All(value => value is string)) {
-                                freeParameters[parameter.ResourceName] = parameter;
-                                DebugWriteLine($"FREE => {parameter.ResourceName}");
-                            } else {
-                                boundParameters[parameter.ResourceName] = parameter;
-                                DebugWriteLine($"BOUND => {parameter.ResourceName}");
-                            }
-                            break;
-                        default:
-                            throw new ApplicationException($"unrecognized parameter type: {parameter?.GetType().ToString() ?? "null"}");
-                        }
-                    } catch(Exception e) {
-                        throw new ApplicationException($"error while processing '{parameter?.ResourceName ?? "???"}'", e);
-                    }
-                    DiscoverParameters(parameter.Resources);
+                    // nothing to do
+                    break;
+                default:
+                    throw new InvalidOperationException($"cannot resolve references for this type: {output?.GetType()}");
                 }
             }
 
-            bool ResolveParameters(IEnumerable<KeyValuePair<string, AResource>> parameters) {
-                if(parameters == null) {
-                    return false;
+            // resolve references in functions
+            foreach(var function in module.Resources.OfType<Function>()) {
+                function.Environment = (IDictionary<string, object>)ResolveResourceNamesToLogicalIds(Substitute(function.Environment, ReportMissingReference));
+
+                // update VPC information
+                if(function.VPC != null) {
+                    function.VPC.SecurityGroupIds = ResolveResourceNamesToLogicalIds(Substitute(function.VPC.SecurityGroupIds));
+                    function.VPC.SubnetIds = ResolveResourceNamesToLogicalIds(Substitute(function.VPC.SubnetIds));
                 }
-                var progress = false;
-                foreach(var kv in parameters) {
 
-                    // NOTE (2018-10-04, bjorg): each iteration, we loop over a bound variable;
-                    //  in the iteration, we attempt to substitute all references with free variables;
-                    //  if we do, the variable can be added to the pool of free variables;
-                    //  if we iterate over all bound variables without making progress, then we must have
-                    //  a circular dependency and we stop.
-
-                    var parameter = kv.Value;
-                    AtLocation(parameter.Name, () => {
-                        var doesNotContainBoundParameters = true;
-                        switch(parameter) {
-                        case ValueParameter _:
-                            parameter.Reference = Substitute(parameter.Reference, CheckBoundParameters);
-                            break;
-                        case ReferencedResourceParameter referencedResourceParameter:
-                            referencedResourceParameter.Resource.ResourceReferences = referencedResourceParameter.Resource.ResourceReferences.Select(r => Substitute(r, CheckBoundParameters)).ToList();
-                            parameter.Reference = FnJoin(",", referencedResourceParameter.Resource.ResourceReferences);
-                            break;
-                        case CloudFormationResourceParameter cloudFormationResourceParameter:
-                            cloudFormationResourceParameter.Resource.Properties = (IDictionary<string, object>)Substitute(cloudFormationResourceParameter.Resource.Properties, CheckBoundParameters);
-                            break;
-                        default:
-                            throw new InvalidOperationException($"cannot resolve references for this type: {parameter?.GetType()}");
+                // update function sources
+                foreach(var source in function.Sources) {
+                    switch(source) {
+                    case AlexaSource alexaSource:
+                        if(alexaSource.EventSourceToken != null) {
+                            alexaSource.EventSourceToken = ResolveResourceNamesToLogicalIds(Substitute(alexaSource.EventSourceToken, ReportMissingReference));
                         }
-                        if(doesNotContainBoundParameters) {
+                        break;
+                    }
+
+                }
+            }
+
+            // resolve everything to logical ids
+            module.Secrets = module.Secrets.Select(ResolveResourceNamesToLogicalIds).ToList();
+            module.Conditions = (IDictionary<string, object>)ResolveResourceNamesToLogicalIds(module.Conditions);
+            foreach(var parameter in module.GetAllResources()) {
+                if((parameter is AResourceParameter resourceParameter) && (resourceParameter.Resource != null)) {
+                    var resource = resourceParameter.Resource;
+                    if(resource.Properties?.Any() == true) {
+                        resource.Properties = (IDictionary<string, object>)ResolveResourceNamesToLogicalIds(resource.Properties);
+                    }
+                    if(resource.DependsOn?.Any() == true) {
+                        resourceParameter.Resource.DependsOn = resourceParameter.Resource.DependsOn.Select(dependency => module.GetResource(dependency).LogicalId).ToList();
+                    }
+                }
+            }
+            foreach(var grant in module.Grants) {
+                grant.References = ResolveResourceNamesToLogicalIds(grant.References);
+            }
+
+            // local functions
+            void DiscoverVariables() {
+                foreach(var variable in module.Variables) {
+                    switch(variable.Value.Reference) {
+                    case null:
+                        throw new ApplicationException($"variable cannot be null: {variable.Key}");
+                    case string _:
+                        freeVariables[variable.Key] = variable.Value;
+                        DebugWriteLine($"FREE => {variable.Key}");
+                        break;
+                    case IList<object> list:
+                        if(list.All(value => value is string)) {
+                            freeVariables[variable.Key] = variable.Value;
+                            DebugWriteLine($"FREE => {variable.Key}");
+                        } else {
+                            boundVariables[variable.Key] = variable.Value;
+                            DebugWriteLine($"BOUND => {variable.Key}");
+                        }
+                        break;
+                    default:
+                        boundVariables[variable.Key] = variable.Value;
+                        DebugWriteLine($"BOUND => {variable.Key}");
+                        break;
+                    }
+                }
+            }
+
+            void ResolveVariables() {
+                bool progress;
+                do {
+                    progress = false;
+                    foreach(var variable in boundVariables.Values.ToList()) {
+
+                        // NOTE (2018-10-04, bjorg): each iteration, we loop over a bound variable;
+                        //  in the iteration, we attempt to substitute all references with free variables;
+                        //  if we do, the variable can be added to the pool of free variables;
+                        //  if we iterate over all bound variables without making progress, then we must have
+                        //  a circular dependency and we stop.
+
+                        var doesNotContainBoundVariables = true;
+                        variable.Reference = Substitute(variable.Reference, (string missingName) => {
+                            doesNotContainBoundVariables = doesNotContainBoundVariables && !boundVariables.ContainsKey(missingName);
+                        });
+                        if(doesNotContainBoundVariables) {
 
                             // capture that progress towards resolving all bound variables has been made;
                             // if ever an iteration does not produces progress, we need to stop; otherwise
@@ -271,58 +213,22 @@ namespace MindTouch.LambdaSharp.Tool {
                             progress = true;
 
                             // promote bound variable to free variable
-                            freeParameters[parameter.ResourceName] = parameter;
-                            boundParameters.Remove(parameter.ResourceName);
-                            DebugWriteLine($"RESOLVED => {parameter.ResourceName} = {Newtonsoft.Json.JsonConvert.SerializeObject(parameter.Reference)}");
+                            freeVariables[variable.FullName] = variable;
+                            boundVariables.Remove(variable.FullName);
+                            DebugWriteLine($"RESOLVED => {variable.FullName} = {Newtonsoft.Json.JsonConvert.SerializeObject(variable.Reference)}");
                         }
-
-                        // local functions
-                        void CheckBoundParameters(string missingName)
-                            => doesNotContainBoundParameters = doesNotContainBoundParameters && !boundParameters.ContainsKey(missingName.Replace("::", ""));
-                    });
-                }
-                return progress;
+                    }
+                } while(progress);
             }
 
-            void ReportUnresolvedParameters(IEnumerable<AResource> parameters) {
-                if(parameters == null) {
-                    return;
-                }
-                foreach(var parameter in parameters) {
-                    AtLocation(parameter.Name, (Action)(() => {
-                        switch(parameter) {
-                        case ValueParameter valueParameter:
-                            Substitute(valueParameter.Reference, ReportMissingReference);
-                            break;
-                        case ReferencedResourceParameter referencedResourceParameter:
-                            foreach(var item in referencedResourceParameter.Resource.ResourceReferences) {
-                                Substitute(item, ReportMissingReference);
-                            }
-                            break;
-                        case Function function:
-                            function.Environment = (IDictionary<string, object>)Substitute(function.Environment, ReportMissingReference);
-                            break;
-                        case InputParameter inputParameter:
-                            if(inputParameter.Reference != null) {
-                                inputParameter.Reference = Substitute(inputParameter.Reference, ReportMissingReference);
-                            }
-                            break;
-                        case CloudFormationResourceParameter _:
-                        case PackageParameter _:
-                        case SecretParameter _:
-
-                            // nothing to do
-                            break;
-                        default:
-                            throw new InvalidOperationException($"cannot check unresolved references for this type: {parameter?.GetType()}");
-                        }
-                        ReportUnresolvedParameters(parameter.Resources);
-                    }));
+            void ReportUnresolvedVariables() {
+                foreach(var variable in module.Variables.Values) {
+                    Substitute(variable.Reference, ReportMissingReference);
                 }
             }
 
             void ReportMissingReference(string missingName) {
-                if(boundParameters.ContainsKey(missingName)) {
+                if(boundVariables.ContainsKey(missingName)) {
                     AddError($"circular !Ref dependency on '{missingName}'");
                 } else {
                     AddError($"could not find !Ref dependency '{missingName}'");
@@ -436,35 +342,123 @@ namespace MindTouch.LambdaSharp.Tool {
             }
 
             bool TrySubstitute(string key, string attribute, out object found) {
+                found = null;
                 if(key.StartsWith("AWS::", StringComparison.Ordinal)) {
-                    found = null;
+
+                    // built-in AWS variable can be kept as-is
+                    return true;
+                } else if(key.StartsWith("@", StringComparison.Ordinal)) {
+
+                    // module resource names can be kept as-is
                     return true;
                 }
-                key = key.Replace("::", "");
 
-                // see if the requested key can be resolved using a free parameter
-                found = null;
-                if(freeParameters.TryGetValue(key, out AResource freeParameter)) {
-                    switch(freeParameter) {
-                    case ValueParameter _:
-                    case SecretParameter _:
-                    case PackageParameter _:
-                    case ReferencedResourceParameter _:
-                    case InputParameter _:
-                        if(attribute != null) {
+                // see if the requested key can be resolved using a free variable
+                if(freeVariables.TryGetValue(key, out ModuleVariable freeVariable)) {
+                    if(attribute != null) {
+                        if(
+                            (freeVariable.Reference is IDictionary<string, object> map)
+                            && (map.Count == 1)
+                            && map.TryGetValue("Ref", out object refObject)
+                            && (refObject is string refValue)
+                        ) {
+                            found = FnGetAtt(refValue, attribute);
+                        } else {
                             AddError($"reference '{key}' must resolve to a CloudFormation resource to be used with an Fn::GetAtt expression");
+                            found = FnGetAtt(key, attribute);
                         }
-                        found = freeParameter.Reference;
-                        break;
-                    case CloudFormationResourceParameter _:
-                        found = (attribute != null)
-                            ? FnGetAtt(key, attribute)
-                            : freeParameter.Reference;
-                        break;
+                    } else {
+                        found = freeVariable.Reference;
                     }
                     return true;
                 }
                 return false;
+            }
+
+            object ResolveResourceNamesToLogicalIds(object value) {
+                switch(value) {
+                 case IDictionary<string, object> map:
+                    map = map.ToDictionary(kv => kv.Key, kv => ResolveResourceNamesToLogicalIds(kv.Value));
+                    if(map.Count == 1) {
+
+                        // handle !Ref expression
+                        if(map.TryGetValue("Ref", out object refObject) && (refObject is string refKey) && refKey.StartsWith("@", StringComparison.Ordinal)) {
+                            return FnRef(refKey.Substring(1));
+                        }
+
+                        // handle !GetAtt expression
+                        if(
+                            map.TryGetValue("Fn::GetAtt", out object getAttObject)
+                            && (getAttObject is IList<object> getAttArgs)
+                            && (getAttArgs.Count == 2)
+                            && getAttArgs[0] is string getAttKey
+                            && getAttKey.StartsWith("@", StringComparison.Ordinal)
+                            && getAttArgs[1] is string getAttAttribute
+                        ) {
+                            return FnGetAtt(getAttKey.Substring(1), getAttAttribute);
+                        }
+
+                        // handle !Sub expression
+                        if(map.TryGetValue("Fn::Sub", out object subObject)) {
+                            string subPattern;
+                            IDictionary<string, object> subArgs = null;
+
+                            // determine which form of !Sub is being used
+                            if(subObject is string) {
+                                subPattern = (string)subObject;
+                                subArgs = new Dictionary<string, object>();
+                            } else if(
+                                (subObject is IList<object> subList)
+                                && (subList.Count == 2)
+                                && (subList[0] is string)
+                                && (subList[1] is IDictionary<string, object>)
+                            ) {
+                                subPattern = (string)subList[0];
+                                subArgs = (IDictionary<string, object>)subList[1];
+                            } else {
+                                return map;
+                            }
+
+                            // replace as many ${VAR} occurrences as possible
+                            var substitions = false;
+                            subPattern = Regex.Replace(subPattern, SUBVARIABLE_PATTERN, match => {
+                                var matchText = match.ToString();
+                                var name = matchText.Substring(2, matchText.Length - 3).Trim().Split('.', 2);
+                                if(!subArgs.ContainsKey(name[0]) && name[0].StartsWith("@", StringComparison.Ordinal)) {
+                                    return (name.Length == 2)
+                                        ? name[0].Substring(1)
+                                        : name[0].Substring(1) + "." + name[1];
+                                }
+                                return matchText;
+                            });
+                            if(!substitions) {
+                                return map;
+                            }
+
+                            // determine which form of !Sub to construct
+                            return subArgs.Any()
+                                ? FnSub(subPattern, subArgs)
+                                : Regex.IsMatch(subPattern, SUBVARIABLE_PATTERN)
+                                ? FnSub(subPattern)
+                                : subPattern;
+                        }
+                    }
+                    return map;
+                case IList<object> list:
+                    return list.Select(ResolveResourceNamesToLogicalIds).ToList();
+                case null:
+                    AddError("null value is not allowed");
+                    return value;
+                case string _:
+
+                    // nothing further to substitute
+                    return value;
+                default:
+
+                    // nothing further to substitute
+                    DebugWriteLine($"SKIPPING: {value.GetType()}");
+                    return value;
+                }
             }
         }
     }

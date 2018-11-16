@@ -70,7 +70,9 @@ namespace MindTouch.LambdaSharp.Tool {
             // stack header
             _stack = new Stack {
                 AWSTemplateFormatVersion = "2010-09-09",
-                Description = _module.Description
+                Description = (_module.Description != null)
+                    ? _module.Description.TrimEnd() + $" (v{_module.Version})"
+                    : null
             };
 
             // create generic resource statement; additional resource statements can be added by resources
@@ -119,7 +121,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 module.ResourceStatements.Add(new Statement {
                     Sid = "ModuleDeadLetterQueueLogging",
                     Effect = "Allow",
-                    Resource = _module.GetResource("LambdaSharp::DeadLetterQueueArn").Reference,
+                    Resource = _module.Variables["Module::DeadLetterQueueArn"].Reference,
                     Action = new List<string> {
                         "sqs:SendMessage"
                     }
@@ -164,7 +166,7 @@ namespace MindTouch.LambdaSharp.Tool {
                                         Sid = "CloudWatchLogsKinesisPermissions",
                                         Effect = "Allow",
                                         Action = "kinesis:PutRecord",
-                                        Resource = _module.GetResource("LambdaSharp::LoggingStreamArn").Reference
+                                        Resource = _module.Variables["Module::LoggingStreamArn"].Reference
                                     }
                                 }
                             }
@@ -232,7 +234,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // add interface for presenting inputs
             _stack.AddTemplateMetadata("AWS::CloudFormation::Interface", new Dictionary<string, object> {
-                ["ParameterLabels"] = _module.GetAllResources().OfType<InputParameter>().ToDictionary(input => input.ResourceName, input => new Dictionary<string, object> {
+                ["ParameterLabels"] = _module.GetAllResources().OfType<InputParameter>().ToDictionary(input => input.LogicalId, input => new Dictionary<string, object> {
                     ["default"] = input.Label
                 }),
                 ["ParameterGroups"] = _module.GetAllResources().OfType<InputParameter>()
@@ -241,7 +243,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         ["Label"] = new Dictionary<string, string> {
                             ["default"] = section.Key
                         },
-                        ["Parameters"] = section.Select(input => input.ResourceName).ToList()
+                        ["Parameters"] = section.Select(input => input.LogicalId).ToList()
                     }
                 )
             });
@@ -259,48 +261,48 @@ namespace MindTouch.LambdaSharp.Tool {
             return template;
         }
 
+        private void AddGrants() {
+            foreach(var grant in _module.Grants) {
+                _module.ResourceStatements.Add(new Statement {
+                    Sid = grant.Sid,
+                    Effect = "Allow",
+                    Resource = grant.References,
+                    Action = grant.Allow
+                });
+            }
+        }
+
         private void AddResource(
             AResource definition,
             string envPrefix
         ) {
             var fullEnvName = envPrefix + definition.Name.ToUpperInvariant();
-            var resourceName = definition.ResourceName;
+            var logicalId = definition.LogicalId;
             switch(definition) {
             case SecretParameter secretParameter:
                 if(secretParameter.EncryptionContext?.Any() == true) {
-                    AddEnvironmentParameter("Secret", $"{secretParameter.Reference}|{string.Join("|", secretParameter.EncryptionContext.Select(kv => $"{Uri.EscapeDataString(kv.Key)}={Uri.EscapeDataString(kv.Value)}"))}");
+                    AddEnvironmentParameter("Secret", $"{GetReference()}|{string.Join("|", secretParameter.EncryptionContext.Select(kv => $"{Uri.EscapeDataString(kv.Key)}={Uri.EscapeDataString(kv.Value)}"))}");
                 } else {
-                    AddEnvironmentParameter("Secret", secretParameter.Reference);
+                    var reference = _module.Variables[definition.FullName].Reference;
+                    AddEnvironmentParameter("Secret", GetReference());
                 }
                 break;
             case ValueParameter _:
-                AddEnvironmentParameter("String", definition.Reference);
+                AddEnvironmentParameter("String", GetReference());
                 break;
             case PackageParameter packageParameter:
-                AddEnvironmentParameter("String", definition.Reference);
-                _stack.Add(resourceName, new LambdaSharpResource("LambdaSharp::S3::Package") {
+                AddEnvironmentParameter("String", GetReference());
+
+                // TODO: move this out from here
+                _stack.Add(logicalId, new LambdaSharpResource("LambdaSharp::S3::Package") {
                     ["DestinationBucketName"] = Fn.Ref(packageParameter.DestinationBucketParameterName),
                     ["DestinationKeyPrefix"] = packageParameter.DestinationKeyPrefix,
                     ["SourceBucketName"] = Fn.Ref("DeploymentBucketName"),
                     ["SourcePackageKey"] = Fn.Sub($"Modules/{_module.Name}/Assets/{Path.GetFileName(packageParameter.PackagePath)}")
                 });
                 break;
-            case ReferencedResourceParameter referenceResourceParameter: {
-                    AddEnvironmentParameter("String", definition.Reference);
-
-                    // add permissions for resource
-                    var resource = referenceResourceParameter.Resource;
-                    if(resource.Allow?.Any() == true) {
-                        _module.ResourceStatements.Add(new Statement {
-                            Sid = resourceName,
-                            Effect = "Allow",
-                            Resource = (resource.ResourceReferences.Count == 1)
-                                ? resource.ResourceReferences.First()
-                                : resource.ResourceReferences,
-                            Action = resource.Allow
-                        });
-                    }
-                }
+            case ReferencedResourceParameter referenceResourceParameter:
+                AddEnvironmentParameter("String", GetReference());
                 break;
             case CloudFormationResourceParameter cloudFormationResourceParameter: {
                     var resource = cloudFormationResourceParameter.Resource;
@@ -311,29 +313,19 @@ namespace MindTouch.LambdaSharp.Tool {
                         resourceTemplate = new CustomResource(resource.Type, resource.Properties);
                     } else if(!ResourceMapping.TryParseResourceProperties(
                         resource.Type,
-                        definition.Reference,
+                        GetReference(),
                         resource.Properties,
                         out resourceAsStatementFn,
                         out resourceTemplate
                     )) {
                         throw new NotImplementedException($"resource type is not supported: {resource.Type}");
                     }
-                    _stack.Add(resourceName, resourceTemplate, condition: resource.Condition, dependsOn: resource.DependsOn.ToArray());
-
-                    // add permissions for resource
-                    if((resource.Allow?.Any() == true) && (resourceAsStatementFn != null)) {
-                        _module.ResourceStatements.Add(new Statement {
-                            Sid = resourceName,
-                            Effect = "Allow",
-                            Resource = resourceAsStatementFn,
-                            Action = resource.Allow
-                        });
-                    }
-                    AddEnvironmentParameter("String", definition.Reference);
+                    _stack.Add(logicalId, resourceTemplate, condition: resource.Condition, dependsOn: resource.DependsOn.ToArray());
+                    AddEnvironmentParameter("String", GetReference());
                 }
                 break;
             case InputParameter valueInputParameter: {
-                    _stack.Add(resourceName, new Parameter {
+                    _stack.Add(logicalId, new Parameter {
                         Type = (valueInputParameter.Type == "Secret") ? "String" : valueInputParameter.Type,
                         Description = valueInputParameter.Description,
                         Default = valueInputParameter.Default,
@@ -346,47 +338,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         MinValue = valueInputParameter.MinValue,
                         NoEcho = valueInputParameter.NoEcho
                     });
-
-                    // check if a conditional resource definition is attached to the input parameter
-                    var resource = valueInputParameter.Resource;
-                    if(resource != null) {
-                        object resourceAsStatementFn;
-
-                        // create resource when no input is provided
-                        if(valueInputParameter.Default != null) {
-                            Humidifier.Resource resourceTemplate;
-                            if(resource.Type.StartsWith("Custom::")) {
-                                resourceAsStatementFn = null;
-                                resourceTemplate = new CustomResource(resource.Type, resource.Properties);
-                            } else if(!ResourceMapping.TryParseResourceProperties(
-                                resource.Type,
-                                definition.Reference,
-                                resource.Properties,
-                                out resourceAsStatementFn,
-                                out resourceTemplate
-                            )) {
-                                throw new NotImplementedException($"resource type is not supported: {resource.Type}");
-                            }
-                            var condition = $"{resourceName}Created";
-                            _stack.Add(condition, new Condition(Fn.Equals(Fn.Ref(resourceName), valueInputParameter.Default)));
-                            _stack.Add($"{resourceName}CreatedInstance", resourceTemplate, condition: condition, dependsOn: resource.DependsOn.ToArray());
-                        } else {
-
-                            // resource must always be provided as an input
-                            resourceAsStatementFn = ResourceMapping.ExpandResourceReference(resource.Type, resource.ResourceReferences.First());
-                        }
-
-                        // add requested permission to input resource
-                        if(resource.Allow?.Any() == true) {
-                            _module.ResourceStatements.Add(new Statement {
-                                Sid = resourceName,
-                                Effect = "Allow",
-                                Resource = resourceAsStatementFn,
-                                Action = resource.Allow
-                            });
-                        }
-                    }
-                    AddEnvironmentParameter(valueInputParameter.Type, definition.Reference);
+                    AddEnvironmentParameter(valueInputParameter.Type, GetReference());
                 }
                 break;
             case Function function:
@@ -396,15 +348,9 @@ namespace MindTouch.LambdaSharp.Tool {
                 throw new ArgumentOutOfRangeException(nameof(definition), definition, "unknown parameter type");
             }
 
-            // check if nested parameters need to be added
-            var nestedParameters = definition.Resources.OfType<AParameter>();
-            foreach(var nestedParameter in nestedParameters) {
-                AddResource(nestedParameter, fullEnvName + "_");
-            }
-
             // local function
             void AddEnvironmentParameter(string type, object value) {
-                foreach(var function in ((AParameter)definition).Scope.Select(name => _module.Resources.OfType<Function>().First(f => f.Name == name))) {
+                foreach(var function in GetScope().Select(name => _module.Resources.OfType<Function>().First(f => f.Name == name))) {
                     if(type == "Secret") {
                         function.Environment["SEC_" + fullEnvName] = value;
                     } else {
@@ -412,6 +358,9 @@ namespace MindTouch.LambdaSharp.Tool {
                     }
                 }
             }
+
+            object GetReference() => _module.Variables[definition.FullName].Reference;
+            IList<string> GetScope() => _module.Variables[definition.FullName].Scope;
         }
 
         private void AddFunction(Module module, Function function) {
@@ -423,8 +372,8 @@ namespace MindTouch.LambdaSharp.Tool {
             environmentVariables["MODULE_VERSION"] = module.Version.ToString();
             environmentVariables["LAMBDA_NAME"] = function.Name;
             environmentVariables["LAMBDA_RUNTIME"] = function.Runtime;
-            environmentVariables["DEADLETTERQUEUE"] = module.GetResource("LambdaSharp::DeadLetterQueueArn").Reference;
-            environmentVariables["DEFAULTSECRETKEY"] = module.GetResource("LambdaSharp::DefaultSecretKeyArn").Reference;
+            environmentVariables["DEADLETTERQUEUE"] = module.Variables["LambdaSharp::DeadLetterQueueArn"].Reference;
+            environmentVariables["DEFAULTSECRETKEY"] = module.Variables["LambdaSharp::DefaultSecretKeyArn"].Reference;
 
             // check if function as a VPC configuration
             Lambda.FunctionTypes.VpcConfig vpcConfig = null;
@@ -449,7 +398,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     S3Key = FnSub($"Modules/{module.Name}/Assets/{Path.GetFileName(function.PackagePath)}")
                 },
                 DeadLetterConfig = new Lambda.FunctionTypes.DeadLetterConfig {
-                    TargetArn = module.GetResource("LambdaSharp::DeadLetterQueueArn").Reference
+                    TargetArn = module.Variables["Module::DeadLetterQueueArn"].Reference
                 },
                 Environment = new Lambda.FunctionTypes.Environment {
                     Variables = environmentVariables
@@ -468,7 +417,7 @@ namespace MindTouch.LambdaSharp.Tool {
             });
             if(function.HasFunctionRegistration) {
                 _stack.Add($"{function.Name}LogGroupSubscription", new SubscriptionFilter {
-                    DestinationArn = module.GetResource("LambdaSharp::LoggingStreamArn").Reference,
+                    DestinationArn = module.Variables["Module::LoggingStreamArn"].Reference,
                     FilterPattern = "-\"*** \"",
                     LogGroupName = FnRef(functionLogGroup),
                     RoleArn = FnGetAtt("CloudWatchLogsRole", "Arn")

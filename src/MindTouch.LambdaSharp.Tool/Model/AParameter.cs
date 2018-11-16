@@ -21,31 +21,23 @@
 
 
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace MindTouch.LambdaSharp.Tool.Model {
 
-    public abstract class AResource : IResourceCollection {
+    public abstract class AResource {
 
         //--- Properties ---
         public string Name { get; set; }
+        public string FullName { get; set; }
         public string Description { get; set; }
         public string ResourceName { get; set; }
-        public object Reference { get; set; }
-        public IList<AResource> Resources { get; set; } = new List<AResource>();
 
-        //--- Methods ---
-        public AResource AddResource(AResource resource) {
-            resource.ResourceName = ResourceName + resource.Name;
-            Resources.Add(resource);
-            return resource;
-        }
+        [JsonIgnore]
+        public string LogicalId => ResourceName.Substring(1);
     }
 
-    public abstract class AParameter : AResource {
-
-        //--- Properties ---
-        public IList<string> Scope { get; set; } = new string[0];
-    }
+    public abstract class AParameter : AResource { }
 
     public class SecretParameter : AParameter {
 

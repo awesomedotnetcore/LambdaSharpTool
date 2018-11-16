@@ -20,6 +20,7 @@
  */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using MindTouch.LambdaSharp.Tool.Internal;
@@ -30,23 +31,6 @@ using Newtonsoft.Json;
 namespace MindTouch.LambdaSharp.Tool {
 
     public class ModelAugmenter : AModelProcessor {
-
-        //--- Class Methods ---
-        private void EnumerateOrDefault(IList<object> items, object single, Action<string, object> callback) {
-            switch(items.Count) {
-            case 0:
-                callback("", single);
-                break;
-            case 1:
-                callback("", items.First());
-                break;
-            default:
-                for(var i = 0; i < items.Count; ++i) {
-                    callback((i + 1).ToString(), items[i]);
-                }
-                break;
-            }
-        }
 
         //--- Types ---
         private class ApiRoute {
@@ -61,6 +45,7 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         //--- Fields ---
+        private ModuleBuilder _module;
         private List<ApiRoute> _apiGatewayRoutes;
 
         //--- Constructors ---
@@ -68,114 +53,89 @@ namespace MindTouch.LambdaSharp.Tool {
 
         //--- Methods ---
         public void Augment(Module module) {
-
-            // append the version to the module description
-            if(module.Description != null) {
-                module.Description = module.Description.TrimEnd() + $" (v{module.Version})";
-            }
+            _module = new ModuleBuilder(Settings, SourceFilename, module);
 
             // add module variables
-            var moduleValue = new ValueParameter {
-                Name = "Module",
-                Description = "LambdaSharp module information",
-                Reference = ""
-            };
-            module.AddResource(moduleValue);
-            moduleValue.AddResource(new ValueParameter {
-                Name = "Id",
-                Description = "LambdaSharp module id",
-                Reference = FnRef("AWS::StackName")
+            var moduleValue = _module.AddEntry(new ValueParameter {
+                Name = "Module"
             });
-            moduleValue.AddResource(new ValueParameter {
-                Name = "Name",
-                Description = "Module name",
-                Reference = module.Name
-            });
-            moduleValue.AddResource(new ValueParameter {
-                Name = "Version",
-                Description = "Module version",
-                Reference = module.Version.ToString()
-            });
+            _module.AddVariable("Module", "");
+            _module.AddVariable("Module::Id", FnRef("AWS::StackName"));
+            _module.AddVariable("Module::Name", module.Name);
+            _module.AddVariable("Module::Version", module.Version.ToString());
 
             // add LambdaSharp Module Options
             var section = "LambdaSharp Module Options";
-            module.AddResource(new InputParameter {
-                Name = "Secrets",
-                Section = section,
-                Label = "Secret Keys (ARNs)",
-                Description = "Comma-separated list of optional secret keys",
-                Default = ""
-            });
+            _module.AddInput(
+                name: "Secrets",
+                section: section,
+                label: "Secret Keys (ARNs)",
+                description: "Comma-separated list of optional secret keys",
+                defaultValue: ""
+            );
 
             // add standard parameters (unless requested otherwise)
-            if(!module.HasPragma("no-lambdasharp-dependencies")) {
+            if(!_module.HasPragma("no-lambdasharp-dependencies")) {
 
                 // add LambdaSharp Module Internal Dependencies
                 section = "LambdaSharp Dependencies";
-                module.AddImportParameter(
+                _module.AddImport(
                     import: "LambdaSharp::DeadLetterQueueArn",
                     section: section,
                     label: "Dead Letter Queue (ARN)",
                     description: "Dead letter queue for functions"
                 );
-                module.AddImportParameter(
+                _module.AddImport(
                     import: "LambdaSharp::LoggingStreamArn",
                     section: section,
                     label: "Logging Stream (ARN)",
                     description: "Logging kinesis stream for functions"
                 );
-                module.AddImportParameter(
+                _module.AddImport(
                     import: "LambdaSharp::DefaultSecretKeyArn",
                     section: section,
                     label: "Secret Key (ARN)",
                     description: "Default secret key for functions"
                 );
-                module.Secrets.Add(module.GetResource("LambdaSharp::DefaultSecretKeyArn").Reference);
+                _module.AddSecret(module.Variables["LambdaSharp::DefaultSecretKeyArn"].Reference);
 
-                // check if lambdasharp imports should be added
-                moduleValue.AddResource(new ValueParameter {
-                    Name = "DeadLetterQueueArn",
-                    Description = "LambdaSharp Dead Letter Queue",
-                    Reference = FnRef("LambdaSharp::DeadLetterQueueArn")
-                });
-                moduleValue.AddResource(new ValueParameter {
-                    Name = "LoggingStreamArn",
-                    Description = "LambdaSharp Logging Stream",
-                    Reference = FnRef("LambdaSharp::LoggingStreamArn")
-                });
+                // add lambdasharp imports
+                _module.AddVariable("Module::DeadLetterQueueArn", FnRef("LambdaSharp::DeadLetterQueueArn"));
+                _module.AddVariable("Module::LoggingStreamArn", FnRef("LambdaSharp::LoggingStreamArn"));
+                _module.AddVariable("Module::DefaultSecretKeyArn", FnRef("LambdaSharp::DefaultSecretKeyArn"));
             }
 
             // add LambdaSharp Deployment Settings
             section = "LambdaSharp Deployment Settings (DO NOT MODIFY)";
-            module.AddResource(new InputParameter {
-                Name = "DeploymentBucketName",
-                Section = section,
-                Label = "Deployment S3 Bucket",
-                Description = "Source deployment S3 bucket name"
-            });
-            module.AddResource(new InputParameter {
-                Name = "DeploymentPrefix",
-                Section = section,
-                Label = "Deployment Prefix",
-                Description = "Module deployment prefix"
-            });
-            module.AddResource(new InputParameter {
-                Name = "DeploymentPrefixLowercase",
-                Section = section,
-                Label = "Deployment Prefix (lowercase)",
-                Description = "Module deployment prefix (lowercase)"
-            });
-            module.AddResource(new InputParameter {
-                Name = "DeploymentParent",
-                Section = section,
-                Label = "Parent Stack Name",
-                Description = "Parent stack name for nested deployments, blank otherwise",
-                Default = ""
-            });
+            _module.AddInput(
+                name: "DeploymentBucketName",
+                section: section,
+                label: "Deployment S3 Bucket",
+                description: "Source deployment S3 bucket name"
+            );
+            _module.AddInput(
+                name: "DeploymentPrefix",
+                section: section,
+                label: "Deployment Prefix",
+                description: "Module deployment prefix"
+            );
+            _module.AddInput(
+                name: "DeploymentPrefixLowercase",
+                section: section,
+                label: "Deployment Prefix (lowercase)",
+                description: "Module deployment prefix (lowercase)"
+            );
+            _module.AddInput(
+                name: "DeploymentParent",
+                section: section,
+                label: "Parent Stack Name",
+                description: "Parent stack name for nested deployments, blank otherwise",
+                defaultValue: ""
+            );
 
             // add module registration
             if(module.HasModuleRegistration) {
-                moduleValue.AddResource(new CloudFormationResourceParameter {
+                _module.AddEntry(moduleValue, new CloudFormationResourceParameter {
                     Name = "Registration",
                     Resource = CreateResource("LambdaSharp::Register::Module", new Dictionary<string, object> {
                         ["ModuleId"] = FnRef("AWS::StackName"),
@@ -188,7 +148,7 @@ namespace MindTouch.LambdaSharp.Tool {
             // create module IAM role used by all functions
             var functions = module.GetAllResources().OfType<Function>();
             if(functions.Any()) {
-                moduleValue.AddResource(new CloudFormationResourceParameter {
+                _module.AddEntry(moduleValue, new CloudFormationResourceParameter {
                     Name = "Role",
                     Resource = CreateResource("AWS::IAM::Role", new Dictionary<string, object> {
                         ["AssumeRolePolicyDocument"] = new Dictionary<string, object> {
@@ -218,8 +178,8 @@ namespace MindTouch.LambdaSharp.Tool {
 
                 // create function registration
                 if(module.HasModuleRegistration) {
-                    foreach(var function in functions.Where(f => f.HasFunctionRegistration)) {
-                        function.AddResource(new CloudFormationResourceParameter {
+                    foreach(var function in functions.Where(f => f.HasFunctionRegistration).ToList()) {
+                        _module.AddEntry(function, new CloudFormationResourceParameter {
                             Name = "Registration",
                             Resource = CreateResource("LambdaSharp::Register::Function", new Dictionary<string, object> {
                                 ["ModuleId"] = FnRef("AWS::StackName"),
@@ -247,7 +207,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
                     // recursively create resources as needed
                     var apiMethods = new List<KeyValuePair<string, object>>();
-                    AddApiResource(module, restApiName, FnRef(restApiName), FnGetAtt(restApiName, "RootResourceId"), 0, _apiGatewayRoutes, apiMethods);
+                    AddApiResource(null, restApiName, FnRef(restApiName), FnGetAtt(restApiName, "RootResourceId"), 0, _apiGatewayRoutes, apiMethods);
 
                     // RestApi deployment depends on all methods and their hash (to force redeployment in case of change)
                     var methodSignature = string.Join("\n", apiMethods
@@ -266,17 +226,13 @@ namespace MindTouch.LambdaSharp.Tool {
                             ["FailOnWarnings"] = true
                         })
                     };
-                    moduleValue.AddResource(restApiVar);
+                    _module.AddEntry(moduleValue, restApiVar);
 
                     // add RestApi url
-                    restApiVar.AddResource(new ValueParameter {
-                        Name = "Url",
-                        Description = "Module REST API Url",
-                        Reference = FnSub("https://${Module::RestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/LATEST/")
-                    });
+                    _module.AddVariable("Module::RestApi::Url", FnSub("https://${Module::RestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/LATEST/"));
 
                     // create a RestApi role that can write logs
-                    restApiVar.AddResource(new CloudFormationResourceParameter {
+                    _module.AddEntry(restApiVar, new CloudFormationResourceParameter {
                         Name = "Role",
                         Description = "Module REST API Role",
                         Resource = CreateResource("AWS::IAM::Role", new Dictionary<string, object> {
@@ -322,7 +278,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     });
 
                     // create a RestApi account which uses the RestApi role
-                    restApiVar.AddResource(new CloudFormationResourceParameter {
+                    _module.AddEntry(restApiVar, new CloudFormationResourceParameter {
                         Name = "Account",
                         Description = "Module REST API Account",
                         Resource = CreateResource("AWS::ApiGateway::Account", new Dictionary<string, object> {
@@ -332,7 +288,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
                     // NOTE (2018-06-21, bjorg): the RestApi deployment resource depends on ALL methods resources having been created;
                     //  a new name is used for the deployment to force the stage to be updated
-                    restApiVar.AddResource(new CloudFormationResourceParameter {
+                    _module.AddEntry(restApiVar, new CloudFormationResourceParameter {
                         Name = "Deployment" + methodsHash,
                         Description = "Module REST API Deployment",
                         Resource = new Resource {
@@ -348,7 +304,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     // RestApi stage depends on API gateway deployment and API gateway account
                     // NOTE (2018-06-21, bjorg): the stage resource depends on the account resource having been granted
                     //  the necessary permissions for logging
-                    restApiVar.AddResource(new CloudFormationResourceParameter {
+                    _module.AddEntry(restApiVar, new CloudFormationResourceParameter {
                         Name = "Stage",
                         Description = "Module REST API Stage",
                         Resource = new Resource {
@@ -373,7 +329,7 @@ namespace MindTouch.LambdaSharp.Tool {
             }
         }
 
-        private void AddApiResource(IResourceCollection resources, string parentPrefix, object restApiId, object parentId, int level, IEnumerable<ApiRoute> routes, List<KeyValuePair<string, object>> apiMethods) {
+        private void AddApiResource(AResource parent, string parentPrefix, object restApiId, object parentId, int level, IEnumerable<ApiRoute> routes, List<KeyValuePair<string, object>> apiMethods) {
 
             // attach methods to resource id
             var methods = routes.Where(route => route.Path.Length == level).ToArray();
@@ -392,11 +348,11 @@ namespace MindTouch.LambdaSharp.Tool {
                     continue;
                 }
                 apiMethods.Add(new KeyValuePair<string, object>(methodName, apiMethod));
-                resources.AddResource(new CloudFormationResourceParameter {
+                _module.AddEntry(parent, new CloudFormationResourceParameter {
                     Name = method.Method,
                     Resource = CreateResource("AWS::ApiGateway::Method", apiMethod)
                 });
-                resources.AddResource(new CloudFormationResourceParameter {
+                _module.AddEntry(parent, new CloudFormationResourceParameter {
                     Name = $"{method.Function.Name}{methodName}Permission",
                     Resource = CreateResource("AWS::Lambda::Permission", new Dictionary<string, object> {
                         ["Action"] = "lambda:InvokeFunction",
@@ -417,7 +373,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
                 // create a new resource
                 var newResourceName = parentPrefix + partName + "Resource";
-                resources.AddResource(new CloudFormationResourceParameter {
+                var resource = _module.AddEntry(parent, new CloudFormationResourceParameter {
                     Name = newResourceName,
                     Resource = CreateResource("AWS::ApiGateway::Resource", new Dictionary<string, object> {
                         ["RestApiId"] = restApiId,
@@ -425,7 +381,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         ["PathPart"] = subRoute.Key
                     })
                 });
-                AddApiResource(resources, parentPrefix + partName, restApiId, FnRef(newResourceName), level + 1, subRoute, apiMethods);
+                AddApiResource(resource, parentPrefix + partName, restApiId, FnRef(newResourceName), level + 1, subRoute, apiMethods);
             }
 
             IDictionary<string, object> CreateRequestResponseApiMethod(ApiRoute method) {
@@ -516,10 +472,9 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // check if function has any SNS topic event sources
             foreach(var topicSource in function.Sources.OfType<TopicSource>()) {
-                var parameter = (AResourceParameter)module.GetResource(topicSource.TopicName);
-                EnumerateOrDefault(parameter.Resource.ResourceReferences, parameter.Reference, (suffix, arn) => {
-                    function.AddResource(new CloudFormationResourceParameter {
-                        Name = $"{parameter.ResourceName}SnsPermission{suffix}",
+                Enumerate(topicSource.TopicName, (suffix, parameter, arn) => {
+                    _module.AddEntry(function, new CloudFormationResourceParameter {
+                        Name = $"{parameter.LogicalId}SnsPermission{suffix}",
                         Resource = CreateResource("AWS::Lambda::Permission", new Dictionary<string, object> {
                             ["Action"] = "lambda:InvokeFunction",
                             ["SourceArn"] = arn,
@@ -527,8 +482,8 @@ namespace MindTouch.LambdaSharp.Tool {
                             ["Principal"] = "sns.amazonaws.com"
                         })
                     });
-                    function.AddResource(new CloudFormationResourceParameter {
-                        Name = $"{parameter.ResourceName}Subscription{suffix}",
+                    _module.AddEntry(function, new CloudFormationResourceParameter {
+                        Name = $"{parameter.LogicalId}Subscription{suffix}",
                         Resource = CreateResource("AWS::SNS::Subscription", new Dictionary<string, object> {
                             ["Endpoint"] = FnGetAtt(function.Name, "Arn"),
                             ["Protocol"] = "lambda",
@@ -543,7 +498,7 @@ namespace MindTouch.LambdaSharp.Tool {
             if(scheduleSources.Any()) {
                 for(var i = 0; i < scheduleSources.Count; ++i) {
                     var name = "ScheduleEvent" + (i + 1).ToString();
-                    function.AddResource(new CloudFormationResourceParameter {
+                    _module.AddEntry(function, new CloudFormationResourceParameter {
                         Name = name,
                         Resource = CreateResource("AWS::Events::Rule", new Dictionary<string, object> {
                             ["ScheduleExpression"] = scheduleSources[i].Expression,
@@ -575,7 +530,7 @@ namespace MindTouch.LambdaSharp.Tool {
                             }
                         })
                     });
-                    function.AddResource(new CloudFormationResourceParameter {
+                    _module.AddEntry(function, new CloudFormationResourceParameter {
                         Name = name + "Permission",
                         Resource = CreateResource("AWS::Lambda::Permission", new Dictionary<string, object> {
                             ["Action"] = "lambda:InvokeFunction",
@@ -607,15 +562,15 @@ namespace MindTouch.LambdaSharp.Tool {
             if(s3Sources.Any()) {
                 foreach(var grp in s3Sources
                     .Select(source => new {
-                        Parameter = (AResourceParameter)module.GetResource(source.Bucket),
+                        FullName = source.Bucket,
                         Source = source
-                    }).ToLookup(tuple => tuple.Parameter.ResourceName)
+                    }).ToLookup(tuple => tuple.FullName)
                 ) {
-                    var functionS3Permission = $"{grp.Key}S3Permission";
-                    var functionS3Subscription = $"{grp.Key}S3Subscription";
-                    EnumerateOrDefault(grp.First().Parameter.Resource.ResourceReferences, FnGetAtt(grp.Key, "Arn"), (suffix, arn) => {
-                        function.AddResource(new CloudFormationResourceParameter {
-                            Name = functionS3Permission,
+                    Enumerate(grp.Key, (suffix, parameter, arn) => {
+                        var functionS3Permission = $"{parameter.LogicalId}S3Permission";
+                        var functionS3Subscription = $"{parameter.LogicalId}S3Subscription";
+                        _module.AddEntry(function, new CloudFormationResourceParameter {
+                            Name = functionS3Permission + suffix,
                             Resource = CreateResource("AWS::Lambda::Permission", new Dictionary<string, object> {
                                 ["Action"] = "lambda:InvokeFunction",
                                 ["SourceAccount"] = FnRef("AWS::AccountId"),
@@ -624,8 +579,8 @@ namespace MindTouch.LambdaSharp.Tool {
                                 ["Principal"] = "s3.amazonaws.com"
                             })
                         });
-                        function.AddResource(new CloudFormationResourceParameter {
-                            Name = functionS3Subscription,
+                        _module.AddEntry(function, new CloudFormationResourceParameter {
+                            Name = functionS3Subscription + suffix,
                             Resource = CreateResource("LambdaSharp::S3::Subscription", new Dictionary<string, object> {
                                 ["BucketArn"] = arn,
                                 ["FunctionArn"] = FnGetAtt(function.Name, "Arn"),
@@ -651,10 +606,9 @@ namespace MindTouch.LambdaSharp.Tool {
             var sqsSources = function.Sources.OfType<SqsSource>().ToList();
             if(sqsSources.Any()) {
                 foreach(var source in sqsSources) {
-                    var parameter = (AResourceParameter)module.GetResource(source.Queue);
-                    EnumerateOrDefault(parameter.Resource.ResourceReferences, FnGetAtt(parameter.ResourceName, "Arn"), (suffix, arn) => {
-                        function.AddResource(new CloudFormationResourceParameter {
-                            Name = $"{parameter.ResourceName}EventMapping{suffix}",
+                    Enumerate(source.Queue, (suffix, parameter, arn) => {
+                        _module.AddEntry(function, new CloudFormationResourceParameter {
+                            Name = $"{parameter.LogicalId}EventMapping{suffix}",
                             Resource = CreateResource("AWS::Lambda::EventSourceMapping", new Dictionary<string, object> {
                                 ["BatchSize"] = source.BatchSize,
                                 ["Enabled"] = true,
@@ -689,7 +643,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         );
                         module.Conditions.Add(condition, FnEquals(source.EventSourceToken, "*"));
                     }
-                    function.AddResource(new CloudFormationResourceParameter {
+                    _module.AddEntry(function, new CloudFormationResourceParameter {
                         Name = $"AlexaPermission{suffix}",
                         Resource = CreateResource("AWS::Lambda::Permission", new Dictionary<string, object> {
                             ["Action"] = "lambda:InvokeFunction",
@@ -705,10 +659,9 @@ namespace MindTouch.LambdaSharp.Tool {
             var dynamoDbSources = function.Sources.OfType<DynamoDBSource>().ToList();
             if(dynamoDbSources.Any()) {
                 foreach(var source in dynamoDbSources) {
-                    var parameter = (AResourceParameter)module.GetResource(source.DynamoDB);
-                    EnumerateOrDefault(parameter.Resource.ResourceReferences, FnGetAtt(parameter.ResourceName, "StreamArn"), (suffix, arn) => {
-                        function.AddResource(new CloudFormationResourceParameter {
-                            Name = $"{parameter.ResourceName}EventMapping{suffix}",
+                    Enumerate(source.DynamoDB, (suffix, parameter, arn) => {
+                        _module.AddEntry(function, new CloudFormationResourceParameter {
+                            Name = $"{parameter.LogicalId}EventMapping{suffix}",
                             Resource = CreateResource("AWS::Lambda::EventSourceMapping", new Dictionary<string, object> {
                                 ["BatchSize"] = source.BatchSize,
                                 ["StartingPosition"] = source.StartingPosition,
@@ -725,10 +678,9 @@ namespace MindTouch.LambdaSharp.Tool {
             var kinesisSources = function.Sources.OfType<KinesisSource>().ToList();
             if(kinesisSources.Any()) {
                 foreach(var source in kinesisSources) {
-                    var parameter = (AResourceParameter)module.GetResource(source.Kinesis);
-                    EnumerateOrDefault(parameter.Resource.ResourceReferences, FnGetAtt(parameter.ResourceName, "Arn"), (suffix, arn) => {
-                        function.AddResource(new CloudFormationResourceParameter {
-                            Name = $"{parameter.ResourceName}EventMapping{suffix}",
+                    Enumerate(source.Kinesis, (suffix, parameter, arn) => {
+                        _module.AddEntry(function, new CloudFormationResourceParameter {
+                            Name = $"{parameter.LogicalId}EventMapping{suffix}",
                             Resource = CreateResource("AWS::Lambda::EventSourceMapping", new Dictionary<string, object> {
                                 ["BatchSize"] = source.BatchSize,
                                 ["StartingPosition"] = source.StartingPosition,
@@ -741,5 +693,43 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
             }
         }
-    }
+
+        private void EnumerateOrDefault(IList<object> items, object single, Action<string, object> callback) {
+            switch(items.Count) {
+            case 0:
+                callback("", single);
+                break;
+            case 1:
+                callback("", items.First());
+                break;
+            default:
+                for(var i = 0; i < items.Count; ++i) {
+                    callback((i + 1).ToString(), items[i]);
+                }
+                break;
+            }
+        }
+
+        private void Enumerate(string fullName, Action<string, AResource, object> action) {
+            var entry = _module.GetEntry(fullName);
+            var variable = _module.GetVariable(fullName);
+            if(variable.Reference is IList list) {
+                switch(list.Count) {
+                case 0:
+                    action("", entry, variable.Reference);
+                    break;
+                case 1:
+                    action("", entry, list[0]);
+                    break;
+                default:
+                    for(var i = 0; i < list.Count; ++i) {
+                        action((i + 1).ToString(), entry, list[i]);
+                    }
+                    break;
+                }
+            } else {
+                action("", entry, variable.Reference);
+            }
+        }
+   }
 }
