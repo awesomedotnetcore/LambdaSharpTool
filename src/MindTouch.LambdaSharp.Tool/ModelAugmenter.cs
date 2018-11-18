@@ -596,16 +596,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 var sourceSuffix = (sourceIndex + 1).ToString();
                 switch(source) {
                 case TopicSource topicSource:
-                    Enumerate(topicSource.TopicName, (suffix, parameter, arn) => {
-                        function.AddEntry(new HumidifierParameter {
-                            Name = $"Source{sourceSuffix}SnsPermission{suffix}",
-                            Resource = new Humidifier.Lambda.Permission {
-                                Action = "lambda:InvokeFunction",
-                                SourceArn = arn,
-                                FunctionName = FnGetAtt(function.FullName, "Arn"),
-                                Principal = "sns.amazonaws.com"
-                            }
-                        });
+                    Enumerate(topicSource.TopicName, (suffix, _, arn) => {
                         function.AddEntry(new HumidifierParameter {
                             Name = $"Source{sourceSuffix}Subscription{suffix}",
                             Resource = new Humidifier.SNS.Subscription {
@@ -614,16 +605,25 @@ namespace MindTouch.LambdaSharp.Tool {
                                 TopicArn = arn
                             }
                         });
+                        function.AddEntry(new HumidifierParameter {
+                            Name = $"Source{sourceSuffix}Permission{suffix}",
+                            Resource = new Humidifier.Lambda.Permission {
+                                Action = "lambda:InvokeFunction",
+                                SourceArn = arn,
+                                FunctionName = FnGetAtt(function.FullName, "Arn"),
+                                Principal = "sns.amazonaws.com"
+                            }
+                        });
                     });
                     break;
                 case ScheduleSource scheduleSource: {
-                        var scheduleEntry = function.AddEntry(new HumidifierParameter {
-                            Name = $"ScheduleEvent{sourceSuffix}",
+                        var schedule = function.AddEntry(new HumidifierParameter {
+                            Name = $"Source{sourceSuffix}ScheduleEvent",
                             Resource = new Humidifier.Events.Rule {
                                 ScheduleExpression = scheduleSource.Expression,
                                 Targets = new[] {
                                     new Humidifier.Events.RuleTypes.Target {
-                                        Id = FnSub($"${{AWS::StackName}}{function.LogicalId}Source{sourceSuffix}"),
+                                        Id = FnSub($"${{AWS::StackName}}-{function.LogicalId}Source{sourceSuffix}ScheduleEvent"),
                                         Arn = FnGetAtt(function.FullName, "Arn"),
                                         InputTransformer = new Humidifier.Events.RuleTypes.InputTransformer {
                                             InputPathsMap = new Dictionary<string, object> {
@@ -636,13 +636,13 @@ namespace MindTouch.LambdaSharp.Tool {
                                             },
                                             InputTemplate =
 @"{
-""Version"": <version>,
-""Id"": <id>,
-""Source"": <source>,
-""Account"": <account>,
-""Time"": <time>,
-""Region"": <region>,
-""tName"": """ + scheduleSource.Name + @"""
+    ""Version"": <version>,
+    ""Id"": <id>,
+    ""Source"": <source>,
+    ""Account"": <account>,
+    ""Time"": <time>,
+    ""Region"": <region>,
+    ""tName"": """ + scheduleSource.Name + @"""
 }"
                                         }
                                     }
@@ -653,23 +653,65 @@ namespace MindTouch.LambdaSharp.Tool {
                             Name = $"Source{sourceSuffix}Permission",
                             Resource = new Humidifier.Lambda.Permission {
                                 Action = "lambda:InvokeFunction",
-                                SourceArn = FnGetAtt(scheduleEntry.FullName, "Arn"),
+                                SourceArn = FnGetAtt(schedule.FullName, "Arn"),
                                 FunctionName = FnGetAtt(function.FullName, "Arn"),
                                 Principal = "events.amazonaws.com"
                             }
                         });
                     }
                     break;
-                case ApiGatewaySource apiGatewaySource: {
-
-                    }
+                case ApiGatewaySource apiGatewaySource:
+                    _apiGatewayRoutes.Add(new ApiRoute {
+                        Method = apiGatewaySource.Method,
+                        Path = apiGatewaySource.Path,
+                        Integration = apiGatewaySource.Integration,
+                        Function = function,
+                        OperationName = apiGatewaySource.OperationName,
+                        ApiKeyRequired = apiGatewaySource.ApiKeyRequired
+                    });
                     break;
-                case S3Source s3Source: {
+                case S3Source s3Source:
+                    Enumerate(s3Source.Bucket, (suffix, _, arn) => {
+                        var permission = function.AddEntry(new HumidifierParameter {
+                            Name = $"Source{sourceSuffix}Permission",
+                            Resource = new Humidifier.Lambda.Permission {
+                                Action = "lambda:InvokeFunction",
+                                SourceAccount = FnRef("AWS::AccountId"),
+                                SourceArn = arn,
+                                FunctionName = FnGetAtt(function.FullName, "Arn"),
+                                Principal = "s3.amazonaws.com"
+                            }
+                        });
+                        function.AddEntry(new CloudFormationResourceParameter {
+                            Name = $"Source{sourceSuffix}Subscription",
+                            Resource = CreateResource("LambdaSharp::S3::Subscription", new Dictionary<string, object> {
+                                ["BucketArn"] = arn,
+                                ["FunctionArn"] = FnGetAtt(function.FullName, "Arn"),
+                                ["Filters"] = new List<object> {
 
-                    }
+                                    // TODO (2018-11-18, bjorg): we need to group filters from the same function for the same bucket
+                                    ConvertS3Source()
+                                }
+                            }, dependsOn: new List<string> { permission.FullName })
+                        });
+
+                        // local function
+                        Dictionary<string, object> ConvertS3Source() {
+                            var filter = new Dictionary<string, object> {
+                                ["Events"] = s3Source.Events
+                            };
+                            if(s3Source.Prefix != null) {
+                                filter["Prefix"] = s3Source.Prefix;
+                            }
+                            if(s3Source.Suffix != null) {
+                                filter["Suffix"] = s3Source.Suffix;
+                            }
+                            return filter;
+                        }
+                    });
                     break;
                 case SqsSource sqsSource:
-                    Enumerate(sqsSource.Queue, (suffix, parameter, arn) => {
+                    Enumerate(sqsSource.Queue, (suffix, _, arn) => {
                         function.AddEntry(new HumidifierParameter {
                             Name = $"Source{sourceSuffix}EventMapping{suffix}",
                             Resource = new Humidifier.Lambda.EventSourceMapping {
@@ -690,6 +732,8 @@ namespace MindTouch.LambdaSharp.Tool {
                                 eventSourceToken = null;
                             }
                         } else if(eventSourceToken != null) {
+
+                            // create conditional expression toi allow "*" values
                             var condition = $"{function.LogicalId}Source{sourceSuffix}AlexaIsBlank";
                             eventSourceToken = FnIf(
                                 condition,
@@ -710,7 +754,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     }
                     break;
                 case DynamoDBSource dynamoDbSource:
-                    Enumerate(dynamoDbSource.DynamoDB, (suffix, parameter, arn) => {
+                    Enumerate(dynamoDbSource.DynamoDB, (suffix, _, arn) => {
                         function.AddEntry(new HumidifierParameter {
                             Name = $"Source{sourceSuffix}EventMapping{suffix}",
                             Resource = new Humidifier.Lambda.EventSourceMapping {
@@ -724,7 +768,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     });
                     break;
                 case KinesisSource kinesisSource:
-                    Enumerate(kinesisSource.Kinesis, (suffix, parameter, arn) => {
+                    Enumerate(kinesisSource.Kinesis, (suffix, _, arn) => {
                         function.AddEntry(new HumidifierParameter {
                             Name = $"Source{sourceSuffix}EventMapping{suffix}",
                             Resource = new Humidifier.Lambda.EventSourceMapping {
@@ -739,66 +783,6 @@ namespace MindTouch.LambdaSharp.Tool {
                     break;
                 default:
                     throw new ApplicationException($"unrecognized function source type '{source?.GetType()}' for source #{sourceSuffix}");
-                }
-            }
-
-            // check if function has any API gateway event sources
-            var apiSources = function.Resource.Sources.OfType<ApiGatewaySource>().ToList();
-            if(apiSources.Any()) {
-                foreach(var apiEvent in apiSources) {
-                    _apiGatewayRoutes.Add(new ApiRoute {
-                        Method = apiEvent.Method,
-                        Path = apiEvent.Path,
-                        Integration = apiEvent.Integration,
-                        Function = function,
-                        OperationName = apiEvent.OperationName,
-                        ApiKeyRequired = apiEvent.ApiKeyRequired
-                    });
-                }
-            }
-
-            // check if function has any S3 event sources
-            var s3Sources = function.Resource.Sources.OfType<S3Source>().ToList();
-            if(s3Sources.Any()) {
-                foreach(var grp in s3Sources
-                    .Select(source => new {
-                        FullName = source.Bucket,
-                        Source = source
-                    }).ToLookup(tuple => tuple.FullName)
-                ) {
-                    Enumerate(grp.Key, (suffix, parameter, arn) => {
-                        var functionS3Permission = $"{parameter.LogicalId}S3Permission";
-                        var functionS3Subscription = $"{parameter.LogicalId}S3Subscription";
-                        function.AddEntry(new HumidifierParameter {
-                            Name = functionS3Permission + suffix,
-                            Resource = new Humidifier.Lambda.Permission {
-                                Action = "lambda:InvokeFunction",
-                                SourceAccount = FnRef("AWS::AccountId"),
-                                SourceArn = arn,
-                                FunctionName = FnGetAtt(function.FullName, "Arn"),
-                                Principal = "s3.amazonaws.com"
-                            }
-                        });
-                        function.AddEntry(new CloudFormationResourceParameter {
-                            Name = functionS3Subscription + suffix,
-                            Resource = CreateResource("LambdaSharp::S3::Subscription", new Dictionary<string, object> {
-                                ["BucketArn"] = arn,
-                                ["FunctionArn"] = FnGetAtt(function.FullName, "Arn"),
-                                ["Filters"] = grp.Select(tuple => {
-                                    var filter = new Dictionary<string, object>() {
-                                        ["Events"] = tuple.Source.Events,
-                                    };
-                                    if(tuple.Source.Prefix != null) {
-                                        filter["Prefix"] = tuple.Source.Prefix;
-                                    }
-                                    if(tuple.Source.Suffix != null) {
-                                        filter["Suffix"] = tuple.Source.Suffix;
-                                    }
-                                    return filter;
-                                }).ToArray()
-                            }, dependsOn: new List<string> { functionS3Permission })
-                        });
-                    });
                 }
             }
         }
