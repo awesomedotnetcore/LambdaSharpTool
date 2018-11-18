@@ -144,7 +144,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 _module.AddResourceStatement(new Humidifier.Statement {
                     Sid = "ModuleDeadLetterQueueLogging",
                     Effect = "Allow",
-                    Resource = _module.GetVariable("Module::DeadLetterQueueArn").Reference,
+                    Resource = _module.GetVariable("Module::DeadLetterQueueArn"),
                     Action = new List<string> {
                         "sqs:SendMessage"
                     }
@@ -279,7 +279,7 @@ namespace MindTouch.LambdaSharp.Tool {
                                                 Sid = "CloudWatchLogsKinesisPermissions",
                                                 Effect = "Allow",
                                                 Action = "kinesis:PutRecord",
-                                                Resource = _module.GetVariable("Module::LoggingStreamArn").Reference
+                                                Resource = _module.GetVariable("Module::LoggingStreamArn")
                                             }
                                         }.ToList()
                                     }
@@ -832,10 +832,10 @@ namespace MindTouch.LambdaSharp.Tool {
         private void Enumerate(string fullName, Action<string, AResource, object> action) {
             var entry = _module.GetEntry(fullName);
             var variable = _module.GetVariable(fullName);
-            if(variable.Reference is IList list) {
+            if(variable is IList list) {
                 switch(list.Count) {
                 case 0:
-                    action("", entry, variable.Reference);
+                    action("", entry, variable);
                     break;
                 case 1:
                     action("", entry, list[0]);
@@ -847,7 +847,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     break;
                 }
             } else {
-                action("", entry, variable.Reference);
+                action("", entry, variable);
             }
         }
    }

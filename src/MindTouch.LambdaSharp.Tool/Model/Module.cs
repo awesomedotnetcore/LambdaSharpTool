@@ -28,13 +28,6 @@ using YamlDotNet.Serialization;
 
 namespace MindTouch.LambdaSharp.Tool.Model {
 
-    public class ModuleVariable {
-
-        //--- Properties ---
-        public string FullName { get; set; }
-        public object Reference { get; set; }
-    }
-
     public class ModuleGrant {
 
         //--- Properties ---
@@ -51,7 +44,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public string Description { get; set; }
         public IList<object> Pragmas { get; } = new List<object>();
         public IList<object> Secrets { get; set; } = new List<object>();
-        public IDictionary<string, ModuleVariable> Variables { get; } = new Dictionary<string, ModuleVariable>();
+        public IDictionary<string, object> Variables { get; } = new Dictionary<string, object>();
         public IList<AResource> Resources { get; } = new List<AResource>();
         public IList<AOutput> Outputs { get; } = new List<AOutput>();
         public IDictionary<string, object> Conditions  { get; set; } = new Dictionary<string, object>();

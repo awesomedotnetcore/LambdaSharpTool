@@ -53,6 +53,9 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             }
             _module.Resources.Add(resource);
             AddVariable(resource.FullName, resource.Reference ?? FnRef(resource.ResourceName));
+
+            // clearing out the reference, because it never gets used after this step
+            resource.Reference = null;
             return resource;
         }
 
@@ -83,23 +86,17 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         }
 
         public void AddVariable(string fullName, object reference) {
-            _module.Variables.Add(fullName, new ModuleVariable {
-                FullName = fullName ?? throw new ArgumentNullException(nameof(fullName)),
-                Reference = reference ?? throw new ArgumentNullException(nameof(reference))
-            });
+            _module.Variables.Add(fullName, reference ?? throw new ArgumentNullException(nameof(reference)));
         }
 
         public void UpdateVariable(AResource resource, object reference) {
             if(!_module.Variables.ContainsKey(resource.FullName)) {
                 throw new KeyNotFoundException($"could not find key: {resource.FullName}");
             }
-            _module.Variables[resource.FullName] = new ModuleVariable {
-                FullName = resource.FullName,
-                Reference = reference ?? throw new ArgumentNullException(nameof(reference))
-            };
+            _module.Variables[resource.FullName] = reference ?? throw new ArgumentNullException(nameof(reference));
         }
 
-        public ModuleVariable GetVariable(string fullName) => _module.Variables[fullName];
+        public object GetVariable(string fullName) => _module.Variables[fullName];
 
         public AResource AddInput(
             string name,

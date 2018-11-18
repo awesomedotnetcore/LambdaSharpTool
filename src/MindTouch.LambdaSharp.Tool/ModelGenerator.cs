@@ -238,7 +238,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
             }
 
-            object GetReference() => _module.Variables[definition.FullName].Reference;
+            object GetReference() => _module.Variables[definition.FullName];
         }
 
         private void AddFunction(Module module, Function function) {
@@ -250,8 +250,8 @@ namespace MindTouch.LambdaSharp.Tool {
             environmentVariables["MODULE_VERSION"] = module.Version.ToString();
             environmentVariables["LAMBDA_NAME"] = function.Name;
             environmentVariables["LAMBDA_RUNTIME"] = function.Runtime;
-            environmentVariables["DEADLETTERQUEUE"] = module.Variables["LambdaSharp::DeadLetterQueueArn"].Reference;
-            environmentVariables["DEFAULTSECRETKEY"] = module.Variables["LambdaSharp::DefaultSecretKeyArn"].Reference;
+            environmentVariables["DEADLETTERQUEUE"] = module.Variables["LambdaSharp::DeadLetterQueueArn"];
+            environmentVariables["DEFAULTSECRETKEY"] = module.Variables["LambdaSharp::DefaultSecretKeyArn"];
 
             // check if function as a VPC configuration
             Lambda.FunctionTypes.VpcConfig vpcConfig = null;
@@ -276,7 +276,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     S3Key = FnSub($"Modules/{module.Name}/Assets/{Path.GetFileName(function.PackagePath)}")
                 },
                 DeadLetterConfig = new Lambda.FunctionTypes.DeadLetterConfig {
-                    TargetArn = module.Variables["Module::DeadLetterQueueArn"].Reference
+                    TargetArn = module.Variables["Module::DeadLetterQueueArn"]
                 },
                 Environment = new Lambda.FunctionTypes.Environment {
                     Variables = environmentVariables
