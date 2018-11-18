@@ -484,13 +484,15 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 if(HasErrors) {
                     return false;
                 }
-File.WriteAllText("module.json", JsonConvert.SerializeObject(module, Formatting.Indented));
 
                 // resolve all references
                 new ModelReferenceResolver(settings, moduleSource).Resolve(module);
                 if(HasErrors) {
                     return false;
                 }
+File.WriteAllText("module.json", JsonConvert.SerializeObject(module, Formatting.Indented));
+Console.WriteLine("module.json generated");
+return false;
 
                 // generate & save cloudformation template
                 var template = new ModelGenerator(settings, moduleSource).Generate(module);

@@ -20,6 +20,7 @@
  */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -49,9 +50,9 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // resolve scopes
             var functionNames = new HashSet<string>(module.Resources.OfType<Function>().Select(function => function.FullName));
-            foreach(var variable in module.Variables.Values) {
-                if(variable.Scope.Contains("*")) {
-                    variable.Scope = variable.Scope
+            foreach(var resource in module.Resources) {
+                if(resource.Scope.Contains("*")) {
+                    resource.Scope = resource.Scope
                         .Where(scope => scope != "*")
                         .Union(functionNames)
                         .Distinct()
@@ -97,19 +98,32 @@ namespace MindTouch.LambdaSharp.Tool {
                 return;
             }
 
-            // resolve references in resource properties
-            foreach(var parameter in module.GetAllResources()
-                .OfType<AResourceParameter>()
-                .Where(p => p.Resource?.Properties != null)
-            ) {
-                parameter.Resource.Properties = (IDictionary<string, object>)Substitute(parameter.Resource.Properties, ReportMissingReference);
+            // resolve everything to logical ids
+            module.Secrets = (IList<object>)Substitute(module.Secrets, final: true);;
+            module.Conditions = (IDictionary<string, object>)Substitute(module.Conditions, final: true);
+            foreach(var parameter in module.GetAllResources()) {
+                switch(parameter) {
+                case AResourceParameter resourceParameter:
+                    if(resourceParameter.Resource != null) {
+                        var resource = resourceParameter.Resource;
+                        if(resource.Properties?.Any() == true) {
+                            resource.Properties = (IDictionary<string, object>)Substitute(resource.Properties, ReportMissingReference, final: true);
+                        }
+                        resourceParameter.Resource.DependsOn = resourceParameter.Resource.DependsOn.Select(dependency => module.GetResource(dependency).LogicalId).ToList();
+                    }
+                    break;
+                case HumidifierParameter humidifierParameter:
+                    humidifierParameter.Resource = (Humidifier.Resource)Substitute(humidifierParameter.Resource, ReportMissingReference, final: true);
+                    humidifierParameter.DependsOn = humidifierParameter.DependsOn.Select(dependency => module.GetResource(dependency).LogicalId).ToList();
+                    break;
+                }
             }
 
             // resolve references in output values
             foreach(var output in module.Outputs) {
                 switch(output) {
                 case ExportOutput exportOutput:
-                    exportOutput.Value = ResolveResourceNamesToLogicalIds(Substitute(exportOutput.Value, ReportMissingReference));
+                    exportOutput.Value = Substitute(exportOutput.Value, ReportMissingReference, final: true);
                     break;
                 case CustomResourceHandlerOutput _:
                 case MacroOutput _:
@@ -123,12 +137,12 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // resolve references in functions
             foreach(var function in module.Resources.OfType<Function>()) {
-                function.Environment = (IDictionary<string, object>)ResolveResourceNamesToLogicalIds(Substitute(function.Environment, ReportMissingReference));
+                function.Environment = (IDictionary<string, object>)Substitute(function.Environment, ReportMissingReference, final: true);
 
                 // update VPC information
                 if(function.VPC != null) {
-                    function.VPC.SecurityGroupIds = ResolveResourceNamesToLogicalIds(Substitute(function.VPC.SecurityGroupIds));
-                    function.VPC.SubnetIds = ResolveResourceNamesToLogicalIds(Substitute(function.VPC.SubnetIds));
+                    function.VPC.SecurityGroupIds = Substitute(function.VPC.SecurityGroupIds, final: true);
+                    function.VPC.SubnetIds = Substitute(function.VPC.SubnetIds, final: true);
                 }
 
                 // update function sources
@@ -136,7 +150,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     switch(source) {
                     case AlexaSource alexaSource:
                         if(alexaSource.EventSourceToken != null) {
-                            alexaSource.EventSourceToken = ResolveResourceNamesToLogicalIds(Substitute(alexaSource.EventSourceToken, ReportMissingReference));
+                            alexaSource.EventSourceToken = Substitute(alexaSource.EventSourceToken, ReportMissingReference, final: true);
                         }
                         break;
                     }
@@ -144,22 +158,9 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
             }
 
-            // resolve everything to logical ids
-            module.Secrets = module.Secrets.Select(ResolveResourceNamesToLogicalIds).ToList();
-            module.Conditions = (IDictionary<string, object>)ResolveResourceNamesToLogicalIds(module.Conditions);
-            foreach(var parameter in module.GetAllResources()) {
-                if((parameter is AResourceParameter resourceParameter) && (resourceParameter.Resource != null)) {
-                    var resource = resourceParameter.Resource;
-                    if(resource.Properties?.Any() == true) {
-                        resource.Properties = (IDictionary<string, object>)ResolveResourceNamesToLogicalIds(resource.Properties);
-                    }
-                    if(resource.DependsOn?.Any() == true) {
-                        resourceParameter.Resource.DependsOn = resourceParameter.Resource.DependsOn.Select(dependency => module.GetResource(dependency).LogicalId).ToList();
-                    }
-                }
-            }
+            // resolve references in grants
             foreach(var grant in module.Grants) {
-                grant.References = ResolveResourceNamesToLogicalIds(grant.References);
+                grant.References = Substitute(grant.References, ReportMissingReference, final: true);
             }
 
             // local functions
@@ -235,119 +236,170 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
             }
 
-            object Substitute(object value, Action<string> missing = null) {
-
-                // check if we need to convert the dictionary keys to be strings
-                if(value is IDictionary<object, object> objectMap) {
-                    value = objectMap.ToDictionary(kv => (string)kv.Key, kv => kv.Value);
-                }
+            object Substitute(object value, Action<string> missing = null, bool final = false) {
                 switch(value) {
-                case IDictionary<string, object> map:
-                    map = map.ToDictionary(kv => kv.Key, kv => Substitute(kv.Value, missing));
-                    if(map.Count == 1) {
-
-                        // handle !Ref expression
-                        if(map.TryGetValue("Ref", out object refObject) && (refObject is string refKey)) {
-                            if(TrySubstitute(refKey, null, out object found)) {
-                                return found ?? map;
-                            }
-                            DebugWriteLine($"NOT FOUND => {refKey}");
-                            missing?.Invoke(refKey);
-                            return map;
+                case IDictionary dictionary: {
+                        var map = new Dictionary<object, object>();
+                        foreach(DictionaryEntry entry in dictionary) {
+                            map.Add(entry.Key, Substitute(entry.Value, missing, final));
                         }
-
-                        // handle !GetAtt expression
-                        if(
-                            map.TryGetValue("Fn::GetAtt", out object getAttObject)
-                            && (getAttObject is IList<object> getAttArgs)
-                            && (getAttArgs.Count == 2)
-                            && getAttArgs[0] is string getAttKey
-                            && getAttArgs[1] is string getAttAttribute
-                        ) {
-                            if(TrySubstitute(getAttKey, getAttAttribute, out object found)) {
-                                return found ?? map;
-                            }
-                            DebugWriteLine($"NOT FOUND => {getAttKey}");
-                            missing?.Invoke(getAttKey);
-                            return map;
+                        foreach(var entry in map) {
+                            dictionary[entry.Key] = entry.Value;
                         }
+                        if(map.Count == 1) {
 
-                        // handle !Sub expression
-                        if(map.TryGetValue("Fn::Sub", out object subObject)) {
-                            string subPattern;
-                            IDictionary<string, object> subArgs = null;
-
-                            // determine which form of !Sub is being used
-                            if(subObject is string) {
-                                subPattern = (string)subObject;
-                                subArgs = new Dictionary<string, object>();
-                            } else if(
-                                (subObject is IList<object> subList)
-                                && (subList.Count == 2)
-                                && (subList[0] is string)
-                                && (subList[1] is IDictionary<string, object>)
-                            ) {
-                                subPattern = (string)subList[0];
-                                subArgs = (IDictionary<string, object>)subList[1];
-                            } else {
-                                return map;
-                            }
-
-                            // replace as many ${VAR} occurrences as possible
-                            var substitions = false;
-                            subPattern = Regex.Replace(subPattern, SUBVARIABLE_PATTERN, match => {
-                                var matchText = match.ToString();
-                                var name = matchText.Substring(2, matchText.Length - 3).Trim().Split('.', 2);
-                                if(!subArgs.ContainsKey(name[0])) {
-                                    if(TrySubstitute(name[0], (name.Length == 2) ? name[1] : null, out object found)) {
-                                        substitions = true;
-                                        if(found == null) {
-                                            return matchText;
-                                        }
-                                        if(found is string text) {
-                                            return text;
-                                        }
-                                        var argName = $"P{subArgs.Count}";
-                                        subArgs.Add(argName, found);
-                                        return "${" + argName + "}";
-                                    }
-                                    DebugWriteLine($"NOT FOUND => {name[0]}");
-                                    missing?.Invoke(name[0]);
+                            // handle !Ref expression
+                            if(map.TryGetValue("Ref", out object refObject) && (refObject is string refKey)) {
+                                if(TrySubstitute(refKey, null, final, out object found)) {
+                                    return found ?? value;
                                 }
-                                return matchText;
-                            });
-                            if(!substitions) {
-                                return map;
+                                DebugWriteLine($"NOT FOUND => {refKey}");
+                                missing?.Invoke(refKey);
+                                return value;
                             }
 
-                            // determine which form of !Sub to construct
-                            return subArgs.Any()
-                                ? FnSub(subPattern, subArgs)
-                                : Regex.IsMatch(subPattern, SUBVARIABLE_PATTERN)
-                                ? FnSub(subPattern)
-                                : subPattern;
-                        }
-                    }
-                    return map;
-                case IList<object> list:
-                    return list.Select(item => Substitute(item, missing)).ToList();
-                case null:
-                    AddError("null value is not allowed");
-                    return value;
-                default:
+                            // handle !GetAtt expression
+                            if(
+                                map.TryGetValue("Fn::GetAtt", out object getAttObject)
+                                && (getAttObject is IList<object> getAttArgs)
+                                && (getAttArgs.Count == 2)
+                                && getAttArgs[0] is string getAttKey
+                                && getAttArgs[1] is string getAttAttribute
+                            ) {
+                                if(TrySubstitute(getAttKey, getAttAttribute, final, out object found)) {
+                                    return found ?? map;
+                                }
+                                DebugWriteLine($"NOT FOUND => {getAttKey}");
+                                missing?.Invoke(getAttKey);
+                                return value;
+                            }
 
-                    // nothing further to substitute
-                    return value;
+                            // handle !Sub expression
+                            if(map.TryGetValue("Fn::Sub", out object subObject)) {
+                                string subPattern;
+                                IDictionary<string, object> subArgs = null;
+
+                                // determine which form of !Sub is being used
+                                if(subObject is string) {
+                                    subPattern = (string)subObject;
+                                    subArgs = new Dictionary<string, object>();
+                                } else if(
+                                    (subObject is IList<object> subList)
+                                    && (subList.Count == 2)
+                                    && (subList[0] is string)
+                                    && (subList[1] is IDictionary<string, object>)
+                                ) {
+                                    subPattern = (string)subList[0];
+                                    subArgs = (IDictionary<string, object>)subList[1];
+                                } else {
+                                    return value;
+                                }
+
+                                // replace as many ${VAR} occurrences as possible
+                                var substitions = false;
+                                subPattern = Regex.Replace(subPattern, SUBVARIABLE_PATTERN, match => {
+                                    var matchText = match.ToString();
+                                    var name = matchText.Substring(2, matchText.Length - 3).Trim().Split('.', 2);
+                                    var suffix = (name.Length == 2) ? ("." + name[1]) : null;
+                                    var subRefKey = name[0];
+                                    if(!subArgs.ContainsKey(subRefKey)) {
+                                        if(TrySubstitute(subRefKey, suffix?.Substring(1), final, out object found)) {
+                                            if(found == null) {
+                                                return matchText;
+                                            }
+                                            substitions = true;
+                                            if(found is string text) {
+                                                return text;
+                                            }
+                                            if((found is IDictionary<string, object> subMap) && (subMap.Count == 1)) {
+
+                                                // check if found value is a !Ref expression that can be inlined
+                                                if(subMap.TryGetValue("Ref", out object subMapRefObject)) {
+                                                    if(name.Length == 2) {
+                                                        return "${" + subMapRefObject + suffix + "}";
+                                                    }
+                                                    return "${" + subMapRefObject + "}";
+                                                }
+
+                                                // check if found value is a !GetAtt expression that can be inlined
+                                                if(
+                                                    subMap.TryGetValue("Fn::GetAtt", out object subMapGetAttObject)
+                                                    && (subMapGetAttObject is IList<object> subMapGetAttArgs)
+                                                    && (subMapGetAttArgs.Count == 2)
+                                                ) {
+                                                    return "${" + subMapGetAttArgs[0] + "." + subMapGetAttArgs[1] + "}";
+                                                }
+                                            }
+
+                                            // substitute found value as new argument
+                                            var argName = $"P{subArgs.Count}";
+                                            subArgs.Add(argName, found);
+                                            return "${" + argName + "}";
+                                        }
+                                        DebugWriteLine($"NOT FOUND => {subRefKey}");
+                                        missing?.Invoke(subRefKey);
+                                    }
+                                    return matchText;
+                                });
+                                if(!substitions) {
+                                    return value;
+                                }
+
+                                // determine which form of !Sub to construct
+                                return subArgs.Any()
+                                    ? FnSub(subPattern, subArgs)
+                                    : Regex.IsMatch(subPattern, SUBVARIABLE_PATTERN)
+                                    ? FnSub(subPattern)
+                                    : subPattern;
+                            }
+                        }
+                        return value;
+                    }
+                case IList list: {
+                        for(var i = 0; i < list.Count; ++i) {
+                            list[i] = Substitute(list[i], missing, final);
+                        }
+                        return value;
+                    }
+                case null:
+                    throw new ApplicationException("null value is not allowed");
+                default:
+                    if(SkipType(value.GetType())) {
+
+                        // nothing further to substitute
+                        return value;
+                    }
+                    if(value.GetType().FullName.StartsWith("Humidifier.", StringComparison.Ordinal)) {
+
+                        // use reflection to substitute properties
+                        foreach(var property in value.GetType().GetProperties().Where(p => !SkipType(p.PropertyType))) {
+                            var propertyValue = property.GetGetMethod()?.Invoke(value, new object[0]);
+                            if((propertyValue != null) && !propertyValue.GetType().IsValueType) {
+                                property.GetSetMethod()?.Invoke(value, new[] { Substitute(propertyValue, missing, final) });
+                                DebugWriteLine($"UPDATED => {value.GetType()}::{property.Name} [{property.PropertyType}]");
+                            }
+                        }
+                        return value;
+                    }
+                    throw new ApplicationException($"unsupported type: {value.GetType()}");
                 }
+
+                // local function
+                bool SkipType(Type type) => type.IsValueType || type == typeof(string);
             }
 
-            bool TrySubstitute(string key, string attribute, out object found) {
+            bool TrySubstitute(string key, string attribute, bool final, out object found) {
                 found = null;
                 if(key.StartsWith("AWS::", StringComparison.Ordinal)) {
 
                     // built-in AWS variable can be kept as-is
                     return true;
                 } else if(key.StartsWith("@", StringComparison.Ordinal)) {
+                    if(final) {
+                        found = (attribute != null)
+                            ? FnGetAtt(key.Substring(1), attribute)
+                            : FnRef(key.Substring(1));
+                    }
 
                     // module resource names can be kept as-is
                     return true;
@@ -373,92 +425,6 @@ namespace MindTouch.LambdaSharp.Tool {
                     return true;
                 }
                 return false;
-            }
-
-            object ResolveResourceNamesToLogicalIds(object value) {
-                switch(value) {
-                 case IDictionary<string, object> map:
-                    map = map.ToDictionary(kv => kv.Key, kv => ResolveResourceNamesToLogicalIds(kv.Value));
-                    if(map.Count == 1) {
-
-                        // handle !Ref expression
-                        if(map.TryGetValue("Ref", out object refObject) && (refObject is string refKey) && refKey.StartsWith("@", StringComparison.Ordinal)) {
-                            return FnRef(refKey.Substring(1));
-                        }
-
-                        // handle !GetAtt expression
-                        if(
-                            map.TryGetValue("Fn::GetAtt", out object getAttObject)
-                            && (getAttObject is IList<object> getAttArgs)
-                            && (getAttArgs.Count == 2)
-                            && getAttArgs[0] is string getAttKey
-                            && getAttKey.StartsWith("@", StringComparison.Ordinal)
-                            && getAttArgs[1] is string getAttAttribute
-                        ) {
-                            return FnGetAtt(getAttKey.Substring(1), getAttAttribute);
-                        }
-
-                        // handle !Sub expression
-                        if(map.TryGetValue("Fn::Sub", out object subObject)) {
-                            string subPattern;
-                            IDictionary<string, object> subArgs = null;
-
-                            // determine which form of !Sub is being used
-                            if(subObject is string) {
-                                subPattern = (string)subObject;
-                                subArgs = new Dictionary<string, object>();
-                            } else if(
-                                (subObject is IList<object> subList)
-                                && (subList.Count == 2)
-                                && (subList[0] is string)
-                                && (subList[1] is IDictionary<string, object>)
-                            ) {
-                                subPattern = (string)subList[0];
-                                subArgs = (IDictionary<string, object>)subList[1];
-                            } else {
-                                return map;
-                            }
-
-                            // replace as many ${VAR} occurrences as possible
-                            var substitions = false;
-                            subPattern = Regex.Replace(subPattern, SUBVARIABLE_PATTERN, match => {
-                                var matchText = match.ToString();
-                                var name = matchText.Substring(2, matchText.Length - 3).Trim().Split('.', 2);
-                                if(!subArgs.ContainsKey(name[0]) && name[0].StartsWith("@", StringComparison.Ordinal)) {
-                                    return (name.Length == 2)
-                                        ? name[0].Substring(1)
-                                        : name[0].Substring(1) + "." + name[1];
-                                }
-                                return matchText;
-                            });
-                            if(!substitions) {
-                                return map;
-                            }
-
-                            // determine which form of !Sub to construct
-                            return subArgs.Any()
-                                ? FnSub(subPattern, subArgs)
-                                : Regex.IsMatch(subPattern, SUBVARIABLE_PATTERN)
-                                ? FnSub(subPattern)
-                                : subPattern;
-                        }
-                    }
-                    return map;
-                case IList<object> list:
-                    return list.Select(ResolveResourceNamesToLogicalIds).ToList();
-                case null:
-                    AddError("null value is not allowed");
-                    return value;
-                case string _:
-
-                    // nothing further to substitute
-                    return value;
-                default:
-
-                    // nothing further to substitute
-                    DebugWriteLine($"SKIPPING: {value.GetType()}");
-                    return value;
-                }
             }
         }
     }

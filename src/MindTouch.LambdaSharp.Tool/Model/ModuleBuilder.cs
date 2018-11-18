@@ -43,20 +43,16 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         //--- Methods ---
         public Module ToModule() => _module;
 
-        public AResource AddEntry(AResource resource) {
-            resource.FullName = resource.Name;
-            resource.ResourceName = $"@{resource.Name}";
-            _module.Resources.Add(resource);
-            return resource;
-        }
-
         public AResource AddEntry(AResource parent, AResource resource) {
             if(parent == null) {
-                return AddEntry(resource);
+                resource.FullName = resource.Name;
+                resource.ResourceName = $"@{resource.Name}";
+            } else {
+                resource.FullName = parent.FullName + "::" + resource.Name;
+                resource.ResourceName = parent.ResourceName + resource.Name;
             }
-            resource.FullName = parent.FullName + "::" + resource.Name;
-            resource.ResourceName = parent.ResourceName + resource.Name;
             _module.Resources.Add(resource);
+            AddVariable(resource.FullName, resource.Reference ?? FnRef(resource.ResourceName));
             return resource;
         }
 
@@ -86,12 +82,21 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             }
         }
 
-        public void AddVariable(string fullName, object reference, object scope = null) {
+        public void AddVariable(string fullName, object reference) {
             _module.Variables.Add(fullName, new ModuleVariable {
                 FullName = fullName ?? throw new ArgumentNullException(nameof(fullName)),
-                Scope = ConvertScope(scope),
                 Reference = reference ?? throw new ArgumentNullException(nameof(reference))
             });
+        }
+
+        public void UpdateVariable(AResource resource, object reference) {
+            if(!_module.Variables.ContainsKey(resource.FullName)) {
+                throw new KeyNotFoundException($"could not find key: {resource.FullName}");
+            }
+            _module.Variables[resource.FullName] = new ModuleVariable {
+                FullName = resource.FullName,
+                Reference = reference ?? throw new ArgumentNullException(nameof(reference))
+            };
         }
 
         public ModuleVariable GetVariable(string fullName) => _module.Variables[fullName];
@@ -118,7 +123,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         ) {
 
             // create input parameter entry
-            var result = AddEntry(new InputParameter {
+            var result = AddEntry(null, new InputParameter {
                 Name = name,
                 Default = defaultValue,
                 ConstraintDescription = constraintDescription,
@@ -131,6 +136,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
                 // set AParameter fields
                 Description = description,
+                Scope = ConvertScope(scope),
 
                 // set AInputParamete fields
                 Type = type ?? "String",
@@ -142,17 +148,11 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             // check if a conditional managed resource is associated with the input parameter
             if((awsType == null) && (awsAllow == null)) {
 
-                // register input reference
-                var reference = FnRef(result.ResourceName);
-                AddVariable(result.FullName, reference, scope);
+                // nothing to do
             } else if(defaultValue == null) {
 
-                // register input reference
-                var reference = FnRef(result.ResourceName);
-                AddVariable(result.FullName, reference, scope);
-
                 // request input parameter resource grants
-                AddGrant(result.LogicalId, awsType, reference, awsAllow);
+                AddGrant(result.LogicalId, awsType, FnRef(result.ResourceName), awsAllow);
             } else {
 
                 // create conditional managed resource
@@ -169,7 +169,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                     ResourceMapping.GetArnReference(awsType, instance.ResourceName),
                     FnRef(result.ResourceName)
                 );
-                AddVariable(result.FullName, reference, scope);
+                UpdateVariable(result, reference);
 
                 // request input parameter or conditional managed resource grants
                 AddGrant(instance.LogicalId, awsType, reference, awsAllow);
@@ -197,13 +197,11 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             if(rootParameter == null) {
 
                 // create root collection entry
-                rootParameter = AddEntry(new ValueParameter {
+                rootParameter = AddEntry(null, new ValueParameter {
                     Name = exportModule,
-                    Description = $"{exportModule} cross-module references"
+                    Description = $"{exportModule} cross-module references",
+                    Reference = ""
                 });
-
-                // register root collection reference
-                AddVariable(rootParameter.FullName, "");
             }
 
             // create import parameter entry
@@ -215,9 +213,10 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
                 // set AParameter fields
                 Description = description,
+                Type = type ?? "String",
+                Scope = ConvertScope(scope),
 
                 // set AInputParamete fields
-                Type = type ?? "String",
                 Section = section ?? "Module Settings",
 
                 // TODO (2018-11-11, bjorg): do we really want to use the cross-module reference when converting to a label?
@@ -235,7 +234,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 })),
                 FnRef(result.ResourceName)
             );
-            AddVariable(result.FullName, reference, scope);
+            UpdateVariable(result, reference);
 
             // check if resource grants is associated with the import parameter
             if((awsType != null) || (awsAllow != null)) {
@@ -302,7 +301,11 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         public void AddCondition(string name, object condition) => _module.Conditions.Add(name, condition);
 
-        private IList<string> ConvertScope(object scope) {
+        public void AddResourceStatement(Humidifier.Statement statement) {
+            _module.ResourceStatements.Add(statement);
+        }
+
+        public IList<string> ConvertScope(object scope) {
             if(scope == null) {
                 return new string[0];
             }

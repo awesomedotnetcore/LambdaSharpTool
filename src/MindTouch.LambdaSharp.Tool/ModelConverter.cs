@@ -38,7 +38,7 @@ namespace MindTouch.LambdaSharp.Tool {
         private const string CUSTOM_RESOURCE_PREFIX = "Custom::";
 
         //--- Fields ---
-        private ModuleBuilder _module;
+        private ModuleBuilder _builder;
 
         //--- Constructors ---
         public ModelConverter(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
@@ -58,7 +58,7 @@ namespace MindTouch.LambdaSharp.Tool {
         private Module Convert(ModuleNode module) {
 
             // initialize module
-            _module = new ModuleBuilder(Settings, SourceFilename, new Module {
+            _builder = new ModuleBuilder(Settings, SourceFilename, new Module {
                 Name = module.Module,
                 Version = VersionInfo.Parse(module.Version),
                 Description = module.Description
@@ -66,20 +66,20 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // convert collections
             ForEach("Secrets", module.Secrets, (index, secret) => {
-                AtLocation($"[{index}]", () => _module.AddSecret(secret));
+                AtLocation($"[{index}]", () => _builder.AddSecret(secret));
             });
             ForEach("Inputs", module.Inputs, ConvertInput);
             ForEach("Outputs", module.Outputs, ConvertOutput);
             ForEach("Variables", module.Variables, (index, parameter) => ConvertParameter(parent: null, index: index, parameter: parameter));
             ForEach("Functions",  module.Functions, ConvertFunction);
-            return _module.ToModule();
+            return _builder.ToModule();
         }
 
         private void ConvertInput(int index, InputNode input) {
             var type = DeterminNodeType("input", index, input, InputNode.FieldCheckers, InputNode.FieldCombinations, new[] { "Parameter", "Import" });
             switch(type) {
             case "Parameter":
-                AtLocation(input.Parameter, () => _module.AddInput(
+                AtLocation(input.Parameter, () => _builder.AddInput(
                     input.Parameter,
                     input.Description,
                     input.Type,
@@ -102,7 +102,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 ));
                 break;
             case "Import":
-                AtLocation(input.Import, () => _module.AddImport(
+                AtLocation(input.Import, () => _builder.AddImport(
                     input.Import,
                     input.Description,
                     input.Type,
@@ -137,9 +137,10 @@ namespace MindTouch.LambdaSharp.Tool {
                 AtLocation(parameter.Var, () => {
 
                     // create managed resource entry
-                    var result = _module.AddEntry(parent, new CloudFormationResourceParameter {
+                    var result = _builder.AddEntry(parent, new CloudFormationResourceParameter {
                         Name = parameter.Var,
                         Description = parameter.Description,
+                        Scope = _builder.ConvertScope(parameter.Scope),
                         Resource = CreateResource(parameter.Resource)
                     });
 
@@ -147,10 +148,10 @@ namespace MindTouch.LambdaSharp.Tool {
                     var reference = (parameter.Resource.ArnAttribute != null)
                         ? FnGetAtt(result.ResourceName, parameter.Resource.ArnAttribute)
                         : ResourceMapping.GetArnReference(parameter.Resource.Type, result.ResourceName);
-                    _module.AddVariable(result.FullName, reference, parameter.Scope);
+                    _builder.UpdateVariable(result, reference);
 
                     // request managed resource grants
-                    _module.AddGrant(result.LogicalId, parameter.Resource.Type, reference, parameter.Resource.Allow);
+                    _builder.AddGrant(result.LogicalId, parameter.Resource.Type, reference, parameter.Resource.Allow);
 
                     // recurse
                     ConvertParameters(result);
@@ -162,16 +163,15 @@ namespace MindTouch.LambdaSharp.Tool {
                 AtLocation(parameter.Var, () => {
 
                     // create exiting resource entry
-                    var result = _module.AddEntry(parent, new ReferencedResourceParameter {
+                    var result = _builder.AddEntry(parent, new ReferencedResourceParameter {
                         Name = parameter.Var,
-                        Description = parameter.Description
+                        Description = parameter.Description,
+                        Scope = _builder.ConvertScope(parameter.Scope),
+                        Reference = parameter.Value
                     });
 
-                    // register new resource reference
-                    _module.AddVariable(result.FullName, parameter.Value, parameter.Scope);
-
                     // request existing resource grants
-                    _module.AddGrant(result.LogicalId, parameter.Resource.Type, parameter.Value, parameter.Resource.Allow);
+                    _builder.AddGrant(result.LogicalId, parameter.Resource.Type, parameter.Value, parameter.Resource.Allow);
 
                     // recurse
                     ConvertParameters(result);
@@ -183,16 +183,14 @@ namespace MindTouch.LambdaSharp.Tool {
                 AtLocation(parameter.Var, () => {
 
                     // create literal value entry
-                    var result = _module.AddEntry(parent, new ValueParameter {
+                    var result = _builder.AddEntry(parent, new ValueParameter {
                         Name = parameter.Var,
-                        Description = parameter.Description
-                    });
-
-                    // register literal value reference
-                    var reference = (parameter.Value is IList<object> values)
+                        Description = parameter.Description,
+                        Scope = _builder.ConvertScope(parameter.Scope),
+                        Reference = (parameter.Value is IList<object> values)
                             ? FnJoin(",", values)
-                            : parameter.Value;
-                    _module.AddVariable(result.FullName, reference, parameter.Scope);
+                            : parameter.Value
+                    });
 
                     // recurse
                     ConvertParameters(result);
@@ -204,15 +202,20 @@ namespace MindTouch.LambdaSharp.Tool {
                 AtLocation(parameter.Var, () => {
 
                     // create encrypted value entry
-                    var result = _module.AddEntry(parent, new SecretParameter {
+                    var result = _builder.AddEntry(parent, new SecretParameter {
                         Name = parameter.Var,
                         Description = parameter.Description,
-                        Secret = parameter.Secret,
-                        EncryptionContext = parameter.EncryptionContext
+                        Scope = _builder.ConvertScope(parameter.Scope),
+                        Reference = FnJoin(
+                            "|",
+                            new object[] {
+                                parameter.Value
+                            }.Union(parameter.EncryptionContext
+                                ?.Select(kv => $"{Uri.EscapeDataString(kv.Key)}={Uri.EscapeDataString(kv.Value)}")
+                                ?? new string[0]
+                            ).ToArray()
+                        )
                     });
-
-                    // register encrypted value reference
-                    _module.AddVariable(result.FullName, parameter.Value, parameter.Scope);
 
                     // recurse
                     ConvertParameters(result);
@@ -224,13 +227,12 @@ namespace MindTouch.LambdaSharp.Tool {
                 AtLocation(parameter.Var, () => {
 
                     // create empty entry
-                    var result = _module.AddEntry(parent, new ValueParameter {
+                    var result = _builder.AddEntry(parent, new ValueParameter {
                         Name = parameter.Var,
-                        Description = parameter.Description
+                        Description = parameter.Description,
+                        Scope = _builder.ConvertScope(parameter.Scope),
+                        Reference = ""
                     });
-
-                    // register empty entry reference
-                    _module.AddVariable(result.FullName, "", parameter.Scope);
 
                     // recurse
                     ConvertParameters(result);
@@ -242,16 +244,17 @@ namespace MindTouch.LambdaSharp.Tool {
                 AtLocation(parameter.Var, () => {
 
                     // create package resource entry
-                    var result = _module.AddEntry(parent, new PackageParameter {
+                    var result = _builder.AddEntry(parent, new PackageParameter {
                         Name = parameter.Package,
                         Description = parameter.Description,
+                        Scope = _builder.ConvertScope(parameter.Scope),
                         DestinationBucketParameterName = parameter.Bucket,
                         DestinationKeyPrefix = parameter.Prefix ?? "",
                         SourceFilepath = parameter.Files
                     });
 
                     // register package resource reference
-                    _module.AddVariable(result.FullName, FnGetAtt(result.FullName, "Url"), parameter.Scope);
+                    _builder.UpdateVariable(result, FnGetAtt(result.ResourceName, "Url"));
 
                     // recurse
                     ConvertParameters(result);
@@ -270,7 +273,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
                 // append the version to the function description
                 if(function.Description != null) {
-                    function.Description = function.Description.TrimEnd() + $" (v{_module.Version})";
+                    function.Description = function.Description.TrimEnd() + $" (v{_builder.Version})";
                 }
 
                 // initialize VPC configuration if provided
@@ -293,7 +296,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
                 // create function entry
                 var eventIndex = 0;
-                var result = _module.AddEntry(new Function {
+                var result = _builder.AddEntry(null, new Function {
                     Name = function.Function,
                     Description = function.Description,
                     Memory = function.Memory,
@@ -310,9 +313,6 @@ namespace MindTouch.LambdaSharp.Tool {
                     Sources = AtLocation("Sources", () => function.Sources?.Select(source => ConvertFunctionSource(function, ++eventIndex, source)).Where(evt => evt != null).ToList(), null) ?? new List<AFunctionSource>(),
                     Pragmas = function.Pragmas
                 });
-
-                // register function reference
-                _module.AddVariable(result.FullName, FnRef(result.ResourceName));
             });
         }
 
@@ -415,13 +415,13 @@ namespace MindTouch.LambdaSharp.Tool {
             var type = DeterminNodeType("output", index, output, OutputNode.FieldCheckers, OutputNode.FieldCombinations, new[] { "Export", "CustomResource", "Macro" });
             switch(type) {
             case "Export":
-                AtLocation(output.Export, () => _module.AddExport(output.Export, output.Description, output.Value));
+                AtLocation(output.Export, () => _builder.AddExport(output.Export, output.Description, output.Value));
                 break;
             case "CustomResource":
-                AtLocation(output.CustomResource, () => _module.AddCustomResource(output.CustomResource, output.Description, output.Handler));
+                AtLocation(output.CustomResource, () => _builder.AddCustomResource(output.CustomResource, output.Description, output.Handler));
                 break;
             case "Macro":
-                AtLocation(output.Macro, () => _module.AddMacro(output.Macro, output.Description, output.Handler));
+                AtLocation(output.Macro, () => _builder.AddMacro(output.Macro, output.Description, output.Handler));
                 break;
             }
         }

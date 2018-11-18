@@ -29,8 +29,10 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         //--- Properties ---
         public string Name { get; set; }
-        public string FullName { get; set; }
         public string Description { get; set; }
+        public IList<string> Scope { get; set; } = new string[0];
+        public object Reference;
+        public string FullName { get; set; }
         public string ResourceName { get; set; }
 
         [JsonIgnore]
@@ -39,12 +41,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
     public abstract class AParameter : AResource { }
 
-    public class SecretParameter : AParameter {
-
-        //--- Properties ---
-        public object Secret { get; set; }
-        public IDictionary<string, string> EncryptionContext { get; set; }
-    }
+    public class SecretParameter : AParameter { }
 
     public class ValueParameter : AParameter { }
 
@@ -63,6 +60,14 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public Resource Resource { get; set; }
     }
 
+    public class HumidifierParameter : AParameter {
+
+        //--- Properties ---
+        public Humidifier.Resource Resource { get; set; }
+        public IList<string> DependsOn { get; set; } = new string[0];
+        public string Condition { get; set; }
+    }
+
     public class ReferencedResourceParameter : AResourceParameter { }
 
     public class CloudFormationResourceParameter : AResourceParameter { }
@@ -70,10 +75,10 @@ namespace MindTouch.LambdaSharp.Tool.Model {
     public class InputParameter : AResourceParameter {
 
         //--- Properties ---
+        public string Type { get; set; } = "String";
         public string Section { get; set; }
         public string Label { get; set; }
         public bool? NoEcho { get; set; }
-        public string Type { get; set; } = "String";
         public string Default { get; set; }
         public string ConstraintDescription { get; set; }
         public string AllowedPattern { get; set; }

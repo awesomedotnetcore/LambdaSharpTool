@@ -32,7 +32,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         //--- Properties ---
         public string FullName { get; set; }
-        public IList<string> Scope { get; set; }
         public object Reference { get; set; }
     }
 
@@ -56,7 +55,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public IList<AResource> Resources { get; } = new List<AResource>();
         public IList<AOutput> Outputs { get; } = new List<AOutput>();
         public IDictionary<string, object> Conditions  { get; set; } = new Dictionary<string, object>();
-        public IList<object> ResourceStatements { get; } = new List<object>();
+        public List<Humidifier.Statement> ResourceStatements { get; } = new List<Humidifier.Statement>();
         public IList<ModuleGrant> Grants { get; } = new List<ModuleGrant>();
 
         [JsonIgnore]
