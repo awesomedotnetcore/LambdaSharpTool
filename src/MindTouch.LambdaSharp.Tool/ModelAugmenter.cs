@@ -48,7 +48,7 @@ namespace MindTouch.LambdaSharp.Tool {
             public string Method { get; set; }
             public string[] Path { get; set; }
             public ApiGatewaySourceIntegration Integration { get; set; }
-            public Function Function { get; set; }
+            public ModuleBuilder.Entry<FunctionParameter> Function { get; set; }
             public string OperationName { get; set; }
             public bool? ApiKeyRequired { get; set; }
         }
@@ -65,13 +65,10 @@ namespace MindTouch.LambdaSharp.Tool {
             _module = new ModuleBuilder(Settings, SourceFilename, module);
 
             // add module variables
-            var moduleValue = _module.AddEntry(null, new ValueParameter {
-                Name = "Module",
-                Reference = ""
-            });
-            _module.AddVariable("Module::Id", FnRef("AWS::StackName"));
-            _module.AddVariable("Module::Name", module.Name);
-            _module.AddVariable("Module::Version", module.Version.ToString());
+            var moduleValue = _module.AddVariable("Module", "Module Variables", "");
+            _module.AddVariable("Module::Id", "Module ID", FnRef("AWS::StackName"));
+            _module.AddVariable("Module::Name", "Module Name", module.Name);
+            _module.AddVariable("Module::Version", "Module Version", module.Version.ToString());
 
             // add LambdaSharp Module Options
             var section = "LambdaSharp Module Options";
@@ -136,9 +133,9 @@ namespace MindTouch.LambdaSharp.Tool {
                 _module.AddSecret(FnRef("Module::DefaultSecretKeyArn"));
 
                 // add lambdasharp imports
-                _module.AddVariable("Module::DeadLetterQueueArn", FnRef("LambdaSharp::DeadLetterQueueArn"));
-                _module.AddVariable("Module::LoggingStreamArn", FnRef("LambdaSharp::LoggingStreamArn"));
-                _module.AddVariable("Module::DefaultSecretKeyArn", FnRef("LambdaSharp::DefaultSecretKeyArn"));
+                _module.AddVariable("Module::DeadLetterQueueArn", "Module Dead Letter Queue (ARN)", FnRef("LambdaSharp::DeadLetterQueueArn"));
+                _module.AddVariable("Module::LoggingStreamArn", "Module Logging Stream (ARN)", FnRef("LambdaSharp::LoggingStreamArn"));
+                _module.AddVariable("Module::DefaultSecretKeyArn", "Module Default Secret Key (ARN)", FnRef("LambdaSharp::DefaultSecretKeyArn"));
 
                 // permissions needed for dead-letter queue
                 _module.AddResourceStatement(new Humidifier.Statement {
@@ -181,7 +178,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // add module registration
             if(module.HasModuleRegistration) {
-                _module.AddEntry(moduleValue, new CloudFormationResourceParameter {
+                moduleValue.AddEntry(new CloudFormationResourceParameter {
                     Name = "Registration",
                     Resource = CreateResource("LambdaSharp::Register::Module", new Dictionary<string, object> {
                         ["ModuleId"] = FnRef("AWS::StackName"),
@@ -192,11 +189,13 @@ namespace MindTouch.LambdaSharp.Tool {
             }
 
             // create module IAM role used by all functions
-            var functions = module.GetAllResources().OfType<Function>();
+            var functions = module.GetAllEntriesOfType<FunctionParameter>().Select(
+                entry => new ModuleBuilder.Entry<FunctionParameter>(_module, entry)
+            );
             if(functions.Any()) {
 
                 // create module role
-                _module.AddEntry(moduleValue, new HumidifierParameter {
+                moduleValue.AddEntry(new HumidifierParameter {
                     Name = "Role",
                     Resource = new Humidifier.IAM.Role {
                         AssumeRolePolicyDocument = new Humidifier.PolicyDocument {
@@ -236,7 +235,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 });
 
                 // permissions needed for lambda functions to exist in a VPC
-                if(functions.Any(function => function.VPC != null)) {
+                if(functions.Any(function => function.Resource.Function.VpcConfig != null)) {
                     _module.AddResourceStatement(new Humidifier.Statement {
                         Sid = "ModuleVpcNetworkInterfaces",
                         Effect = "Allow",
@@ -253,7 +252,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 if(module.HasModuleRegistration) {
 
                     // create CloudWatch Logs IAM role to invoke kinesis stream
-                     var cloudwatchLogsRole = _module.AddEntry(moduleValue, new HumidifierParameter {
+                     var cloudwatchLogsRole = moduleValue.AddEntry(new HumidifierParameter {
                         Name = "CloudWatchLogsRole",
                         Resource = new Humidifier.IAM.Role {
                             AssumeRolePolicyDocument = new Humidifier.PolicyDocument {
@@ -288,24 +287,24 @@ namespace MindTouch.LambdaSharp.Tool {
                         }
                     });
 
-                    foreach(var function in functions.Where(f => f.HasFunctionRegistration).ToList()) {
-                        _module.AddEntry(function, new CloudFormationResourceParameter {
+                    foreach(var function in functions.Where(f => f.Resource.HasFunctionRegistration).ToList()) {
+                        function.AddEntry(new CloudFormationResourceParameter {
                             Name = "Registration",
                             Resource = CreateResource("LambdaSharp::Register::Function", new Dictionary<string, object> {
                                 ["ModuleId"] = FnRef("AWS::StackName"),
-                                ["FunctionId"] = FnRef(function.Name),
-                                ["FunctionName"] = function.Name,
-                                ["FunctionLogGroupName"] = FnSub($"/aws/lambda/${{{function.Name}}}"),
+                                ["FunctionId"] = FnRef(function.FullName),
+                                ["FunctionName"] = function.Resource.Name,
+                                ["FunctionLogGroupName"] = FnSub($"/aws/lambda/${{{function.LogicalId}}}"),
                                 ["FunctionPlatform"] = "AWS Lambda",
-                                ["FunctionFramework"] = function.Runtime,
-                                ["FunctionLanguage"] = function.Language,
-                                ["FunctionMaxMemory"] = function.Memory,
-                                ["FunctionMaxDuration"] = function.Timeout
+                                ["FunctionFramework"] = function.Resource.Function.Runtime,
+                                ["FunctionLanguage"] = function.Resource.Language,
+                                ["FunctionMaxMemory"] = function.Resource.Function.MemorySize,
+                                ["FunctionMaxDuration"] = function.Resource.Function.Timeout
                             }, dependsOn: new List<string> { "Module::Registration" })
                         });
 
                         // create function log-group with retention window
-                        var logGroup = _module.AddEntry(function, new HumidifierParameter {
+                        var logGroup = function.AddEntry(new HumidifierParameter {
                             Name = "LogGroup",
                             Resource = new Humidifier.Logs.LogGroup {
                                 LogGroupName = FnSub($"/aws/lambda/${{{function.LogicalId}}}"),
@@ -315,7 +314,7 @@ namespace MindTouch.LambdaSharp.Tool {
                                 RetentionInDays = 7
                             }
                         });
-                        var logSubscription = _module.AddEntry(function, new HumidifierParameter {
+                        var logSubscription = function.AddEntry(new HumidifierParameter {
                             Name = "LogGroupSubscription",
                             Resource = new Humidifier.Logs.SubscriptionFilter {
                                 DestinationArn = FnRef("Module::LoggingStreamArn"),
@@ -329,7 +328,7 @@ namespace MindTouch.LambdaSharp.Tool {
             }
 
             // check if RestApi resources need to be added
-            if(module.Resources.OfType<Function>().Any(function => function.Sources.OfType<ApiGatewaySource>().Any())) {
+            if(module.GetAllEntriesOfType<FunctionParameter>().Any(function => function.Resource.Sources.OfType<ApiGatewaySource>().Any())) {
                 _apiGatewayRoutes = new List<ApiRoute>();
 
                 // check if an API gateway needs to be created
@@ -348,7 +347,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     string methodsHash = methodSignature.ToMD5Hash();
 
                     // create a RestApi
-                    var restApiVar = _module.AddEntry(moduleValue, new HumidifierParameter {
+                    var restApiVar = moduleValue.AddEntry(new HumidifierParameter {
                         Name = "RestApi",
                         Description = "Module REST API",
                         Resource = new Humidifier.ApiGateway.RestApi {
@@ -359,10 +358,14 @@ namespace MindTouch.LambdaSharp.Tool {
                     });
 
                     // add RestApi url
-                    _module.AddVariable("Module::RestApi::Url", FnSub("https://${Module::RestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/LATEST/"));
+                    _module.AddVariable(
+                        "Module::RestApi::Url",
+                        "Module REST API URL",
+                        FnSub("https://${Module::RestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/LATEST/")
+                    );
 
                     // create a RestApi role that can write logs
-                    _module.AddEntry(restApiVar, new HumidifierParameter {
+                    restApiVar.AddEntry(new HumidifierParameter {
                         Name = "Role",
                         Description = "Module REST API Role",
                         Resource = new Humidifier.IAM.Role {
@@ -408,7 +411,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     });
 
                     // create a RestApi account which uses the RestApi role
-                    _module.AddEntry(restApiVar, new HumidifierParameter {
+                    restApiVar.AddEntry(new HumidifierParameter {
                         Name = "Account",
                         Description = "Module REST API Account",
                         Resource = new Humidifier.ApiGateway.Account {
@@ -418,7 +421,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
                     // NOTE (2018-06-21, bjorg): the RestApi deployment resource depends on ALL methods resources having been created;
                     //  a new name is used for the deployment to force the stage to be updated
-                    _module.AddEntry(restApiVar, new HumidifierParameter {
+                    restApiVar.AddEntry(new HumidifierParameter {
                         Name = "Deployment" + methodsHash,
                         Description = "Module REST API Deployment",
                         Resource = new Humidifier.ApiGateway.Deployment {
@@ -431,7 +434,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     // RestApi stage depends on API gateway deployment and API gateway account
                     // NOTE (2018-06-21, bjorg): the stage resource depends on the account resource having been granted
                     //  the necessary permissions for logging
-                    _module.AddEntry(restApiVar, new HumidifierParameter {
+                    restApiVar.AddEntry(new HumidifierParameter {
                         Name = "Stage",
                         Description = "Module REST API Stage",
                         Resource = new Humidifier.ApiGateway.Stage {
@@ -453,7 +456,7 @@ namespace MindTouch.LambdaSharp.Tool {
             }
         }
 
-        private void AddApiResource(AResource parent, string parentPrefix, object restApiId, object parentId, int level, IEnumerable<ApiRoute> routes, List<KeyValuePair<string, object>> apiMethods) {
+        private void AddApiResource(ModuleBuilder.Entry<AResource> parent, string parentPrefix, object restApiId, object parentId, int level, IEnumerable<ApiRoute> routes, List<KeyValuePair<string, object>> apiMethods) {
 
             // attach methods to resource id
             var methods = routes.Where(route => route.Path.Length == level).ToArray();
@@ -472,15 +475,15 @@ namespace MindTouch.LambdaSharp.Tool {
                     continue;
                 }
                 apiMethods.Add(new KeyValuePair<string, object>(methodName, apiMethod));
-                _module.AddEntry(parent, new HumidifierParameter {
+                parent.AddEntry(new HumidifierParameter {
                     Name = method.Method,
                     Resource = apiMethod
                 });
-                _module.AddEntry(parent, new HumidifierParameter {
-                    Name = $"{method.Function.Name}{methodName}Permission",
+                parent.AddEntry(new HumidifierParameter {
+                    Name = $"{methodName}Permission",
                     Resource = new Humidifier.Lambda.Permission {
                         Action = "lambda:InvokeFunction",
-                        FunctionName = FnGetAtt(method.Function.Name, "Arn"),
+                        FunctionName = FnGetAtt(method.Function.FullName, "Arn"),
                         Principal = "apigateway.amazonaws.com",
                         SourceArn = FnSub($"arn:aws:execute-api:${{AWS::Region}}:${{AWS::AccountId}}:${{ModuleRestApi}}/LATEST/{method.Method}/{string.Join("/", method.Path)}")
                     }
@@ -497,7 +500,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
                 // create a new resource
                 var newResourceName = parentPrefix + partName + "Resource";
-                var resource = _module.AddEntry(parent, new HumidifierParameter {
+                var resource = parent.AddEntry(new HumidifierParameter {
                     Name = newResourceName,
                     Resource = new Humidifier.ApiGateway.Resource {
                         RestApiId = restApiId,
@@ -505,7 +508,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         PathPart = subRoute.Key
                     }
                 });
-                AddApiResource(resource, parentPrefix + partName, restApiId, FnRef(newResourceName), level + 1, subRoute, apiMethods);
+                AddApiResource(resource.Cast<AResource>(), parentPrefix + partName, restApiId, FnRef(newResourceName), level + 1, subRoute, apiMethods);
             }
 
             Humidifier.ApiGateway.Method CreateRequestResponseApiMethod(ApiRoute method) {
@@ -522,7 +525,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         Uri = FnSub(
                             "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Arn}/invocations",
                             new Dictionary<string, object> {
-                                ["Arn"] = FnGetAtt(method.Function.Name, "Arn")
+                                ["Arn"] = FnGetAtt(method.Function.FullName, "Arn")
                             }
                         )
                     }
@@ -587,82 +590,160 @@ namespace MindTouch.LambdaSharp.Tool {
             }
         }
 
-        private void AddFunction(Module module, Function function) {
-
-            // check if function has any SNS topic event sources
-            foreach(var topicSource in function.Sources.OfType<TopicSource>()) {
-                Enumerate(topicSource.TopicName, (suffix, parameter, arn) => {
-                    _module.AddEntry(function, new HumidifierParameter {
-                        Name = $"{parameter.LogicalId}SnsPermission{suffix}",
-                        Resource = new Humidifier.Lambda.Permission {
-                            Action = "lambda:InvokeFunction",
-                            SourceArn = arn,
-                            FunctionName = FnGetAtt(function.Name, "Arn"),
-                            Principal = "sns.amazonaws.com"
-                        }
+        private void AddFunction(Module module, ModuleBuilder.Entry<FunctionParameter> function) {
+            for(var sourceIndex = 0; sourceIndex < function.Resource.Sources.Count; ++sourceIndex) {
+                var source = function.Resource.Sources[sourceIndex];
+                var sourceSuffix = (sourceIndex + 1).ToString();
+                switch(source) {
+                case TopicSource topicSource:
+                    Enumerate(topicSource.TopicName, (suffix, parameter, arn) => {
+                        function.AddEntry(new HumidifierParameter {
+                            Name = $"Source{sourceSuffix}SnsPermission{suffix}",
+                            Resource = new Humidifier.Lambda.Permission {
+                                Action = "lambda:InvokeFunction",
+                                SourceArn = arn,
+                                FunctionName = FnGetAtt(function.FullName, "Arn"),
+                                Principal = "sns.amazonaws.com"
+                            }
+                        });
+                        function.AddEntry(new HumidifierParameter {
+                            Name = $"Source{sourceSuffix}Subscription{suffix}",
+                            Resource = new Humidifier.SNS.Subscription {
+                                Endpoint = FnGetAtt(function.FullName, "Arn"),
+                                Protocol = "lambda",
+                                TopicArn = arn
+                            }
+                        });
                     });
-                    _module.AddEntry(function, new HumidifierParameter {
-                        Name = $"{parameter.LogicalId}Subscription{suffix}",
-                        Resource = new Humidifier.SNS.Subscription {
-                            Endpoint = FnGetAtt(function.Name, "Arn"),
-                            Protocol = "lambda",
-                            TopicArn = arn
-                        }
-                    });
-                });
-            }
-
-            // check if function has any API gateway event sources
-            var scheduleSources = function.Sources.OfType<ScheduleSource>().ToList();
-            if(scheduleSources.Any()) {
-                for(var i = 0; i < scheduleSources.Count; ++i) {
-                    var name = "ScheduleEvent" + (i + 1).ToString();
-                    _module.AddEntry(function, new HumidifierParameter {
-                        Name = name,
-                        Resource = new Humidifier.Events.Rule {
-                            ScheduleExpression = scheduleSources[i].Expression,
-                            Targets = new[] {
-                                new Humidifier.Events.RuleTypes.Target {
-                                    Id = FnSub("${AWS::StackName}" + name),
-                                    Arn = FnGetAtt(function.Name, "Arn"),
-                                    InputTransformer = new Humidifier.Events.RuleTypes.InputTransformer {
-                                        InputPathsMap = new Dictionary<string, object> {
-                                            ["version"] = "$.version",
-                                            ["id"] = "$.id",
-                                            ["source"] = "$.source",
-                                            ["account"] = "$.account",
-                                            ["time"] = "$.time",
-                                            ["region"] = "$.region"
-                                        },
-                                        InputTemplate =
-    @"{
-    ""Version"": <version>,
-    ""Id"": <id>,
-    ""Source"": <source>,
-    ""Account"": <account>,
-    ""Time"": <time>,
-    ""Region"": <region>,
-    ""tName"": """ + scheduleSources[i].Name + @"""
-    }"
+                    break;
+                case ScheduleSource scheduleSource: {
+                        var scheduleEntry = function.AddEntry(new HumidifierParameter {
+                            Name = $"ScheduleEvent{sourceSuffix}",
+                            Resource = new Humidifier.Events.Rule {
+                                ScheduleExpression = scheduleSource.Expression,
+                                Targets = new[] {
+                                    new Humidifier.Events.RuleTypes.Target {
+                                        Id = FnSub($"${{AWS::StackName}}{function.LogicalId}Source{sourceSuffix}"),
+                                        Arn = FnGetAtt(function.FullName, "Arn"),
+                                        InputTransformer = new Humidifier.Events.RuleTypes.InputTransformer {
+                                            InputPathsMap = new Dictionary<string, object> {
+                                                ["version"] = "$.version",
+                                                ["id"] = "$.id",
+                                                ["source"] = "$.source",
+                                                ["account"] = "$.account",
+                                                ["time"] = "$.time",
+                                                ["region"] = "$.region"
+                                            },
+                                            InputTemplate =
+@"{
+""Version"": <version>,
+""Id"": <id>,
+""Source"": <source>,
+""Account"": <account>,
+""Time"": <time>,
+""Region"": <region>,
+""tName"": """ + scheduleSource.Name + @"""
+}"
+                                        }
                                     }
-                                }
-                            }.ToList()
-                        }
+                                }.ToList()
+                            }
+                        });
+                        function.AddEntry(new HumidifierParameter {
+                            Name = $"Source{sourceSuffix}Permission",
+                            Resource = new Humidifier.Lambda.Permission {
+                                Action = "lambda:InvokeFunction",
+                                SourceArn = FnGetAtt(scheduleEntry.FullName, "Arn"),
+                                FunctionName = FnGetAtt(function.FullName, "Arn"),
+                                Principal = "events.amazonaws.com"
+                            }
+                        });
+                    }
+                    break;
+                case ApiGatewaySource apiGatewaySource: {
+
+                    }
+                    break;
+                case S3Source s3Source: {
+
+                    }
+                    break;
+                case SqsSource sqsSource:
+                    Enumerate(sqsSource.Queue, (suffix, parameter, arn) => {
+                        function.AddEntry(new HumidifierParameter {
+                            Name = $"Source{sourceSuffix}EventMapping{suffix}",
+                            Resource = new Humidifier.Lambda.EventSourceMapping {
+                                BatchSize = sqsSource.BatchSize,
+                                Enabled = true,
+                                EventSourceArn = arn,
+                                FunctionName = FnRef(function.FullName)
+                            }
+                        });
                     });
-                    _module.AddEntry(function, new HumidifierParameter {
-                        Name = name + "Permission",
-                        Resource = new Humidifier.Lambda.Permission {
-                            Action = "lambda:InvokeFunction",
-                            SourceArn = FnGetAtt(name, "Arn"),
-                            FunctionName = FnGetAtt(function.Name, "Arn"),
-                            Principal = "events.amazonaws.com"
+                    break;
+                case AlexaSource alexaSource: {
+
+                        // check if we need to create a conditional expression for a non-literal token
+                        var eventSourceToken = alexaSource.EventSourceToken;
+                        if(eventSourceToken is string token) {
+                            if(token == "*") {
+                                eventSourceToken = null;
+                            }
+                        } else if(eventSourceToken != null) {
+                            var condition = $"{function.LogicalId}Source{sourceSuffix}AlexaIsBlank";
+                            eventSourceToken = FnIf(
+                                condition,
+                                FnRef("AWS::NoValue"),
+                                alexaSource.EventSourceToken
+                            );
+                            module.Conditions.Add(condition, FnEquals(alexaSource.EventSourceToken, "*"));
                         }
+                        function.AddEntry(new HumidifierParameter {
+                            Name = $"Source{sourceSuffix}AlexaPermission",
+                            Resource = new Humidifier.Lambda.Permission {
+                                Action = "lambda:InvokeFunction",
+                                FunctionName = FnGetAtt(function.FullName, "Arn"),
+                                Principal = "alexa-appkit.amazon.com",
+                                EventSourceToken = eventSourceToken
+                            }
+                        });
+                    }
+                    break;
+                case DynamoDBSource dynamoDbSource:
+                    Enumerate(dynamoDbSource.DynamoDB, (suffix, parameter, arn) => {
+                        function.AddEntry(new HumidifierParameter {
+                            Name = $"Source{sourceSuffix}EventMapping{suffix}",
+                            Resource = new Humidifier.Lambda.EventSourceMapping {
+                                BatchSize = dynamoDbSource.BatchSize,
+                                StartingPosition = dynamoDbSource.StartingPosition,
+                                Enabled = true,
+                                EventSourceArn = arn,
+                                FunctionName = FnRef(function.FullName)
+                            }
+                        });
                     });
+                    break;
+                case KinesisSource kinesisSource:
+                    Enumerate(kinesisSource.Kinesis, (suffix, parameter, arn) => {
+                        function.AddEntry(new HumidifierParameter {
+                            Name = $"Source{sourceSuffix}EventMapping{suffix}",
+                            Resource = new Humidifier.Lambda.EventSourceMapping {
+                                BatchSize = kinesisSource.BatchSize,
+                                StartingPosition = kinesisSource.StartingPosition,
+                                Enabled = true,
+                                EventSourceArn = arn,
+                                FunctionName = FnRef(function.FullName)
+                            }
+                        });
+                    });
+                    break;
+                default:
+                    throw new ApplicationException($"unrecognized function source type '{source?.GetType()}' for source #{sourceSuffix}");
                 }
             }
 
             // check if function has any API gateway event sources
-            var apiSources = function.Sources.OfType<ApiGatewaySource>().ToList();
+            var apiSources = function.Resource.Sources.OfType<ApiGatewaySource>().ToList();
             if(apiSources.Any()) {
                 foreach(var apiEvent in apiSources) {
                     _apiGatewayRoutes.Add(new ApiRoute {
@@ -677,7 +758,7 @@ namespace MindTouch.LambdaSharp.Tool {
             }
 
             // check if function has any S3 event sources
-            var s3Sources = function.Sources.OfType<S3Source>().ToList();
+            var s3Sources = function.Resource.Sources.OfType<S3Source>().ToList();
             if(s3Sources.Any()) {
                 foreach(var grp in s3Sources
                     .Select(source => new {
@@ -688,21 +769,21 @@ namespace MindTouch.LambdaSharp.Tool {
                     Enumerate(grp.Key, (suffix, parameter, arn) => {
                         var functionS3Permission = $"{parameter.LogicalId}S3Permission";
                         var functionS3Subscription = $"{parameter.LogicalId}S3Subscription";
-                        _module.AddEntry(function, new HumidifierParameter {
+                        function.AddEntry(new HumidifierParameter {
                             Name = functionS3Permission + suffix,
                             Resource = new Humidifier.Lambda.Permission {
                                 Action = "lambda:InvokeFunction",
                                 SourceAccount = FnRef("AWS::AccountId"),
                                 SourceArn = arn,
-                                FunctionName = FnGetAtt(function.Name, "Arn"),
+                                FunctionName = FnGetAtt(function.FullName, "Arn"),
                                 Principal = "s3.amazonaws.com"
                             }
                         });
-                        _module.AddEntry(function, new CloudFormationResourceParameter {
+                        function.AddEntry(new CloudFormationResourceParameter {
                             Name = functionS3Subscription + suffix,
                             Resource = CreateResource("LambdaSharp::S3::Subscription", new Dictionary<string, object> {
                                 ["BucketArn"] = arn,
-                                ["FunctionArn"] = FnGetAtt(function.Name, "Arn"),
+                                ["FunctionArn"] = FnGetAtt(function.FullName, "Arn"),
                                 ["Filters"] = grp.Select(tuple => {
                                     var filter = new Dictionary<string, object>() {
                                         ["Events"] = tuple.Source.Events,
@@ -719,113 +800,6 @@ namespace MindTouch.LambdaSharp.Tool {
                         });
                     });
                 }
-            }
-
-            // check if function has any SQS event sources
-            var sqsSources = function.Sources.OfType<SqsSource>().ToList();
-            if(sqsSources.Any()) {
-                foreach(var source in sqsSources) {
-                    Enumerate(source.Queue, (suffix, parameter, arn) => {
-                        _module.AddEntry(function, new HumidifierParameter {
-                            Name = $"{parameter.LogicalId}EventMapping{suffix}",
-                            Resource = new Humidifier.Lambda.EventSourceMapping {
-                                BatchSize = source.BatchSize,
-                                Enabled = true,
-                                EventSourceArn = arn,
-                                FunctionName = FnRef(function.Name)
-                            }
-                        });
-                    });
-                }
-            }
-
-            // check if function has any Alexa event sources
-            var alexaSources = function.Sources.OfType<AlexaSource>().ToList();
-            if(alexaSources.Any()) {
-                var index = 0;
-                foreach(var source in alexaSources) {
-                    ++index;
-                    var suffix = index.ToString();
-
-                    // check if we need to create a conditional expression for a non-literal token
-                    var eventSourceToken = source.EventSourceToken;
-                    if(eventSourceToken is string token) {
-                        if(token == "*") {
-                            eventSourceToken = null;
-                        }
-                    } else if(eventSourceToken != null) {
-                        var condition = $"{function.Name}AlexaIsBlank{suffix}";
-                        eventSourceToken = FnIf(
-                            condition,
-                            FnRef("AWS::NoValue"),
-                            source.EventSourceToken
-                        );
-                        module.Conditions.Add(condition, FnEquals(source.EventSourceToken, "*"));
-                    }
-                    _module.AddEntry(function, new HumidifierParameter {
-                        Name = $"AlexaPermission{suffix}",
-                        Resource = new Humidifier.Lambda.Permission {
-                            Action = "lambda:InvokeFunction",
-                            FunctionName = FnGetAtt(function.Name, "Arn"),
-                            Principal = "alexa-appkit.amazon.com",
-                            EventSourceToken = eventSourceToken
-                        }
-                    });
-                }
-            }
-
-            // check if function has any DynamoDB event sources
-            var dynamoDbSources = function.Sources.OfType<DynamoDBSource>().ToList();
-            if(dynamoDbSources.Any()) {
-                foreach(var source in dynamoDbSources) {
-                    Enumerate(source.DynamoDB, (suffix, parameter, arn) => {
-                        _module.AddEntry(function, new HumidifierParameter {
-                            Name = $"{parameter.LogicalId}EventMapping{suffix}",
-                            Resource = new Humidifier.Lambda.EventSourceMapping {
-                                BatchSize = source.BatchSize,
-                                StartingPosition = source.StartingPosition,
-                                Enabled = true,
-                                EventSourceArn = arn,
-                                FunctionName = FnRef(function.Name)
-                            }
-                        });
-                    });
-                }
-            }
-
-            // check if function has any Kinesis event sources
-            var kinesisSources = function.Sources.OfType<KinesisSource>().ToList();
-            if(kinesisSources.Any()) {
-                foreach(var source in kinesisSources) {
-                    Enumerate(source.Kinesis, (suffix, parameter, arn) => {
-                        _module.AddEntry(function, new HumidifierParameter {
-                            Name = $"{parameter.LogicalId}EventMapping{suffix}",
-                            Resource = new Humidifier.Lambda.EventSourceMapping {
-                                BatchSize = source.BatchSize,
-                                StartingPosition = source.StartingPosition,
-                                Enabled = true,
-                                EventSourceArn = arn,
-                                FunctionName = FnRef(function.Name)
-                            }
-                        });
-                    });
-                }
-            }
-        }
-
-        private void EnumerateOrDefault(IList<object> items, object single, Action<string, object> callback) {
-            switch(items.Count) {
-            case 0:
-                callback("", single);
-                break;
-            case 1:
-                callback("", items.First());
-                break;
-            default:
-                for(var i = 0; i < items.Count; ++i) {
-                    callback((i + 1).ToString(), items[i]);
-                }
-                break;
             }
         }
 

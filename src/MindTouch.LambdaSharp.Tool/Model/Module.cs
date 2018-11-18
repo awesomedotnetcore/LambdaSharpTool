@@ -36,6 +36,40 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public IList<string> Allow { get; set; }
     }
 
+    public class ModuleEntry<TResource> where TResource : AResource {
+
+        //--- Fields ---
+        public readonly string FullName;
+        public readonly string Description;
+        public readonly string ResourceName;
+        public readonly string LogicalId;
+        public readonly TResource Resource;
+
+        //--- Constructors ---
+        public ModuleEntry(
+            string fullName,
+            string description,
+            object reference,
+            IList<string> scope,
+            TResource resource
+        ) {
+            FullName = fullName ?? throw new ArgumentNullException(nameof(fullName));
+            LogicalId = fullName.Replace("::", "");
+            ResourceName = "@" + LogicalId;
+            Reference = reference;
+            Scope = scope ?? new string[0];
+            Resource = resource;
+        }
+
+        //--- Properties ---
+        public object Reference { get; set; }
+        public IList<string> Scope { get; set; }
+
+        //--- Methods ---
+        public ModuleEntry<T> Cast<T>() where T : AResource
+            => new ModuleEntry<T>(FullName, Description, Reference, Scope, (T)(object)Resource);
+    }
+
     public class Module {
 
         //--- Properties ---
@@ -44,24 +78,29 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public string Description { get; set; }
         public IList<object> Pragmas { get; } = new List<object>();
         public IList<object> Secrets { get; set; } = new List<object>();
-        public IDictionary<string, object> Variables { get; } = new Dictionary<string, object>();
-        public IList<AResource> Resources { get; } = new List<AResource>();
         public IList<AOutput> Outputs { get; } = new List<AOutput>();
         public IDictionary<string, object> Conditions  { get; set; } = new Dictionary<string, object>();
         public List<Humidifier.Statement> ResourceStatements { get; } = new List<Humidifier.Statement>();
         public IList<ModuleGrant> Grants { get; } = new List<ModuleGrant>();
+        public IDictionary<string, ModuleEntry<AResource>> Entries { get; } = new Dictionary<string, ModuleEntry<AResource>>();
 
         [JsonIgnore]
         public bool HasModuleRegistration => !HasPragma("no-module-registration");
 
-        [JsonIgnore]
-        public IEnumerable<Function> Functions => GetAllResources().OfType<Function>();
-
         //--- Methods ---
         public bool HasPragma(string pragma) => Pragmas?.Contains(pragma) == true;
+        public ModuleEntry<AResource> GetEntry(string fullName) => Entries[fullName];
+        public AResource GetResource(string fullName) => GetEntry(fullName).Resource;
+        public object GetReference(string fullName) => GetEntry(fullName).Reference;
+        public IEnumerable<AResource> GetAllResources()
+            => Entries.Values
+                .Where(entry => entry.Resource != null)
+                .Select(entry => entry.Resource);
 
-        public AResource GetResource(string fullName) => Resources.First(resource => resource.FullName == fullName);
-
-        public IEnumerable<AResource> GetAllResources() => Resources;
+        public IEnumerable<ModuleEntry<T>> GetAllEntriesOfType<T>() where T : AResource
+            => Entries.Values
+                .Where(entry => entry.Resource is T)
+                .Select(entry => entry.Cast<T>())
+                .ToList();
     }
 }

@@ -49,11 +49,11 @@ namespace MindTouch.LambdaSharp.Tool {
             string gitsha,
             string buildConfiguration
         ) {
-            foreach(var function in module.Resources.OfType<Function>()) {
-                AtLocation(function.Name, () => {
+            foreach(var function in module.GetAllEntriesOfType<FunctionParameter>()) {
+                AtLocation(function.FullName, () => {
                     Process(
                         module,
-                        function,
+                        function.Resource,
                         version,
                         skipCompile,
                         skipAssemblyValidation,
@@ -66,7 +66,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
         private void Process(
             Module module,
-            Function function,
+            FunctionParameter function,
             VersionInfo version,
             bool skipCompile,
             bool skipAssemblyValidation,
@@ -135,7 +135,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
         private void ProcessDotNet(
             Module module,
-            Function function,
+            FunctionParameter function,
             VersionInfo version,
             bool skipCompile,
             bool skipAssemblyValidation,
@@ -169,11 +169,11 @@ namespace MindTouch.LambdaSharp.Tool {
             }
 
             // check if we need to read the project file <RootNamespace> element to determine the handler name
-            if(function.Handler == null) {
+            if(function.Function.Handler == null) {
                 AtLocation("Handler", () => {
                     var rootNamespace = mainPropertyGroup?.Element("RootNamespace")?.Value;
                     if(rootNamespace != null) {
-                        function.Handler = $"{projectName}::{rootNamespace}.Function::FunctionHandlerAsync";
+                        function.Function.Handler = $"{projectName}::{rootNamespace}.Function::FunctionHandlerAsync";
                     } else {
                         AddError("could not auto-determine handler; either add Function field or <RootNamespace> to project file");
                     }
@@ -226,7 +226,9 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
             }
             if(skipCompile) {
-                function.PackagePath = $"{function.Name}-NOCOMPILE.zip";
+                function.Function.Code = new Humidifier.Lambda.FunctionTypes.Code {
+                    ZipFile = $"{function.Name}-NOCOMPILE.zip"
+                };
                 return;
             }
 
@@ -268,7 +270,9 @@ namespace MindTouch.LambdaSharp.Tool {
                         return;
                     }
                 }
-                function.PackagePath = CreatePackage(function.Name, gitsha, tempDirectory);
+                function.Function.Code = new Humidifier.Lambda.FunctionTypes.Code {
+                    ZipFile = CreatePackage(function.Name, gitsha, tempDirectory)
+                };
             } finally {
                 if(Directory.Exists(tempDirectory)) {
                     try {
@@ -338,7 +342,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
         private void ProcessJavascript(
             Module module,
-            Function function,
+            FunctionParameter function,
             VersionInfo version,
             bool skipCompile,
             bool skipAssemblyValidation,
@@ -349,8 +353,8 @@ namespace MindTouch.LambdaSharp.Tool {
             function.Language = "javascript";
 
             // check if we need to set a default handler
-            if(function.Handler == null) {
-                function.Handler = "index.handler";
+            if(function.Function.Handler == null) {
+                function.Function.Handler = "index.handler";
             }
 
             // check if we need to set a default runtime
@@ -358,11 +362,15 @@ namespace MindTouch.LambdaSharp.Tool {
                 function.Runtime = "nodejs8.10";
             }
             if(skipCompile) {
-                function.PackagePath = $"{function.Name}-NOCOMPILE.zip";
+                function.Function.Code = new Humidifier.Lambda.FunctionTypes.Code {
+                    ZipFile = $"{function.Name}-NOCOMPILE.zip"
+                };
                 return;
             }
             Console.WriteLine($"=> Building function {function.Name} [{function.Runtime}]");
-            function.PackagePath = CreatePackage(function.Name, gitsha, Path.GetDirectoryName(project));
+            function.Function.Code = new Humidifier.Lambda.FunctionTypes.Code {
+                ZipFile = CreatePackage(function.Name, gitsha, Path.GetDirectoryName(project))
+            };
         }
 
         private string CreatePackage(string functionName, string gitsha, string folder) {

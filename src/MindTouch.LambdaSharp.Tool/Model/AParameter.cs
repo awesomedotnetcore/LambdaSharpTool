@@ -32,11 +32,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public string Description { get; set; }
         public IList<string> Scope { get; set; } = new string[0];
         public object Reference;
-        public string FullName { get; set; }
-        public string ResourceName { get; set; }
-
-        [JsonIgnore]
-        public string LogicalId => ResourceName.Substring(1);
     }
 
     public abstract class AParameter : AResource { }
@@ -72,48 +67,27 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
     public class CloudFormationResourceParameter : AResourceParameter { }
 
-    public class InputParameter : AResourceParameter {
+    public class InputParameter : AResource {
 
         //--- Properties ---
-        public string Type { get; set; } = "String";
         public string Section { get; set; }
         public string Label { get; set; }
-        public bool? NoEcho { get; set; }
-        public string Default { get; set; }
-        public string ConstraintDescription { get; set; }
-        public string AllowedPattern { get; set; }
-        public IList<string> AllowedValues { get; set; }
-        public int? MaxLength { get; set; }
-        public int? MaxValue { get; set; }
-        public int? MinLength { get; set; }
-        public int? MinValue { get; set; }
+        public Humidifier.Parameter Parameter { get; set; }
     }
 
-    public class Function : AResource {
+    public class FunctionParameter : AResource {
 
         //--- Properties ---
-        public string Memory { get; set; }
-        public string Timeout { get; set; }
         public string Project { get; set; }
-        public string Handler { get; set; }
         public string Runtime { get; set; }
         public string Language { get; set; }
-        public string ReservedConcurrency { get; set; }
-        public FunctionVpc VPC;
         public IDictionary<string, object> Environment { get; set; }
         public IList<AFunctionSource> Sources { get; set; }
         public IList<object> Pragmas { get; set; }
-        public string PackagePath { get; set; }
+        public Humidifier.Lambda.Function Function { get; set; }
         public bool HasFunctionRegistration => !HasPragma("no-function-registration");
 
         //--- Methods ---
         public bool HasPragma(string pragma) => Pragmas?.Contains(pragma) == true;
-   }
-
-   public class FunctionVpc {
-
-       //--- Properties ---
-       public object SubnetIds { get; set; }
-       public object SecurityGroupIds { get; set; }
    }
 }

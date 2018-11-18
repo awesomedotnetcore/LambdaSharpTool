@@ -506,12 +506,12 @@ return false;
                 File.WriteAllText(outputCloudFormationFilePath, template);
 
                 // generate & save module manifest
-                var functions = module.Functions
-                    .Where(f => f.PackagePath != null)
-                    .Select(f => Path.GetRelativePath(settings.OutputDirectory, f.PackagePath))
+                var functions = module.GetAllEntriesOfType<FunctionParameter>()
+                    .Where(f => f.Resource.Function?.Code?.ZipFile != null)
+                    .Select(f => Path.GetRelativePath(settings.OutputDirectory, (string)f.Resource.Function.Code.ZipFile))
                     .ToList();
-                var packages = module.Resources.OfType<PackageParameter>()
-                    .Select(p => Path.GetRelativePath(settings.OutputDirectory, p.PackagePath))
+                var packages = module.GetAllEntriesOfType<PackageParameter>()
+                    .Select(p => Path.GetRelativePath(settings.OutputDirectory, p.Resource.PackagePath))
                     .ToList();
                 var manifest = new ModuleManifest {
                     ModuleName = module.Name,

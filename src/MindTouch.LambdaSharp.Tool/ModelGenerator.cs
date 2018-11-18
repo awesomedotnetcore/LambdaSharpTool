@@ -65,8 +65,8 @@ namespace MindTouch.LambdaSharp.Tool {
             _stack.Add($"ModuleIsNotNested", new Condition(Fn.Equals(Fn.Ref("DeploymentParent"), "")));
 
             // add parameters
-            foreach(var parameter in _module.Resources) {
-                AddResource(parameter);
+            foreach(var entry in _module.Entries.Values.Where(e => e.Resource != null)) {
+                AddResource(entry);
             }
 
             // add outputs
@@ -116,12 +116,13 @@ namespace MindTouch.LambdaSharp.Tool {
             }
 
             // add interface for presenting inputs
+            var inputParameters = _module.GetAllEntriesOfType<InputParameter>();
             _stack.AddTemplateMetadata("AWS::CloudFormation::Interface", new Dictionary<string, object> {
-                ["ParameterLabels"] = _module.GetAllResources().OfType<InputParameter>().ToDictionary(input => input.LogicalId, input => new Dictionary<string, object> {
-                    ["default"] = input.Label
+                ["ParameterLabels"] = inputParameters.ToDictionary(input => input.LogicalId, input => new Dictionary<string, object> {
+                    ["default"] = input.Resource.Label
                 }),
-                ["ParameterGroups"] = _module.GetAllResources().OfType<InputParameter>()
-                    .GroupBy(input => input.Section)
+                ["ParameterGroups"] = inputParameters
+                    .GroupBy(input => input.Resource.Section)
                     .Select(section => new Dictionary<string, object> {
                         ["Label"] = new Dictionary<string, string> {
                             ["default"] = section.Key
@@ -144,21 +145,10 @@ namespace MindTouch.LambdaSharp.Tool {
             return template;
         }
 
-        private void AddGrants() {
-            foreach(var grant in _module.Grants) {
-                _module.ResourceStatements.Add(new Statement {
-                    Sid = grant.Sid,
-                    Effect = "Allow",
-                    Resource = grant.References,
-                    Action = grant.Allow
-                });
-            }
-        }
-
-        private void AddResource(AResource definition) {
-            var fullEnvName = definition.FullName.Replace("::", "_").ToUpperInvariant();
-            var logicalId = definition.LogicalId;
-            switch(definition) {
+        private void AddResource(ModuleEntry<AResource> entry) {
+            var fullEnvName = entry.FullName.Replace("::", "_").ToUpperInvariant();
+            var logicalId = entry.LogicalId;
+            switch(entry.Resource) {
             case SecretParameter secretParameter:
                 AddEnvironmentParameter("Secret", GetReference());
                 break;
@@ -168,7 +158,7 @@ namespace MindTouch.LambdaSharp.Tool {
             case PackageParameter packageParameter:
                 AddEnvironmentParameter("String", GetReference());
 
-                // this CloudFormation resource can only be created once the file packager has run
+                // NOTE: this CloudFormation resource can only be created once the file packager has run
                 _stack.Add(logicalId, new LambdaSharpResource("LambdaSharp::S3::Package") {
                     ["DestinationBucketName"] = Fn.Ref(packageParameter.DestinationBucketParameterName),
                     ["DestinationKeyPrefix"] = packageParameter.DestinationKeyPrefix,
@@ -204,44 +194,34 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
                 break;
             case InputParameter valueInputParameter: {
-                    _stack.Add(logicalId, new Parameter {
-                        Type = (valueInputParameter.Type == "Secret") ? "String" : valueInputParameter.Type,
-                        Description = valueInputParameter.Description,
-                        Default = valueInputParameter.Default,
-                        ConstraintDescription = valueInputParameter.ConstraintDescription,
-                        AllowedPattern = valueInputParameter.AllowedPattern,
-                        AllowedValues = valueInputParameter.AllowedValues?.ToList(),
-                        MaxLength = valueInputParameter.MaxLength,
-                        MaxValue = valueInputParameter.MaxValue,
-                        MinLength = valueInputParameter.MinLength,
-                        MinValue = valueInputParameter.MinValue,
-                        NoEcho = valueInputParameter.NoEcho
-                    });
+                    _stack.Add(logicalId, valueInputParameter.Parameter);
                     AddEnvironmentParameter(valueInputParameter.Type, GetReference());
                 }
                 break;
-            case Function function:
+            case FunctionParameter function:
                 AddFunction(_module, function);
                 break;
             default:
-                throw new ArgumentOutOfRangeException(nameof(definition), definition, "unknown parameter type");
+                throw new ArgumentOutOfRangeException(nameof(entry), entry, "unknown parameter type");
             }
 
             // local function
             void AddEnvironmentParameter(string type, object value) {
-                foreach(var function in definition.Scope.Select(name => _module.Resources.OfType<Function>().First(f => f.Name == name))) {
+
+                // TODO: let's make this a tad more efficient!
+                foreach(var function in entry.Scope.Select(name => _module.GetAllEntriesOfType<FunctionParameter>().First(f => f.FullName == name))) {
                     if(type == "Secret") {
-                        function.Environment["SEC_" + fullEnvName] = value;
+                        function.Resource.Function.Environment.Variables["SEC_" + fullEnvName] = value;
                     } else {
-                        function.Environment["STR_" + fullEnvName] = value;
+                        function.Resource.Function.Environment.Variables["STR_" + fullEnvName] = value;
                     }
                 }
             }
 
-            object GetReference() => _module.Variables[definition.FullName];
+            object GetReference() => _module.GetReference(entry.FullName);
         }
 
-        private void AddFunction(Module module, Function function) {
+        private void AddFunction(Module module, FunctionParameter function) {
 
             // initialize function environment variables
             var environmentVariables = function.Environment.ToDictionary(kv => kv.Key, kv => (dynamic)kv.Value);
@@ -250,39 +230,25 @@ namespace MindTouch.LambdaSharp.Tool {
             environmentVariables["MODULE_VERSION"] = module.Version.ToString();
             environmentVariables["LAMBDA_NAME"] = function.Name;
             environmentVariables["LAMBDA_RUNTIME"] = function.Runtime;
-            environmentVariables["DEADLETTERQUEUE"] = module.Variables["LambdaSharp::DeadLetterQueueArn"];
-            environmentVariables["DEFAULTSECRETKEY"] = module.Variables["LambdaSharp::DefaultSecretKeyArn"];
-
-            // check if function as a VPC configuration
-            Lambda.FunctionTypes.VpcConfig vpcConfig = null;
-            if(function.VPC != null) {
-                vpcConfig = new Lambda.FunctionTypes.VpcConfig {
-                    SubnetIds = function.VPC.SubnetIds,
-                    SecurityGroupIds = function.VPC.SecurityGroupIds
-                };
-            }
+            environmentVariables["DEADLETTERQUEUE"] = module.GetReference("LambdaSharp::DeadLetterQueueArn");
+            environmentVariables["DEFAULTSECRETKEY"] = module.GetReference("LambdaSharp::DefaultSecretKeyArn");
 
             // create function definition
-            _stack.Add(function.Name, new Lambda.Function {
-                Description = function.Description,
-                Runtime = function.Runtime,
-                Handler = function.Handler,
-                Timeout = function.Timeout,
-                MemorySize = function.Memory,
-                ReservedConcurrentExecutions = function.ReservedConcurrency,
-                Role = FnGetAtt("ModuleRole", "Arn"),
-                Code = new Lambda.FunctionTypes.Code {
-                    S3Bucket = FnRef("DeploymentBucketName"),
-                    S3Key = FnSub($"Modules/{module.Name}/Assets/{Path.GetFileName(function.PackagePath)}")
-                },
-                DeadLetterConfig = new Lambda.FunctionTypes.DeadLetterConfig {
-                    TargetArn = module.Variables["Module::DeadLetterQueueArn"]
-                },
-                Environment = new Lambda.FunctionTypes.Environment {
-                    Variables = environmentVariables
-                },
-                VpcConfig = vpcConfig
-            });
+            _stack.Add(function.Name, function.Function);
+
+            // TODO: make sure all these fields get set
+            // _stack.Add(function.Name, new Lambda.Function {
+            //     Runtime = function.Runtime,
+            //     Handler = function.Handler,
+            //     Timeout = function.Timeout,
+            //     Code = new Lambda.FunctionTypes.Code {
+            //         S3Bucket = FnRef("DeploymentBucketName"),
+            //         S3Key = FnSub($"Modules/{module.Name}/Assets/{Path.GetFileName(function.PackagePath)}")
+            //     },
+            //     Environment = new Lambda.FunctionTypes.Environment {
+            //         Variables = environmentVariables
+            //     },
+            // });
         }
     }
 }

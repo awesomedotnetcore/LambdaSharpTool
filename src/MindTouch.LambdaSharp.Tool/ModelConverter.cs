@@ -118,7 +118,7 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         private void ConvertParameter(
-            AResource parent,
+            ModuleBuilder.Entry<AResource> parent,
             int index,
             ParameterNode parameter
         ) {
@@ -137,7 +137,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 AtLocation(parameter.Var, () => {
 
                     // create managed resource entry
-                    var result = _builder.AddEntry(parent, new CloudFormationResourceParameter {
+                    var result = parent.AddEntry(new CloudFormationResourceParameter {
                         Name = parameter.Var,
                         Description = parameter.Description,
                         Scope = _builder.ConvertScope(parameter.Scope),
@@ -145,16 +145,15 @@ namespace MindTouch.LambdaSharp.Tool {
                     });
 
                     // register managed resource reference
-                    var reference = (parameter.Resource.ArnAttribute != null)
+                    result.Reference = (parameter.Resource.ArnAttribute != null)
                         ? FnGetAtt(result.ResourceName, parameter.Resource.ArnAttribute)
                         : ResourceMapping.GetArnReference(parameter.Resource.Type, result.ResourceName);
-                    _builder.UpdateVariable(result, reference);
 
                     // request managed resource grants
-                    _builder.AddGrant(result.LogicalId, parameter.Resource.Type, reference, parameter.Resource.Allow);
+                    _builder.AddGrant(result.LogicalId, parameter.Resource.Type, result.Reference, parameter.Resource.Allow);
 
                     // recurse
-                    ConvertParameters(result);
+                    ConvertParameters(result.Cast<AResource>());
                 });
                 break;
             case "Var.Reference":
@@ -163,7 +162,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 AtLocation(parameter.Var, () => {
 
                     // create exiting resource entry
-                    var result = _builder.AddEntry(parent, new ReferencedResourceParameter {
+                    var result = parent.AddEntry(new ReferencedResourceParameter {
                         Name = parameter.Var,
                         Description = parameter.Description,
                         Scope = _builder.ConvertScope(parameter.Scope),
@@ -174,7 +173,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     _builder.AddGrant(result.LogicalId, parameter.Resource.Type, parameter.Value, parameter.Resource.Allow);
 
                     // recurse
-                    ConvertParameters(result);
+                    ConvertParameters(result.Cast<AResource>());
                 });
                 break;
             case "Var.Value":
@@ -183,7 +182,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 AtLocation(parameter.Var, () => {
 
                     // create literal value entry
-                    var result = _builder.AddEntry(parent, new ValueParameter {
+                    var result = parent.AddEntry(new ValueParameter {
                         Name = parameter.Var,
                         Description = parameter.Description,
                         Scope = _builder.ConvertScope(parameter.Scope),
@@ -193,7 +192,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     });
 
                     // recurse
-                    ConvertParameters(result);
+                    ConvertParameters(result.Cast<AResource>());
                 });
                 break;
             case "Var.Secret":
@@ -202,7 +201,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 AtLocation(parameter.Var, () => {
 
                     // create encrypted value entry
-                    var result = _builder.AddEntry(parent, new SecretParameter {
+                    var result = parent.AddEntry(new SecretParameter {
                         Name = parameter.Var,
                         Description = parameter.Description,
                         Scope = _builder.ConvertScope(parameter.Scope),
@@ -218,7 +217,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     });
 
                     // recurse
-                    ConvertParameters(result);
+                    ConvertParameters(result.Cast<AResource>());
                 });
                 break;
             case "Var.Empty":
@@ -227,7 +226,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 AtLocation(parameter.Var, () => {
 
                     // create empty entry
-                    var result = _builder.AddEntry(parent, new ValueParameter {
+                    var result = parent.AddEntry(new ValueParameter {
                         Name = parameter.Var,
                         Description = parameter.Description,
                         Scope = _builder.ConvertScope(parameter.Scope),
@@ -235,7 +234,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     });
 
                     // recurse
-                    ConvertParameters(result);
+                    ConvertParameters(result.Cast<AResource>());
                 });
                 break;
             case "Package":
@@ -244,7 +243,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 AtLocation(parameter.Var, () => {
 
                     // create package resource entry
-                    var result = _builder.AddEntry(parent, new PackageParameter {
+                    var result = parent.AddEntry(new PackageParameter {
                         Name = parameter.Package,
                         Description = parameter.Description,
                         Scope = _builder.ConvertScope(parameter.Scope),
@@ -254,16 +253,16 @@ namespace MindTouch.LambdaSharp.Tool {
                     });
 
                     // register package resource reference
-                    _builder.UpdateVariable(result, FnGetAtt(result.ResourceName, "Url"));
+                    result.Reference = FnGetAtt(result.ResourceName, "Url");
 
                     // recurse
-                    ConvertParameters(result);
+                    ConvertParameters(result.Cast<AResource>());
                 });
                 break;
             }
 
             // local functions
-            void ConvertParameters(AResource result) {
+            void ConvertParameters(ModuleBuilder.Entry<AResource> result) {
                 ForEach("Variables", parameter.Variables, (i, p) => ConvertParameter(result, i, p));
             }
         }
@@ -277,14 +276,14 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
 
                 // initialize VPC configuration if provided
-                FunctionVpc vpc = null;
+                Humidifier.Lambda.FunctionTypes.VpcConfig vpc = null;
                 if(function.VPC?.Any() == true) {
                     if(
                         function.VPC.TryGetValue("SubnetIds", out var subnets)
                         && function.VPC.TryGetValue("SecurityGroupIds", out var securityGroups)
                     ) {
                         AtLocation("VPC", () => {
-                            vpc = new FunctionVpc {
+                            vpc = new Humidifier.Lambda.FunctionTypes.VpcConfig {
                                 SubnetIds = subnets,
                                 SecurityGroupIds = securityGroups
                             };
@@ -296,22 +295,35 @@ namespace MindTouch.LambdaSharp.Tool {
 
                 // create function entry
                 var eventIndex = 0;
-                var result = _builder.AddEntry(null, new Function {
+                var result = _builder.AddEntry(new FunctionParameter {
                     Name = function.Function,
                     Description = function.Description,
-                    Memory = function.Memory,
-                    Timeout = function.Timeout,
                     Project = function.Project,
-                    Handler = function.Handler,
-                    Runtime = function.Runtime,
                     Language = function.Language,
-                    ReservedConcurrency = function.ReservedConcurrency,
-                    VPC = vpc,
 
                     // TODO (2018-11-10, bjorg): don't put generator logic into the converter
-                    Environment = function.Environment.ToDictionary(kv => "STR_" + kv.Key.Replace("::", "_").ToUpperInvariant(), kv => kv.Value) ?? new Dictionary<string, object>(),
+                    Environment = function.Environment.ToDictionary(
+                        kv => "STR_" + kv.Key.Replace("::", "_").ToUpperInvariant(),
+                        kv => kv.Value
+                    ) ?? new Dictionary<string, object>(),
                     Sources = AtLocation("Sources", () => function.Sources?.Select(source => ConvertFunctionSource(function, ++eventIndex, source)).Where(evt => evt != null).ToList(), null) ?? new List<AFunctionSource>(),
-                    Pragmas = function.Pragmas
+                    Pragmas = function.Pragmas,
+                    Function = new Humidifier.Lambda.Function {
+                        Description = function.Description,
+                        Timeout = function.Timeout,
+                        Runtime = function.Runtime,
+                        ReservedConcurrentExecutions = function.ReservedConcurrency,
+                        MemorySize = function.Memory,
+                        Handler = function.Handler,
+                        VpcConfig = vpc,
+                        Role = FnGetAtt("Module::Role", "Arn"),
+                        DeadLetterConfig = new Humidifier.Lambda.FunctionTypes.DeadLetterConfig {
+                            TargetArn = FnRef("Module::DeadLetterQueueArn")
+                        },
+                        Environment = new Humidifier.Lambda.FunctionTypes.Environment {
+                            Variables = new Dictionary<string, dynamic>()
+                        }
+                    }
                 });
             });
         }
