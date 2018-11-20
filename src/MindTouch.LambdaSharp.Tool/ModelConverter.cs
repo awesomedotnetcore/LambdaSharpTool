@@ -213,7 +213,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         Reference = FnJoin(
                             "|",
                             new object[] {
-                                parameter.Value
+                                parameter.Secret
                             }.Union(parameter.EncryptionContext
                                 ?.Select(kv => $"{Uri.EscapeDataString(kv.Key)}={Uri.EscapeDataString(kv.Value)}")
                                 ?? new string[0]
@@ -300,7 +300,6 @@ namespace MindTouch.LambdaSharp.Tool {
                         ?.Select((source, eventIndex) => ConvertFunctionSource(function, eventIndex, source))
                         .Where(evt => evt != null)
                         .ToList()
-                    , null
                 );
                 var result = _builder.AddEntry(new FunctionParameter {
                     Name = function.Function,
@@ -366,7 +365,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     var path = api.Substring(pathSeparatorIndex + 1).TrimStart().Split('/', StringSplitOptions.RemoveEmptyEntries);
 
                     // parse integration into a valid enum
-                    var integration = AtLocation("Integration", () => Enum.Parse<ApiGatewaySourceIntegration>(source.Integration ?? "RequestResponse", ignoreCase: true), ApiGatewaySourceIntegration.Unsupported);
+                    var integration = AtLocation("Integration", () => Enum.Parse<ApiGatewaySourceIntegration>(source.Integration ?? "RequestResponse", ignoreCase: true));
                     return new ApiGatewaySource {
                         Method = method,
                         Path = path,
@@ -374,12 +373,12 @@ namespace MindTouch.LambdaSharp.Tool {
                         OperationName = source.OperationName,
                         ApiKeyRequired = source.ApiKeyRequired
                     };
-                }, null);
+                });
             case "Schedule":
                 return AtLocation("Schedule", () => new ScheduleSource {
                     Expression = source.Schedule,
                     Name = source.Name
-                }, null);
+                });
             case "S3":
                 return AtLocation("S3", () => new S3Source {
                     Bucket = source.S3,
@@ -390,39 +389,39 @@ namespace MindTouch.LambdaSharp.Tool {
                     },
                     Prefix = source.Prefix,
                     Suffix = source.Suffix
-                }, null);
+                });
             case "SlackCommand":
                 return AtLocation("SlackCommand", () => new ApiGatewaySource {
                     Method = "POST",
                     Path = source.SlackCommand.Split('/', StringSplitOptions.RemoveEmptyEntries),
                     Integration = ApiGatewaySourceIntegration.SlackCommand,
                     OperationName = source.OperationName
-                }, null);
+                });
             case "Topic":
                 return AtLocation("Topic", () => new TopicSource {
                     TopicName = source.Topic
-                }, null);
+                });
             case "Sqs":
                 return AtLocation("Sqs", () => new SqsSource {
                     Queue = source.Sqs,
                     BatchSize = source.BatchSize ?? 10
-                }, null);
+                });
             case "Alexa":
                 return AtLocation("Alexa", () => new AlexaSource {
                     EventSourceToken = source.Alexa
-                }, null);
+                });
             case "DynamoDB":
                 return AtLocation("DynamoDB", () => new DynamoDBSource {
                     DynamoDB = source.DynamoDB,
                     BatchSize = source.BatchSize ?? 100,
                     StartingPosition = source.StartingPosition ?? "LATEST"
-                }, null);
+                });
             case "Kinesis":
                 return AtLocation("Kinesis", () => new KinesisSource {
                     Kinesis = source.Kinesis,
                     BatchSize = source.BatchSize ?? 100,
                     StartingPosition = source.StartingPosition ?? "LATEST"
-                }, null);
+                });
             }
             return null;
         }
@@ -490,7 +489,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
                 }
                 return match.Key;
-            }, null);
+            });
         }
     }
 }

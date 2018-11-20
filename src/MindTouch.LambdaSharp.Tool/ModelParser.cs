@@ -149,7 +149,7 @@ namespace MindTouch.LambdaSharp.Tool {
                             ) {
                                 choice = Tuple.Create(
                                     inputEntry.Key.Scalar.Value,
-                                    AtLocation(inputEntry.Key.Scalar.Value, () => ResolveChoices(inputEntry.Value), inputEntry.Value)
+                                    AtLocation(inputEntry.Key.Scalar.Value, () => ResolveChoices(inputEntry.Value))
                                 );
                             }
                         } else {
@@ -157,7 +157,7 @@ namespace MindTouch.LambdaSharp.Tool {
                             // add the entry to the output map
                             outputMap.Entries.Add(new KeyValuePair<YamlScalar, AYamlValue>(
                                 inputEntry.Key,
-                                AtLocation(inputEntry.Key.Scalar.Value, () => ResolveChoices(inputEntry.Value), inputEntry.Value)
+                                AtLocation(inputEntry.Key.Scalar.Value, () => ResolveChoices(inputEntry.Value))
                             ));
                         }
                     }

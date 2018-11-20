@@ -490,18 +490,22 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 if(HasErrors) {
                     return false;
                 }
-File.WriteAllText("module.json", JsonConvert.SerializeObject(module, Formatting.Indented));
-Console.WriteLine("module.json generated");
-return false;
+
+                // create folder for cloudformation output
+                var outputCloudFormationDirectory = Path.GetDirectoryName(outputCloudFormationFilePath);
+                if(outputCloudFormationDirectory != "") {
+                    Directory.CreateDirectory(outputCloudFormationDirectory);
+                }
+
+var moduleJson = Path.ChangeExtension(outputCloudFormationFilePath, null) + "-module.json";
+File.WriteAllText(moduleJson, JsonConvert.SerializeObject(module, Formatting.Indented));
+Console.WriteLine($"{moduleJson} generated");
+//return false;
 
                 // generate & save cloudformation template
                 var template = new ModelGenerator(settings, moduleSource).Generate(module);
                 if(HasErrors) {
                     return false;
-                }
-                var outputCloudFormationDirectory = Path.GetDirectoryName(outputCloudFormationFilePath);
-                if(outputCloudFormationDirectory != "") {
-                    Directory.CreateDirectory(outputCloudFormationDirectory);
                 }
                 File.WriteAllText(outputCloudFormationFilePath, template);
 

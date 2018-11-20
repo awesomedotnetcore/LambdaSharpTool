@@ -30,23 +30,6 @@ using Newtonsoft.Json;
 
 namespace MindTouch.LambdaSharp.Tool {
 
-    public class ModelResolutionException : Exception {
-
-        //--- Class Methods ---
-        public static ModelResolutionException New(string segment, Exception exception) {
-            return (exception is ModelResolutionException resolutionException)
-                ? new ModelResolutionException(segment + "/" + resolutionException, resolutionException.InnerException)
-                : new ModelResolutionException(segment, exception);
-        }
-
-        //--- Fields ---
-        public readonly string Path;
-
-        //--- Constructors ---
-        public ModelResolutionException(string segment, Exception innerException) : base($"error location: {segment}", innerException)
-            => Path = segment ?? throw new ArgumentNullException(nameof(segment));
-    }
-
     public class ModelReferenceResolver : AModelProcessor {
 
         //--- Constants ---
@@ -54,7 +37,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
         //--- Class Methods ---
         private static void DebugWriteLine(Func<string> lazyMessage) {
-#if true
+#if false
             Console.WriteLine(lazyMessage());
 #endif
         }
@@ -81,74 +64,99 @@ namespace MindTouch.LambdaSharp.Tool {
             }
 
             // resolve exports
-            foreach(var output in module.Outputs.OfType<ExportOutput>()) {
-                if(output.Value == null) {
+            AtLocation("Outputs", () => {
+                foreach(var output in module.Outputs.OfType<ExportOutput>()) {
+                    AtLocation(output.Name, () => {
+                        if(output.Value == null) {
 
-                    // NOTE: if no value is provided, we expect the export name to correspond to a
-                    //  parameter name; if it does, we export the ARN value of that parameter; in
-                    //  addition, we assume its description if none is provided.
+                            // NOTE: if no value is provided, we expect the export name to correspond to a
+                            //  parameter name; if it does, we export the ARN value of that parameter; in
+                            //  addition, we assume its description if none is provided.
 
-                    if(!module.TryGetEntry(output.Name, out ModuleEntry entry)) {
-                        AddError("could not find matching entry");
-                        output.Value = "<BAD>";
-                    } else {
-                        output.Value = entry.Reference;
-                    }
+                            if(!module.TryGetEntry(output.Name, out ModuleEntry entry)) {
+                                AddError("could not find matching entry");
+                                output.Value = "<BAD>";
+                            } else {
+                                output.Value = entry.Reference;
+                            }
 
-                    // only set the description if the value was not set
-                    if(output.Description == null) {
-                        output.Description = entry.Description;
-                    }
+                            // only set the description if the value was not set
+                            if(output.Description == null) {
+                                output.Description = entry.Description;
+                            }
+                        }
+                    });
                 }
-            }
+            });
 
             // resolve all inter-entry references
             var freeEntries = new Dictionary<string, ModuleEntry>();
             var boundEntries = new Dictionary<string, ModuleEntry>();
-            DiscoverEntries();
-            ResolveEntries();
-            ReportUnresolvedEntries();
+            AtLocation("Entries", () => {
+                DiscoverEntries();
+                ResolveEntries();
+                ReportUnresolvedEntries();
+            });
             if(Settings.HasErrors) {
                 return;
             }
 
             // resolve everything to logical ids
-            module.Secrets = (IList<object>)Substitute(module.Secrets);;
-            module.Conditions = (IDictionary<string, object>)Substitute(module.Conditions);
-            foreach(var entry in module.Entries) {
-                switch(entry.Resource) {
-                case null:
-                case InputParameter _:
-                case ValueParameter _:
-                case SecretParameter _:
-                case PackageParameter _:
+            AtLocation("Secrets", () => {
+                module.Secrets = (IList<object>)Substitute(module.Secrets);
+            });
+            AtLocation("Conditions", () => {
+                module.Conditions = (IDictionary<string, object>)Substitute(module.Conditions);
+            });
+            AtLocation("Entries", () => {
+                foreach(var entry in module.Entries) {
+                    AtLocation(entry.FullName, () => {
+                        switch(entry.Resource) {
+                        case InputParameter _:
+                        case ValueParameter _:
+                        case SecretParameter _:
+                        case PackageParameter _:
 
-                    // nothing to do
-                    break;
-                case HumidifierParameter humidifierParameter:
-                    humidifierParameter.Resource = (Humidifier.Resource)Substitute(humidifierParameter.Resource, ReportMissingReference);
-                    humidifierParameter.DependsOn = humidifierParameter.DependsOn.Select(dependency => module.GetEntry(dependency).LogicalId).ToList();
-                    break;
-                case FunctionParameter functionParameter:
-                    functionParameter.Environment = (IDictionary<string, object>)Substitute(functionParameter.Environment, ReportMissingReference);
-                    functionParameter.Function = (Humidifier.Lambda.Function)Substitute(functionParameter.Function, ReportMissingReference);
-
-                    // update function sources
-                    foreach(var source in functionParameter.Sources) {
-                        switch(source) {
-                        case AlexaSource alexaSource:
-                            if(alexaSource.EventSourceToken != null) {
-                                alexaSource.EventSourceToken = Substitute(alexaSource.EventSourceToken, ReportMissingReference);
-                            }
+                            // nothing to do
                             break;
-                        }
+                        case HumidifierParameter humidifierParameter:
+                            AtLocation("Resources", () => {
+                                humidifierParameter.Resource = (Humidifier.Resource)Substitute(humidifierParameter.Resource, ReportMissingReference);
+                            });
+                            AtLocation("DependsOn", () => {
+                                humidifierParameter.DependsOn = humidifierParameter.DependsOn.Select(dependency => module.GetEntry(dependency).LogicalId).ToList();
+                            });
+                            break;
+                        case FunctionParameter functionParameter:
+                            AtLocation("Environment", () => {
+                                functionParameter.Environment = (IDictionary<string, object>)Substitute(functionParameter.Environment, ReportMissingReference);
+                            });
+                            AtLocation("Function", () => {
+                                functionParameter.Function = (Humidifier.Lambda.Function)Substitute(functionParameter.Function, ReportMissingReference);
+                            });
 
-                    }
-                    break;
-                default:
-                    throw new ApplicationException($"unexpected type: {entry.Resource.GetType()}");
+                            // update function sources
+                            AtLocation("Sources", () => {
+                                var index = 0;
+                                foreach(var source in functionParameter.Sources) {
+                                    AtLocation($"[{++index}]", () => {
+                                        switch(source) {
+                                        case AlexaSource alexaSource:
+                                            if(alexaSource.EventSourceToken != null) {
+                                                alexaSource.EventSourceToken = Substitute(alexaSource.EventSourceToken, ReportMissingReference);
+                                            }
+                                            break;
+                                        }
+                                    });
+                                }
+                            });
+                            break;
+                        default:
+                            throw new ApplicationException($"unexpected type: {entry.Resource.GetType()}");
+                        }
+                    });
                 }
-            }
+            });
 
             // resolve references in output values
             foreach(var output in module.Outputs) {
@@ -167,34 +175,40 @@ namespace MindTouch.LambdaSharp.Tool {
             }
 
             // resolve references in grants
-            foreach(var grant in module.Grants) {
-                grant.References = Substitute(grant.References, ReportMissingReference);
-            }
+            AtLocation("Grants", () => {
+                foreach(var grant in module.Grants) {
+                    AtLocation(grant.Sid, () => {
+                        grant.References = Substitute(grant.References, ReportMissingReference);
+                    });
+                }
+            });
 
             // local functions
             void DiscoverEntries() {
                 foreach(var entry in module.Entries) {
-                    switch(entry.Reference) {
-                    case null:
-                        throw new ApplicationException($"entry reference cannot be null: {entry.FullName}");
-                    case string _:
-                        freeEntries[entry.FullName] = entry;
-                        DebugWriteLine(() => $"FREE => {entry.FullName}");
-                        break;
-                    case IList<object> list:
-                        if(list.All(value => value is string)) {
+                    AtLocation(entry.FullName, () => {
+                        switch(entry.Reference) {
+                        case null:
+                            throw new ApplicationException($"entry reference cannot be null: {entry.FullName}");
+                        case string _:
                             freeEntries[entry.FullName] = entry;
                             DebugWriteLine(() => $"FREE => {entry.FullName}");
-                        } else {
+                            break;
+                        case IList<object> list:
+                            if(list.All(value => value is string)) {
+                                freeEntries[entry.FullName] = entry;
+                                DebugWriteLine(() => $"FREE => {entry.FullName}");
+                            } else {
+                                boundEntries[entry.FullName] = entry;
+                                DebugWriteLine(() => $"BOUND => {entry.FullName}");
+                            }
+                            break;
+                        default:
                             boundEntries[entry.FullName] = entry;
                             DebugWriteLine(() => $"BOUND => {entry.FullName}");
+                            break;
                         }
-                        break;
-                    default:
-                        boundEntries[entry.FullName] = entry;
-                        DebugWriteLine(() => $"BOUND => {entry.FullName}");
-                        break;
-                    }
+                    });
                 }
             }
 
@@ -203,36 +217,42 @@ namespace MindTouch.LambdaSharp.Tool {
                 do {
                     progress = false;
                     foreach(var entry in boundEntries.Values.ToList()) {
+                        AtLocation(entry.FullName, () => {
 
-                        // NOTE (2018-10-04, bjorg): each iteration, we loop over a bound entry;
-                        //  in the iteration, we attempt to substitute all references with free entries;
-                        //  if we do, the entry can be added to the pool of free entries;
-                        //  if we iterate over all bound entries without making progress, then we must have
-                        //  a circular dependency and we stop.
+                            // NOTE (2018-10-04, bjorg): each iteration, we loop over a bound entry;
+                            //  in the iteration, we attempt to substitute all references with free entries;
+                            //  if we do, the entry can be added to the pool of free entries;
+                            //  if we iterate over all bound entries without making progress, then we must have
+                            //  a circular dependency and we stop.
 
-                        var doesNotContainBoundEntries = true;
-                        entry.Reference = Substitute(entry.Reference, (string missingName) => {
-                            doesNotContainBoundEntries = doesNotContainBoundEntries && !boundEntries.ContainsKey(missingName);
+                            var doesNotContainBoundEntries = true;
+                            AtLocation("Reference", () => {
+                                entry.Reference = Substitute(entry.Reference, (string missingName) => {
+                                    doesNotContainBoundEntries = doesNotContainBoundEntries && !boundEntries.ContainsKey(missingName);
+                                });
+                            });
+                            if(doesNotContainBoundEntries) {
+
+                                // capture that progress towards resolving all bound entries has been made;
+                                // if ever an iteration does not produces progress, we need to stop; otherwise
+                                // we will loop forever
+                                progress = true;
+
+                                // promote bound entry to free entry
+                                freeEntries[entry.FullName] = entry;
+                                boundEntries.Remove(entry.FullName);
+                                DebugWriteLine(() => $"RESOLVED => {entry.FullName} = {Newtonsoft.Json.JsonConvert.SerializeObject(entry.Reference)}");
+                            }
                         });
-                        if(doesNotContainBoundEntries) {
-
-                            // capture that progress towards resolving all bound entries has been made;
-                            // if ever an iteration does not produces progress, we need to stop; otherwise
-                            // we will loop forever
-                            progress = true;
-
-                            // promote bound entry to free entry
-                            freeEntries[entry.FullName] = entry;
-                            boundEntries.Remove(entry.FullName);
-                            DebugWriteLine(() => $"RESOLVED => {entry.FullName} = {Newtonsoft.Json.JsonConvert.SerializeObject(entry.Reference)}");
-                        }
                     }
                 } while(progress);
             }
 
             void ReportUnresolvedEntries() {
                 foreach(var entry in module.Entries) {
-                    Substitute(entry.Reference, ReportMissingReference);
+                    AtLocation(entry.FullName, () => {
+                        Substitute(entry.Reference, ReportMissingReference);
+                    });
                 }
             }
 
@@ -249,11 +269,9 @@ namespace MindTouch.LambdaSharp.Tool {
                 case IDictionary dictionary: {
                         var map = new Dictionary<object, object>();
                         foreach(DictionaryEntry entry in dictionary) {
-                            try {
+                            AtLocation((string)entry.Key, () => {
                                 map.Add(entry.Key, Substitute(entry.Value, missing));
-                            } catch(Exception e) {
-                                throw ModelResolutionException.New((string)entry.Key, e);
-                            }
+                            });
                         }
                         foreach(var entry in map) {
                             dictionary[entry.Key] = entry.Value;
@@ -369,7 +387,9 @@ namespace MindTouch.LambdaSharp.Tool {
                     }
                 case IList list: {
                         for(var i = 0; i < list.Count; ++i) {
-                            list[i] = Substitute(list[i], missing);
+                            AtLocation($"[{i + 1}]", () => {
+                                list[i] = Substitute(list[i], missing);
+                            });
                         }
                         return value;
                     }
@@ -385,15 +405,17 @@ namespace MindTouch.LambdaSharp.Tool {
 
                         // use reflection to substitute properties
                         foreach(var property in value.GetType().GetProperties().Where(p => !SkipType(p.PropertyType))) {
-                            try {
-                                var propertyValue = property.GetGetMethod()?.Invoke(value, new object[0]);
-                                if((propertyValue != null) && !propertyValue.GetType().IsValueType) {
-                                    property.GetSetMethod()?.Invoke(value, new[] { Substitute(propertyValue, missing) });
-                                    DebugWriteLine(() => $"UPDATED => {value.GetType()}::{property.Name} [{property.PropertyType}]");
+                            AtLocation(property.Name, () => {
+                                try {
+                                    var propertyValue = property.GetGetMethod()?.Invoke(value, new object[0]);
+                                    if((propertyValue != null) && !propertyValue.GetType().IsValueType) {
+                                        property.GetSetMethod()?.Invoke(value, new[] { Substitute(propertyValue, missing) });
+                                        DebugWriteLine(() => $"UPDATED => {value.GetType()}::{property.Name} [{property.PropertyType}]");
+                                    }
+                                } catch(Exception e) {
+                                    throw new ApplicationException($"unable to get/set {value.GetType()}::{property.Name}", e);
                                 }
-                            } catch(Exception e) {
-                                throw new ApplicationException($"unable to get/set {value.GetType()}::{property.Name}", e);
-                            }
+                            });
                         }
                         return value;
                     }
@@ -411,6 +433,8 @@ namespace MindTouch.LambdaSharp.Tool {
                     // built-in AWS references can be kept as-is
                     return true;
                 } else if(key.StartsWith("@", StringComparison.Ordinal)) {
+
+                    // TODO: remove @ prefix from resource names
                     // if(final) {
                     //     found = (attribute != null)
                     //         ? FnGetAtt(key.Substring(1), attribute)
@@ -422,18 +446,38 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
 
                 // check if the requested key can be resolved using a free entry
+                var visited = new HashSet<string>();
+            again:
                 if(freeEntries.TryGetValue(key, out ModuleEntry freeEntry)) {
                     if(attribute != null) {
-                        if(
-                            (freeEntry.Reference is IDictionary<string, object> map)
-                            && (map.Count == 1)
-                            && map.TryGetValue("Ref", out object refObject)
-                            && (refObject is string refValue)
-                        ) {
-                            found = FnGetAtt(refValue, attribute);
-                        } else {
-                            AddError($"reference '{key}' must resolve to a resource when using an Fn::GetAtt expression");
+                        switch(freeEntry.Resource) {
+                        case SecretParameter _:
+                        case PackageParameter _:
+                        case InputParameter _:
+                            AddError($"reference '{key}' must be a reference, resource, or function when using Fn::GetAtt");
+                            break;
+                        case ValueParameter _:
+                            if(
+                                (freeEntry.Reference is IDictionary<string, object> map)
+                                && (map.Count == 1)
+                                && map.TryGetValue("Ref", out object refObject)
+                                && (refObject is string refValue)
+                            ) {
+
+                                // check the key hasn't been visited previously to avoid infinite loops
+                                if(visited.Add(key)) {
+                                    key = refValue;
+                                    goto again;
+                                }
+                                AddError($"reference '{key}' has a circular dependency on '{refValue}'");
+                            } else {
+                                AddError($"reference '{key}' must be a reference, resource, or function when using Fn::GetAtt");
+                            }
+                            break;
+                        case FunctionParameter _:
+                        case HumidifierParameter _:
                             found = FnGetAtt(key, attribute);
+                            break;
                         }
                     } else {
                         found = freeEntry.Reference;

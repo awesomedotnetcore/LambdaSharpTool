@@ -164,7 +164,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     return false;
                 }
                 return true;
-            }, false)) {
+            })) {
                 return;
             }
 

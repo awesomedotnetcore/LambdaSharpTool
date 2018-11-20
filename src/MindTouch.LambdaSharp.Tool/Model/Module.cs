@@ -19,7 +19,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using MindTouch.LambdaSharp.Tool.Internal;
@@ -34,36 +33,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public string Sid { get; set; }
         public object References { get; set; }
         public IList<string> Allow { get; set; }
-    }
-
-    public class ModuleEntry {
-
-        //--- Fields ---
-        public readonly string FullName;
-        public readonly string Description;
-        public readonly string ResourceName;
-        public readonly string LogicalId;
-        public readonly AResource Resource;
-
-        //--- Constructors ---
-        public ModuleEntry(
-            string fullName,
-            string description,
-            object reference,
-            IList<string> scope,
-            AResource resource
-        ) {
-            FullName = fullName ?? throw new ArgumentNullException(nameof(fullName));
-            LogicalId = fullName.Replace("::", "");
-            ResourceName = "@" + LogicalId;
-            Reference = reference;
-            Scope = scope ?? new string[0];
-            Resource = resource;
-        }
-
-        //--- Properties ---
-        public object Reference { get; set; }
-        public IList<string> Scope { get; set; }
     }
 
     public class Module {
@@ -95,9 +64,10 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public ModuleEntry GetEntry(string fullName) => _entriesByFullName[fullName];
         public object GetReference(string fullName) => GetEntry(fullName).Reference;
         public bool TryGetEntry(string fullName, out ModuleEntry entry) => _entriesByFullName.TryGetValue(fullName, out entry);
-        public void AddEntry(string fullName, ModuleEntry entry) {
-            _entriesByFullName.Add(fullName, entry);
+        public ModuleEntry AddEntry(ModuleEntry entry) {
+            _entriesByFullName.Add(entry.FullName, entry);
             _entries.Add(entry);
+            return entry;
         }
 
         public IEnumerable<ModuleEntry> GetAllEntriesOfType<T>()

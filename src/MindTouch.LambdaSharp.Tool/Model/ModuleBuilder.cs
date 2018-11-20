@@ -107,14 +107,22 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         }
 
         public ModuleBuilderEntry<AResource> AddVariable(string fullName, string description, object reference, IList<string> scope = null) {
-            var entry = new ModuleEntry(
+            var doubleColonIndex = fullName.LastIndexOf("::");
+            var name = (doubleColonIndex < 0)
+                ? fullName
+                : fullName.Substring(doubleColonIndex + 2);
+            var entry = _module.AddEntry(new ModuleEntry(
                 fullName,
                 description,
                 reference ?? throw new ArgumentNullException(nameof(reference)),
                 scope,
-                resource: null
-            );
-            _module.AddEntry(fullName, entry);
+                resource: new ValueParameter {
+                    Name = name,
+                    Description = description,
+                    Scope = scope,
+                    Reference = reference
+                }
+            ));
             return new ModuleBuilderEntry<AResource>(this, entry);
         }
 
@@ -316,7 +324,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 return (scope == null)
                     ? new List<string>()
                     : ConvertToStringList(scope);
-            }, new List<string>());
+            });
         }
 
         public ModuleBuilderEntry<TResource> AddEntry<TResource, TParent>(
@@ -328,8 +336,13 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 : parent.FullName + "::" + resource.Name;
 
             // create entry
-            var entry = new ModuleEntry(fullName, resource.Description, resource.Reference, resource.Scope, resource);
-            _module.AddEntry(fullName, entry);
+            var entry = _module.AddEntry(new ModuleEntry(
+                fullName,
+                resource.Description,
+                resource.Reference,
+                resource.Scope,
+                resource
+            ));
             if(entry.Reference == null) {
                 if(resource is HumidifierParameter humidifierParameter) {
                     entry.Reference = ResourceMapping.GetArnReference(humidifierParameter.Resource.AWSTypeName, entry.ResourceName);

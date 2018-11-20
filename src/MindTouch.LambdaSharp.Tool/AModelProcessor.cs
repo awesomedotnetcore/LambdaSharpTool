@@ -67,7 +67,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 return parameters.First();
             }
             if(parameters.All(value => value is string)) {
-                return string.Join(",", parameters);
+                return string.Join(separator, parameters);
             }
             return new Dictionary<string, object> {
                 ["Fn::Join"] = new List<object> {
@@ -185,7 +185,7 @@ namespace MindTouch.LambdaSharp.Tool {
             }
         }
 
-        protected T AtLocation<T>(string location, Func<T> function, T onErrorReturn) {
+        protected T AtLocation<T>(string location, Func<T> function) {
             try {
                 _locations.Push(location);
                 return function();
