@@ -111,19 +111,22 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             var name = (doubleColonIndex < 0)
                 ? fullName
                 : fullName.Substring(doubleColonIndex + 2);
-            var entry = _module.AddEntry(new ModuleEntry(
-                fullName,
-                description,
-                reference ?? throw new ArgumentNullException(nameof(reference)),
-                scope,
-                resource: new ValueParameter {
-                    Name = name,
-                    Description = description,
-                    Scope = scope,
-                    Reference = reference
-                }
-            ));
-            return new ModuleBuilderEntry<AResource>(this, entry);
+            return AddEntry(new ValueParameter {
+                Name = name,
+                Description = description,
+                Scope = scope,
+                Reference = reference
+            }).Cast<AResource>();
+        }
+
+        public ModuleBuilderEntry<AResource> AddSecret(ModuleBuilderEntry<AResource> parent, string name, string description, object reference, IList<string> scope = null) {
+            return AddEntry(parent, new ValueParameter {
+                Name = name,
+                Description = description,
+                Scope = scope,
+                Reference = reference,
+                IsSecret = true
+            }).Cast<AResource>();
         }
 
         public ModuleBuilderEntry<InputParameter> AddInput(

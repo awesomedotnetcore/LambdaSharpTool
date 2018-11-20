@@ -114,7 +114,6 @@ namespace MindTouch.LambdaSharp.Tool {
                         switch(entry.Resource) {
                         case InputParameter _:
                         case ValueParameter _:
-                        case SecretParameter _:
                         case PackageParameter _:
 
                             // nothing to do
@@ -451,7 +450,6 @@ namespace MindTouch.LambdaSharp.Tool {
                 if(freeEntries.TryGetValue(key, out ModuleEntry freeEntry)) {
                     if(attribute != null) {
                         switch(freeEntry.Resource) {
-                        case SecretParameter _:
                         case PackageParameter _:
                         case InputParameter _:
                             AddError($"reference '{key}' must be a reference, resource, or function when using Fn::GetAtt");

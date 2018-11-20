@@ -34,9 +34,11 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public object Reference;
     }
 
-    public class SecretParameter : AResource { }
+    public class ValueParameter : AResource {
 
-    public class ValueParameter : AResource { }
+        //--- Properties ---
+        public bool IsSecret { get; set; }
+    }
 
     public class PackageParameter : AResource {
 

@@ -149,11 +149,8 @@ namespace MindTouch.LambdaSharp.Tool {
             var fullEnvName = entry.FullName.Replace("::", "_").ToUpperInvariant();
             var logicalId = entry.LogicalId;
             switch(entry.Resource) {
-            case SecretParameter secretParameter:
-                AddEnvironmentParameter(isSecret: true, value: GetReference());
-                break;
-            case ValueParameter _:
-                AddEnvironmentParameter(isSecret: false, value: GetReference());
+            case ValueParameter valueParameter:
+                AddEnvironmentParameter(valueParameter.IsSecret, GetReference());
                 break;
             case PackageParameter packageParameter:
                 AddEnvironmentParameter(isSecret: false, value: GetReference());
@@ -172,9 +169,9 @@ namespace MindTouch.LambdaSharp.Tool {
                     AddEnvironmentParameter(isSecret: false, value: GetReference());
                 }
                 break;
-            case InputParameter valueInputParameter: {
-                    _stack.Add(logicalId, valueInputParameter.Parameter);
-                    AddEnvironmentParameter(valueInputParameter.IsSecret, GetReference());
+            case InputParameter inputParameter: {
+                    _stack.Add(logicalId, inputParameter.Parameter);
+                    AddEnvironmentParameter(inputParameter.IsSecret, GetReference());
                 }
                 break;
             case FunctionParameter function:

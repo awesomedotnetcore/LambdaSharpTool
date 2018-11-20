@@ -206,11 +206,12 @@ namespace MindTouch.LambdaSharp.Tool {
                 AtLocation(parameter.Var, () => {
 
                     // create encrypted value entry
-                    var result = _builder.AddEntry(parent, new SecretParameter {
-                        Name = parameter.Var,
-                        Description = parameter.Description,
-                        Scope = _builder.ConvertScope(parameter.Scope),
-                        Reference = FnJoin(
+                    var result = _builder.AddSecret(
+                        parent: parent,
+                        name: parameter.Var,
+                        description: parameter.Description,
+                        scope: _builder.ConvertScope(parameter.Scope),
+                        reference: FnJoin(
                             "|",
                             new object[] {
                                 parameter.Secret
@@ -219,7 +220,7 @@ namespace MindTouch.LambdaSharp.Tool {
                                 ?? new string[0]
                             ).ToArray()
                         )
-                    });
+                    );
 
                     // recurse
                     ConvertParameters(result.Cast<AResource>());
