@@ -80,7 +80,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
             }
 
-            // resolve outputs
+            // resolve exports
             foreach(var output in module.Outputs.OfType<ExportOutput>()) {
                 if(output.Value == null) {
 
@@ -91,15 +91,8 @@ namespace MindTouch.LambdaSharp.Tool {
                     if(!module.Entries.TryGetValue(output.Name, out ModuleEntry entry)) {
                         AddError("could not find matching entry");
                         output.Value = "<BAD>";
-                    } else if(entry.Resource is InputParameter) {
-
-                        // input parameters are always expected to be in ARN format
-                        output.Value = FnRef(entry.ResourceName);
                     } else {
-                        output.Value = ResourceMapping.GetArnReference(
-                            (entry.Resource as AResourceParameter)?.Resource?.Type,
-                            entry.FullName
-                        );
+                        output.Value = entry.Reference;
                     }
 
                     // only set the description if the value was not set
@@ -122,24 +115,15 @@ namespace MindTouch.LambdaSharp.Tool {
             // resolve everything to logical ids
             module.Secrets = (IList<object>)Substitute(module.Secrets);;
             module.Conditions = (IDictionary<string, object>)Substitute(module.Conditions);
-            foreach(var parameter in module.GetAllResources()) {
-                switch(parameter) {
-                case AResourceParameter resourceParameter:
-                    if(resourceParameter.Resource != null) {
-                        var resource = resourceParameter.Resource;
-                        if(resource.Properties?.Any() == true) {
-                            try {
-                                resource.Properties = (IDictionary<string, object>)Substitute(resource.Properties, ReportMissingReference);
-                            } catch(Exception e) {
-                                throw ModelResolutionException.New(resourceParameter.Name, e);
-                            }
-                        }
-                        resourceParameter.Resource.DependsOn = resourceParameter.Resource.DependsOn.Select(dependency => module.GetEntry(dependency).LogicalId).ToList();
-                    }
+            foreach(var entry in module.Entries.Values) {
+                switch(entry.Resource) {
+                case null:
+
+                    // nothing to do
                     break;
                 case HumidifierParameter humidifierParameter:
                     humidifierParameter.Resource = (Humidifier.Resource)Substitute(humidifierParameter.Resource, ReportMissingReference);
-                    humidifierParameter.DependsOn = humidifierParameter.DependsOn.Select(dependency => module.GetEntry(dependency).LogicalId).ToList();
+                    humidifierParameter.DependsOn = humidifierParameter.DependsOn.Select(dependency => module.Entries[dependency].LogicalId).ToList();
                     break;
                 case FunctionParameter functionParameter:
                     functionParameter.Environment = (IDictionary<string, object>)Substitute(functionParameter.Environment, ReportMissingReference);
@@ -157,6 +141,8 @@ namespace MindTouch.LambdaSharp.Tool {
 
                     }
                     break;
+                default:
+                    throw new ApplicationException($"unexpected type: {entry.Resource.GetType()}");
                 }
             }
 

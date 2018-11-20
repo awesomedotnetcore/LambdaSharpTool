@@ -141,11 +141,12 @@ namespace MindTouch.LambdaSharp.Tool {
                 AtLocation(parameter.Var, () => {
 
                     // create managed resource entry
-                    var result = _builder.AddEntry(parent, new ManagedResourceParameter {
+                    var result = _builder.AddEntry(parent, new HumidifierParameter {
                         Name = parameter.Var,
                         Description = parameter.Description,
                         Scope = _builder.ConvertScope(parameter.Scope),
-                        Resource = CreateResource(parameter.Resource)
+                        Resource = new Humidifier.CustomResource(parameter.Resource.Type, parameter.Resource.Properties),
+                        DependsOn = ConvertToStringList(parameter.Resource.DependsOn)
                     });
 
                     // register managed resource reference
@@ -165,8 +166,8 @@ namespace MindTouch.LambdaSharp.Tool {
                 // existing resource
                 AtLocation(parameter.Var, () => {
 
-                    // create exiting resource entry
-                    var result = _builder.AddEntry(parent, new ReferencedResourceParameter {
+                    // create existing resource entry
+                    var result = _builder.AddEntry(parent, new ValueParameter {
                         Name = parameter.Var,
                         Description = parameter.Description,
                         Scope = _builder.ConvertScope(parameter.Scope),

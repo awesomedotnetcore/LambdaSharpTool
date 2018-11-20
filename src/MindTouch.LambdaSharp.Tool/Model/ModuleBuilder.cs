@@ -75,7 +75,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         //--- Methods ---
         public Module ToModule() => _module;
-        public AResource GetEntry(string fullName) => _module.GetResource(fullName);
+        public ModuleBuilderEntry<AResource> GetEntry(string fullName) => new ModuleBuilderEntry<AResource>(this, _module.Entries[fullName]);
         public void AddCondition(string name, object condition) => _module.Conditions.Add(name, condition);
         public void AddResourceStatement(Humidifier.Statement statement) => _module.ResourceStatements.Add(statement);
 
@@ -175,9 +175,10 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 // create conditional managed resource
                 var condition = $"{result.LogicalId}Created";
                 AddCondition(condition, FnEquals(FnRef(result.ResourceName), defaultValue));
-                var instance = AddEntry(result, new ManagedResourceParameter {
+                var instance = AddEntry(result, new HumidifierParameter {
                     Name = "Resource",
-                    Resource = CreateResource(awsType, awsProperties, condition)
+                    Resource = new Humidifier.CustomResource(awsType, awsProperties),
+                    Condition = condition
                 });
 
                 // register input parameter reference
@@ -330,7 +331,11 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             var entry = new ModuleEntry(fullName, resource.Description, resource.Reference, resource.Scope, resource);
             _module.Entries.Add(fullName, entry);
             if(entry.Reference == null) {
-                entry.Reference = FnRef(entry.ResourceName);
+                if(resource is HumidifierParameter humidifierParameter) {
+                    entry.Reference = ResourceMapping.GetArnReference(humidifierParameter.Resource.AWSTypeName, entry.ResourceName);
+                } else {
+                    entry.Reference = FnRef(entry.ResourceName);
+                }
             }
 
             // create entry

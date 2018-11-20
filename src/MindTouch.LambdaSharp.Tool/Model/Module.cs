@@ -85,9 +85,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         //--- Methods ---
         public bool HasPragma(string pragma) => Pragmas?.Contains(pragma) == true;
-        public ModuleEntry GetEntry(string fullName) => Entries[fullName];
-        public AResource GetResource(string fullName) => GetEntry(fullName).Resource;
-        public object GetReference(string fullName) => GetEntry(fullName).Reference;
+        public object GetReference(string fullName) => Entries[fullName].Reference;
         public IEnumerable<AResource> GetAllResources()
             => Entries.Values
                 .Where(entry => entry.Resource != null)

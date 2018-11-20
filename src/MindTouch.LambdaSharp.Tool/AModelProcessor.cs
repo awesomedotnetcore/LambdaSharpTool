@@ -237,26 +237,6 @@ namespace MindTouch.LambdaSharp.Tool {
             return result;
         }
 
-        protected Resource CreateResource(ResourceNode resource, string condition = null) {
-            return CreateResource(resource.Type, resource.Properties, condition, resource.DependsOn);
-        }
-
-        protected Resource CreateResource(string awsType, IDictionary<string, object> properties, string condition = null, object dependsOn = null) {
-            properties = properties ?? new Dictionary<string, object>();
-
-            // check if the service token needs to be added for custom resources
-            if(!awsType.StartsWith("AWS::") && !awsType.StartsWith("Custom::") && !properties.ContainsKey("ServiceToken")) {
-                properties["ServiceToken"] = AModelProcessor.FnImportValue(AModelProcessor.FnSub($"${{DeploymentPrefix}}CustomResource-{awsType}"));
-                awsType = "Custom::" + awsType.Replace("::", "");
-            }
-            return new Resource {
-                Type = awsType,
-                Properties = properties,
-                DependsOn = ConvertToStringList(dependsOn),
-                Condition = condition
-            };
-        }
-
         protected void ForEach<T>(string location, IEnumerable<T> values, Action<int, T> action) {
             if(values?.Any() != true) {
                 return;

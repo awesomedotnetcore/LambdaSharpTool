@@ -159,33 +159,12 @@ namespace MindTouch.LambdaSharp.Tool {
                 AddEnvironmentParameter(isSecret: false, value: GetReference());
 
                 // NOTE: this CloudFormation resource can only be created once the file packager has run
-                _stack.Add(logicalId, new LambdaSharpResource("LambdaSharp::S3::Package") {
+                _stack.Add(logicalId, new Humidifier.CustomResource("LambdaSharp::S3::Package") {
                     ["DestinationBucketName"] = Fn.Ref(packageParameter.DestinationBucketParameterName),
                     ["DestinationKeyPrefix"] = packageParameter.DestinationKeyPrefix,
                     ["SourceBucketName"] = Fn.Ref("DeploymentBucketName"),
                     ["SourcePackageKey"] = Fn.Sub($"Modules/{_module.Name}/Assets/{Path.GetFileName(packageParameter.PackagePath)}")
                 });
-                break;
-            case ReferencedResourceParameter referenceResourceParameter:
-                AddEnvironmentParameter(isSecret: false, value: GetReference());
-                break;
-            case ManagedResourceParameter managedResourceParameter: {
-                    var resource = managedResourceParameter.Resource;
-                    Humidifier.Resource resourceTemplate;
-                    if(resource.Type.StartsWith("Custom::")) {
-                        resourceTemplate = new CustomResource(resource.Type, resource.Properties);
-                    } else if(!ResourceMapping.TryParseResourceProperties(
-                        resource.Type,
-                        GetReference(),
-                        resource.Properties,
-                        out _,
-                        out resourceTemplate
-                    )) {
-                        throw new NotImplementedException($"resource type is not supported: {resource.Type}");
-                    }
-                    _stack.Add(logicalId, resourceTemplate, condition: resource.Condition, dependsOn: resource.DependsOn.ToArray());
-                    AddEnvironmentParameter(isSecret: false, value: GetReference());
-                }
                 break;
             case HumidifierParameter humidifierParameter: {
                     var resourceTemplate = humidifierParameter.Resource;

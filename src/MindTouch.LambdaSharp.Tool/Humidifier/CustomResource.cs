@@ -22,10 +22,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using MindTouch.LambdaSharp.Tool;
 
-namespace MindTouch.LambdaSharp.Tool.Model {
+namespace Humidifier {
 
-    public class CustomResource : Humidifier.Resource, IDictionary<string, object> {
+    public class CustomResource : Resource, IDictionary<string, object> {
 
         //--- Fields ---
         private readonly string _typeName;
@@ -34,7 +35,18 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         //--- Constructors ---
         public CustomResource(string typeName, IDictionary<string, object> properties) {
             _typeName = typeName ?? throw new ArgumentNullException(nameof(typeName));
-            _properties = properties ?? throw new ArgumentNullException(nameof(properties));
+            _properties = properties ?? new Dictionary<string, object>();
+
+            // resolve custom resource service token
+            if(
+                !_typeName.StartsWith("AWS::", StringComparison.Ordinal)
+                && !_typeName.StartsWith("Custom::", StringComparison.Ordinal)
+                && !_properties.ContainsKey("ServiceToken")
+            ) {
+                _properties["ServiceToken"] = AModelProcessor.FnImportValue(AModelProcessor.FnSub($"${{DeploymentPrefix}}CustomResource-{_typeName}"));
+                _typeName = "Custom::" + _typeName.Replace("::", "");
+            }
+
         }
 
         public CustomResource(string typeName) : this(typeName, new Dictionary<string, object>()) { }
@@ -66,13 +78,5 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         //--- IEnumerable Members ---
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-    }
-
-    public class LambdaSharpResource : CustomResource {
-
-        //--- Constructors ---
-        public LambdaSharpResource(string typeName) : base("Custom::" + typeName.Replace("::", "")) {
-            this["ServiceToken"] = AModelProcessor.FnImportValue(AModelProcessor.FnSub($"${{DeploymentPrefix}}CustomResource-{typeName}"));
-        }
     }
 }

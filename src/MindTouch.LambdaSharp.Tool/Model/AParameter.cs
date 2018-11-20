@@ -34,13 +34,11 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public object Reference;
     }
 
-    public abstract class AParameter : AResource { }
+    public class SecretParameter : AResource { }
 
-    public class SecretParameter : AParameter { }
+    public class ValueParameter : AResource { }
 
-    public class ValueParameter : AParameter { }
-
-    public class PackageParameter : AParameter {
+    public class PackageParameter : AResource {
 
         //--- Properties ---
         public string DestinationBucketParameterName { get; set; }
@@ -49,23 +47,13 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public string PackagePath { get; set; }
     }
 
-    public abstract class AResourceParameter : AParameter {
-
-        //--- Properties ---
-        public Resource Resource { get; set; }
-    }
-
-    public class HumidifierParameter : AParameter {
+    public class HumidifierParameter : AResource {
 
         //--- Properties ---
         public Humidifier.Resource Resource { get; set; }
         public IList<string> DependsOn { get; set; } = new string[0];
         public string Condition { get; set; }
     }
-
-    public class ReferencedResourceParameter : AResourceParameter { }
-
-    public class ManagedResourceParameter : AResourceParameter { }
 
     public class InputParameter : AResource {
 
