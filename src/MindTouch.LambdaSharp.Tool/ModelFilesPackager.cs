@@ -42,14 +42,14 @@ namespace MindTouch.LambdaSharp.Tool {
         //--- Methods ---
         public void Process(Module module) {
             _module = module;
-            foreach(var entry in module.GetAllEntriesOfType<PackageParameter>()) {
+            foreach(var entry in module.Entries.OfType<PackageEntry>()) {
                 AtLocation(entry.FullName, () => {
-                    ProcessParameter((PackageParameter)entry.Resource);
+                    ProcessParameter(entry);
                 });
             }
         }
 
-        private void ProcessParameter(PackageParameter parameter) {
+        private void ProcessParameter(PackageEntry parameter) {
             var files = new List<string>();
             AtLocation("Package", () => {
 
@@ -104,6 +104,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     }
                 }
                 parameter.PackagePath = package;
+                parameter.Package["SourcePackageKey"] = $"Modules/{_module.Name}/Assets/{Path.GetFileName(package)}";
             });
         }
     }

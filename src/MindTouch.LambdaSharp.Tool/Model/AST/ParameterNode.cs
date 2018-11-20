@@ -82,7 +82,7 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         // package
         public string Package { get; set; }
         public string Files { get; set; }
-        public string Bucket { get; set; }
-        public string Prefix { get; set; }
+        public object Bucket { get; set; }
+        public object Prefix { get; set; }
     }
 }

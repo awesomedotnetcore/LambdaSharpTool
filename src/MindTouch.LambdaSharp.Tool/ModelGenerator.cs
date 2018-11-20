@@ -116,13 +116,13 @@ namespace MindTouch.LambdaSharp.Tool {
             }
 
             // add interface for presenting inputs
-            var inputParameters = _module.GetAllEntriesOfType<InputParameter>();
+            var inputParameters = _module.Entries.OfType<InputEntry>();
             _stack.AddTemplateMetadata("AWS::CloudFormation::Interface", new Dictionary<string, object> {
                 ["ParameterLabels"] = inputParameters.ToDictionary(input => input.LogicalId, input => new Dictionary<string, object> {
-                    ["default"] = ((InputParameter)input.Resource).Label
+                    ["default"] = input.Label
                 }),
                 ["ParameterGroups"] = inputParameters
-                    .GroupBy(input => ((InputParameter)input.Resource).Section)
+                    .GroupBy(input => input.Section)
                     .Select(section => new Dictionary<string, object> {
                         ["Label"] = new Dictionary<string, string> {
                             ["default"] = section.Key
@@ -145,36 +145,32 @@ namespace MindTouch.LambdaSharp.Tool {
             return template;
         }
 
-        private void AddResource(ModuleEntry entry) {
+        private void AddResource(AModuleEntry entry) {
             var fullEnvName = entry.FullName.Replace("::", "_").ToUpperInvariant();
             var logicalId = entry.LogicalId;
-            switch(entry.Resource) {
-            case ValueParameter valueParameter:
+            switch(entry) {
+            case ValueEntry valueParameter:
                 AddEnvironmentParameter(valueParameter.IsSecret, GetReference());
                 break;
-            case PackageParameter packageParameter:
+            case PackageEntry packageParameter:
+                _stack.Add(logicalId, packageParameter.Package);
                 AddEnvironmentParameter(isSecret: false, value: GetReference());
-
-                // NOTE: this CloudFormation resource can only be created once the file packager has run
-                _stack.Add(logicalId, new Humidifier.CustomResource("LambdaSharp::S3::Package") {
-                    ["DestinationBucketName"] = Fn.Ref(packageParameter.DestinationBucketParameterName),
-                    ["DestinationKeyPrefix"] = packageParameter.DestinationKeyPrefix,
-                    ["SourceBucketName"] = Fn.Ref("DeploymentBucketName"),
-                    ["SourcePackageKey"] = Fn.Sub($"Modules/{_module.Name}/Assets/{Path.GetFileName(packageParameter.PackagePath)}")
-                });
                 break;
-            case HumidifierParameter humidifierParameter: {
-                    var resourceTemplate = humidifierParameter.Resource;
-                    _stack.Add(logicalId, resourceTemplate, condition: humidifierParameter.Condition, dependsOn: humidifierParameter.DependsOn.ToArray());
-                    AddEnvironmentParameter(isSecret: false, value: GetReference());
-                }
+            case HumidifierEntry humidifierParameter:
+                _stack.Add(
+                    logicalId,
+                    humidifierParameter.Resource,
+                    humidifierParameter.Condition,
+                    dependsOn: humidifierParameter.DependsOn.ToArray()
+                );
+                AddEnvironmentParameter(isSecret: false, value: GetReference());
                 break;
-            case InputParameter inputParameter: {
+            case InputEntry inputParameter: {
                     _stack.Add(logicalId, inputParameter.Parameter);
                     AddEnvironmentParameter(inputParameter.IsSecret, GetReference());
                 }
                 break;
-            case FunctionParameter function:
+            case FunctionEntry function:
                 AddFunction(_module, function);
                 break;
             default:
@@ -185,9 +181,8 @@ namespace MindTouch.LambdaSharp.Tool {
             void AddEnvironmentParameter(bool isSecret, object value) {
 
                 // TODO: let's make this a tad more efficient!
-                foreach(var function in entry.Scope.Select(name => _module.GetAllEntriesOfType<FunctionParameter>().First(f => f.FullName == name))) {
-                    var resource = (FunctionParameter)function.Resource;
-                    var environment = resource.Function.Environment.Variables;
+                foreach(var function in entry.Scope.Select(name => _module.Entries.OfType<FunctionEntry>().First(f => f.FullName == name))) {
+                    var environment = function.Function.Environment.Variables;
                     if(isSecret) {
                         environment["SEC_" + fullEnvName] = value;
                     } else {
@@ -199,7 +194,7 @@ namespace MindTouch.LambdaSharp.Tool {
             object GetReference() => _module.GetReference(entry.FullName);
         }
 
-        private void AddFunction(Module module, FunctionParameter function) {
+        private void AddFunction(Module module, FunctionEntry function) {
 
             // initialize function environment variables
             var environment = function.Function.Environment.Variables;

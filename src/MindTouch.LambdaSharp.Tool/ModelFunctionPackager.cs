@@ -49,11 +49,11 @@ namespace MindTouch.LambdaSharp.Tool {
             string gitsha,
             string buildConfiguration
         ) {
-            foreach(var function in module.GetAllEntriesOfType<FunctionParameter>()) {
+            foreach(var function in module.Entries.OfType<FunctionEntry>()) {
                 AtLocation(function.FullName, () => {
                     Process(
                         module,
-                        (FunctionParameter)function.Resource,
+                        function,
                         version,
                         skipCompile,
                         skipAssemblyValidation,
@@ -66,7 +66,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
         private void Process(
             Module module,
-            FunctionParameter function,
+            FunctionEntry function,
             VersionInfo version,
             bool skipCompile,
             bool skipAssemblyValidation,
@@ -135,7 +135,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
         private void ProcessDotNet(
             Module module,
-            FunctionParameter function,
+            FunctionEntry function,
             VersionInfo version,
             bool skipCompile,
             bool skipAssemblyValidation,
@@ -342,7 +342,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
         private void ProcessJavascript(
             Module module,
-            FunctionParameter function,
+            FunctionEntry function,
             VersionInfo version,
             bool skipCompile,
             bool skipAssemblyValidation,

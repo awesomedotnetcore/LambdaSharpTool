@@ -49,7 +49,7 @@ namespace MindTouch.LambdaSharp.Tool {
         public void Resolve(Module module) {
 
             // resolve scopes
-            var functionNames = module.GetAllEntriesOfType<FunctionParameter>()
+            var functionNames = module.Entries.OfType<FunctionEntry>()
                 .Select(function => function.FullName)
                 .ToList();
             foreach(var entry in module.Entries) {
@@ -73,7 +73,7 @@ namespace MindTouch.LambdaSharp.Tool {
                             //  parameter name; if it does, we export the ARN value of that parameter; in
                             //  addition, we assume its description if none is provided.
 
-                            if(!module.TryGetEntry(output.Name, out ModuleEntry entry)) {
+                            if(!module.TryGetEntry(output.Name, out AModuleEntry entry)) {
                                 AddError("could not find matching entry");
                                 output.Value = "<BAD>";
                             } else {
@@ -90,8 +90,8 @@ namespace MindTouch.LambdaSharp.Tool {
             });
 
             // resolve all inter-entry references
-            var freeEntries = new Dictionary<string, ModuleEntry>();
-            var boundEntries = new Dictionary<string, ModuleEntry>();
+            var freeEntries = new Dictionary<string, AModuleEntry>();
+            var boundEntries = new Dictionary<string, AModuleEntry>();
             AtLocation("Entries", () => {
                 DiscoverEntries();
                 ResolveEntries();
@@ -111,14 +111,14 @@ namespace MindTouch.LambdaSharp.Tool {
             AtLocation("Entries", () => {
                 foreach(var entry in module.Entries) {
                     AtLocation(entry.FullName, () => {
-                        switch(entry.Resource) {
-                        case InputParameter _:
-                        case ValueParameter _:
-                        case PackageParameter _:
+                        switch(entry) {
+                        case InputEntry _:
+                        case ValueEntry _:
+                        case PackageEntry _:
 
                             // nothing to do
                             break;
-                        case HumidifierParameter humidifierParameter:
+                        case HumidifierEntry humidifierParameter:
                             AtLocation("Resources", () => {
                                 humidifierParameter.Resource = (Humidifier.Resource)Substitute(humidifierParameter.Resource, ReportMissingReference);
                             });
@@ -126,7 +126,7 @@ namespace MindTouch.LambdaSharp.Tool {
                                 humidifierParameter.DependsOn = humidifierParameter.DependsOn.Select(dependency => module.GetEntry(dependency).LogicalId).ToList();
                             });
                             break;
-                        case FunctionParameter functionParameter:
+                        case FunctionEntry functionParameter:
                             AtLocation("Environment", () => {
                                 functionParameter.Environment = (IDictionary<string, object>)Substitute(functionParameter.Environment, ReportMissingReference);
                             });
@@ -151,7 +151,7 @@ namespace MindTouch.LambdaSharp.Tool {
                             });
                             break;
                         default:
-                            throw new ApplicationException($"unexpected type: {entry.Resource.GetType()}");
+                            throw new ApplicationException($"unexpected type: {entry.GetType()}");
                         }
                     });
                 }
@@ -447,14 +447,14 @@ namespace MindTouch.LambdaSharp.Tool {
                 // check if the requested key can be resolved using a free entry
                 var visited = new HashSet<string>();
             again:
-                if(freeEntries.TryGetValue(key, out ModuleEntry freeEntry)) {
+                if(freeEntries.TryGetValue(key, out AModuleEntry freeEntry)) {
                     if(attribute != null) {
-                        switch(freeEntry.Resource) {
-                        case PackageParameter _:
-                        case InputParameter _:
+                        switch(freeEntry) {
+                        case PackageEntry _:
+                        case InputEntry _:
                             AddError($"reference '{key}' must be a reference, resource, or function when using Fn::GetAtt");
                             break;
-                        case ValueParameter _:
+                        case ValueEntry _:
                             if(
                                 (freeEntry.Reference is IDictionary<string, object> map)
                                 && (map.Count == 1)
@@ -472,8 +472,8 @@ namespace MindTouch.LambdaSharp.Tool {
                                 AddError($"reference '{key}' must be a reference, resource, or function when using Fn::GetAtt");
                             }
                             break;
-                        case FunctionParameter _:
-                        case HumidifierParameter _:
+                        case FunctionEntry _:
+                        case HumidifierEntry _:
                             found = FnGetAtt(key, attribute);
                             break;
                         }

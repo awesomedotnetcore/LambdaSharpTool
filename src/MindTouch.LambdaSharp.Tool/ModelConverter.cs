@@ -122,7 +122,7 @@ namespace MindTouch.LambdaSharp.Tool {
         private void ConvertParameter(int index, ParameterNode parameter) => ConvertParameter(null, index, parameter);
 
         private void ConvertParameter(
-            ModuleBuilderEntry<AResource> parent,
+            AModuleEntry parent,
             int index,
             ParameterNode parameter
         ) {
@@ -141,13 +141,16 @@ namespace MindTouch.LambdaSharp.Tool {
                 AtLocation(parameter.Var, () => {
 
                     // create managed resource entry
-                    var result = _builder.AddEntry(parent, new HumidifierParameter {
-                        Name = parameter.Var,
-                        Description = parameter.Description,
-                        Scope = _builder.ConvertScope(parameter.Scope),
-                        Resource = new Humidifier.CustomResource(parameter.Resource.Type, parameter.Resource.Properties),
-                        DependsOn = ConvertToStringList(parameter.Resource.DependsOn)
-                    });
+                    var result = _builder.AddResource(
+                        parent: parent,
+                        name: parameter.Var,
+                        description: parameter.Description,
+                        scope: parameter.Scope,
+                        awsType: parameter.Resource.Type,
+                        awsProperties: parameter.Resource.Properties,
+                        dependsOn: ConvertToStringList(parameter.Resource.DependsOn),
+                        condition: null
+                    );
 
                     // register managed resource reference
                     result.Reference = (parameter.Resource.ArnAttribute != null)
@@ -158,7 +161,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     _builder.AddGrant(result.LogicalId, parameter.Resource.Type, result.Reference, parameter.Resource.Allow);
 
                     // recurse
-                    ConvertParameters(result.Cast<AResource>());
+                    ConvertParameters(result);
                 });
                 break;
             case "Var.Reference":
@@ -167,18 +170,20 @@ namespace MindTouch.LambdaSharp.Tool {
                 AtLocation(parameter.Var, () => {
 
                     // create existing resource entry
-                    var result = _builder.AddEntry(parent, new ValueParameter {
-                        Name = parameter.Var,
-                        Description = parameter.Description,
-                        Scope = _builder.ConvertScope(parameter.Scope),
-                        Reference = parameter.Value
-                    });
+                    var result = _builder.AddValue(
+                        parent: parent,
+                        name: parameter.Var,
+                        description: parameter.Description,
+                        reference: parameter.Value,
+                        scope: parameter.Scope,
+                        isSecret: false
+                    );
 
                     // request existing resource grants
                     _builder.AddGrant(result.LogicalId, parameter.Resource.Type, parameter.Value, parameter.Resource.Allow);
 
                     // recurse
-                    ConvertParameters(result.Cast<AResource>());
+                    ConvertParameters(result);
                 });
                 break;
             case "Var.Value":
@@ -187,17 +192,19 @@ namespace MindTouch.LambdaSharp.Tool {
                 AtLocation(parameter.Var, () => {
 
                     // create literal value entry
-                    var result = _builder.AddEntry(parent, new ValueParameter {
-                        Name = parameter.Var,
-                        Description = parameter.Description,
-                        Scope = _builder.ConvertScope(parameter.Scope),
-                        Reference = (parameter.Value is IList<object> values)
+                    var result = _builder.AddValue(
+                        parent: parent,
+                        name: parameter.Var,
+                        description: parameter.Description,
+                        reference: (parameter.Value is IList<object> values)
                             ? FnJoin(",", values)
-                            : parameter.Value
-                    });
+                            : parameter.Value,
+                        scope: parameter.Scope,
+                        isSecret: false
+                    );
 
                     // recurse
-                    ConvertParameters(result.Cast<AResource>());
+                    ConvertParameters(result);
                 });
                 break;
             case "Var.Secret":
@@ -206,11 +213,11 @@ namespace MindTouch.LambdaSharp.Tool {
                 AtLocation(parameter.Var, () => {
 
                     // create encrypted value entry
-                    var result = _builder.AddSecret(
+                    var result = _builder.AddValue(
                         parent: parent,
                         name: parameter.Var,
                         description: parameter.Description,
-                        scope: _builder.ConvertScope(parameter.Scope),
+                        scope: parameter.Scope,
                         reference: FnJoin(
                             "|",
                             new object[] {
@@ -219,11 +226,12 @@ namespace MindTouch.LambdaSharp.Tool {
                                 ?.Select(kv => $"{Uri.EscapeDataString(kv.Key)}={Uri.EscapeDataString(kv.Value)}")
                                 ?? new string[0]
                             ).ToArray()
-                        )
+                        ),
+                        isSecret: true
                     );
 
                     // recurse
-                    ConvertParameters(result.Cast<AResource>());
+                    ConvertParameters(result);
                 });
                 break;
             case "Var.Empty":
@@ -232,15 +240,17 @@ namespace MindTouch.LambdaSharp.Tool {
                 AtLocation(parameter.Var, () => {
 
                     // create empty entry
-                    var result = _builder.AddEntry(parent, new ValueParameter {
-                        Name = parameter.Var,
-                        Description = parameter.Description,
-                        Scope = _builder.ConvertScope(parameter.Scope),
-                        Reference = ""
-                    });
+                    var result = _builder.AddValue(
+                        parent: parent,
+                        name: parameter.Var,
+                        description: parameter.Description,
+                        reference: "",
+                        scope: parameter.Scope,
+                        isSecret: false
+                    );
 
                     // recurse
-                    ConvertParameters(result.Cast<AResource>());
+                    ConvertParameters(result);
                 });
                 break;
             case "Package":
@@ -249,26 +259,29 @@ namespace MindTouch.LambdaSharp.Tool {
                 AtLocation(parameter.Var, () => {
 
                     // create package resource entry
-                    var result = _builder.AddEntry(parent, new PackageParameter {
-                        Name = parameter.Package,
-                        Description = parameter.Description,
-                        Scope = _builder.ConvertScope(parameter.Scope),
-                        DestinationBucketParameterName = parameter.Bucket,
-                        DestinationKeyPrefix = parameter.Prefix ?? "",
-                        SourceFilepath = parameter.Files
-                    });
+                    var result = _builder.AddPackage(
+                        parent: parent,
+                        name: parameter.Package,
+                        description: parameter.Description,
+                        scope: parameter.Scope,
+                        destinationBucket: (parameter.Bucket is string bucketParameter)
+                            ? FnRef(bucketParameter)
+                            : parameter.Bucket,
+                        destinationKeyPrefix: parameter.Prefix ?? "",
+                        sourceFilepath: parameter.Files
+                    );
 
                     // register package resource reference
                     result.Reference = FnGetAtt(result.ResourceName, "Url");
 
                     // recurse
-                    ConvertParameters(result.Cast<AResource>());
+                    ConvertParameters(result);
                 });
                 break;
             }
 
             // local functions
-            void ConvertParameters(ModuleBuilderEntry<AResource> result) {
+            void ConvertParameters(AModuleEntry result) {
                 ForEach("Variables", parameter.Variables, (i, p) => ConvertParameter(result, i, p));
             }
         }
@@ -277,21 +290,17 @@ namespace MindTouch.LambdaSharp.Tool {
             AtLocation(function.Function, () => {
 
                 // initialize VPC configuration if provided
-                Humidifier.Lambda.FunctionTypes.VpcConfig vpc = null;
+                object subnets = null;
+                object securityGroups = null;
                 if(function.VPC?.Any() == true) {
-                    if(
-                        function.VPC.TryGetValue("SubnetIds", out var subnets)
-                        && function.VPC.TryGetValue("SecurityGroupIds", out var securityGroups)
-                    ) {
-                        AtLocation("VPC", () => {
-                            vpc = new Humidifier.Lambda.FunctionTypes.VpcConfig {
-                                SubnetIds = subnets,
-                                SecurityGroupIds = securityGroups
-                            };
-                        });
-                    } else {
-                        AddError("Lambda function contains a VPC definition that does not include 'SubnetIds' or 'SecurityGroupIds' attributes");
-                    }
+                    AtLocation("VPC", () => {
+                        if(
+                            !function.VPC.TryGetValue("SubnetIds", out subnets)
+                            || !function.VPC.TryGetValue("SecurityGroupIds", out securityGroups)
+                        ) {
+                            AddError("Lambda function contains a VPC definition that does not include 'SubnetIds' or 'SecurityGroupIds' attributes");
+                        }
+                    });
                 }
 
                 // create function entry
@@ -302,33 +311,23 @@ namespace MindTouch.LambdaSharp.Tool {
                         .Where(evt => evt != null)
                         .ToList()
                 );
-                var result = _builder.AddEntry(new FunctionParameter {
-                    Name = function.Function,
-                    Description = function.Description,
-                    Project = function.Project,
-                    Language = function.Language,
-                    Environment = function.Environment ?? new Dictionary<string, object>(),
-                    Sources = sources ?? new List<AFunctionSource>(),
-                    Pragmas = function.Pragmas,
-                    Function = new Humidifier.Lambda.Function {
-                        Description = (function.Description != null)
-                            ? function.Description.TrimEnd() + $" (v{_builder.Version})"
-                            : null,
-                        Timeout = function.Timeout,
-                        Runtime = function.Runtime,
-                        ReservedConcurrentExecutions = function.ReservedConcurrency,
-                        MemorySize = function.Memory,
-                        Handler = function.Handler,
-                        VpcConfig = vpc,
-                        Role = FnGetAtt("Module::Role", "Arn"),
-                        DeadLetterConfig = new Humidifier.Lambda.FunctionTypes.DeadLetterConfig {
-                            TargetArn = FnRef("Module::DeadLetterQueueArn")
-                        },
-                        Environment = new Humidifier.Lambda.FunctionTypes.Environment {
-                            Variables = new Dictionary<string, dynamic>()
-                        }
-                    }
-                });
+                var result = _builder.AddFunction(
+                    parent: null,
+                    name: function.Function,
+                    description: function.Description,
+                    project: function.Project,
+                    language: function.Language,
+                    environment: function.Environment,
+                    sources: sources,
+                    pragmas: function.Pragmas,
+                    timeout: function.Timeout,
+                    runtime: function.Runtime,
+                    reservedConcurrency: function.ReservedConcurrency,
+                    memory: function.Memory,
+                    handler: function.Handler,
+                    subnets: subnets,
+                    securityGroups: securityGroups
+                );
             });
         }
 

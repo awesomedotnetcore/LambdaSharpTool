@@ -39,10 +39,10 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         //--- Fields ---
         [JsonIgnore]
-        private readonly Dictionary<string, ModuleEntry> _entriesByFullName = new Dictionary<string, ModuleEntry>();
+        private readonly Dictionary<string, AModuleEntry> _entriesByFullName = new Dictionary<string, AModuleEntry>();
 
         [JsonIgnore]
-        private readonly List<ModuleEntry> _entries = new List<ModuleEntry>();
+        private readonly List<AModuleEntry> _entries = new List<AModuleEntry>();
 
         //--- Properties ---
         public string Name { get; set; }
@@ -54,25 +54,21 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public IDictionary<string, object> Conditions  { get; set; } = new Dictionary<string, object>();
         public List<Humidifier.Statement> ResourceStatements { get; } = new List<Humidifier.Statement>();
         public IList<ModuleGrant> Grants { get; } = new List<ModuleGrant>();
-        public IEnumerable<ModuleEntry> Entries => _entries;
+        public IEnumerable<AModuleEntry> Entries => _entries;
 
         [JsonIgnore]
         public bool HasModuleRegistration => !HasPragma("no-module-registration");
 
         //--- Methods ---
         public bool HasPragma(string pragma) => Pragmas?.Contains(pragma) == true;
-        public ModuleEntry GetEntry(string fullName) => _entriesByFullName[fullName];
+        public AModuleEntry GetEntry(string fullName) => _entriesByFullName[fullName];
         public object GetReference(string fullName) => GetEntry(fullName).Reference;
-        public bool TryGetEntry(string fullName, out ModuleEntry entry) => _entriesByFullName.TryGetValue(fullName, out entry);
-        public ModuleEntry AddEntry(ModuleEntry entry) {
+        public bool TryGetEntry(string fullName, out AModuleEntry entry) => _entriesByFullName.TryGetValue(fullName, out entry);
+
+        public AModuleEntry AddEntry(AModuleEntry entry) {
             _entriesByFullName.Add(entry.FullName, entry);
             _entries.Add(entry);
             return entry;
         }
-
-        public IEnumerable<ModuleEntry> GetAllEntriesOfType<T>()
-            => Entries
-                .Where(entry => entry.Resource is T)
-                .ToList();
     }
 }

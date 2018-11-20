@@ -26,39 +26,6 @@ using MindTouch.LambdaSharp.Tool.Internal;
 
 namespace MindTouch.LambdaSharp.Tool.Model {
 
-    public class ModuleBuilderEntry<T> where T : AResource {
-
-        //--- Fields ---
-        private readonly ModuleBuilder _builder;
-        private readonly ModuleEntry _entry;
-
-        //--- Constructors ---
-        public ModuleBuilderEntry(ModuleBuilder builder, ModuleEntry entry) {
-            _builder = builder ?? throw new ArgumentNullException(nameof(builder));
-            _entry = entry ?? throw new ArgumentNullException(nameof(entry));
-        }
-
-        //--- Properties ---
-        public string FullName => _entry.FullName;
-        public string Description => _entry.Description;
-        public string ResourceName => _entry.ResourceName;
-        public string LogicalId => _entry.LogicalId;
-        public T Resource => (T)_entry.Resource;
-
-        public object Reference {
-            get => _entry.Reference;
-            set => _entry.Reference = value;
-        }
-
-        //--- Methods ---
-        public ModuleBuilderEntry<TChild> AddEntry<TChild>(TChild resource) where TChild : AResource {
-            return _builder.AddEntry<TChild, T>(this, resource);
-        }
-
-        public ModuleBuilderEntry<TResourceType> Cast<TResourceType>() where TResourceType : AResource
-            => new ModuleBuilderEntry<TResourceType>(_builder, _entry);
-    }
-
     public class ModuleBuilder : AModelProcessor {
 
         //--- Fields ---
@@ -75,12 +42,9 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         //--- Methods ---
         public Module ToModule() => _module;
-        public ModuleBuilderEntry<AResource> GetEntry(string fullName) => new ModuleBuilderEntry<AResource>(this, _module.GetEntry(fullName));
+        public AModuleEntry GetEntry(string fullName) =>  _module.GetEntry(fullName);
         public void AddCondition(string name, object condition) => _module.Conditions.Add(name, condition);
         public void AddResourceStatement(Humidifier.Statement statement) => _module.ResourceStatements.Add(statement);
-
-        public ModuleBuilderEntry<TResource> AddEntry<TResource>(TResource resource) where TResource : AResource
-            => AddEntry<TResource, AResource>(null, resource);
 
         public bool AddSecret(object secret) {
             if(secret is string textSecret) {
@@ -106,30 +70,11 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             }
         }
 
-        public ModuleBuilderEntry<AResource> AddVariable(string fullName, string description, object reference, IList<string> scope = null) {
-            var doubleColonIndex = fullName.LastIndexOf("::");
-            var name = (doubleColonIndex < 0)
-                ? fullName
-                : fullName.Substring(doubleColonIndex + 2);
-            return AddEntry(new ValueParameter {
-                Name = name,
-                Description = description,
-                Scope = scope,
-                Reference = reference
-            }).Cast<AResource>();
+        public AModuleEntry AddValue(AModuleEntry parent, string name, string description, object reference, object scope, bool isSecret) {
+            return AddEntry(new ValueEntry(parent, name, description, reference, ConvertScope(scope), isSecret));
         }
 
-        public ModuleBuilderEntry<AResource> AddSecret(ModuleBuilderEntry<AResource> parent, string name, string description, object reference, IList<string> scope = null) {
-            return AddEntry(parent, new ValueParameter {
-                Name = name,
-                Description = description,
-                Scope = scope,
-                Reference = reference,
-                IsSecret = true
-            }).Cast<AResource>();
-        }
-
-        public ModuleBuilderEntry<InputParameter> AddInput(
+        public AModuleEntry AddInput(
             string name,
             string description = null,
             string type = null,
@@ -151,14 +96,16 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         ) {
 
             // create input parameter entry
-            var result = AddEntry(new InputParameter {
-                Name = name,
-                Description = description,
-                Scope = ConvertScope(scope),
-                Section = section ?? "Module Settings",
-                Label = label ?? StringEx.PascalCaseToLabel(name),
-                IsSecret = (type == "Secret"),
-                Parameter = new Humidifier.Parameter {
+            var result = AddEntry(new InputEntry(
+                parent: null,
+                name: name,
+                description: description,
+                reference: null,
+                scope: ConvertScope(scope),
+                section: section,
+                label: label,
+                isSecret: (type == "Secret"),
+                parameter: new Humidifier.Parameter {
                     Type = ConvertInputType(type),
                     Description = description,
                     Default = defaultValue,
@@ -171,7 +118,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                     MinValue = minValue,
                     NoEcho = noEcho
                 }
-            });
+            ));
 
             // check if a conditional managed resource is associated with the input parameter
             if((awsType == null) && (awsAllow == null)) {
@@ -186,11 +133,16 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 // create conditional managed resource
                 var condition = $"{result.LogicalId}Created";
                 AddCondition(condition, FnEquals(FnRef(result.ResourceName), defaultValue));
-                var instance = AddEntry(result, new HumidifierParameter {
-                    Name = "Resource",
-                    Resource = new Humidifier.CustomResource(awsType, awsProperties),
-                    Condition = condition
-                });
+                var instance = AddResource(
+                    parent: result,
+                    name: "Resource",
+                    description: null,
+                    scope: null,
+                    awsType: awsType,
+                    awsProperties: awsProperties,
+                    dependsOn: null,
+                    condition: condition
+                );
 
                 // register input parameter reference
                 result.Reference = FnIf(
@@ -205,7 +157,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             return result;
         }
 
-        public ModuleBuilderEntry<InputParameter> AddImport(
+        public AModuleEntry AddImport(
             string import,
             string description = null,
             string type = null,
@@ -221,21 +173,28 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             var exportName = parts[1];
 
             // find or create root module import collection node
-            var rootParameter = _module.TryGetEntry(exportModule, out ModuleEntry existingEntry)
-                ? new ModuleBuilderEntry<AResource>(this, existingEntry)
-                : AddVariable(exportModule, $"{exportModule} cross-module references", "");
+            var rootParameter = _module.TryGetEntry(exportModule, out AModuleEntry existingEntry)
+                ? existingEntry
+                : AddValue(
+                    parent: null,
+                    name: exportModule,
+                    description: $"{exportModule} cross-module references",
+                    reference: "",
+                    scope: null,
+                    isSecret: false
+                );
 
             // create import parameter entry
-            var result = rootParameter.AddEntry(new InputParameter {
-                Name = exportName,
-                Description = description,
-                Scope = ConvertScope(scope),
-                Section = section ?? "Module Settings",
-                IsSecret = (type == "Secret"),
-
-                // TODO (2018-11-11, bjorg): do we really want to use the cross-module reference when converting to a label?
-                Label = label ?? StringEx.PascalCaseToLabel(import),
-                Parameter = new Humidifier.Parameter {
+            var result = AddEntry(new InputEntry(
+                parent: rootParameter,
+                name: exportName,
+                description: description,
+                reference: null,
+                scope: ConvertScope(scope),
+                section: section,
+                label: label,
+                isSecret: (type == "Secret"),
+                parameter: new Humidifier.Parameter {
                     Type = ConvertInputType(type),
                     Description = description,
                     Default = "$" + import,
@@ -243,7 +202,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                     AllowedPattern =  @"^.+$",
                     NoEcho = noEcho
                 }
-            });
+            ));
 
             // register import parameter reference
             var condition = $"{result.LogicalId}IsImport";
@@ -289,6 +248,139 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             });
         }
 
+        public AModuleEntry AddResource(
+            AModuleEntry parent,
+            string name,
+            string description,
+            object scope,
+            Humidifier.Resource resource,
+            IList<string> dependsOn,
+            string condition
+        ) {
+            var result = new HumidifierEntry(
+                parent: parent,
+                name: name,
+                description: description,
+                reference: null,
+                scope: ConvertScope(scope),
+                resource: resource,
+                dependsOn: dependsOn,
+                condition: condition
+            );
+            result.Reference = ResourceMapping.GetArnReference(resource.AWSTypeName, result.ResourceName);
+            return AddEntry(result);
+        }
+
+        public AModuleEntry AddResource(
+            AModuleEntry parent,
+            string name,
+            string description,
+            object scope,
+            string awsType,
+            IDictionary<string, object> awsProperties,
+            IList<string> dependsOn,
+            string condition
+        ) {
+            // TODO: missing => default attribute selector for reference
+
+            var result = new HumidifierEntry(
+                parent: parent,
+                name: name,
+                description: description,
+                reference: null,
+                scope: ConvertScope(scope),
+                resource: new Humidifier.CustomResource(awsType, awsProperties),
+                dependsOn: dependsOn,
+                condition: condition
+            );
+            result.Reference = ResourceMapping.GetArnReference(awsType, result.ResourceName);
+            return AddEntry(result);
+        }
+
+        public AModuleEntry AddPackage(
+            AModuleEntry parent,
+            string name,
+            string description,
+            object scope,
+            object destinationBucket,
+            object destinationKeyPrefix,
+            string sourceFilepath
+        ) {
+            var result = new PackageEntry(
+                parent: parent,
+                name: name,
+                description: description,
+                scope: ConvertScope(scope),
+                sourceFilepath: sourceFilepath,
+                package: new Humidifier.CustomResource("LambdaSharp::S3::Package") {
+                    ["DestinationBucketName"] = destinationBucket,
+                    ["DestinationKeyPrefix"] = destinationKeyPrefix,
+                    ["SourceBucketName"] = FnRef("DeploymentBucketName"),
+                    // ["SourcePackageKey"] = $"Modules/{_module.Name}/Assets/{Path.GetFileName(packageParameter.PackagePath)}"
+                }
+            );
+            result.Reference = FnGetAtt(result.ResourceName, "Url");
+            return AddEntry(result);
+        }
+
+        public AModuleEntry AddFunction(
+            AModuleEntry parent,
+            string name,
+            string description,
+            string project,
+            string language,
+            IDictionary<string, object> environment,
+            IList<AFunctionSource> sources,
+            IList<object> pragmas,
+            string timeout,
+            string runtime,
+            string reservedConcurrency,
+            string memory,
+            string handler,
+            object subnets,
+            object securityGroups
+        ) {
+
+            // initialize optional VPC configuration
+            Humidifier.Lambda.FunctionTypes.VpcConfig vpc = null;
+            if((subnets != null) && (securityGroups != null)) {
+                vpc = new Humidifier.Lambda.FunctionTypes.VpcConfig {
+                    SubnetIds = subnets,
+                    SecurityGroupIds = securityGroups
+                };
+            }
+            return AddEntry(new FunctionEntry(
+                parent: parent,
+                name: name,
+                description: description,
+                reference: null,
+                scope: new string[0],
+                project: project,
+                language: language,
+                environment: environment ?? new Dictionary<string, object>(),
+                sources: sources ?? new AFunctionSource[0],
+                pragmas: pragmas ?? new object[0],
+                function: new Humidifier.Lambda.Function {
+                    Description = (description != null)
+                        ? description.TrimEnd() + $" (v{_module.Version})"
+                        : null,
+                    Timeout = timeout,
+                    Runtime = runtime,
+                    ReservedConcurrentExecutions = reservedConcurrency,
+                    MemorySize = memory,
+                    Handler = handler,
+                    VpcConfig = vpc,
+                    Role = FnGetAtt("Module::Role", "Arn"),
+                    DeadLetterConfig = new Humidifier.Lambda.FunctionTypes.DeadLetterConfig {
+                        TargetArn = FnRef("Module::DeadLetterQueueArn")
+                    },
+                    Environment = new Humidifier.Lambda.FunctionTypes.Environment {
+                        Variables = new Dictionary<string, dynamic>()
+                    }
+                }
+            ));
+        }
+
         public void AddGrant(string sid, string awsType, object reference, object awsAllow) {
 
             // resolve shorthands and deduplicate statements
@@ -319,7 +411,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             });
         }
 
-        public IList<string> ConvertScope(object scope) {
+        private IList<string> ConvertScope(object scope) {
             if(scope == null) {
                 return new string[0];
             }
@@ -330,32 +422,15 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             });
         }
 
-        public ModuleBuilderEntry<TResource> AddEntry<TResource, TParent>(
-            ModuleBuilderEntry<TParent> parent,
-            TResource resource
-        ) where TResource : AResource where TParent : AResource {
-            var fullName = (parent == null)
-                ? resource.Name
-                : parent.FullName + "::" + resource.Name;
+        private AModuleEntry AddEntry(AModuleEntry entry) {
 
-            // create entry
-            var entry = _module.AddEntry(new ModuleEntry(
-                fullName,
-                resource.Description,
-                resource.Reference,
-                resource.Scope,
-                resource
-            ));
+            // set default reference
             if(entry.Reference == null) {
-                if(resource is HumidifierParameter humidifierParameter) {
-                    entry.Reference = ResourceMapping.GetArnReference(humidifierParameter.Resource.AWSTypeName, entry.ResourceName);
-                } else {
-                    entry.Reference = FnRef(entry.ResourceName);
-                }
+                entry.Reference = FnRef(entry.ResourceName);
             }
 
-            // create entry
-            return new ModuleBuilderEntry<TResource>(this, entry);
+            // add entry
+            return _module.AddEntry(entry);
         }
 
         private string ConvertInputType(string type)

@@ -510,13 +510,13 @@ Console.WriteLine($"{moduleJson} generated");
                 File.WriteAllText(outputCloudFormationFilePath, template);
 
                 // generate & save module manifest
-                var functions = module.GetAllEntriesOfType<FunctionParameter>()
-                    .Select(entry => ((FunctionParameter)entry.Resource).Function)
+                var functions = module.Entries.OfType<FunctionEntry>()
+                    .Select(entry => entry.Function)
                     .Where(f => f?.Code?.ZipFile != null)
                     .Select(f => Path.GetRelativePath(settings.OutputDirectory, (string)f.Code.ZipFile))
                     .ToList();
-                var packages = module.GetAllEntriesOfType<PackageParameter>()
-                    .Select(entry => ((PackageParameter)entry.Resource))
+                var packages = module.Entries.OfType<PackageEntry>()
+                    .Select(entry => entry)
                     .Select(p => Path.GetRelativePath(settings.OutputDirectory, p.PackagePath))
                     .ToList();
                 var manifest = new ModuleManifest {

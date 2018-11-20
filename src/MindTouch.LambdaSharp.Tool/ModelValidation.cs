@@ -110,10 +110,10 @@ namespace MindTouch.LambdaSharp.Tool {
                         // check if required attributes are present
                         Validate(parameter.Files != null, "missing 'Files' attribute");
                         Validate(parameter.Bucket != null, "missing 'Bucket' attribute");
-                        if(parameter.Bucket != null) {
+                        if(parameter.Bucket is string bucketParameter) {
 
                             // verify that target bucket is defined as parameter with correct type
-                            ValidateSourceParameter(parameter.Bucket, "AWS::S3::Bucket", "Kinesis S3 bucket resource");
+                            ValidateSourceParameter(bucketParameter, "AWS::S3::Bucket", "Kinesis S3 bucket resource");
                         }
 
                         // check if package is nested
