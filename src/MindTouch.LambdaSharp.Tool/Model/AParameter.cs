@@ -65,7 +65,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
     public class ReferencedResourceParameter : AResourceParameter { }
 
-    public class CloudFormationResourceParameter : AResourceParameter { }
+    public class ManagedResourceParameter : AResourceParameter { }
 
     public class InputParameter : AResource {
 

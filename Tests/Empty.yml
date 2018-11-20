@@ -1,0 +1,6 @@
+Module: TestModule
+Description: LambdaSharp CloudFormation Test
+# Pragmas:
+#   - no-runtime-version-check
+#   - no-lambdasharp-dependencies
+#   - no-module-registration

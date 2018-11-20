@@ -65,14 +65,16 @@ namespace MindTouch.LambdaSharp.Tool {
             });
 
             // convert collections
-            ForEach("Secrets", module.Secrets, (index, secret) => {
-                AtLocation($"[{index}]", () => _builder.AddSecret(secret));
-            });
+            ForEach("Secrets", module.Secrets, ConvertSecret);
             ForEach("Inputs", module.Inputs, ConvertInput);
             ForEach("Outputs", module.Outputs, ConvertOutput);
-            ForEach("Variables", module.Variables, (index, parameter) => ConvertParameter(parent: null, index: index, parameter: parameter));
+            ForEach("Variables", module.Variables, ConvertParameter);
             ForEach("Functions",  module.Functions, ConvertFunction);
             return _builder.ToModule();
+        }
+
+        private void ConvertSecret(int index, object secret) {
+            AtLocation($"[{index}]", () => _builder.AddSecret(secret));
         }
 
         private void ConvertInput(int index, InputNode input) {
@@ -117,6 +119,8 @@ namespace MindTouch.LambdaSharp.Tool {
             }
         }
 
+        private void ConvertParameter(int index, ParameterNode parameter) => ConvertParameter(null, index, parameter);
+
         private void ConvertParameter(
             ModuleBuilderEntry<AResource> parent,
             int index,
@@ -137,7 +141,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 AtLocation(parameter.Var, () => {
 
                     // create managed resource entry
-                    var result = _builder.AddEntry(parent, new CloudFormationResourceParameter {
+                    var result = _builder.AddEntry(parent, new ManagedResourceParameter {
                         Name = parameter.Var,
                         Description = parameter.Description,
                         Scope = _builder.ConvertScope(parameter.Scope),
@@ -268,12 +272,7 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         private void ConvertFunction(int index, FunctionNode function) {
-            AtLocation(function.Function ?? $"[{index}]", () => {
-
-                // append the version to the function description
-                if(function.Description != null) {
-                    function.Description = function.Description.TrimEnd() + $" (v{_builder.Version})";
-                }
+            AtLocation(function.Function, () => {
 
                 // initialize VPC configuration if provided
                 Humidifier.Lambda.FunctionTypes.VpcConfig vpc = null;
@@ -294,22 +293,26 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
 
                 // create function entry
-                var eventIndex = 0;
+                var sources = AtLocation(
+                    "Sources",
+                    () => function.Sources
+                        ?.Select((source, eventIndex) => ConvertFunctionSource(function, eventIndex, source))
+                        .Where(evt => evt != null)
+                        .ToList()
+                    , null
+                );
                 var result = _builder.AddEntry(new FunctionParameter {
                     Name = function.Function,
                     Description = function.Description,
                     Project = function.Project,
                     Language = function.Language,
-
-                    // TODO (2018-11-10, bjorg): don't put generator logic into the converter
-                    Environment = function.Environment.ToDictionary(
-                        kv => "STR_" + kv.Key.Replace("::", "_").ToUpperInvariant(),
-                        kv => kv.Value
-                    ) ?? new Dictionary<string, object>(),
-                    Sources = AtLocation("Sources", () => function.Sources?.Select(source => ConvertFunctionSource(function, ++eventIndex, source)).Where(evt => evt != null).ToList(), null) ?? new List<AFunctionSource>(),
+                    Environment = function.Environment ?? new Dictionary<string, object>(),
+                    Sources = sources ?? new List<AFunctionSource>(),
                     Pragmas = function.Pragmas,
                     Function = new Humidifier.Lambda.Function {
-                        Description = function.Description,
+                        Description = (function.Description != null)
+                            ? function.Description.TrimEnd() + $" (v{_builder.Version})"
+                            : null,
                         Timeout = function.Timeout,
                         Runtime = function.Runtime,
                         ReservedConcurrentExecutions = function.ReservedConcurrency,

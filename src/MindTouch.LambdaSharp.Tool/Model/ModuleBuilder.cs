@@ -75,11 +75,12 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         //--- Methods ---
         public Module ToModule() => _module;
+        public AResource GetEntry(string fullName) => _module.GetResource(fullName);
+        public void AddCondition(string name, object condition) => _module.Conditions.Add(name, condition);
+        public void AddResourceStatement(Humidifier.Statement statement) => _module.ResourceStatements.Add(statement);
 
         public ModuleBuilderEntry<TResource> AddEntry<TResource>(TResource resource) where TResource : AResource
             => AddEntry<TResource, AResource>(null, resource);
-
-        public AResource GetEntry(string fullName) => _module.GetResource(fullName);
 
         public bool AddSecret(object secret) {
             if(secret is string textSecret) {
@@ -116,8 +117,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             _module.Entries.Add(fullName, entry);
             return new ModuleBuilderEntry<AResource>(this, entry);
         }
-
-        public object GetVariable(string fullName) => _module.Entries[fullName].Reference;
 
         public ModuleBuilderEntry<InputParameter> AddInput(
             string name,
@@ -176,7 +175,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 // create conditional managed resource
                 var condition = $"{result.LogicalId}Created";
                 AddCondition(condition, FnEquals(FnRef(result.ResourceName), defaultValue));
-                var instance = AddEntry(result, new CloudFormationResourceParameter {
+                var instance = AddEntry(result, new ManagedResourceParameter {
                     Name = "Resource",
                     Resource = CreateResource(awsType, awsProperties, condition)
                 });
@@ -306,12 +305,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 References = ResourceMapping.ExpandResourceReference(awsType, reference),
                 Allow = allowStatements.Distinct().OrderBy(text => text).ToList()
             });
-        }
-
-        public void AddCondition(string name, object condition) => _module.Conditions.Add(name, condition);
-
-        public void AddResourceStatement(Humidifier.Statement statement) {
-            _module.ResourceStatements.Add(statement);
         }
 
         public IList<string> ConvertScope(object scope) {

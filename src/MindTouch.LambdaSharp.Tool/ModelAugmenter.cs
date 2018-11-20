@@ -54,7 +54,7 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         //--- Fields ---
-        private ModuleBuilder _module;
+        private ModuleBuilder _builder;
         private List<ApiRoute> _apiGatewayRoutes;
 
         //--- Constructors ---
@@ -62,17 +62,17 @@ namespace MindTouch.LambdaSharp.Tool {
 
         //--- Methods ---
         public void Augment(Module module) {
-            _module = new ModuleBuilder(Settings, SourceFilename, module);
+            _builder = new ModuleBuilder(Settings, SourceFilename, module);
 
             // add module variables
-            var moduleValue = _module.AddVariable("Module", "Module Variables", "");
-            _module.AddVariable("Module::Id", "Module ID", FnRef("AWS::StackName"));
-            _module.AddVariable("Module::Name", "Module Name", module.Name);
-            _module.AddVariable("Module::Version", "Module Version", module.Version.ToString());
+            var moduleValue = _builder.AddVariable("Module", "Module Variables", "");
+            _builder.AddVariable("Module::Id", "Module ID", FnRef("AWS::StackName"));
+            _builder.AddVariable("Module::Name", "Module Name", module.Name);
+            _builder.AddVariable("Module::Version", "Module Version", module.Version.ToString());
 
             // add LambdaSharp Module Options
             var section = "LambdaSharp Module Options";
-            _module.AddInput(
+            _builder.AddInput(
                 name: "Secrets",
                 section: section,
                 label: "Secret Keys (ARNs)",
@@ -81,7 +81,7 @@ namespace MindTouch.LambdaSharp.Tool {
             );
 
             // add decryption permission for secret
-            _module.AddResourceStatement(new Humidifier.Statement {
+            _builder.AddResourceStatement(new Humidifier.Statement {
                 Sid = "SecretsDecryption",
                 Effect = "Allow",
                 Resource = FnSplit(
@@ -105,43 +105,43 @@ namespace MindTouch.LambdaSharp.Tool {
                     "kms:GenerateDataKeyWithoutPlaintext"
                 }
             });
-            _module.AddCondition("SecretsIsEmpty", FnEquals(FnRef("Secrets"), ""));
+            _builder.AddCondition("SecretsIsEmpty", FnEquals(FnRef("Secrets"), ""));
 
             // add standard parameters (unless requested otherwise)
-            if(!_module.HasPragma("no-lambdasharp-dependencies")) {
+            if(!_builder.HasPragma("no-lambdasharp-dependencies")) {
 
                 // add LambdaSharp Module Internal Dependencies
                 section = "LambdaSharp Dependencies";
-                _module.AddImport(
+                _builder.AddImport(
                     import: "LambdaSharp::DeadLetterQueueArn",
                     section: section,
                     label: "Dead Letter Queue (ARN)",
                     description: "Dead letter queue for functions"
                 );
-                _module.AddImport(
+                _builder.AddImport(
                     import: "LambdaSharp::LoggingStreamArn",
                     section: section,
                     label: "Logging Stream (ARN)",
                     description: "Logging kinesis stream for functions"
                 );
-                _module.AddImport(
+                _builder.AddImport(
                     import: "LambdaSharp::DefaultSecretKeyArn",
                     section: section,
                     label: "Secret Key (ARN)",
                     description: "Default secret key for functions"
                 );
-                _module.AddSecret(FnRef("Module::DefaultSecretKeyArn"));
+                _builder.AddSecret(FnRef("Module::DefaultSecretKeyArn"));
 
                 // add lambdasharp imports
-                _module.AddVariable("Module::DeadLetterQueueArn", "Module Dead Letter Queue (ARN)", FnRef("LambdaSharp::DeadLetterQueueArn"));
-                _module.AddVariable("Module::LoggingStreamArn", "Module Logging Stream (ARN)", FnRef("LambdaSharp::LoggingStreamArn"));
-                _module.AddVariable("Module::DefaultSecretKeyArn", "Module Default Secret Key (ARN)", FnRef("LambdaSharp::DefaultSecretKeyArn"));
+                _builder.AddVariable("Module::DeadLetterQueueArn", "Module Dead Letter Queue (ARN)", FnRef("LambdaSharp::DeadLetterQueueArn"));
+                _builder.AddVariable("Module::LoggingStreamArn", "Module Logging Stream (ARN)", FnRef("LambdaSharp::LoggingStreamArn"));
+                _builder.AddVariable("Module::DefaultSecretKeyArn", "Module Default Secret Key (ARN)", FnRef("LambdaSharp::DefaultSecretKeyArn"));
 
                 // permissions needed for dead-letter queue
-                _module.AddResourceStatement(new Humidifier.Statement {
+                _builder.AddResourceStatement(new Humidifier.Statement {
                     Sid = "ModuleDeadLetterQueueLogging",
                     Effect = "Allow",
-                    Resource = _module.GetVariable("Module::DeadLetterQueueArn"),
+                    Resource = FnRef("Module::DeadLetterQueueArn"),
                     Action = new List<string> {
                         "sqs:SendMessage"
                     }
@@ -150,25 +150,25 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // add LambdaSharp Deployment Settings
             section = "LambdaSharp Deployment Settings (DO NOT MODIFY)";
-            _module.AddInput(
+            _builder.AddInput(
                 name: "DeploymentBucketName",
                 section: section,
                 label: "Deployment S3 Bucket",
                 description: "Source deployment S3 bucket name"
             );
-            _module.AddInput(
+            _builder.AddInput(
                 name: "DeploymentPrefix",
                 section: section,
                 label: "Deployment Prefix",
                 description: "Module deployment prefix"
             );
-            _module.AddInput(
+            _builder.AddInput(
                 name: "DeploymentPrefixLowercase",
                 section: section,
                 label: "Deployment Prefix (lowercase)",
                 description: "Module deployment prefix (lowercase)"
             );
-            _module.AddInput(
+            _builder.AddInput(
                 name: "DeploymentParent",
                 section: section,
                 label: "Parent Stack Name",
@@ -177,8 +177,8 @@ namespace MindTouch.LambdaSharp.Tool {
             );
 
             // add module registration
-            if(module.HasModuleRegistration) {
-                moduleValue.AddEntry(new CloudFormationResourceParameter {
+            if(!_builder.HasPragma("no-module-registration")) {
+                moduleValue.AddEntry(new ManagedResourceParameter {
                     Name = "Registration",
                     Resource = CreateResource("LambdaSharp::Register::Module", new Dictionary<string, object> {
                         ["ModuleId"] = FnRef("AWS::StackName"),
@@ -189,9 +189,7 @@ namespace MindTouch.LambdaSharp.Tool {
             }
 
             // create module IAM role used by all functions
-            var functions = module.GetAllEntriesOfType<FunctionParameter>().Select(
-                entry => new ModuleBuilderEntry<FunctionParameter>(_module, entry)
-            );
+            var functions = module.GetAllEntriesOfType<FunctionParameter>().Select(entry => new ModuleBuilderEntry<FunctionParameter>(_builder, entry));
             if(functions.Any()) {
 
                 // create module role
@@ -223,8 +221,8 @@ namespace MindTouch.LambdaSharp.Tool {
                     }
                 });
 
-                // create generic resource statement; additional resource statements can be added by resources
-                _module.AddResourceStatement(new Humidifier.Statement {
+                // permission needed for writing to log streams (but not for creating log groups!)
+                _builder.AddResourceStatement(new Humidifier.Statement {
                     Sid = "ModuleLogStreamAccess",
                     Effect = "Allow",
                     Resource = "arn:aws:logs:*:*:*",
@@ -236,7 +234,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
                 // permissions needed for lambda functions to exist in a VPC
                 if(functions.Any(function => function.Resource.Function.VpcConfig != null)) {
-                    _module.AddResourceStatement(new Humidifier.Statement {
+                    _builder.AddResourceStatement(new Humidifier.Statement {
                         Sid = "ModuleVpcNetworkInterfaces",
                         Effect = "Allow",
                         Resource = "*",
@@ -278,7 +276,7 @@ namespace MindTouch.LambdaSharp.Tool {
                                                 Sid = "CloudWatchLogsKinesisPermissions",
                                                 Effect = "Allow",
                                                 Action = "kinesis:PutRecord",
-                                                Resource = _module.GetVariable("Module::LoggingStreamArn")
+                                                Resource = FnRef("Module::LoggingStreamArn")
                                             }
                                         }.ToList()
                                     }
@@ -287,8 +285,9 @@ namespace MindTouch.LambdaSharp.Tool {
                         }
                     });
 
+                    // register functions
                     foreach(var function in functions.Where(f => f.Resource.HasFunctionRegistration).ToList()) {
-                        function.AddEntry(new CloudFormationResourceParameter {
+                        function.AddEntry(new ManagedResourceParameter {
                             Name = "Registration",
                             Resource = CreateResource("LambdaSharp::Register::Function", new Dictionary<string, object> {
                                 ["ModuleId"] = FnRef("AWS::StackName"),
@@ -358,7 +357,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     });
 
                     // add RestApi url
-                    _module.AddVariable(
+                    _builder.AddVariable(
                         "Module::RestApi::Url",
                         "Module REST API URL",
                         FnSub("https://${Module::RestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/LATEST/")
@@ -682,7 +681,7 @@ namespace MindTouch.LambdaSharp.Tool {
                                 Principal = "s3.amazonaws.com"
                             }
                         });
-                        function.AddEntry(new CloudFormationResourceParameter {
+                        function.AddEntry(new ManagedResourceParameter {
                             Name = $"Source{sourceSuffix}Subscription",
                             Resource = CreateResource("LambdaSharp::S3::Subscription", new Dictionary<string, object> {
                                 ["BucketArn"] = arn,
@@ -788,8 +787,8 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         private void Enumerate(string fullName, Action<string, AResource, object> action) {
-            var entry = _module.GetEntry(fullName);
-            var variable = _module.GetVariable(fullName);
+            var entry = _builder.GetEntry(fullName);
+            var variable = FnRef(fullName);
             if(variable is IList list) {
                 switch(list.Count) {
                 case 0:

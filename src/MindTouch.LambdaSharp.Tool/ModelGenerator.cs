@@ -169,8 +169,8 @@ namespace MindTouch.LambdaSharp.Tool {
             case ReferencedResourceParameter referenceResourceParameter:
                 AddEnvironmentParameter(isSecret: false, value: GetReference());
                 break;
-            case CloudFormationResourceParameter cloudFormationResourceParameter: {
-                    var resource = cloudFormationResourceParameter.Resource;
+            case ManagedResourceParameter managedResourceParameter: {
+                    var resource = managedResourceParameter.Resource;
                     Humidifier.Resource resourceTemplate;
                     if(resource.Type.StartsWith("Custom::")) {
                         resourceTemplate = new CustomResource(resource.Type, resource.Properties);
@@ -211,10 +211,11 @@ namespace MindTouch.LambdaSharp.Tool {
                 // TODO: let's make this a tad more efficient!
                 foreach(var function in entry.Scope.Select(name => _module.GetAllEntriesOfType<FunctionParameter>().First(f => f.FullName == name))) {
                     var resource = (FunctionParameter)function.Resource;
+                    var environment = resource.Function.Environment.Variables;
                     if(isSecret) {
-                        resource.Function.Environment.Variables["SEC_" + fullEnvName] = value;
+                        environment["SEC_" + fullEnvName] = value;
                     } else {
-                        resource.Function.Environment.Variables["STR_" + fullEnvName] = value;
+                        environment["STR_" + fullEnvName] = value;
                     }
                 }
             }
@@ -225,31 +226,31 @@ namespace MindTouch.LambdaSharp.Tool {
         private void AddFunction(Module module, FunctionParameter function) {
 
             // initialize function environment variables
-            var environmentVariables = function.Environment.ToDictionary(kv => kv.Key, kv => (dynamic)kv.Value);
-            environmentVariables["MODULE_NAME"] = module.Name;
-            environmentVariables["MODULE_ID"] = FnRef("AWS::StackName");
-            environmentVariables["MODULE_VERSION"] = module.Version.ToString();
-            environmentVariables["LAMBDA_NAME"] = function.Name;
-            environmentVariables["LAMBDA_RUNTIME"] = function.Function.Runtime;
-            environmentVariables["DEADLETTERQUEUE"] = module.GetReference("LambdaSharp::DeadLetterQueueArn");
-            environmentVariables["DEFAULTSECRETKEY"] = module.GetReference("LambdaSharp::DefaultSecretKeyArn");
+            var environment = function.Function.Environment.Variables;
+            foreach(var kv in function.Environment) {
 
-            // create function definition
-            _stack.Add(function.Name, function.Function);
+                // add explicit environment variable as string value
+                var key = "STR_" + kv.Key.Replace("::", "_").ToUpperInvariant();
+                environment[key] = (dynamic)kv.Value;
+            }
+            environment["MODULE_NAME"] = module.Name;
+            environment["MODULE_ID"] = FnRef("AWS::StackName");
+            environment["MODULE_VERSION"] = module.Version.ToString();
+            environment["LAMBDA_NAME"] = function.Name;
+            environment["LAMBDA_RUNTIME"] = function.Function.Runtime;
+            environment["DEADLETTERQUEUE"] = module.GetReference("LambdaSharp::DeadLetterQueueArn");
+            environment["DEFAULTSECRETKEY"] = module.GetReference("LambdaSharp::DefaultSecretKeyArn");
 
             // TODO: make sure all these fields get set
             // _stack.Add(function.Name, new Lambda.Function {
-            //     Runtime = function.Runtime,
-            //     Handler = function.Handler,
-            //     Timeout = function.Timeout,
             //     Code = new Lambda.FunctionTypes.Code {
             //         S3Bucket = FnRef("DeploymentBucketName"),
             //         S3Key = FnSub($"Modules/{module.Name}/Assets/{Path.GetFileName(function.PackagePath)}")
             //     },
-            //     Environment = new Lambda.FunctionTypes.Environment {
-            //         Variables = environmentVariables
-            //     },
             // });
+
+            // create function definition
+            _stack.Add(function.Name, function.Function);
         }
     }
 }

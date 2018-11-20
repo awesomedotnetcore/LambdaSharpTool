@@ -30,6 +30,9 @@ if [ -z "$1" ]; then
     if [ $? -ne 0 ]; then
         exit $?
     fi
+    lash Empty
+    lash Empty-NoDependencies
+    lash Empty-NoRegistration
     lash Source-Topic
     lash Source-Timer
     lash Source-Api-SlackCommand
