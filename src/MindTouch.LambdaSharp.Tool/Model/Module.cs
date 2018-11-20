@@ -68,6 +68,13 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
     public class Module {
 
+        //--- Fields ---
+        [JsonIgnore]
+        private readonly Dictionary<string, ModuleEntry> _entriesByFullName = new Dictionary<string, ModuleEntry>();
+
+        [JsonIgnore]
+        private readonly List<ModuleEntry> _entries = new List<ModuleEntry>();
+
         //--- Properties ---
         public string Name { get; set; }
         public VersionInfo Version { get; set; }
@@ -78,21 +85,23 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public IDictionary<string, object> Conditions  { get; set; } = new Dictionary<string, object>();
         public List<Humidifier.Statement> ResourceStatements { get; } = new List<Humidifier.Statement>();
         public IList<ModuleGrant> Grants { get; } = new List<ModuleGrant>();
-        public IDictionary<string, ModuleEntry> Entries { get; } = new Dictionary<string, ModuleEntry>();
+        public IEnumerable<ModuleEntry> Entries => _entries;
 
         [JsonIgnore]
         public bool HasModuleRegistration => !HasPragma("no-module-registration");
 
         //--- Methods ---
         public bool HasPragma(string pragma) => Pragmas?.Contains(pragma) == true;
-        public object GetReference(string fullName) => Entries[fullName].Reference;
-        public IEnumerable<AResource> GetAllResources()
-            => Entries.Values
-                .Where(entry => entry.Resource != null)
-                .Select(entry => entry.Resource);
+        public ModuleEntry GetEntry(string fullName) => _entriesByFullName[fullName];
+        public object GetReference(string fullName) => GetEntry(fullName).Reference;
+        public bool TryGetEntry(string fullName, out ModuleEntry entry) => _entriesByFullName.TryGetValue(fullName, out entry);
+        public void AddEntry(string fullName, ModuleEntry entry) {
+            _entriesByFullName.Add(fullName, entry);
+            _entries.Add(entry);
+        }
 
         public IEnumerable<ModuleEntry> GetAllEntriesOfType<T>()
-            => Entries.Values
+            => Entries
                 .Where(entry => entry.Resource is T)
                 .ToList();
     }

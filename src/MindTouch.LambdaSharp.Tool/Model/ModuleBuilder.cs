@@ -75,7 +75,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         //--- Methods ---
         public Module ToModule() => _module;
-        public ModuleBuilderEntry<AResource> GetEntry(string fullName) => new ModuleBuilderEntry<AResource>(this, _module.Entries[fullName]);
+        public ModuleBuilderEntry<AResource> GetEntry(string fullName) => new ModuleBuilderEntry<AResource>(this, _module.GetEntry(fullName));
         public void AddCondition(string name, object condition) => _module.Conditions.Add(name, condition);
         public void AddResourceStatement(Humidifier.Statement statement) => _module.ResourceStatements.Add(statement);
 
@@ -114,7 +114,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 scope,
                 resource: null
             );
-            _module.Entries.Add(fullName, entry);
+            _module.AddEntry(fullName, entry);
             return new ModuleBuilderEntry<AResource>(this, entry);
         }
 
@@ -210,7 +210,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             var exportName = parts[1];
 
             // find or create root module import collection node
-            var rootParameter = _module.Entries.TryGetValue(exportModule, out ModuleEntry existingEntry)
+            var rootParameter = _module.TryGetEntry(exportModule, out ModuleEntry existingEntry)
                 ? new ModuleBuilderEntry<AResource>(this, existingEntry)
                 : AddVariable(exportModule, $"{exportModule} cross-module references", "");
 
@@ -329,7 +329,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
             // create entry
             var entry = new ModuleEntry(fullName, resource.Description, resource.Reference, resource.Scope, resource);
-            _module.Entries.Add(fullName, entry);
+            _module.AddEntry(fullName, entry);
             if(entry.Reference == null) {
                 if(resource is HumidifierParameter humidifierParameter) {
                     entry.Reference = ResourceMapping.GetArnReference(humidifierParameter.Resource.AWSTypeName, entry.ResourceName);

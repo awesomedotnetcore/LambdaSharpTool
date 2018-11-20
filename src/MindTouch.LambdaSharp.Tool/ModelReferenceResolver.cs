@@ -69,7 +69,7 @@ namespace MindTouch.LambdaSharp.Tool {
             var functionNames = module.GetAllEntriesOfType<FunctionParameter>()
                 .Select(function => function.FullName)
                 .ToList();
-            foreach(var entry in module.Entries.Values) {
+            foreach(var entry in module.Entries) {
                 if(entry.Scope.Contains("*")) {
                     entry.Scope = entry.Scope
                         .Where(scope => scope != "*")
@@ -88,7 +88,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     //  parameter name; if it does, we export the ARN value of that parameter; in
                     //  addition, we assume its description if none is provided.
 
-                    if(!module.Entries.TryGetValue(output.Name, out ModuleEntry entry)) {
+                    if(!module.TryGetEntry(output.Name, out ModuleEntry entry)) {
                         AddError("could not find matching entry");
                         output.Value = "<BAD>";
                     } else {
@@ -115,15 +115,19 @@ namespace MindTouch.LambdaSharp.Tool {
             // resolve everything to logical ids
             module.Secrets = (IList<object>)Substitute(module.Secrets);;
             module.Conditions = (IDictionary<string, object>)Substitute(module.Conditions);
-            foreach(var entry in module.Entries.Values) {
+            foreach(var entry in module.Entries) {
                 switch(entry.Resource) {
                 case null:
+                case InputParameter _:
+                case ValueParameter _:
+                case SecretParameter _:
+                case PackageParameter _:
 
                     // nothing to do
                     break;
                 case HumidifierParameter humidifierParameter:
                     humidifierParameter.Resource = (Humidifier.Resource)Substitute(humidifierParameter.Resource, ReportMissingReference);
-                    humidifierParameter.DependsOn = humidifierParameter.DependsOn.Select(dependency => module.Entries[dependency].LogicalId).ToList();
+                    humidifierParameter.DependsOn = humidifierParameter.DependsOn.Select(dependency => module.GetEntry(dependency).LogicalId).ToList();
                     break;
                 case FunctionParameter functionParameter:
                     functionParameter.Environment = (IDictionary<string, object>)Substitute(functionParameter.Environment, ReportMissingReference);
@@ -169,7 +173,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // local functions
             void DiscoverEntries() {
-                foreach(var entry in module.Entries.Values) {
+                foreach(var entry in module.Entries) {
                     switch(entry.Reference) {
                     case null:
                         throw new ApplicationException($"entry reference cannot be null: {entry.FullName}");
@@ -227,7 +231,7 @@ namespace MindTouch.LambdaSharp.Tool {
             }
 
             void ReportUnresolvedEntries() {
-                foreach(var entry in module.Entries.Values) {
+                foreach(var entry in module.Entries) {
                     Substitute(entry.Reference, ReportMissingReference);
                 }
             }
@@ -381,10 +385,14 @@ namespace MindTouch.LambdaSharp.Tool {
 
                         // use reflection to substitute properties
                         foreach(var property in value.GetType().GetProperties().Where(p => !SkipType(p.PropertyType))) {
-                            var propertyValue = property.GetGetMethod()?.Invoke(value, new object[0]);
-                            if((propertyValue != null) && !propertyValue.GetType().IsValueType) {
-                                property.GetSetMethod()?.Invoke(value, new[] { Substitute(propertyValue, missing) });
-                                DebugWriteLine(() => $"UPDATED => {value.GetType()}::{property.Name} [{property.PropertyType}]");
+                            try {
+                                var propertyValue = property.GetGetMethod()?.Invoke(value, new object[0]);
+                                if((propertyValue != null) && !propertyValue.GetType().IsValueType) {
+                                    property.GetSetMethod()?.Invoke(value, new[] { Substitute(propertyValue, missing) });
+                                    DebugWriteLine(() => $"UPDATED => {value.GetType()}::{property.Name} [{property.PropertyType}]");
+                                }
+                            } catch(Exception e) {
+                                throw new ApplicationException($"unable to get/set {value.GetType()}::{property.Name}", e);
                             }
                         }
                         return value;

@@ -22,11 +22,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using MindTouch.LambdaSharp.Tool;
 
 namespace Humidifier {
 
-    public class CustomResource : Resource, IDictionary<string, object> {
+    public class CustomResource : Resource, IDictionary<string, object>, IDictionary {
 
         //--- Fields ---
         private readonly string _typeName;
@@ -53,12 +54,10 @@ namespace Humidifier {
 
         //--- Properties ---
         public override string AWSTypeName => _typeName;
-
         public object this[string key] {
             get => _properties[key];
             set => _properties[key] = value;
         }
-
         public ICollection<string> Keys => _properties.Keys;
         public ICollection<object> Values => _properties.Values;
         public int Count => _properties.Count;
@@ -76,7 +75,28 @@ namespace Humidifier {
         public bool Remove(KeyValuePair<string, object> item) => _properties.Remove(item);
         public bool TryGetValue(string key, out object value) => _properties.TryGetValue(key, out value);
 
+        //--- IDictionary Members ---
+        bool IDictionary.IsFixedSize => false;
+        bool IDictionary.IsReadOnly => _properties.IsReadOnly;
+        ICollection IDictionary.Keys => _properties.Keys.ToList();
+        ICollection IDictionary.Values => _properties.Values.ToList();
+        int ICollection.Count => _properties.Count;
+        bool ICollection.IsSynchronized => false;
+        object ICollection.SyncRoot => this;
+        object IDictionary.this[object key] {
+            get => _properties[(string)key];
+            set => _properties[(string)key] = value;
+        }
+
         //--- IEnumerable Members ---
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        void IDictionary.Add(object key, object value) => _properties.Add((string)key, value);
+        void IDictionary.Clear() => _properties.Clear();
+        bool IDictionary.Contains(object key) => _properties.ContainsKey((string)key);
+        IDictionaryEnumerator IDictionary.GetEnumerator()
+            => ((IDictionary)_properties.ToDictionary(kv => kv.Key, kv => kv.Value)).GetEnumerator();
+        void IDictionary.Remove(object key) => _properties.Remove((string)key);
+        void ICollection.CopyTo(Array array, int index)
+            => ((IDictionary)_properties.ToDictionary(kv => kv.Key, kv => kv.Value)).CopyTo(array, index);
     }
 }
