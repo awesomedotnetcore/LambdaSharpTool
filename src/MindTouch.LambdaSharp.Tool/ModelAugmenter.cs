@@ -46,7 +46,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
         //--- Fields ---
         private ModuleBuilder _builder;
-        private List<ApiRoute> _apiGatewayRoutes;
+        private List<ApiRoute> _apiGatewayRoutes = new List<ApiRoute>();
 
         //--- Constructors ---
         public ModelAugmenter(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
@@ -348,22 +348,9 @@ namespace MindTouch.LambdaSharp.Tool {
 
                 // check if RestApi resources need to be added
                 if(functions.Any(f => f.Sources.OfType<ApiGatewaySource>().Any())) {
-                    _apiGatewayRoutes = new List<ApiRoute>();
 
                     // check if an API gateway needs to be created
                     if(_apiGatewayRoutes.Any()) {
-                        var restApiName = "ModuleRestApi";
-
-                        // recursively create resources as needed
-                        var apiMethods = new List<KeyValuePair<string, object>>();
-                        AddApiResource(null, restApiName, FnRef(restApiName), FnGetAtt(restApiName, "RootResourceId"), 0, _apiGatewayRoutes, apiMethods);
-
-                        // RestApi deployment depends on all methods and their hash (to force redeployment in case of change)
-                        var methodSignature = string.Join("\n", apiMethods
-                            .OrderBy(kv => kv.Key)
-                            .Select(kv => JsonConvert.SerializeObject(kv.Value))
-                        );
-                        string methodsHash = methodSignature.ToMD5Hash();
 
                         // create a RestApi
                         var restApiEntry = _builder.AddResource(
@@ -379,6 +366,17 @@ namespace MindTouch.LambdaSharp.Tool {
                             dependsOn: null,
                             condition: null
                         );
+
+                        // recursively create resources as needed
+                        var apiMethods = new List<KeyValuePair<string, object>>();
+                        AddApiResource(restApiEntry, FnRef(restApiEntry.FullName), FnGetAtt(restApiEntry.FullName, "RootResourceId"), 0, _apiGatewayRoutes, apiMethods);
+
+                        // RestApi deployment depends on all methods and their hash (to force redeployment in case of change)
+                        var methodSignature = string.Join("\n", apiMethods
+                            .OrderBy(kv => kv.Key)
+                            .Select(kv => JsonConvert.SerializeObject(kv.Value))
+                        );
+                        string methodsHash = methodSignature.ToMD5Hash();
 
                         // add RestApi url
                         _builder.AddValue(
@@ -401,7 +399,7 @@ namespace MindTouch.LambdaSharp.Tool {
                                     Version = "2012-10-17",
                                     Statement = new[] {
                                         new Humidifier.Statement {
-                                            Sid = "ModuleRestApiInvocation",
+                                            Sid = "Module::RestApi::Invocation",
                                             Effect = "Allow",
                                             Principal = new Humidifier.Principal {
                                                 Service = "apigateway.amazonaws.com"
@@ -417,7 +415,7 @@ namespace MindTouch.LambdaSharp.Tool {
                                             Version = "2012-10-17",
                                             Statement = new[] {
                                                 new Humidifier.Statement {
-                                                    Sid = "ModuleRestApiLogging",
+                                                    Sid = "Module::RestApi::Logging",
                                                     Effect = "Allow",
                                                     Action = new[] {
                                                         "logs:CreateLogGroup",
@@ -496,12 +494,11 @@ namespace MindTouch.LambdaSharp.Tool {
             }
         }
 
-        private void AddApiResource(AModuleEntry parent, string parentPrefix, object restApiId, object parentId, int level, IEnumerable<ApiRoute> routes, List<KeyValuePair<string, object>> apiMethods) {
+        private void AddApiResource(AModuleEntry parent, object restApiId, object parentId, int level, IEnumerable<ApiRoute> routes, List<KeyValuePair<string, object>> apiMethods) {
 
-            // attach methods to resource id
+            // create methods at this route level to parent id
             var methods = routes.Where(route => route.Path.Length == level).ToArray();
             foreach(var method in methods) {
-                var methodName = parentPrefix + method.Method;
                 Humidifier.ApiGateway.Method apiMethod;
                 switch(method.Integration) {
                 case ApiGatewaySourceIntegration.RequestResponse:
@@ -514,8 +511,9 @@ namespace MindTouch.LambdaSharp.Tool {
                     AddError($"api integration {method.Integration} is not supported");
                     continue;
                 }
-                apiMethods.Add(new KeyValuePair<string, object>(methodName, apiMethod));
-                _builder.AddResource(
+
+                // add API method entry
+                var methodEntry = _builder.AddResource(
                     parent: parent,
                     name: method.Method,
                     description: null,
@@ -524,35 +522,37 @@ namespace MindTouch.LambdaSharp.Tool {
                     dependsOn: null,
                     condition: null
                 );
+
+                // add permission to API method to invoke lambda
                 _builder.AddResource(
-                    parent: parent,
-                    name: $"{methodName}Permission",
+                    parent: methodEntry,
+                    name: "Permission",
                     description: null,
                     scope: null,
                     resource: new Humidifier.Lambda.Permission {
                         Action = "lambda:InvokeFunction",
                         FunctionName = FnGetAtt(method.Function.FullName, "Arn"),
                         Principal = "apigateway.amazonaws.com",
-                        SourceArn = FnSub($"arn:aws:execute-api:${{AWS::Region}}:${{AWS::AccountId}}:${{ModuleRestApi}}/LATEST/{method.Method}/{string.Join("/", method.Path)}")
+                        SourceArn = FnSub($"arn:aws:execute-api:${{AWS::Region}}:${{AWS::AccountId}}:${{Module::RestApi}}/LATEST/{method.Method}/{string.Join("/", method.Path)}")
                     },
                     dependsOn: null,
                     condition: null
                 );
+                apiMethods.Add(new KeyValuePair<string, object>(methodEntry.FullName, apiMethod));
             }
 
-            // create new resource for each route with a common path segment
+            // find sub-routes and group common sub-route prefix
             var subRoutes = routes.Where(route => route.Path.Length > level).ToLookup(route => route.Path[level]);
             foreach(var subRoute in subRoutes) {
 
                 // remove special character from path segment and capitalize it
                 var partName = new string(subRoute.Key.Where(c => char.IsLetterOrDigit(c)).ToArray());
-                partName = char.ToUpperInvariant(partName[0]) + partName.Substring(1);
+                partName = char.ToUpperInvariant(partName[0]) + ((partName.Length > 1) ? partName.Substring(1) : "");
 
-                // create a new resource
-                var newResourceName = parentPrefix + partName + "Resource";
+                // create a new parent resource to attach methods or sub-resource to
                 var resource = _builder.AddResource(
                     parent: parent,
-                    name: newResourceName,
+                    name: partName + "Resource",
                     description: null,
                     scope: null,
                     resource: new Humidifier.ApiGateway.Resource {
@@ -563,7 +563,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     dependsOn: null,
                     condition: null
                 );
-                AddApiResource(resource, parentPrefix + partName, restApiId, FnRef(newResourceName), level + 1, subRoute, apiMethods);
+                AddApiResource(resource, restApiId, FnRef(resource.FullName), level + 1, subRoute, apiMethods);
             }
 
             Humidifier.ApiGateway.Method CreateRequestResponseApiMethod(ApiRoute method) {

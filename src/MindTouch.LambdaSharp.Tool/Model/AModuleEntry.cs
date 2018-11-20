@@ -93,6 +93,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             Humidifier.CustomResource package
         ) : base(parent, name, description, null, scope) {
             SourceFilepath = sourceFilepath ?? throw new ArgumentNullException(nameof(sourceFilepath));
+            Package = package ?? throw new ArgumentNullException(nameof(package));
         }
 
         //--- Properties ---
