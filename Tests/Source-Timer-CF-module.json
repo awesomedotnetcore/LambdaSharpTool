@@ -1,0 +1,1241 @@
+{
+  "Name": "TestModule",
+  "Version": "1.0",
+  "Description": "LambdaSharp CloudFormation Test",
+  "Pragmas": [],
+  "Secrets": [
+    {
+      "Fn::If": [
+        "LambdaSharpDefaultSecretKeyArnIsImport",
+        {
+          "Fn::ImportValue": {
+            "Fn::Sub": [
+              "${@DeploymentPrefix}${Import}",
+              {
+                "Import": {
+                  "Fn::Select": [
+                    "1",
+                    {
+                      "Fn::Split": [
+                        "$",
+                        {
+                          "Ref": "@LambdaSharpDefaultSecretKeyArn"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "Ref": "@LambdaSharpDefaultSecretKeyArn"
+        }
+      ]
+    }
+  ],
+  "Outputs": [],
+  "Conditions": {
+    "SecretsIsEmpty": {
+      "Fn::Equals": [
+        {
+          "Ref": "@Secrets"
+        },
+        ""
+      ]
+    },
+    "LambdaSharpDeadLetterQueueArnIsImport": {
+      "Fn::Equals": [
+        {
+          "Fn::Select": [
+            "0",
+            {
+              "Fn::Split": [
+                "$",
+                {
+                  "Ref": "@LambdaSharpDeadLetterQueueArn"
+                }
+              ]
+            }
+          ]
+        },
+        ""
+      ]
+    },
+    "LambdaSharpLoggingStreamArnIsImport": {
+      "Fn::Equals": [
+        {
+          "Fn::Select": [
+            "0",
+            {
+              "Fn::Split": [
+                "$",
+                {
+                  "Ref": "@LambdaSharpLoggingStreamArn"
+                }
+              ]
+            }
+          ]
+        },
+        ""
+      ]
+    },
+    "LambdaSharpDefaultSecretKeyArnIsImport": {
+      "Fn::Equals": [
+        {
+          "Fn::Select": [
+            "0",
+            {
+              "Fn::Split": [
+                "$",
+                {
+                  "Ref": "@LambdaSharpDefaultSecretKeyArn"
+                }
+              ]
+            }
+          ]
+        },
+        ""
+      ]
+    }
+  },
+  "ResourceStatements": [
+    {
+      "Sid": "SecretsDecryption",
+      "Effect": "Allow",
+      "Principal": null,
+      "NotPrincipal": null,
+      "Action": [
+        "kms:Decrypt",
+        "kms:Encrypt",
+        "kms:GenerateDataKey",
+        "kms:GenerateDataKeyWithoutPlaintext"
+      ],
+      "NotAction": null,
+      "Resource": {
+        "Fn::Split": [
+          ",",
+          {
+            "Fn::If": [
+              "SecretsIsEmpty",
+              "",
+              {
+                "Fn::Join": [
+                  ",",
+                  [
+                    "",
+                    {
+                      "Ref": "@Secrets"
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "NotResource": null,
+      "Condition": null
+    },
+    {
+      "Sid": "ModuleDeadLetterQueueLogging",
+      "Effect": "Allow",
+      "Principal": null,
+      "NotPrincipal": null,
+      "Action": [
+        "sqs:SendMessage"
+      ],
+      "NotAction": null,
+      "Resource": {
+        "Fn::If": [
+          "LambdaSharpDeadLetterQueueArnIsImport",
+          {
+            "Fn::ImportValue": {
+              "Fn::Sub": [
+                "${@DeploymentPrefix}${Import}",
+                {
+                  "Import": {
+                    "Fn::Select": [
+                      "1",
+                      {
+                        "Fn::Split": [
+                          "$",
+                          {
+                            "Ref": "@LambdaSharpDeadLetterQueueArn"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "Ref": "@LambdaSharpDeadLetterQueueArn"
+          }
+        ]
+      },
+      "NotResource": null,
+      "Condition": null
+    },
+    {
+      "Sid": "ModuleLogStreamAccess",
+      "Effect": "Allow",
+      "Principal": null,
+      "NotPrincipal": null,
+      "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "NotAction": null,
+      "Resource": "arn:aws:logs:*:*:*",
+      "NotResource": null,
+      "Condition": null
+    }
+  ],
+  "Grants": [],
+  "Entries": [
+    {
+      "Project": null,
+      "Language": "csharp",
+      "Environment": {},
+      "Sources": [
+        {
+          "Expression": "rate(1 minute)",
+          "Name": "MyTimer"
+        }
+      ],
+      "Pragmas": [],
+      "Function": {
+        "AWSTypeName": "AWS::Lambda::Function",
+        "Code": {
+          "S3Bucket": null,
+          "S3Key": null,
+          "S3ObjectVersion": null,
+          "ZipFile": "Function-NOCOMPILE.zip"
+        },
+        "DeadLetterConfig": {
+          "TargetArn": {
+            "Fn::If": [
+              "LambdaSharpDeadLetterQueueArnIsImport",
+              {
+                "Fn::ImportValue": {
+                  "Fn::Sub": [
+                    "${@DeploymentPrefix}${Import}",
+                    {
+                      "Import": {
+                        "Fn::Select": [
+                          "1",
+                          {
+                            "Fn::Split": [
+                              "$",
+                              {
+                                "Ref": "@LambdaSharpDeadLetterQueueArn"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "Ref": "@LambdaSharpDeadLetterQueueArn"
+              }
+            ]
+          }
+        },
+        "Description": "My function (v1.0)",
+        "Environment": {
+          "Variables": {}
+        },
+        "FunctionName": null,
+        "Handler": "TestModule.Function::MindTouch.LambdaSharpTestModule.Function.Function::FunctionHandlerAsync",
+        "KmsKeyArn": null,
+        "MemorySize": "128",
+        "ReservedConcurrentExecutions": null,
+        "Role": {
+          "Fn::GetAtt": [
+            "Module::Role",
+            "Arn"
+          ]
+        },
+        "Runtime": "dotnetcore2.1",
+        "Tags": null,
+        "Timeout": "30",
+        "TracingConfig": null,
+        "VpcConfig": null
+      },
+      "HasFunctionRegistration": true,
+      "Name": "Function",
+      "FullName": "Function",
+      "ResourceName": "@Function",
+      "LogicalId": "Function",
+      "Description": null,
+      "Scope": [],
+      "Reference": {
+        "Ref": "@Function"
+      }
+    },
+    {
+      "IsSecret": false,
+      "Name": "Module",
+      "FullName": "Module",
+      "ResourceName": "@Module",
+      "LogicalId": "Module",
+      "Description": null,
+      "Scope": [],
+      "Reference": ""
+    },
+    {
+      "IsSecret": false,
+      "Name": "Id",
+      "FullName": "Module::Id",
+      "ResourceName": "@ModuleId",
+      "LogicalId": "ModuleId",
+      "Description": null,
+      "Scope": [],
+      "Reference": {
+        "Ref": "AWS::StackName"
+      }
+    },
+    {
+      "IsSecret": false,
+      "Name": "Name",
+      "FullName": "Module::Name",
+      "ResourceName": "@ModuleName",
+      "LogicalId": "ModuleName",
+      "Description": null,
+      "Scope": [],
+      "Reference": "TestModule"
+    },
+    {
+      "IsSecret": false,
+      "Name": "Version",
+      "FullName": "Module::Version",
+      "ResourceName": "@ModuleVersion",
+      "LogicalId": "ModuleVersion",
+      "Description": null,
+      "Scope": [],
+      "Reference": "1.0"
+    },
+    {
+      "Section": "LambdaSharp Module Options",
+      "Label": "Secret Keys (ARNs)",
+      "IsSecret": false,
+      "Parameter": {
+        "Type": "String",
+        "Description": "Comma-separated list of optional secret keys",
+        "AllowedPattern": null,
+        "AllowedValues": null,
+        "ConstraintDescription": null,
+        "Default": "",
+        "MinLength": null,
+        "MaxLength": null,
+        "MinValue": null,
+        "MaxValue": null,
+        "NoEcho": null
+      },
+      "Name": "Secrets",
+      "FullName": "Secrets",
+      "ResourceName": "@Secrets",
+      "LogicalId": "Secrets",
+      "Description": null,
+      "Scope": [],
+      "Reference": {
+        "Ref": "@Secrets"
+      }
+    },
+    {
+      "IsSecret": false,
+      "Name": "LambdaSharp",
+      "FullName": "LambdaSharp",
+      "ResourceName": "@LambdaSharp",
+      "LogicalId": "LambdaSharp",
+      "Description": null,
+      "Scope": [],
+      "Reference": ""
+    },
+    {
+      "Section": "LambdaSharp Dependencies",
+      "Label": "Dead Letter Queue (ARN)",
+      "IsSecret": false,
+      "Parameter": {
+        "Type": "String",
+        "Description": "Dead letter queue for functions",
+        "AllowedPattern": "^.+$",
+        "AllowedValues": null,
+        "ConstraintDescription": "must either be a cross-module import reference or a non-blank value",
+        "Default": "$LambdaSharp::DeadLetterQueueArn",
+        "MinLength": null,
+        "MaxLength": null,
+        "MinValue": null,
+        "MaxValue": null,
+        "NoEcho": null
+      },
+      "Name": "DeadLetterQueueArn",
+      "FullName": "LambdaSharp::DeadLetterQueueArn",
+      "ResourceName": "@LambdaSharpDeadLetterQueueArn",
+      "LogicalId": "LambdaSharpDeadLetterQueueArn",
+      "Description": null,
+      "Scope": [],
+      "Reference": {
+        "Fn::If": [
+          "LambdaSharpDeadLetterQueueArnIsImport",
+          {
+            "Fn::ImportValue": {
+              "Fn::Sub": [
+                "${@DeploymentPrefix}${Import}",
+                {
+                  "Import": {
+                    "Fn::Select": [
+                      "1",
+                      {
+                        "Fn::Split": [
+                          "$",
+                          {
+                            "Ref": "@LambdaSharpDeadLetterQueueArn"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "Ref": "@LambdaSharpDeadLetterQueueArn"
+          }
+        ]
+      }
+    },
+    {
+      "Section": "LambdaSharp Dependencies",
+      "Label": "Logging Stream (ARN)",
+      "IsSecret": false,
+      "Parameter": {
+        "Type": "String",
+        "Description": "Logging kinesis stream for functions",
+        "AllowedPattern": "^.+$",
+        "AllowedValues": null,
+        "ConstraintDescription": "must either be a cross-module import reference or a non-blank value",
+        "Default": "$LambdaSharp::LoggingStreamArn",
+        "MinLength": null,
+        "MaxLength": null,
+        "MinValue": null,
+        "MaxValue": null,
+        "NoEcho": null
+      },
+      "Name": "LoggingStreamArn",
+      "FullName": "LambdaSharp::LoggingStreamArn",
+      "ResourceName": "@LambdaSharpLoggingStreamArn",
+      "LogicalId": "LambdaSharpLoggingStreamArn",
+      "Description": null,
+      "Scope": [],
+      "Reference": {
+        "Fn::If": [
+          "LambdaSharpLoggingStreamArnIsImport",
+          {
+            "Fn::ImportValue": {
+              "Fn::Sub": [
+                "${@DeploymentPrefix}${Import}",
+                {
+                  "Import": {
+                    "Fn::Select": [
+                      "1",
+                      {
+                        "Fn::Split": [
+                          "$",
+                          {
+                            "Ref": "@LambdaSharpLoggingStreamArn"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "Ref": "@LambdaSharpLoggingStreamArn"
+          }
+        ]
+      }
+    },
+    {
+      "Section": "LambdaSharp Dependencies",
+      "Label": "Secret Key (ARN)",
+      "IsSecret": false,
+      "Parameter": {
+        "Type": "String",
+        "Description": "Default secret key for functions",
+        "AllowedPattern": "^.+$",
+        "AllowedValues": null,
+        "ConstraintDescription": "must either be a cross-module import reference or a non-blank value",
+        "Default": "$LambdaSharp::DefaultSecretKeyArn",
+        "MinLength": null,
+        "MaxLength": null,
+        "MinValue": null,
+        "MaxValue": null,
+        "NoEcho": null
+      },
+      "Name": "DefaultSecretKeyArn",
+      "FullName": "LambdaSharp::DefaultSecretKeyArn",
+      "ResourceName": "@LambdaSharpDefaultSecretKeyArn",
+      "LogicalId": "LambdaSharpDefaultSecretKeyArn",
+      "Description": null,
+      "Scope": [],
+      "Reference": {
+        "Fn::If": [
+          "LambdaSharpDefaultSecretKeyArnIsImport",
+          {
+            "Fn::ImportValue": {
+              "Fn::Sub": [
+                "${@DeploymentPrefix}${Import}",
+                {
+                  "Import": {
+                    "Fn::Select": [
+                      "1",
+                      {
+                        "Fn::Split": [
+                          "$",
+                          {
+                            "Ref": "@LambdaSharpDefaultSecretKeyArn"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "Ref": "@LambdaSharpDefaultSecretKeyArn"
+          }
+        ]
+      }
+    },
+    {
+      "IsSecret": false,
+      "Name": "DeadLetterQueueArn",
+      "FullName": "Module::DeadLetterQueueArn",
+      "ResourceName": "@ModuleDeadLetterQueueArn",
+      "LogicalId": "ModuleDeadLetterQueueArn",
+      "Description": null,
+      "Scope": [],
+      "Reference": {
+        "Fn::If": [
+          "LambdaSharpDeadLetterQueueArnIsImport",
+          {
+            "Fn::ImportValue": {
+              "Fn::Sub": [
+                "${@DeploymentPrefix}${Import}",
+                {
+                  "Import": {
+                    "Fn::Select": [
+                      "1",
+                      {
+                        "Fn::Split": [
+                          "$",
+                          {
+                            "Ref": "@LambdaSharpDeadLetterQueueArn"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "Ref": "@LambdaSharpDeadLetterQueueArn"
+          }
+        ]
+      }
+    },
+    {
+      "IsSecret": false,
+      "Name": "LoggingStreamArn",
+      "FullName": "Module::LoggingStreamArn",
+      "ResourceName": "@ModuleLoggingStreamArn",
+      "LogicalId": "ModuleLoggingStreamArn",
+      "Description": null,
+      "Scope": [],
+      "Reference": {
+        "Fn::If": [
+          "LambdaSharpLoggingStreamArnIsImport",
+          {
+            "Fn::ImportValue": {
+              "Fn::Sub": [
+                "${@DeploymentPrefix}${Import}",
+                {
+                  "Import": {
+                    "Fn::Select": [
+                      "1",
+                      {
+                        "Fn::Split": [
+                          "$",
+                          {
+                            "Ref": "@LambdaSharpLoggingStreamArn"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "Ref": "@LambdaSharpLoggingStreamArn"
+          }
+        ]
+      }
+    },
+    {
+      "IsSecret": false,
+      "Name": "DefaultSecretKeyArn",
+      "FullName": "Module::DefaultSecretKeyArn",
+      "ResourceName": "@ModuleDefaultSecretKeyArn",
+      "LogicalId": "ModuleDefaultSecretKeyArn",
+      "Description": null,
+      "Scope": [],
+      "Reference": {
+        "Fn::If": [
+          "LambdaSharpDefaultSecretKeyArnIsImport",
+          {
+            "Fn::ImportValue": {
+              "Fn::Sub": [
+                "${@DeploymentPrefix}${Import}",
+                {
+                  "Import": {
+                    "Fn::Select": [
+                      "1",
+                      {
+                        "Fn::Split": [
+                          "$",
+                          {
+                            "Ref": "@LambdaSharpDefaultSecretKeyArn"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "Ref": "@LambdaSharpDefaultSecretKeyArn"
+          }
+        ]
+      }
+    },
+    {
+      "Section": "LambdaSharp Deployment Settings (DO NOT MODIFY)",
+      "Label": "Deployment S3 Bucket",
+      "IsSecret": false,
+      "Parameter": {
+        "Type": "String",
+        "Description": "Source deployment S3 bucket name",
+        "AllowedPattern": null,
+        "AllowedValues": null,
+        "ConstraintDescription": null,
+        "Default": null,
+        "MinLength": null,
+        "MaxLength": null,
+        "MinValue": null,
+        "MaxValue": null,
+        "NoEcho": null
+      },
+      "Name": "DeploymentBucketName",
+      "FullName": "DeploymentBucketName",
+      "ResourceName": "@DeploymentBucketName",
+      "LogicalId": "DeploymentBucketName",
+      "Description": null,
+      "Scope": [],
+      "Reference": {
+        "Ref": "@DeploymentBucketName"
+      }
+    },
+    {
+      "Section": "LambdaSharp Deployment Settings (DO NOT MODIFY)",
+      "Label": "Deployment Prefix",
+      "IsSecret": false,
+      "Parameter": {
+        "Type": "String",
+        "Description": "Module deployment prefix",
+        "AllowedPattern": null,
+        "AllowedValues": null,
+        "ConstraintDescription": null,
+        "Default": null,
+        "MinLength": null,
+        "MaxLength": null,
+        "MinValue": null,
+        "MaxValue": null,
+        "NoEcho": null
+      },
+      "Name": "DeploymentPrefix",
+      "FullName": "DeploymentPrefix",
+      "ResourceName": "@DeploymentPrefix",
+      "LogicalId": "DeploymentPrefix",
+      "Description": null,
+      "Scope": [],
+      "Reference": {
+        "Ref": "@DeploymentPrefix"
+      }
+    },
+    {
+      "Section": "LambdaSharp Deployment Settings (DO NOT MODIFY)",
+      "Label": "Deployment Prefix (lowercase)",
+      "IsSecret": false,
+      "Parameter": {
+        "Type": "String",
+        "Description": "Module deployment prefix (lowercase)",
+        "AllowedPattern": null,
+        "AllowedValues": null,
+        "ConstraintDescription": null,
+        "Default": null,
+        "MinLength": null,
+        "MaxLength": null,
+        "MinValue": null,
+        "MaxValue": null,
+        "NoEcho": null
+      },
+      "Name": "DeploymentPrefixLowercase",
+      "FullName": "DeploymentPrefixLowercase",
+      "ResourceName": "@DeploymentPrefixLowercase",
+      "LogicalId": "DeploymentPrefixLowercase",
+      "Description": null,
+      "Scope": [],
+      "Reference": {
+        "Ref": "@DeploymentPrefixLowercase"
+      }
+    },
+    {
+      "Section": "LambdaSharp Deployment Settings (DO NOT MODIFY)",
+      "Label": "Parent Stack Name",
+      "IsSecret": false,
+      "Parameter": {
+        "Type": "String",
+        "Description": "Parent stack name for nested deployments, blank otherwise",
+        "AllowedPattern": null,
+        "AllowedValues": null,
+        "ConstraintDescription": null,
+        "Default": "",
+        "MinLength": null,
+        "MaxLength": null,
+        "MinValue": null,
+        "MaxValue": null,
+        "NoEcho": null
+      },
+      "Name": "DeploymentParent",
+      "FullName": "DeploymentParent",
+      "ResourceName": "@DeploymentParent",
+      "LogicalId": "DeploymentParent",
+      "Description": null,
+      "Scope": [],
+      "Reference": {
+        "Ref": "@DeploymentParent"
+      }
+    },
+    {
+      "Resource": {
+        "ServiceToken": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${@DeploymentPrefix}CustomResource-LambdaSharp::Register::Module"
+          }
+        },
+        "ModuleId": {
+          "Ref": "AWS::StackName"
+        },
+        "ModuleName": "TestModule",
+        "ModuleVersion": "1.0"
+      },
+      "DependsOn": [],
+      "Condition": null,
+      "Name": "Registration",
+      "FullName": "Module::Registration",
+      "ResourceName": "@ModuleRegistration",
+      "LogicalId": "ModuleRegistration",
+      "Description": null,
+      "Scope": [],
+      "Reference": {
+        "Ref": "AWS::NoValue"
+      }
+    },
+    {
+      "Resource": {
+        "AWSTypeName": "AWS::IAM::Role",
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Id": null,
+          "Statement": [
+            {
+              "Sid": "ModuleLambdaInvocation",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "NotPrincipal": null,
+              "Action": "sts:AssumeRole",
+              "NotAction": null,
+              "Resource": null,
+              "NotResource": null,
+              "Condition": null
+            }
+          ]
+        },
+        "ManagedPolicyArns": null,
+        "MaxSessionDuration": null,
+        "Path": null,
+        "Policies": [
+          {
+            "AWSTypeName": "AWS::IAM::Policy",
+            "Groups": null,
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Id": null,
+              "Statement": [
+                {
+                  "Sid": "SecretsDecryption",
+                  "Effect": "Allow",
+                  "Principal": null,
+                  "NotPrincipal": null,
+                  "Action": [
+                    "kms:Decrypt",
+                    "kms:Encrypt",
+                    "kms:GenerateDataKey",
+                    "kms:GenerateDataKeyWithoutPlaintext"
+                  ],
+                  "NotAction": null,
+                  "Resource": {
+                    "Fn::Split": [
+                      ",",
+                      {
+                        "Fn::If": [
+                          "SecretsIsEmpty",
+                          "",
+                          {
+                            "Fn::Join": [
+                              ",",
+                              [
+                                "",
+                                {
+                                  "Ref": "@Secrets"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "NotResource": null,
+                  "Condition": null
+                },
+                {
+                  "Sid": "ModuleDeadLetterQueueLogging",
+                  "Effect": "Allow",
+                  "Principal": null,
+                  "NotPrincipal": null,
+                  "Action": [
+                    "sqs:SendMessage"
+                  ],
+                  "NotAction": null,
+                  "Resource": {
+                    "Fn::If": [
+                      "LambdaSharpDeadLetterQueueArnIsImport",
+                      {
+                        "Fn::ImportValue": {
+                          "Fn::Sub": [
+                            "${@DeploymentPrefix}${Import}",
+                            {
+                              "Import": {
+                                "Fn::Select": [
+                                  "1",
+                                  {
+                                    "Fn::Split": [
+                                      "$",
+                                      {
+                                        "Ref": "@LambdaSharpDeadLetterQueueArn"
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "Ref": "@LambdaSharpDeadLetterQueueArn"
+                      }
+                    ]
+                  },
+                  "NotResource": null,
+                  "Condition": null
+                },
+                {
+                  "Sid": "ModuleLogStreamAccess",
+                  "Effect": "Allow",
+                  "Principal": null,
+                  "NotPrincipal": null,
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "NotAction": null,
+                  "Resource": "arn:aws:logs:*:*:*",
+                  "NotResource": null,
+                  "Condition": null
+                }
+              ]
+            },
+            "PolicyName": {
+              "Fn::Sub": "${AWS::StackName}ModulePolicy"
+            },
+            "Roles": null,
+            "Users": null
+          }
+        ],
+        "RoleName": null
+      },
+      "DependsOn": [],
+      "Condition": null,
+      "Name": "Role",
+      "FullName": "Module::Role",
+      "ResourceName": "@ModuleRole",
+      "LogicalId": "ModuleRole",
+      "Description": null,
+      "Scope": [],
+      "Reference": {
+        "Fn::GetAtt": [
+          "@ModuleRole",
+          "Arn"
+        ]
+      }
+    },
+    {
+      "Resource": {
+        "AWSTypeName": "AWS::IAM::Role",
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Id": null,
+          "Statement": [
+            {
+              "Sid": "CloudWatchLogsKinesisInvocation",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": {
+                  "Fn::Sub": "logs.${AWS::Region}.amazonaws.com"
+                }
+              },
+              "NotPrincipal": null,
+              "Action": "sts:AssumeRole",
+              "NotAction": null,
+              "Resource": null,
+              "NotResource": null,
+              "Condition": null
+            }
+          ]
+        },
+        "ManagedPolicyArns": null,
+        "MaxSessionDuration": null,
+        "Path": null,
+        "Policies": [
+          {
+            "AWSTypeName": "AWS::IAM::Policy",
+            "Groups": null,
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Id": null,
+              "Statement": [
+                {
+                  "Sid": "CloudWatchLogsKinesisPermissions",
+                  "Effect": "Allow",
+                  "Principal": null,
+                  "NotPrincipal": null,
+                  "Action": "kinesis:PutRecord",
+                  "NotAction": null,
+                  "Resource": {
+                    "Fn::If": [
+                      "LambdaSharpLoggingStreamArnIsImport",
+                      {
+                        "Fn::ImportValue": {
+                          "Fn::Sub": [
+                            "${@DeploymentPrefix}${Import}",
+                            {
+                              "Import": {
+                                "Fn::Select": [
+                                  "1",
+                                  {
+                                    "Fn::Split": [
+                                      "$",
+                                      {
+                                        "Ref": "@LambdaSharpLoggingStreamArn"
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "Ref": "@LambdaSharpLoggingStreamArn"
+                      }
+                    ]
+                  },
+                  "NotResource": null,
+                  "Condition": null
+                }
+              ]
+            },
+            "PolicyName": {
+              "Fn::Sub": "${AWS::StackName}ModuleCloudWatchLogsPolicy"
+            },
+            "Roles": null,
+            "Users": null
+          }
+        ],
+        "RoleName": null
+      },
+      "DependsOn": [],
+      "Condition": null,
+      "Name": "CloudWatchLogsRole",
+      "FullName": "Module::CloudWatchLogsRole",
+      "ResourceName": "@ModuleCloudWatchLogsRole",
+      "LogicalId": "ModuleCloudWatchLogsRole",
+      "Description": null,
+      "Scope": [],
+      "Reference": {
+        "Fn::GetAtt": [
+          "@ModuleCloudWatchLogsRole",
+          "Arn"
+        ]
+      }
+    },
+    {
+      "Resource": {
+        "AWSTypeName": "AWS::Logs::LogGroup",
+        "LogGroupName": {
+          "Fn::Sub": "/aws/lambda/${@Function}"
+        },
+        "RetentionInDays": 7
+      },
+      "DependsOn": [],
+      "Condition": null,
+      "Name": "LogGroup",
+      "FullName": "Function::LogGroup",
+      "ResourceName": "@FunctionLogGroup",
+      "LogicalId": "FunctionLogGroup",
+      "Description": null,
+      "Scope": [],
+      "Reference": {
+        "Fn::GetAtt": [
+          "@FunctionLogGroup",
+          "Arn"
+        ]
+      }
+    },
+    {
+      "Resource": {
+        "AWSTypeName": "AWS::Events::Rule",
+        "Description": null,
+        "EventPattern": null,
+        "Name": null,
+        "RoleArn": null,
+        "ScheduleExpression": "rate(1 minute)",
+        "State": null,
+        "Targets": [
+          {
+            "Arn": {
+              "Fn::GetAtt": [
+                "Function",
+                "Arn"
+              ]
+            },
+            "EcsParameters": null,
+            "Id": {
+              "Fn::Sub": "${AWS::StackName}-FunctionSource1ScheduleEvent"
+            },
+            "Input": null,
+            "InputPath": null,
+            "InputTransformer": {
+              "InputPathsMap": {
+                "version": "$.version",
+                "id": "$.id",
+                "source": "$.source",
+                "account": "$.account",
+                "time": "$.time",
+                "region": "$.region"
+              },
+              "InputTemplate": "{\r\n    \"Version\": <version>,\r\n    \"Id\": <id>,\r\n    \"Source\": <source>,\r\n    \"Account\": <account>,\r\n    \"Time\": <time>,\r\n    \"Region\": <region>,\r\n    \"tName\": \"MyTimer\"\r\n}"
+            },
+            "KinesisParameters": null,
+            "RoleArn": null,
+            "RunCommandParameters": null,
+            "SqsParameters": null
+          }
+        ]
+      },
+      "DependsOn": [],
+      "Condition": null,
+      "Name": "Source1ScheduleEvent",
+      "FullName": "Function::Source1ScheduleEvent",
+      "ResourceName": "@FunctionSource1ScheduleEvent",
+      "LogicalId": "FunctionSource1ScheduleEvent",
+      "Description": null,
+      "Scope": [],
+      "Reference": {
+        "Fn::GetAtt": [
+          "@FunctionSource1ScheduleEvent",
+          "Arn"
+        ]
+      }
+    },
+    {
+      "Resource": {
+        "AWSTypeName": "AWS::Lambda::Permission",
+        "Action": "lambda:InvokeFunction",
+        "EventSourceToken": null,
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "Function",
+            "Arn"
+          ]
+        },
+        "Principal": "events.amazonaws.com",
+        "SourceAccount": null,
+        "SourceArn": {
+          "Fn::GetAtt": [
+            "Function::Source1ScheduleEvent",
+            "Arn"
+          ]
+        }
+      },
+      "DependsOn": [],
+      "Condition": null,
+      "Name": "Source1Permission",
+      "FullName": "Function::Source1Permission",
+      "ResourceName": "@FunctionSource1Permission",
+      "LogicalId": "FunctionSource1Permission",
+      "Description": null,
+      "Scope": [],
+      "Reference": {
+        "Fn::GetAtt": [
+          "@FunctionSource1Permission",
+          "Arn"
+        ]
+      }
+    },
+    {
+      "Resource": {
+        "ServiceToken": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${@DeploymentPrefix}CustomResource-LambdaSharp::Register::Function"
+          }
+        },
+        "ModuleId": {
+          "Ref": "AWS::StackName"
+        },
+        "FunctionId": {
+          "Ref": "@Function"
+        },
+        "FunctionName": "Function",
+        "FunctionLogGroupName": {
+          "Fn::Sub": "/aws/lambda/${@Function}"
+        },
+        "FunctionPlatform": "AWS Lambda",
+        "FunctionFramework": "dotnetcore2.1",
+        "FunctionLanguage": "csharp",
+        "FunctionMaxMemory": "128",
+        "FunctionMaxDuration": "30"
+      },
+      "DependsOn": [
+        "ModuleRegistration"
+      ],
+      "Condition": null,
+      "Name": "Registration",
+      "FullName": "Function::Registration",
+      "ResourceName": "@FunctionRegistration",
+      "LogicalId": "FunctionRegistration",
+      "Description": null,
+      "Scope": [],
+      "Reference": {
+        "Ref": "AWS::NoValue"
+      }
+    },
+    {
+      "Resource": {
+        "AWSTypeName": "AWS::Logs::SubscriptionFilter",
+        "DestinationArn": {
+          "Fn::If": [
+            "LambdaSharpLoggingStreamArnIsImport",
+            {
+              "Fn::ImportValue": {
+                "Fn::Sub": [
+                  "${@DeploymentPrefix}${Import}",
+                  {
+                    "Import": {
+                      "Fn::Select": [
+                        "1",
+                        {
+                          "Fn::Split": [
+                            "$",
+                            {
+                              "Ref": "@LambdaSharpLoggingStreamArn"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "Ref": "@LambdaSharpLoggingStreamArn"
+            }
+          ]
+        },
+        "FilterPattern": "-\"*** \"",
+        "LogGroupName": {
+          "Fn::GetAtt": [
+            "@FunctionLogGroup",
+            "Arn"
+          ]
+        },
+        "RoleArn": {
+          "Fn::GetAtt": [
+            "Module::CloudWatchLogsRole",
+            "Arn"
+          ]
+        }
+      },
+      "DependsOn": [],
+      "Condition": null,
+      "Name": "LogGroupSubscription",
+      "FullName": "Function::LogGroupSubscription",
+      "ResourceName": "@FunctionLogGroupSubscription",
+      "LogicalId": "FunctionLogGroupSubscription",
+      "Description": null,
+      "Scope": [],
+      "Reference": {
+        "Fn::GetAtt": [
+          "@FunctionLogGroupSubscription",
+          "Arn"
+        ]
+      }
+    }
+  ]
+}

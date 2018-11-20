@@ -1,0 +1,16 @@
+Module: TestModule
+Description: LambdaSharp CloudFormation Test
+
+Variables:
+
+  - Var: MyResource
+    Description: A CloudFormation dummy resource
+    Resource:
+      Type: CustomResource::Handler
+      Properties:
+        Result: !Join [ ":", [ !Ref OtherResource, !GetAtt OtherResource.Arn ]]
+
+  - Var: OtherResource
+    Description: A CloudFormation dummy resource to reference
+    Resource:
+      Type: AWS::SNS::Topic

@@ -33,6 +33,17 @@ if [ -z "$1" ]; then
     lash Empty
     lash Empty-NoDependencies
     lash Empty-NoRegistration
+    lash Function-Base64
+    lash Function-Cidr
+    lash Function-GetAtt
+    lash Function-GetAZs
+    lash Function-ImportValue
+    lash Function-Join
+    lash Function-Ref
+    lash Function-Select
+    lash Function-Split
+    lash Function-Sub
+    lash Function-Transform
     lash Source-Topic
     lash Source-Timer
     lash Source-Api-SlackCommand
@@ -41,7 +52,6 @@ if [ -z "$1" ]; then
     lash Source-Sqs
     lash Source-Alexa
     lash Variables
-    lash CloudFormationFunctions
     lash Source-DynamoDB
     lash Source-Kinesis
     lash Inputs

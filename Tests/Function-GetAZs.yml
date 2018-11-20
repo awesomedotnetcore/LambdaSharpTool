@@ -1,0 +1,11 @@
+Module: TestModule
+Description: LambdaSharp CloudFormation Test
+
+Variables:
+
+  - Var: MyResource
+    Description: A CloudFormation dummy resource
+    Resource:
+      Type: CustomResource::Handler
+      Properties:
+        Result: !GetAZs "us-west-1"

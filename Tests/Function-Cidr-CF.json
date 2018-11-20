@@ -1,0 +1,230 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "LambdaSharp CloudFormation Test (v1.0)",
+  "Parameters": {
+    "Secrets": {
+      "Type": "String",
+      "Description": "Comma-separated list of optional secret keys",
+      "Default": ""
+    },
+    "LambdaSharpDeadLetterQueueArn": {
+      "Type": "String",
+      "Description": "Dead letter queue for functions",
+      "AllowedPattern": "^.+$",
+      "ConstraintDescription": "must either be a cross-module import reference or a non-blank value",
+      "Default": "$LambdaSharp::DeadLetterQueueArn"
+    },
+    "LambdaSharpLoggingStreamArn": {
+      "Type": "String",
+      "Description": "Logging kinesis stream for functions",
+      "AllowedPattern": "^.+$",
+      "ConstraintDescription": "must either be a cross-module import reference or a non-blank value",
+      "Default": "$LambdaSharp::LoggingStreamArn"
+    },
+    "LambdaSharpDefaultSecretKeyArn": {
+      "Type": "String",
+      "Description": "Default secret key for functions",
+      "AllowedPattern": "^.+$",
+      "ConstraintDescription": "must either be a cross-module import reference or a non-blank value",
+      "Default": "$LambdaSharp::DefaultSecretKeyArn"
+    },
+    "DeploymentBucketName": {
+      "Type": "String",
+      "Description": "Source deployment S3 bucket name"
+    },
+    "DeploymentPrefix": {
+      "Type": "String",
+      "Description": "Module deployment prefix"
+    },
+    "DeploymentPrefixLowercase": {
+      "Type": "String",
+      "Description": "Module deployment prefix (lowercase)"
+    },
+    "DeploymentParent": {
+      "Type": "String",
+      "Description": "Parent stack name for nested deployments, blank otherwise",
+      "Default": ""
+    }
+  },
+  "Resources": {
+    "MyResource": {
+      "Type": "Custom::CustomResourceHandler",
+      "Properties": {
+        "Result": {
+          "Fn::Cidr": [
+            "192.168.0.0/24",
+            "6",
+            "5"
+          ]
+        },
+        "ServiceToken": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${@DeploymentPrefix}CustomResource-CustomResource::Handler"
+          }
+        }
+      }
+    },
+    "ModuleRegistration": {
+      "Type": "Custom::LambdaSharpRegisterModule",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${@DeploymentPrefix}CustomResource-LambdaSharp::Register::Module"
+          }
+        },
+        "ModuleId": {
+          "Ref": "AWS::StackName"
+        },
+        "ModuleName": "TestModule",
+        "ModuleVersion": "1.0"
+      }
+    }
+  },
+  "Outputs": {
+    "ModuleName": {
+      "Value": "TestModule"
+    },
+    "ModuleVersion": {
+      "Value": "1.0"
+    }
+  },
+  "Conditions": {
+    "SecretsIsEmpty": {
+      "Fn::Equals": [
+        {
+          "Ref": "@Secrets"
+        },
+        ""
+      ]
+    },
+    "LambdaSharpDeadLetterQueueArnIsImport": {
+      "Fn::Equals": [
+        {
+          "Fn::Select": [
+            "0",
+            {
+              "Fn::Split": [
+                "$",
+                {
+                  "Ref": "@LambdaSharpDeadLetterQueueArn"
+                }
+              ]
+            }
+          ]
+        },
+        ""
+      ]
+    },
+    "LambdaSharpLoggingStreamArnIsImport": {
+      "Fn::Equals": [
+        {
+          "Fn::Select": [
+            "0",
+            {
+              "Fn::Split": [
+                "$",
+                {
+                  "Ref": "@LambdaSharpLoggingStreamArn"
+                }
+              ]
+            }
+          ]
+        },
+        ""
+      ]
+    },
+    "LambdaSharpDefaultSecretKeyArnIsImport": {
+      "Fn::Equals": [
+        {
+          "Fn::Select": [
+            "0",
+            {
+              "Fn::Split": [
+                "$",
+                {
+                  "Ref": "@LambdaSharpDefaultSecretKeyArn"
+                }
+              ]
+            }
+          ]
+        },
+        ""
+      ]
+    },
+    "ModuleIsNotNested": {
+      "Fn::Equals": [
+        {
+          "Ref": "DeploymentParent"
+        },
+        ""
+      ]
+    }
+  },
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterLabels": {
+        "Secrets": {
+          "default": "Secret Keys (ARNs)"
+        },
+        "LambdaSharpDeadLetterQueueArn": {
+          "default": "Dead Letter Queue (ARN)"
+        },
+        "LambdaSharpLoggingStreamArn": {
+          "default": "Logging Stream (ARN)"
+        },
+        "LambdaSharpDefaultSecretKeyArn": {
+          "default": "Secret Key (ARN)"
+        },
+        "DeploymentBucketName": {
+          "default": "Deployment S3 Bucket"
+        },
+        "DeploymentPrefix": {
+          "default": "Deployment Prefix"
+        },
+        "DeploymentPrefixLowercase": {
+          "default": "Deployment Prefix (lowercase)"
+        },
+        "DeploymentParent": {
+          "default": "Parent Stack Name"
+        }
+      },
+      "ParameterGroups": [
+        {
+          "Label": {
+            "default": "LambdaSharp Module Options"
+          },
+          "Parameters": [
+            "Secrets"
+          ]
+        },
+        {
+          "Label": {
+            "default": "LambdaSharp Dependencies"
+          },
+          "Parameters": [
+            "LambdaSharpDeadLetterQueueArn",
+            "LambdaSharpLoggingStreamArn",
+            "LambdaSharpDefaultSecretKeyArn"
+          ]
+        },
+        {
+          "Label": {
+            "default": "LambdaSharp Deployment Settings (DO NOT MODIFY)"
+          },
+          "Parameters": [
+            "DeploymentBucketName",
+            "DeploymentPrefix",
+            "DeploymentPrefixLowercase",
+            "DeploymentParent"
+          ]
+        }
+      ]
+    },
+    "LambdaSharp::Manifest": {
+      "Version": "2018-10-22",
+      "ModuleName": "TestModule",
+      "ModuleVersion": "1.0",
+      "Pragmas": []
+    }
+  }
+}

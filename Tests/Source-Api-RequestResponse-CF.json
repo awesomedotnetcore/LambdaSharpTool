@@ -47,12 +47,134 @@
     }
   },
   "Resources": {
+    "Function": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "ZipFile": "Function-NOCOMPILE.zip"
+        },
+        "DeadLetterConfig": {
+          "TargetArn": {
+            "Fn::If": [
+              "LambdaSharpDeadLetterQueueArnIsImport",
+              {
+                "Fn::ImportValue": {
+                  "Fn::Sub": [
+                    "${@DeploymentPrefix}${Import}",
+                    {
+                      "Import": {
+                        "Fn::Select": [
+                          "1",
+                          {
+                            "Fn::Split": [
+                              "$",
+                              {
+                                "Ref": "@LambdaSharpDeadLetterQueueArn"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "Ref": "@LambdaSharpDeadLetterQueueArn"
+              }
+            ]
+          }
+        },
+        "Description": "My function (v1.0)",
+        "Environment": {
+          "Variables": {
+            "MODULE_NAME": "TestModule",
+            "MODULE_ID": {
+              "Ref": "AWS::StackName"
+            },
+            "MODULE_VERSION": "1.0",
+            "LAMBDA_NAME": "Function",
+            "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "DEADLETTERQUEUE": {
+              "Fn::If": [
+                "LambdaSharpDeadLetterQueueArnIsImport",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": [
+                      "${@DeploymentPrefix}${Import}",
+                      {
+                        "Import": {
+                          "Fn::Select": [
+                            "1",
+                            {
+                              "Fn::Split": [
+                                "$",
+                                {
+                                  "Ref": "@LambdaSharpDeadLetterQueueArn"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "Ref": "@LambdaSharpDeadLetterQueueArn"
+                }
+              ]
+            },
+            "DEFAULTSECRETKEY": {
+              "Fn::If": [
+                "LambdaSharpDefaultSecretKeyArnIsImport",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": [
+                      "${@DeploymentPrefix}${Import}",
+                      {
+                        "Import": {
+                          "Fn::Select": [
+                            "1",
+                            {
+                              "Fn::Split": [
+                                "$",
+                                {
+                                  "Ref": "@LambdaSharpDefaultSecretKeyArn"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "Ref": "@LambdaSharpDefaultSecretKeyArn"
+                }
+              ]
+            }
+          }
+        },
+        "Handler": "TestModule.Function::MindTouch.LambdaSharpTestModule.Function.Function::FunctionHandlerAsync",
+        "MemorySize": "128",
+        "Role": {
+          "Fn::GetAtt": [
+            "Module::Role",
+            "Arn"
+          ]
+        },
+        "Runtime": "dotnetcore2.1",
+        "Timeout": "30"
+      }
+    },
     "ModuleRegistration": {
       "Type": "Custom::LambdaSharpRegisterModule",
       "Properties": {
         "ServiceToken": {
           "Fn::ImportValue": {
-            "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::Register::Module"
+            "Fn::Sub": "${@DeploymentPrefix}CustomResource-LambdaSharp::Register::Module"
           }
         },
         "ModuleId": {
@@ -62,7 +184,115 @@
         "ModuleVersion": "1.0"
       }
     },
-    "CloudWatchLogsRole": {
+    "ModuleRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "ModuleLambdaInvocation",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Sid": "SecretsDecryption",
+                  "Effect": "Allow",
+                  "Action": [
+                    "kms:Decrypt",
+                    "kms:Encrypt",
+                    "kms:GenerateDataKey",
+                    "kms:GenerateDataKeyWithoutPlaintext"
+                  ],
+                  "Resource": {
+                    "Fn::Split": [
+                      ",",
+                      {
+                        "Fn::If": [
+                          "SecretsIsEmpty",
+                          "",
+                          {
+                            "Fn::Join": [
+                              ",",
+                              [
+                                "",
+                                {
+                                  "Ref": "@Secrets"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                },
+                {
+                  "Sid": "ModuleDeadLetterQueueLogging",
+                  "Effect": "Allow",
+                  "Action": [
+                    "sqs:SendMessage"
+                  ],
+                  "Resource": {
+                    "Fn::If": [
+                      "LambdaSharpDeadLetterQueueArnIsImport",
+                      {
+                        "Fn::ImportValue": {
+                          "Fn::Sub": [
+                            "${@DeploymentPrefix}${Import}",
+                            {
+                              "Import": {
+                                "Fn::Select": [
+                                  "1",
+                                  {
+                                    "Fn::Split": [
+                                      "$",
+                                      {
+                                        "Ref": "@LambdaSharpDeadLetterQueueArn"
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "Ref": "@LambdaSharpDeadLetterQueueArn"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "Sid": "ModuleLogStreamAccess",
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": "arn:aws:logs:*:*:*"
+                }
+              ]
+            },
+            "PolicyName": {
+              "Fn::Sub": "${AWS::StackName}ModulePolicy"
+            }
+          }
+        ]
+      }
+    },
+    "ModuleCloudWatchLogsRole": {
       "Type": "AWS::IAM::Role",
       "Properties": {
         "AssumeRolePolicyDocument": {
@@ -95,7 +325,7 @@
                       {
                         "Fn::ImportValue": {
                           "Fn::Sub": [
-                            "${DeploymentPrefix}${Import}",
+                            "${@DeploymentPrefix}${Import}",
                             {
                               "Import": {
                                 "Fn::Select": [
@@ -104,7 +334,7 @@
                                     "Fn::Split": [
                                       "$",
                                       {
-                                        "Ref": "LambdaSharpLoggingStreamArn"
+                                        "Ref": "@LambdaSharpLoggingStreamArn"
                                       }
                                     ]
                                   }
@@ -115,7 +345,7 @@
                         }
                       },
                       {
-                        "Ref": "LambdaSharpLoggingStreamArn"
+                        "Ref": "@LambdaSharpLoggingStreamArn"
                       }
                     ]
                   }
@@ -129,170 +359,13 @@
         ]
       }
     },
-    "ModuleRole": {
-      "Type": "AWS::IAM::Role",
+    "FunctionLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
       "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Version": "2012-10-17",
-          "Statement": [
-            {
-              "Sid": "ModuleLambdaInvocation",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "lambda.amazonaws.com"
-              },
-              "Action": "sts:AssumeRole"
-            }
-          ]
+        "LogGroupName": {
+          "Fn::Sub": "/aws/lambda/${@Function}"
         },
-        "Policies": [
-          {
-            "PolicyDocument": {
-              "Version": "2012-10-17",
-              "Statement": [
-                {
-                  "Sid": "ModuleLogStreamAccess",
-                  "Effect": "Allow",
-                  "Action": [
-                    "logs:CreateLogStream",
-                    "logs:PutLogEvents"
-                  ],
-                  "Resource": "arn:aws:logs:*:*:*"
-                },
-                {
-                  "Sid": "SecretsDecryption",
-                  "Effect": "Allow",
-                  "Action": [
-                    "kms:Decrypt",
-                    "kms:Encrypt",
-                    "kms:GenerateDataKey",
-                    "kms:GenerateDataKeyWithoutPlaintext"
-                  ],
-                  "Resource": {
-                    "Fn::Split": [
-                      ",",
-                      {
-                        "Fn::If": [
-                          "SecretsIsEmpty",
-                          {
-                            "Fn::If": [
-                              "LambdaSharpDefaultSecretKeyArnIsImport",
-                              {
-                                "Fn::ImportValue": {
-                                  "Fn::Sub": [
-                                    "${DeploymentPrefix}${Import}",
-                                    {
-                                      "Import": {
-                                        "Fn::Select": [
-                                          "1",
-                                          {
-                                            "Fn::Split": [
-                                              "$",
-                                              {
-                                                "Ref": "LambdaSharpDefaultSecretKeyArn"
-                                              }
-                                            ]
-                                          }
-                                        ]
-                                      }
-                                    }
-                                  ]
-                                }
-                              },
-                              {
-                                "Ref": "LambdaSharpDefaultSecretKeyArn"
-                              }
-                            ]
-                          },
-                          {
-                            "Fn::Join": [
-                              ",",
-                              [
-                                {
-                                  "Fn::If": [
-                                    "LambdaSharpDefaultSecretKeyArnIsImport",
-                                    {
-                                      "Fn::ImportValue": {
-                                        "Fn::Sub": [
-                                          "${DeploymentPrefix}${Import}",
-                                          {
-                                            "Import": {
-                                              "Fn::Select": [
-                                                "1",
-                                                {
-                                                  "Fn::Split": [
-                                                    "$",
-                                                    {
-                                                      "Ref": "LambdaSharpDefaultSecretKeyArn"
-                                                    }
-                                                  ]
-                                                }
-                                              ]
-                                            }
-                                          }
-                                        ]
-                                      }
-                                    },
-                                    {
-                                      "Ref": "LambdaSharpDefaultSecretKeyArn"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "Ref": "Secrets"
-                                }
-                              ]
-                            ]
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                },
-                {
-                  "Sid": "ModuleDeadLetterQueueLogging",
-                  "Effect": "Allow",
-                  "Action": [
-                    "sqs:SendMessage"
-                  ],
-                  "Resource": {
-                    "Fn::If": [
-                      "LambdaSharpDeadLetterQueueArnIsImport",
-                      {
-                        "Fn::ImportValue": {
-                          "Fn::Sub": [
-                            "${DeploymentPrefix}${Import}",
-                            {
-                              "Import": {
-                                "Fn::Select": [
-                                  "1",
-                                  {
-                                    "Fn::Split": [
-                                      "$",
-                                      {
-                                        "Ref": "LambdaSharpDeadLetterQueueArn"
-                                      }
-                                    ]
-                                  }
-                                ]
-                              }
-                            }
-                          ]
-                        }
-                      },
-                      {
-                        "Ref": "LambdaSharpDeadLetterQueueArn"
-                      }
-                    ]
-                  }
-                }
-              ]
-            },
-            "PolicyName": {
-              "Fn::Sub": "${AWS::StackName}ModulePolicy"
-            }
-          }
-        ]
+        "RetentionInDays": 7
       }
     },
     "FunctionRegistration": {
@@ -300,18 +373,18 @@
       "Properties": {
         "ServiceToken": {
           "Fn::ImportValue": {
-            "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::Register::Function"
+            "Fn::Sub": "${@DeploymentPrefix}CustomResource-LambdaSharp::Register::Function"
           }
         },
         "ModuleId": {
           "Ref": "AWS::StackName"
         },
         "FunctionId": {
-          "Ref": "Function"
+          "Ref": "@Function"
         },
         "FunctionName": "Function",
         "FunctionLogGroupName": {
-          "Fn::Sub": "/aws/lambda/${Function}"
+          "Fn::Sub": "/aws/lambda/${@Function}"
         },
         "FunctionPlatform": "AWS Lambda",
         "FunctionFramework": "dotnetcore2.1",
@@ -323,142 +396,6 @@
         "ModuleRegistration"
       ]
     },
-    "Function": {
-      "Type": "AWS::Lambda::Function",
-      "Properties": {
-        "Code": {
-          "S3Bucket": {
-            "Ref": "DeploymentBucketName"
-          },
-          "S3Key": {
-            "Fn::Sub": "Modules/TestModule/Assets/Function-NOCOMPILE.zip"
-          }
-        },
-        "DeadLetterConfig": {
-          "TargetArn": {
-            "Fn::If": [
-              "LambdaSharpDeadLetterQueueArnIsImport",
-              {
-                "Fn::ImportValue": {
-                  "Fn::Sub": [
-                    "${DeploymentPrefix}${Import}",
-                    {
-                      "Import": {
-                        "Fn::Select": [
-                          "1",
-                          {
-                            "Fn::Split": [
-                              "$",
-                              {
-                                "Ref": "LambdaSharpDeadLetterQueueArn"
-                              }
-                            ]
-                          }
-                        ]
-                      }
-                    }
-                  ]
-                }
-              },
-              {
-                "Ref": "LambdaSharpDeadLetterQueueArn"
-              }
-            ]
-          }
-        },
-        "Description": "My function (v1.0)",
-        "Environment": {
-          "Variables": {
-            "MODULE_NAME": "TestModule",
-            "MODULE_ID": {
-              "Ref": "AWS::StackName"
-            },
-            "MODULE_VERSION": "1.0",
-            "LAMBDA_NAME": "Function",
-            "LAMBDA_RUNTIME": "dotnetcore2.1",
-            "DEADLETTERQUEUE": {
-              "Fn::If": [
-                "LambdaSharpDeadLetterQueueArnIsImport",
-                {
-                  "Fn::ImportValue": {
-                    "Fn::Sub": [
-                      "${DeploymentPrefix}${Import}",
-                      {
-                        "Import": {
-                          "Fn::Select": [
-                            "1",
-                            {
-                              "Fn::Split": [
-                                "$",
-                                {
-                                  "Ref": "LambdaSharpDeadLetterQueueArn"
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      }
-                    ]
-                  }
-                },
-                {
-                  "Ref": "LambdaSharpDeadLetterQueueArn"
-                }
-              ]
-            },
-            "DEFAULTSECRETKEY": {
-              "Fn::If": [
-                "LambdaSharpDefaultSecretKeyArnIsImport",
-                {
-                  "Fn::ImportValue": {
-                    "Fn::Sub": [
-                      "${DeploymentPrefix}${Import}",
-                      {
-                        "Import": {
-                          "Fn::Select": [
-                            "1",
-                            {
-                              "Fn::Split": [
-                                "$",
-                                {
-                                  "Ref": "LambdaSharpDefaultSecretKeyArn"
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      }
-                    ]
-                  }
-                },
-                {
-                  "Ref": "LambdaSharpDefaultSecretKeyArn"
-                }
-              ]
-            }
-          }
-        },
-        "Handler": "TestModule.Function::MindTouch.LambdaSharpTestModule.Function.Function::FunctionHandlerAsync",
-        "MemorySize": "128",
-        "Role": {
-          "Fn::GetAtt": [
-            "ModuleRole",
-            "Arn"
-          ]
-        },
-        "Runtime": "dotnetcore2.1",
-        "Timeout": "30"
-      }
-    },
-    "FunctionLogGroup": {
-      "Type": "AWS::Logs::LogGroup",
-      "Properties": {
-        "LogGroupName": {
-          "Fn::Sub": "/aws/lambda/${Function}"
-        },
-        "RetentionInDays": 7
-      }
-    },
     "FunctionLogGroupSubscription": {
       "Type": "AWS::Logs::SubscriptionFilter",
       "Properties": {
@@ -468,7 +405,7 @@
             {
               "Fn::ImportValue": {
                 "Fn::Sub": [
-                  "${DeploymentPrefix}${Import}",
+                  "${@DeploymentPrefix}${Import}",
                   {
                     "Import": {
                       "Fn::Select": [
@@ -477,7 +414,7 @@
                           "Fn::Split": [
                             "$",
                             {
-                              "Ref": "LambdaSharpLoggingStreamArn"
+                              "Ref": "@LambdaSharpLoggingStreamArn"
                             }
                           ]
                         }
@@ -488,17 +425,20 @@
               }
             },
             {
-              "Ref": "LambdaSharpLoggingStreamArn"
+              "Ref": "@LambdaSharpLoggingStreamArn"
             }
           ]
         },
         "FilterPattern": "-\"*** \"",
         "LogGroupName": {
-          "Ref": "FunctionLogGroup"
+          "Fn::GetAtt": [
+            "@FunctionLogGroup",
+            "Arn"
+          ]
         },
         "RoleArn": {
           "Fn::GetAtt": [
-            "CloudWatchLogsRole",
+            "Module::CloudWatchLogsRole",
             "Arn"
           ]
         }
@@ -507,84 +447,32 @@
     "ModuleRestApi": {
       "Type": "AWS::ApiGateway::RestApi",
       "Properties": {
-        "Description": "TestModule API (v1.0)",
+        "Description": "${Module::Name} API (v${Module::Version})",
         "FailOnWarnings": true,
         "Name": {
           "Fn::Sub": "${AWS::StackName} Module API"
         }
       }
     },
-    "ModuleRestApiRole": {
-      "Type": "AWS::IAM::Role",
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Version": "2012-10-17",
-          "Statement": [
-            {
-              "Sid": "ModuleRestApiInvocation",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "apigateway.amazonaws.com"
-              },
-              "Action": "sts:AssumeRole"
-            }
-          ]
-        },
-        "Policies": [
-          {
-            "PolicyDocument": {
-              "Version": "2012-10-17",
-              "Statement": [
-                {
-                  "Sid": "ModuleRestApiLogging",
-                  "Effect": "Allow",
-                  "Action": [
-                    "logs:CreateLogGroup",
-                    "logs:CreateLogStream",
-                    "logs:DescribeLogGroups",
-                    "logs:DescribeLogStreams",
-                    "logs:PutLogEvents",
-                    "logs:GetLogEvents",
-                    "logs:FilterLogEvents"
-                  ],
-                  "Resource": "*"
-                }
-              ]
-            },
-            "PolicyName": {
-              "Fn::Sub": "${AWS::StackName}ModuleRestApiPolicy"
-            }
-          }
-        ]
-      }
-    },
-    "ModuleRestApiAccount": {
-      "Type": "AWS::ApiGateway::Account",
-      "Properties": {
-        "CloudWatchRoleArn": {
-          "Fn::GetAtt": [
-            "ModuleRestApiRole",
-            "Arn"
-          ]
-        }
-      }
-    },
-    "ModuleRestApiItemsResource": {
+    "Module::RestApiItemsResource": {
       "Type": "AWS::ApiGateway::Resource",
       "Properties": {
         "ParentId": {
           "Fn::GetAtt": [
-            "ModuleRestApi",
+            "Module::RestApi",
             "RootResourceId"
           ]
         },
         "PathPart": "items",
         "RestApiId": {
-          "Ref": "ModuleRestApi"
+          "Fn::GetAtt": [
+            "@ModuleRestApi",
+            "Arn"
+          ]
         }
       }
     },
-    "ModuleRestApiItemsGET": {
+    "Module::RestApi::ItemsResourceGET": {
       "Type": "AWS::ApiGateway::Method",
       "Properties": {
         "AuthorizationType": "NONE",
@@ -607,14 +495,20 @@
           }
         },
         "ResourceId": {
-          "Ref": "ModuleRestApiItemsResource"
+          "Fn::GetAtt": [
+            "@Module::RestApiItemsResource",
+            "Arn"
+          ]
         },
         "RestApiId": {
-          "Ref": "ModuleRestApi"
+          "Fn::GetAtt": [
+            "@ModuleRestApi",
+            "Arn"
+          ]
         }
       }
     },
-    "FunctionModuleRestApiItemsGETPermission": {
+    "Module::RestApi::ItemsResource::GETPermission": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "Action": "lambda:InvokeFunction",
@@ -626,11 +520,21 @@
         },
         "Principal": "apigateway.amazonaws.com",
         "SourceArn": {
-          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleRestApi}/LATEST/GET/items"
+          "Fn::Sub": [
+            "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${P0}/LATEST/GET/items",
+            {
+              "P0": {
+                "Fn::GetAtt": [
+                  "@ModuleRestApi",
+                  "Arn"
+                ]
+              }
+            }
+          ]
         }
       }
     },
-    "ModuleRestApiItemsPOST": {
+    "Module::RestApi::ItemsResourcePOST": {
       "Type": "AWS::ApiGateway::Method",
       "Properties": {
         "AuthorizationType": "NONE",
@@ -653,14 +557,20 @@
           }
         },
         "ResourceId": {
-          "Ref": "ModuleRestApiItemsResource"
+          "Fn::GetAtt": [
+            "@Module::RestApiItemsResource",
+            "Arn"
+          ]
         },
         "RestApiId": {
-          "Ref": "ModuleRestApi"
+          "Fn::GetAtt": [
+            "@ModuleRestApi",
+            "Arn"
+          ]
         }
       }
     },
-    "FunctionModuleRestApiItemsPOSTPermission": {
+    "Module::RestApi::ItemsResource::POSTPermission": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "Action": "lambda:InvokeFunction",
@@ -672,23 +582,39 @@
         },
         "Principal": "apigateway.amazonaws.com",
         "SourceArn": {
-          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleRestApi}/LATEST/POST/items"
+          "Fn::Sub": [
+            "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${P0}/LATEST/POST/items",
+            {
+              "P0": {
+                "Fn::GetAtt": [
+                  "@ModuleRestApi",
+                  "Arn"
+                ]
+              }
+            }
+          ]
         }
       }
     },
-    "ModuleRestApiItemsIdResource": {
+    "Module::RestApi::ItemsResourceIdResource": {
       "Type": "AWS::ApiGateway::Resource",
       "Properties": {
         "ParentId": {
-          "Ref": "ModuleRestApiItemsResource"
+          "Fn::GetAtt": [
+            "@Module::RestApiItemsResource",
+            "Arn"
+          ]
         },
         "PathPart": "{id}",
         "RestApiId": {
-          "Ref": "ModuleRestApi"
+          "Fn::GetAtt": [
+            "@ModuleRestApi",
+            "Arn"
+          ]
         }
       }
     },
-    "ModuleRestApiItemsIdGET": {
+    "Module::RestApi::ItemsResource::IdResourceGET": {
       "Type": "AWS::ApiGateway::Method",
       "Properties": {
         "AuthorizationType": "NONE",
@@ -711,14 +637,20 @@
           }
         },
         "ResourceId": {
-          "Ref": "ModuleRestApiItemsIdResource"
+          "Fn::GetAtt": [
+            "@Module::RestApi::ItemsResourceIdResource",
+            "Arn"
+          ]
         },
         "RestApiId": {
-          "Ref": "ModuleRestApi"
+          "Fn::GetAtt": [
+            "@ModuleRestApi",
+            "Arn"
+          ]
         }
       }
     },
-    "FunctionModuleRestApiItemsIdGETPermission": {
+    "Module::RestApi::ItemsResource::IdResource::GETPermission": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "Action": "lambda:InvokeFunction",
@@ -730,11 +662,21 @@
         },
         "Principal": "apigateway.amazonaws.com",
         "SourceArn": {
-          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleRestApi}/LATEST/GET/items/{id}"
+          "Fn::Sub": [
+            "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${P0}/LATEST/GET/items/{id}",
+            {
+              "P0": {
+                "Fn::GetAtt": [
+                  "@ModuleRestApi",
+                  "Arn"
+                ]
+              }
+            }
+          ]
         }
       }
     },
-    "ModuleRestApiItemsIdPUT": {
+    "Module::RestApi::ItemsResource::IdResourcePUT": {
       "Type": "AWS::ApiGateway::Method",
       "Properties": {
         "AuthorizationType": "NONE",
@@ -758,14 +700,20 @@
         },
         "OperationName": "UpdateItem",
         "ResourceId": {
-          "Ref": "ModuleRestApiItemsIdResource"
+          "Fn::GetAtt": [
+            "@Module::RestApi::ItemsResourceIdResource",
+            "Arn"
+          ]
         },
         "RestApiId": {
-          "Ref": "ModuleRestApi"
+          "Fn::GetAtt": [
+            "@ModuleRestApi",
+            "Arn"
+          ]
         }
       }
     },
-    "FunctionModuleRestApiItemsIdPUTPermission": {
+    "Module::RestApi::ItemsResource::IdResource::PUTPermission": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "Action": "lambda:InvokeFunction",
@@ -777,11 +725,21 @@
         },
         "Principal": "apigateway.amazonaws.com",
         "SourceArn": {
-          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleRestApi}/LATEST/PUT/items/{id}"
+          "Fn::Sub": [
+            "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${P0}/LATEST/PUT/items/{id}",
+            {
+              "P0": {
+                "Fn::GetAtt": [
+                  "@ModuleRestApi",
+                  "Arn"
+                ]
+              }
+            }
+          ]
         }
       }
     },
-    "ModuleRestApiItemsIdDELETE": {
+    "Module::RestApi::ItemsResource::IdResourceDELETE": {
       "Type": "AWS::ApiGateway::Method",
       "Properties": {
         "ApiKeyRequired": true,
@@ -805,14 +763,20 @@
           }
         },
         "ResourceId": {
-          "Ref": "ModuleRestApiItemsIdResource"
+          "Fn::GetAtt": [
+            "@Module::RestApi::ItemsResourceIdResource",
+            "Arn"
+          ]
         },
         "RestApiId": {
-          "Ref": "ModuleRestApi"
+          "Fn::GetAtt": [
+            "@ModuleRestApi",
+            "Arn"
+          ]
         }
       }
     },
-    "FunctionModuleRestApiItemsIdDELETEPermission": {
+    "Module::RestApi::ItemsResource::IdResource::DELETEPermission": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "Action": "lambda:InvokeFunction",
@@ -824,33 +788,97 @@
         },
         "Principal": "apigateway.amazonaws.com",
         "SourceArn": {
-          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleRestApi}/LATEST/DELETE/items/{id}"
+          "Fn::Sub": [
+            "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${P0}/LATEST/DELETE/items/{id}",
+            {
+              "P0": {
+                "Fn::GetAtt": [
+                  "@ModuleRestApi",
+                  "Arn"
+                ]
+              }
+            }
+          ]
         }
       }
     },
-    "ModuleRestApiDeployment9F01E7337835B8E68F494C84894209F7": {
+    "Module::RestApiRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "Module::RestApi::Invocation",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "apigateway.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Sid": "Module::RestApi::Logging",
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogGroup",
+                    "logs:CreateLogStream",
+                    "logs:DescribeLogGroups",
+                    "logs:DescribeLogStreams",
+                    "logs:PutLogEvents",
+                    "logs:GetLogEvents",
+                    "logs:FilterLogEvents"
+                  ],
+                  "Resource": "*"
+                }
+              ]
+            },
+            "PolicyName": {
+              "Fn::Sub": "${AWS::StackName}ModuleRestApiPolicy"
+            }
+          }
+        ]
+      }
+    },
+    "Module::RestApiAccount": {
+      "Type": "AWS::ApiGateway::Account",
+      "Properties": {
+        "CloudWatchRoleArn": {
+          "Fn::GetAtt": [
+            "Module::RestApi::Role",
+            "Arn"
+          ]
+        }
+      }
+    },
+    "Module::RestApiDeployment8257107B13775FFA2B1DBD1C67D34D91": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
         "Description": {
-          "Fn::Sub": "${AWS::StackName} API [9F01E7337835B8E68F494C84894209F7]"
+          "Fn::Sub": "${AWS::StackName} API [8257107B13775FFA2B1DBD1C67D34D91]"
         },
         "RestApiId": {
-          "Ref": "ModuleRestApi"
+          "Fn::GetAtt": [
+            "@ModuleRestApi",
+            "Arn"
+          ]
         }
-      },
-      "DependsOn": [
-        "ModuleRestApiItemsGET",
-        "ModuleRestApiItemsPOST",
-        "ModuleRestApiItemsIdGET",
-        "ModuleRestApiItemsIdPUT",
-        "ModuleRestApiItemsIdDELETE"
-      ]
+      }
     },
-    "ModuleRestApiStage": {
+    "Module::RestApiStage": {
       "Type": "AWS::ApiGateway::Stage",
       "Properties": {
         "DeploymentId": {
-          "Ref": "ModuleRestApiDeployment9F01E7337835B8E68F494C84894209F7"
+          "Fn::GetAtt": [
+            "@Module::RestApiDeployment8257107B13775FFA2B1DBD1C67D34D91",
+            "Arn"
+          ]
         },
         "MethodSettings": [
           {
@@ -861,12 +889,15 @@
           }
         ],
         "RestApiId": {
-          "Ref": "ModuleRestApi"
+          "Fn::GetAtt": [
+            "@ModuleRestApi",
+            "Arn"
+          ]
         },
         "StageName": "LATEST"
       },
       "DependsOn": [
-        "ModuleRestApiAccount"
+        "Module::RestApiAccount"
       ]
     }
   },
@@ -879,6 +910,14 @@
     }
   },
   "Conditions": {
+    "SecretsIsEmpty": {
+      "Fn::Equals": [
+        {
+          "Ref": "@Secrets"
+        },
+        ""
+      ]
+    },
     "LambdaSharpDeadLetterQueueArnIsImport": {
       "Fn::Equals": [
         {
@@ -888,7 +927,7 @@
               "Fn::Split": [
                 "$",
                 {
-                  "Ref": "LambdaSharpDeadLetterQueueArn"
+                  "Ref": "@LambdaSharpDeadLetterQueueArn"
                 }
               ]
             }
@@ -906,7 +945,7 @@
               "Fn::Split": [
                 "$",
                 {
-                  "Ref": "LambdaSharpLoggingStreamArn"
+                  "Ref": "@LambdaSharpLoggingStreamArn"
                 }
               ]
             }
@@ -924,7 +963,7 @@
               "Fn::Split": [
                 "$",
                 {
-                  "Ref": "LambdaSharpDefaultSecretKeyArn"
+                  "Ref": "@LambdaSharpDefaultSecretKeyArn"
                 }
               ]
             }
@@ -937,14 +976,6 @@
       "Fn::Equals": [
         {
           "Ref": "DeploymentParent"
-        },
-        ""
-      ]
-    },
-    "SecretsIsEmpty": {
-      "Fn::Equals": [
-        {
-          "Ref": "Secrets"
         },
         ""
       ]
