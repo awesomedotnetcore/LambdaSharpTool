@@ -36,14 +36,14 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public IList<string> Allow { get; set; }
     }
 
-    public class ModuleEntry<TResource> where TResource : AResource {
+    public class ModuleEntry {
 
         //--- Fields ---
         public readonly string FullName;
         public readonly string Description;
         public readonly string ResourceName;
         public readonly string LogicalId;
-        public readonly TResource Resource;
+        public readonly AResource Resource;
 
         //--- Constructors ---
         public ModuleEntry(
@@ -51,7 +51,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             string description,
             object reference,
             IList<string> scope,
-            TResource resource
+            AResource resource
         ) {
             FullName = fullName ?? throw new ArgumentNullException(nameof(fullName));
             LogicalId = fullName.Replace("::", "");
@@ -64,10 +64,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         //--- Properties ---
         public object Reference { get; set; }
         public IList<string> Scope { get; set; }
-
-        //--- Methods ---
-        public ModuleEntry<T> Cast<T>() where T : AResource
-            => new ModuleEntry<T>(FullName, Description, Reference, Scope, (T)(object)Resource);
     }
 
     public class Module {
@@ -82,14 +78,14 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public IDictionary<string, object> Conditions  { get; set; } = new Dictionary<string, object>();
         public List<Humidifier.Statement> ResourceStatements { get; } = new List<Humidifier.Statement>();
         public IList<ModuleGrant> Grants { get; } = new List<ModuleGrant>();
-        public IDictionary<string, ModuleEntry<AResource>> Entries { get; } = new Dictionary<string, ModuleEntry<AResource>>();
+        public IDictionary<string, ModuleEntry> Entries { get; } = new Dictionary<string, ModuleEntry>();
 
         [JsonIgnore]
         public bool HasModuleRegistration => !HasPragma("no-module-registration");
 
         //--- Methods ---
         public bool HasPragma(string pragma) => Pragmas?.Contains(pragma) == true;
-        public ModuleEntry<AResource> GetEntry(string fullName) => Entries[fullName];
+        public ModuleEntry GetEntry(string fullName) => Entries[fullName];
         public AResource GetResource(string fullName) => GetEntry(fullName).Resource;
         public object GetReference(string fullName) => GetEntry(fullName).Reference;
         public IEnumerable<AResource> GetAllResources()
@@ -97,10 +93,9 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 .Where(entry => entry.Resource != null)
                 .Select(entry => entry.Resource);
 
-        public IEnumerable<ModuleEntry<T>> GetAllEntriesOfType<T>() where T : AResource
+        public IEnumerable<ModuleEntry> GetAllEntriesOfType<T>()
             => Entries.Values
                 .Where(entry => entry.Resource is T)
-                .Select(entry => entry.Cast<T>())
                 .ToList();
     }
 }

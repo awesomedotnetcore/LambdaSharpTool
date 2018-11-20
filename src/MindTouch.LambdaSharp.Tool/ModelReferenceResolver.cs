@@ -19,8 +19,6 @@
  * limitations under the License.
  */
 
-#define DEBUGPRINT
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -32,6 +30,23 @@ using Newtonsoft.Json;
 
 namespace MindTouch.LambdaSharp.Tool {
 
+    public class ModelResolutionException : Exception {
+
+        //--- Class Methods ---
+        public static ModelResolutionException New(string segment, Exception exception) {
+            return (exception is ModelResolutionException resolutionException)
+                ? new ModelResolutionException(segment + "/" + resolutionException, resolutionException.InnerException)
+                : new ModelResolutionException(segment, exception);
+        }
+
+        //--- Fields ---
+        public readonly string Path;
+
+        //--- Constructors ---
+        public ModelResolutionException(string segment, Exception innerException) : base($"error location: {segment}", innerException)
+            => Path = segment ?? throw new ArgumentNullException(nameof(segment));
+    }
+
     public class ModelReferenceResolver : AModelProcessor {
 
         //--- Constants ---
@@ -39,7 +54,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
         //--- Class Methods ---
         private static void DebugWriteLine(Func<string> lazyMessage) {
-#if DEBUGPRINT
+#if true
             Console.WriteLine(lazyMessage());
 #endif
         }
@@ -73,7 +88,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     //  parameter name; if it does, we export the ARN value of that parameter; in
                     //  addition, we assume its description if none is provided.
 
-                    if(!module.Entries.TryGetValue(output.Name, out ModuleEntry<AResource> entry)) {
+                    if(!module.Entries.TryGetValue(output.Name, out ModuleEntry entry)) {
                         AddError("could not find matching entry");
                         output.Value = "<BAD>";
                     } else if(entry.Resource is InputParameter) {
@@ -95,8 +110,8 @@ namespace MindTouch.LambdaSharp.Tool {
             }
 
             // resolve all inter-entry references
-            var freeEntries = new Dictionary<string, ModuleEntry<AResource>>();
-            var boundEntries = new Dictionary<string, ModuleEntry<AResource>>();
+            var freeEntries = new Dictionary<string, ModuleEntry>();
+            var boundEntries = new Dictionary<string, ModuleEntry>();
             DiscoverEntries();
             ResolveEntries();
             ReportUnresolvedEntries();
@@ -113,7 +128,11 @@ namespace MindTouch.LambdaSharp.Tool {
                     if(resourceParameter.Resource != null) {
                         var resource = resourceParameter.Resource;
                         if(resource.Properties?.Any() == true) {
-                            resource.Properties = (IDictionary<string, object>)Substitute(resource.Properties, ReportMissingReference);
+                            try {
+                                resource.Properties = (IDictionary<string, object>)Substitute(resource.Properties, ReportMissingReference);
+                            } catch(Exception e) {
+                                throw ModelResolutionException.New(resourceParameter.Name, e);
+                            }
                         }
                         resourceParameter.Resource.DependsOn = resourceParameter.Resource.DependsOn.Select(dependency => module.GetEntry(dependency).LogicalId).ToList();
                     }
@@ -223,7 +242,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
             void ReportUnresolvedEntries() {
                 foreach(var entry in module.Entries.Values) {
-                    Substitute(entry, ReportMissingReference);
+                    Substitute(entry.Reference, ReportMissingReference);
                 }
             }
 
@@ -240,7 +259,11 @@ namespace MindTouch.LambdaSharp.Tool {
                 case IDictionary dictionary: {
                         var map = new Dictionary<object, object>();
                         foreach(DictionaryEntry entry in dictionary) {
-                            map.Add(entry.Key, Substitute(entry.Value, missing));
+                            try {
+                                map.Add(entry.Key, Substitute(entry.Value, missing));
+                            } catch(Exception e) {
+                                throw ModelResolutionException.New((string)entry.Key, e);
+                            }
                         }
                         foreach(var entry in map) {
                             dictionary[entry.Key] = entry.Value;
@@ -405,7 +428,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
 
                 // check if the requested key can be resolved using a free entry
-                if(freeEntries.TryGetValue(key, out ModuleEntry<AResource> freeEntry)) {
+                if(freeEntries.TryGetValue(key, out ModuleEntry freeEntry)) {
                     if(attribute != null) {
                         if(
                             (freeEntry.Reference is IDictionary<string, object> map)

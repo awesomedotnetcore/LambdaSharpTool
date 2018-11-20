@@ -26,41 +26,40 @@ using MindTouch.LambdaSharp.Tool.Internal;
 
 namespace MindTouch.LambdaSharp.Tool.Model {
 
-    public class ModuleBuilder : AModelProcessor {
+    public class ModuleBuilderEntry<T> where T : AResource {
 
-        //--- Types ---
-        public class Entry<TResource> where TResource : AResource {
+        //--- Fields ---
+        private readonly ModuleBuilder _builder;
+        private readonly ModuleEntry _entry;
 
-            //--- Fields ---
-            private readonly ModuleBuilder _builder;
-            private readonly ModuleEntry<TResource> _entry;
-
-            //--- Constructors ---
-            public Entry(ModuleBuilder builder, ModuleEntry<TResource> entry) {
-                _builder = builder ?? throw new ArgumentNullException(nameof(builder));
-                _entry = entry ?? throw new ArgumentNullException(nameof(entry));
-            }
-
-            //--- Properties ---
-            public string FullName => _entry.FullName;
-            public string Description => _entry.Description;
-            public string ResourceName => _entry.ResourceName;
-            public string LogicalId => _entry.LogicalId;
-            public TResource Resource => _entry.Resource;
-
-            public object Reference {
-                get => _entry.Reference;
-                set => _entry.Reference = value;
-            }
-
-            //--- Methods ---
-            public Entry<TChild> AddEntry<TChild>(TChild resource) where TChild : AResource {
-                return _builder.AddEntry<TChild, TResource>(this, resource);
-            }
-
-            public Entry<TResourceType> Cast<TResourceType>() where TResourceType : AResource
-                => new Entry<TResourceType>(_builder, _entry.Cast<TResourceType>());
+        //--- Constructors ---
+        public ModuleBuilderEntry(ModuleBuilder builder, ModuleEntry entry) {
+            _builder = builder ?? throw new ArgumentNullException(nameof(builder));
+            _entry = entry ?? throw new ArgumentNullException(nameof(entry));
         }
+
+        //--- Properties ---
+        public string FullName => _entry.FullName;
+        public string Description => _entry.Description;
+        public string ResourceName => _entry.ResourceName;
+        public string LogicalId => _entry.LogicalId;
+        public T Resource => (T)_entry.Resource;
+
+        public object Reference {
+            get => _entry.Reference;
+            set => _entry.Reference = value;
+        }
+
+        //--- Methods ---
+        public ModuleBuilderEntry<TChild> AddEntry<TChild>(TChild resource) where TChild : AResource {
+            return _builder.AddEntry<TChild, T>(this, resource);
+        }
+
+        public ModuleBuilderEntry<TResourceType> Cast<TResourceType>() where TResourceType : AResource
+            => new ModuleBuilderEntry<TResourceType>(_builder, _entry);
+    }
+
+    public class ModuleBuilder : AModelProcessor {
 
         //--- Fields ---
         private readonly Module _module;
@@ -77,7 +76,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         //--- Methods ---
         public Module ToModule() => _module;
 
-        public Entry<TResource> AddEntry<TResource>(TResource resource) where TResource : AResource
+        public ModuleBuilderEntry<TResource> AddEntry<TResource>(TResource resource) where TResource : AResource
             => AddEntry<TResource, AResource>(null, resource);
 
         public AResource GetEntry(string fullName) => _module.GetResource(fullName);
@@ -106,8 +105,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             }
         }
 
-        public Entry<AResource> AddVariable(string fullName, string description, object reference, IList<string> scope = null) {
-            var entry = new ModuleEntry<AResource>(
+        public ModuleBuilderEntry<AResource> AddVariable(string fullName, string description, object reference, IList<string> scope = null) {
+            var entry = new ModuleEntry(
                 fullName,
                 description,
                 reference ?? throw new ArgumentNullException(nameof(reference)),
@@ -115,12 +114,12 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 resource: null
             );
             _module.Entries.Add(fullName, entry);
-            return new Entry<AResource>(this, entry);
+            return new ModuleBuilderEntry<AResource>(this, entry);
         }
 
         public object GetVariable(string fullName) => _module.Entries[fullName].Reference;
 
-        public Entry<InputParameter> AddInput(
+        public ModuleBuilderEntry<InputParameter> AddInput(
             string name,
             string description = null,
             string type = null,
@@ -148,13 +147,14 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 Scope = ConvertScope(scope),
                 Section = section ?? "Module Settings",
                 Label = label ?? StringEx.PascalCaseToLabel(name),
+                IsSecret = (type == "Secret"),
                 Parameter = new Humidifier.Parameter {
                     Type = ConvertInputType(type),
                     Description = description,
                     Default = defaultValue,
                     ConstraintDescription = constraintDescription,
                     AllowedPattern = allowedPattern,
-                    AllowedValues = allowedValues.ToList(),
+                    AllowedValues = allowedValues?.ToList(),
                     MaxLength = maxLength,
                     MaxValue = maxValue,
                     MinLength = minLength,
@@ -194,7 +194,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             return result;
         }
 
-        public Entry<InputParameter> AddImport(
+        public ModuleBuilderEntry<InputParameter> AddImport(
             string import,
             string description = null,
             string type = null,
@@ -210,8 +210,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             var exportName = parts[1];
 
             // find or create root module import collection node
-            var rootParameter = _module.Entries.TryGetValue(exportModule, out ModuleEntry<AResource> existingEntry)
-                ? new Entry<AResource>(this, existingEntry)
+            var rootParameter = _module.Entries.TryGetValue(exportModule, out ModuleEntry existingEntry)
+                ? new ModuleBuilderEntry<AResource>(this, existingEntry)
                 : AddVariable(exportModule, $"{exportModule} cross-module references", "");
 
             // create import parameter entry
@@ -220,6 +220,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 Description = description,
                 Scope = ConvertScope(scope),
                 Section = section ?? "Module Settings",
+                IsSecret = (type == "Secret"),
 
                 // TODO (2018-11-11, bjorg): do we really want to use the cross-module reference when converting to a label?
                 Label = label ?? StringEx.PascalCaseToLabel(import),
@@ -324,8 +325,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             }, new List<string>());
         }
 
-        private Entry<TResource> AddEntry<TResource, TParent>(
-            Entry<TParent> parent,
+        public ModuleBuilderEntry<TResource> AddEntry<TResource, TParent>(
+            ModuleBuilderEntry<TParent> parent,
             TResource resource
         ) where TResource : AResource where TParent : AResource {
             var fullName = (parent == null)
@@ -333,14 +334,14 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 : parent.FullName + "::" + resource.Name;
 
             // create entry
-            var entry = new ModuleEntry<TResource>(fullName, resource.Description, resource.Reference, resource.Scope, resource);
-            _module.Entries.Add(fullName, entry.Cast<AResource>());
+            var entry = new ModuleEntry(fullName, resource.Description, resource.Reference, resource.Scope, resource);
+            _module.Entries.Add(fullName, entry);
             if(entry.Reference == null) {
                 entry.Reference = FnRef(entry.ResourceName);
             }
 
             // create entry
-            return new Entry<TResource>(this, entry);
+            return new ModuleBuilderEntry<TResource>(this, entry);
         }
 
         private string ConvertInputType(string type)

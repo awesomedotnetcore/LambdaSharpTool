@@ -48,7 +48,7 @@ namespace MindTouch.LambdaSharp.Tool {
             public string Method { get; set; }
             public string[] Path { get; set; }
             public ApiGatewaySourceIntegration Integration { get; set; }
-            public ModuleBuilder.Entry<FunctionParameter> Function { get; set; }
+            public ModuleBuilderEntry<FunctionParameter> Function { get; set; }
             public string OperationName { get; set; }
             public bool? ApiKeyRequired { get; set; }
         }
@@ -190,7 +190,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // create module IAM role used by all functions
             var functions = module.GetAllEntriesOfType<FunctionParameter>().Select(
-                entry => new ModuleBuilder.Entry<FunctionParameter>(_module, entry)
+                entry => new ModuleBuilderEntry<FunctionParameter>(_module, entry)
             );
             if(functions.Any()) {
 
@@ -328,7 +328,7 @@ namespace MindTouch.LambdaSharp.Tool {
             }
 
             // check if RestApi resources need to be added
-            if(module.GetAllEntriesOfType<FunctionParameter>().Any(function => function.Resource.Sources.OfType<ApiGatewaySource>().Any())) {
+            if(module.GetAllEntriesOfType<FunctionParameter>().Any(function => ((FunctionParameter)function.Resource).Sources.OfType<ApiGatewaySource>().Any())) {
                 _apiGatewayRoutes = new List<ApiRoute>();
 
                 // check if an API gateway needs to be created
@@ -456,7 +456,7 @@ namespace MindTouch.LambdaSharp.Tool {
             }
         }
 
-        private void AddApiResource(ModuleBuilder.Entry<AResource> parent, string parentPrefix, object restApiId, object parentId, int level, IEnumerable<ApiRoute> routes, List<KeyValuePair<string, object>> apiMethods) {
+        private void AddApiResource(ModuleBuilderEntry<AResource> parent, string parentPrefix, object restApiId, object parentId, int level, IEnumerable<ApiRoute> routes, List<KeyValuePair<string, object>> apiMethods) {
 
             // attach methods to resource id
             var methods = routes.Where(route => route.Path.Length == level).ToArray();
@@ -590,7 +590,7 @@ namespace MindTouch.LambdaSharp.Tool {
             }
         }
 
-        private void AddFunction(Module module, ModuleBuilder.Entry<FunctionParameter> function) {
+        private void AddFunction(Module module, ModuleBuilderEntry<FunctionParameter> function) {
             for(var sourceIndex = 0; sourceIndex < function.Resource.Sources.Count; ++sourceIndex) {
                 var source = function.Resource.Sources[sourceIndex];
                 var sourceSuffix = (sourceIndex + 1).ToString();

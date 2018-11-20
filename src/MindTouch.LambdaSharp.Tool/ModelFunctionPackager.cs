@@ -53,7 +53,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 AtLocation(function.FullName, () => {
                     Process(
                         module,
-                        function.Resource,
+                        (FunctionParameter)function.Resource,
                         version,
                         skipCompile,
                         skipAssemblyValidation,
@@ -182,17 +182,17 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // check if we need to parse the <TargetFramework> element to determine the lambda runtime
             var targetFramework = mainPropertyGroup?.Element("TargetFramework").Value;
-            if(function.Runtime == null) {
+            if(function.Function.Runtime == null) {
                 AtLocation("Runtime", () => {
                     switch(targetFramework) {
                     case "netcoreapp1.0":
-                        function.Runtime = "dotnetcore1.0";
+                        function.Function.Runtime = "dotnetcore1.0";
                         break;
                     case "netcoreapp2.0":
-                        function.Runtime = "dotnetcore2.0";
+                        function.Function.Runtime = "dotnetcore2.0";
                         break;
                     case "netcoreapp2.1":
-                        function.Runtime = "dotnetcore2.1";
+                        function.Function.Runtime = "dotnetcore2.1";
                         break;
                     default:
                         AddError("could not auto-determine handler; add Runtime field");
@@ -358,8 +358,8 @@ namespace MindTouch.LambdaSharp.Tool {
             }
 
             // check if we need to set a default runtime
-            if(function.Runtime == null) {
-                function.Runtime = "nodejs8.10";
+            if(function.Function.Runtime == null) {
+                function.Function.Runtime = "nodejs8.10";
             }
             if(skipCompile) {
                 function.Function.Code = new Humidifier.Lambda.FunctionTypes.Code {
@@ -367,7 +367,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 };
                 return;
             }
-            Console.WriteLine($"=> Building function {function.Name} [{function.Runtime}]");
+            Console.WriteLine($"=> Building function {function.Name} [{function.Function.Runtime}]");
             function.Function.Code = new Humidifier.Lambda.FunctionTypes.Code {
                 ZipFile = CreatePackage(function.Name, gitsha, Path.GetDirectoryName(project))
             };

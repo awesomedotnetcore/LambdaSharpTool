@@ -507,11 +507,13 @@ return false;
 
                 // generate & save module manifest
                 var functions = module.GetAllEntriesOfType<FunctionParameter>()
-                    .Where(f => f.Resource.Function?.Code?.ZipFile != null)
-                    .Select(f => Path.GetRelativePath(settings.OutputDirectory, (string)f.Resource.Function.Code.ZipFile))
+                    .Select(entry => ((FunctionParameter)entry.Resource).Function)
+                    .Where(f => f?.Code?.ZipFile != null)
+                    .Select(f => Path.GetRelativePath(settings.OutputDirectory, (string)f.Code.ZipFile))
                     .ToList();
                 var packages = module.GetAllEntriesOfType<PackageParameter>()
-                    .Select(p => Path.GetRelativePath(settings.OutputDirectory, p.Resource.PackagePath))
+                    .Select(entry => ((PackageParameter)entry.Resource))
+                    .Select(p => Path.GetRelativePath(settings.OutputDirectory, p.PackagePath))
                     .ToList();
                 var manifest = new ModuleManifest {
                     ModuleName = module.Name,

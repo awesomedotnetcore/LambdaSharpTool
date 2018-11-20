@@ -72,6 +72,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         //--- Properties ---
         public string Section { get; set; }
         public string Label { get; set; }
+        public bool IsSecret { get; set; }
         public Humidifier.Parameter Parameter { get; set; }
     }
 
@@ -79,7 +80,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         //--- Properties ---
         public string Project { get; set; }
-        public string Runtime { get; set; }
         public string Language { get; set; }
         public IDictionary<string, object> Environment { get; set; }
         public IList<AFunctionSource> Sources { get; set; }

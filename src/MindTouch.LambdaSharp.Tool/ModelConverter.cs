@@ -118,7 +118,7 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         private void ConvertParameter(
-            ModuleBuilder.Entry<AResource> parent,
+            ModuleBuilderEntry<AResource> parent,
             int index,
             ParameterNode parameter
         ) {
@@ -137,7 +137,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 AtLocation(parameter.Var, () => {
 
                     // create managed resource entry
-                    var result = parent.AddEntry(new CloudFormationResourceParameter {
+                    var result = _builder.AddEntry(parent, new CloudFormationResourceParameter {
                         Name = parameter.Var,
                         Description = parameter.Description,
                         Scope = _builder.ConvertScope(parameter.Scope),
@@ -162,7 +162,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 AtLocation(parameter.Var, () => {
 
                     // create exiting resource entry
-                    var result = parent.AddEntry(new ReferencedResourceParameter {
+                    var result = _builder.AddEntry(parent, new ReferencedResourceParameter {
                         Name = parameter.Var,
                         Description = parameter.Description,
                         Scope = _builder.ConvertScope(parameter.Scope),
@@ -182,7 +182,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 AtLocation(parameter.Var, () => {
 
                     // create literal value entry
-                    var result = parent.AddEntry(new ValueParameter {
+                    var result = _builder.AddEntry(parent, new ValueParameter {
                         Name = parameter.Var,
                         Description = parameter.Description,
                         Scope = _builder.ConvertScope(parameter.Scope),
@@ -201,7 +201,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 AtLocation(parameter.Var, () => {
 
                     // create encrypted value entry
-                    var result = parent.AddEntry(new SecretParameter {
+                    var result = _builder.AddEntry(parent, new SecretParameter {
                         Name = parameter.Var,
                         Description = parameter.Description,
                         Scope = _builder.ConvertScope(parameter.Scope),
@@ -226,7 +226,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 AtLocation(parameter.Var, () => {
 
                     // create empty entry
-                    var result = parent.AddEntry(new ValueParameter {
+                    var result = _builder.AddEntry(parent, new ValueParameter {
                         Name = parameter.Var,
                         Description = parameter.Description,
                         Scope = _builder.ConvertScope(parameter.Scope),
@@ -243,7 +243,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 AtLocation(parameter.Var, () => {
 
                     // create package resource entry
-                    var result = parent.AddEntry(new PackageParameter {
+                    var result = _builder.AddEntry(parent, new PackageParameter {
                         Name = parameter.Package,
                         Description = parameter.Description,
                         Scope = _builder.ConvertScope(parameter.Scope),
@@ -262,7 +262,7 @@ namespace MindTouch.LambdaSharp.Tool {
             }
 
             // local functions
-            void ConvertParameters(ModuleBuilder.Entry<AResource> result) {
+            void ConvertParameters(ModuleBuilderEntry<AResource> result) {
                 ForEach("Variables", parameter.Variables, (i, p) => ConvertParameter(result, i, p));
             }
         }
