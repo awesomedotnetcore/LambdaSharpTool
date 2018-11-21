@@ -157,6 +157,70 @@
   "Grants": [],
   "Entries": [
     {
+      "Section": "Module Settings",
+      "Label": "Root Domain Name",
+      "Parameter": {
+        "Type": "String",
+        "Description": null,
+        "AllowedPattern": null,
+        "AllowedValues": null,
+        "ConstraintDescription": null,
+        "Default": "example.org",
+        "MinLength": null,
+        "MaxLength": null,
+        "MinValue": null,
+        "MaxValue": null,
+        "NoEcho": null
+      },
+      "Name": "RootDomainName",
+      "FullName": "RootDomainName",
+      "ResourceName": "@RootDomainName",
+      "LogicalId": "RootDomainName",
+      "Description": null,
+      "Scope": [],
+      "Reference": {
+        "Ref": "@RootDomainName"
+      },
+      "IsSecret": false
+    },
+    {
+      "Resource": {
+        "Result1": {
+          "Fn::Transform": {
+            "Name": "MacroName1",
+            "Parameters": {
+              "Param1": "Value1"
+            }
+          }
+        },
+        "Result2": {
+          "Fn::Transform": {
+            "Name": "MacroName2",
+            "Parameters": {
+              "Param1": "Value2"
+            }
+          }
+        },
+        "ServiceToken": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${@DeploymentPrefix}CustomResource-CustomResource::Handler"
+          }
+        }
+      },
+      "DependsOn": [],
+      "Condition": null,
+      "Name": "MyResource",
+      "FullName": "MyResource",
+      "ResourceName": "@MyResource",
+      "LogicalId": "MyResource",
+      "Description": null,
+      "Scope": [],
+      "Reference": {
+        "Ref": "AWS::NoValue"
+      },
+      "IsSecret": false
+    },
+    {
       "Name": "Module",
       "FullName": "Module",
       "ResourceName": "@Module",

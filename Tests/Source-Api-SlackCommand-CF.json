@@ -93,9 +93,6 @@
         "Description": "My function (v1.0)",
         "Environment": {
           "Variables": {
-            "STR_SLACKTOKEN": {
-              "Ref": "@SlackToken"
-            },
             "MODULE_NAME": "TestModule",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
@@ -162,6 +159,9 @@
                   "Ref": "@LambdaSharpDefaultSecretKeyArn"
                 }
               ]
+            },
+            "STR_SLACKTOKEN": {
+              "Ref": "@SlackToken"
             }
           }
         },

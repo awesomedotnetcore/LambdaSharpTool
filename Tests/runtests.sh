@@ -31,19 +31,23 @@ if [ -z "$1" ]; then
         exit $?
     fi
     lash Empty
-    lash Empty-NoDependencies
-    lash Empty-NoRegistration
-    lash Function-Base64
-    lash Function-Cidr
-    lash Function-GetAtt
-    lash Function-GetAZs
-    lash Function-ImportValue
-    lash Function-Join
-    lash Function-Ref
-    lash Function-Select
-    lash Function-Split
-    lash Function-Sub
-    lash Function-Transform
+    lash Empty-NoLambdaSharpDependencies
+    lash Empty-NoModuleRegistration
+    lash Function
+    lash Function-NoLambdaSharpDependencies
+    lash Function-NoModuleRegistration
+    lash Function-NoFunctionRegistration
+    lash Fn-Base64
+    lash Fn-Cidr
+    lash Fn-GetAtt
+    lash Fn-GetAZs
+    lash Fn-ImportValue
+    lash Fn-Join
+    lash Fn-Ref
+    lash Fn-Select
+    lash Fn-Split
+    lash Fn-Sub
+    lash Fn-Transform
     lash Source-Topic
     lash Source-Timer
     lash Source-Api-SlackCommand

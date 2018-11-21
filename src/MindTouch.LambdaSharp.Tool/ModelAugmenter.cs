@@ -297,7 +297,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
 
                 // create function registration
-                if(module.HasModuleRegistration) {
+                if(module.HasModuleRegistration && module.HasLambdaSharpDependencies) {
 
                     // create CloudWatch Logs IAM role to invoke kinesis stream
                      _builder.AddResource(
@@ -546,7 +546,7 @@ namespace MindTouch.LambdaSharp.Tool {
             foreach(var subRoute in subRoutes) {
 
                 // remove special character from path segment and capitalize it
-                var partName = new string(subRoute.Key.Where(c => char.IsLetterOrDigit(c)).ToArray());
+                var partName = subRoute.Key.ToIdentifier();
                 partName = char.ToUpperInvariant(partName[0]) + ((partName.Length > 1) ? partName.Substring(1) : "");
 
                 // create a new parent resource to attach methods or sub-resource to
@@ -911,7 +911,7 @@ namespace MindTouch.LambdaSharp.Tool {
             }
 
             // check if function should be registered
-            if(module.HasModuleRegistration && function.HasFunctionRegistration) {
+            if(module.HasModuleRegistration && function.HasFunctionRegistration && module.HasLambdaSharpDependencies) {
                 _builder.AddResource(
                     parent: function,
                     name: "Registration",

@@ -1,0 +1,265 @@
+{
+  "Name": "TestModule",
+  "Version": "1.0",
+  "Description": "LambdaSharp CloudFormation Test",
+  "Pragmas": [
+    "no-lambdasharp-dependencies"
+  ],
+  "Secrets": [],
+  "Outputs": [],
+  "Conditions": {
+    "SecretsIsEmpty": {
+      "Fn::Equals": [
+        {
+          "Ref": "@Secrets"
+        },
+        ""
+      ]
+    }
+  },
+  "ResourceStatements": [
+    {
+      "Sid": "SecretsDecryption",
+      "Effect": "Allow",
+      "Principal": null,
+      "NotPrincipal": null,
+      "Action": [
+        "kms:Decrypt",
+        "kms:Encrypt",
+        "kms:GenerateDataKey",
+        "kms:GenerateDataKeyWithoutPlaintext"
+      ],
+      "NotAction": null,
+      "Resource": {
+        "Fn::Split": [
+          ",",
+          {
+            "Fn::If": [
+              "SecretsIsEmpty",
+              "",
+              {
+                "Fn::Join": [
+                  ",",
+                  [
+                    "",
+                    {
+                      "Ref": "Secrets"
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "NotResource": null,
+      "Condition": null
+    }
+  ],
+  "Grants": [],
+  "Entries": [
+    {
+      "Name": "Module",
+      "FullName": "Module",
+      "ResourceName": "@Module",
+      "LogicalId": "Module",
+      "Description": null,
+      "Scope": [],
+      "Reference": "",
+      "IsSecret": false
+    },
+    {
+      "Name": "Id",
+      "FullName": "Module::Id",
+      "ResourceName": "@ModuleId",
+      "LogicalId": "ModuleId",
+      "Description": null,
+      "Scope": [],
+      "Reference": {
+        "Ref": "AWS::StackName"
+      },
+      "IsSecret": false
+    },
+    {
+      "Name": "Name",
+      "FullName": "Module::Name",
+      "ResourceName": "@ModuleName",
+      "LogicalId": "ModuleName",
+      "Description": null,
+      "Scope": [],
+      "Reference": "TestModule",
+      "IsSecret": false
+    },
+    {
+      "Name": "Version",
+      "FullName": "Module::Version",
+      "ResourceName": "@ModuleVersion",
+      "LogicalId": "ModuleVersion",
+      "Description": null,
+      "Scope": [],
+      "Reference": "1.0",
+      "IsSecret": false
+    },
+    {
+      "Section": "LambdaSharp Module Options",
+      "Label": "Secret Keys (ARNs)",
+      "Parameter": {
+        "Type": "String",
+        "Description": "Comma-separated list of optional secret keys",
+        "AllowedPattern": null,
+        "AllowedValues": null,
+        "ConstraintDescription": null,
+        "Default": "",
+        "MinLength": null,
+        "MaxLength": null,
+        "MinValue": null,
+        "MaxValue": null,
+        "NoEcho": null
+      },
+      "Name": "Secrets",
+      "FullName": "Secrets",
+      "ResourceName": "@Secrets",
+      "LogicalId": "Secrets",
+      "Description": null,
+      "Scope": [],
+      "Reference": {
+        "Ref": "@Secrets"
+      },
+      "IsSecret": false
+    },
+    {
+      "Section": "LambdaSharp Deployment Settings (DO NOT MODIFY)",
+      "Label": "Deployment S3 Bucket",
+      "Parameter": {
+        "Type": "String",
+        "Description": "Source deployment S3 bucket name",
+        "AllowedPattern": null,
+        "AllowedValues": null,
+        "ConstraintDescription": null,
+        "Default": null,
+        "MinLength": null,
+        "MaxLength": null,
+        "MinValue": null,
+        "MaxValue": null,
+        "NoEcho": null
+      },
+      "Name": "DeploymentBucketName",
+      "FullName": "DeploymentBucketName",
+      "ResourceName": "@DeploymentBucketName",
+      "LogicalId": "DeploymentBucketName",
+      "Description": null,
+      "Scope": [],
+      "Reference": {
+        "Ref": "@DeploymentBucketName"
+      },
+      "IsSecret": false
+    },
+    {
+      "Section": "LambdaSharp Deployment Settings (DO NOT MODIFY)",
+      "Label": "Deployment Prefix",
+      "Parameter": {
+        "Type": "String",
+        "Description": "Module deployment prefix",
+        "AllowedPattern": null,
+        "AllowedValues": null,
+        "ConstraintDescription": null,
+        "Default": null,
+        "MinLength": null,
+        "MaxLength": null,
+        "MinValue": null,
+        "MaxValue": null,
+        "NoEcho": null
+      },
+      "Name": "DeploymentPrefix",
+      "FullName": "DeploymentPrefix",
+      "ResourceName": "@DeploymentPrefix",
+      "LogicalId": "DeploymentPrefix",
+      "Description": null,
+      "Scope": [],
+      "Reference": {
+        "Ref": "@DeploymentPrefix"
+      },
+      "IsSecret": false
+    },
+    {
+      "Section": "LambdaSharp Deployment Settings (DO NOT MODIFY)",
+      "Label": "Deployment Prefix (lowercase)",
+      "Parameter": {
+        "Type": "String",
+        "Description": "Module deployment prefix (lowercase)",
+        "AllowedPattern": null,
+        "AllowedValues": null,
+        "ConstraintDescription": null,
+        "Default": null,
+        "MinLength": null,
+        "MaxLength": null,
+        "MinValue": null,
+        "MaxValue": null,
+        "NoEcho": null
+      },
+      "Name": "DeploymentPrefixLowercase",
+      "FullName": "DeploymentPrefixLowercase",
+      "ResourceName": "@DeploymentPrefixLowercase",
+      "LogicalId": "DeploymentPrefixLowercase",
+      "Description": null,
+      "Scope": [],
+      "Reference": {
+        "Ref": "@DeploymentPrefixLowercase"
+      },
+      "IsSecret": false
+    },
+    {
+      "Section": "LambdaSharp Deployment Settings (DO NOT MODIFY)",
+      "Label": "Parent Stack Name",
+      "Parameter": {
+        "Type": "String",
+        "Description": "Parent stack name for nested deployments, blank otherwise",
+        "AllowedPattern": null,
+        "AllowedValues": null,
+        "ConstraintDescription": null,
+        "Default": "",
+        "MinLength": null,
+        "MaxLength": null,
+        "MinValue": null,
+        "MaxValue": null,
+        "NoEcho": null
+      },
+      "Name": "DeploymentParent",
+      "FullName": "DeploymentParent",
+      "ResourceName": "@DeploymentParent",
+      "LogicalId": "DeploymentParent",
+      "Description": null,
+      "Scope": [],
+      "Reference": {
+        "Ref": "@DeploymentParent"
+      },
+      "IsSecret": false
+    },
+    {
+      "Resource": {
+        "ServiceToken": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${@DeploymentPrefix}CustomResource-LambdaSharp::Register::Module"
+          }
+        },
+        "ModuleId": {
+          "Ref": "AWS::StackName"
+        },
+        "ModuleName": "TestModule",
+        "ModuleVersion": "1.0"
+      },
+      "DependsOn": [],
+      "Condition": null,
+      "Name": "Registration",
+      "FullName": "Module::Registration",
+      "ResourceName": "@ModuleRegistration",
+      "LogicalId": "ModuleRegistration",
+      "Description": null,
+      "Scope": [],
+      "Reference": {
+        "Ref": "AWS::NoValue"
+      },
+      "IsSecret": false
+    }
+  ]
+}

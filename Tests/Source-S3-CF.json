@@ -96,15 +96,6 @@
         "Description": "My function (v1.0)",
         "Environment": {
           "Variables": {
-            "STR_INPUTBUCKET": {
-              "Ref": "@InputBucket"
-            },
-            "STR_BUCKET": {
-              "Fn::GetAtt": [
-                "@Bucket",
-                "Arn"
-              ]
-            },
             "MODULE_NAME": "TestModule",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
@@ -170,6 +161,15 @@
                 {
                   "Ref": "@LambdaSharpDefaultSecretKeyArn"
                 }
+              ]
+            },
+            "STR_INPUTBUCKET": {
+              "Ref": "@InputBucket"
+            },
+            "STR_BUCKET": {
+              "Fn::GetAtt": [
+                "@Bucket",
+                "Arn"
               ]
             }
           }

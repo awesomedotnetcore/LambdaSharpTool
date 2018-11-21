@@ -49,19 +49,41 @@ namespace MindTouch.LambdaSharp.Tool {
         public void Resolve(Module module) {
 
             // resolve scopes
-            var functionNames = module.Entries.OfType<FunctionEntry>()
-                .Select(function => function.FullName)
-                .ToList();
-            foreach(var entry in module.Entries) {
-                if(entry.Scope.Contains("*")) {
-                    entry.Scope = entry.Scope
-                        .Where(scope => scope != "*")
-                        .Union(functionNames)
-                        .Distinct()
-                        .OrderBy(item => item)
-                        .ToList();
+            AtLocation("Entries", () => {
+                var functionNames = module.Entries.OfType<FunctionEntry>()
+                    .Select(function => function.FullName)
+                    .ToList();
+                foreach(var entry in module.Entries) {
+                    AtLocation(entry.FullName, () => {
+                        if(entry.Scope.Contains("*")) {
+                            entry.Scope = entry.Scope
+                                .Where(scope => scope != "*")
+                                .Union(functionNames)
+                                .Distinct()
+                                .OrderBy(item => item)
+                                .ToList();
+                        }
+                    });
                 }
-            }
+            });
+
+            // resolve function environments
+            AtLocation("Functions", () => {
+                foreach(var function in module.Entries.OfType<FunctionEntry>()) {
+                    AtLocation(function.FullName, () => {
+                        var environment = function.Function.Environment.Variables;
+                        environment["MODULE_NAME"] = module.Name;
+                        environment["MODULE_ID"] = FnRef("AWS::StackName");
+                        environment["MODULE_VERSION"] = module.Version.ToString();
+                        environment["LAMBDA_NAME"] = function.FullName;
+                        environment["LAMBDA_RUNTIME"] = function.Function.Runtime;
+                        if(module.HasLambdaSharpDependencies) {
+                            environment["DEADLETTERQUEUE"] = FnRef("Module::DeadLetterQueueArn");
+                            environment["DEFAULTSECRETKEY"] = FnRef("Module::DefaultSecretKeyArn");
+                        }
+                    });
+                }
+            });
 
             // resolve exports
             AtLocation("Outputs", () => {
@@ -118,26 +140,44 @@ namespace MindTouch.LambdaSharp.Tool {
 
                             // nothing to do
                             break;
-                        case HumidifierEntry humidifierParameter:
+                        case HumidifierEntry humidifier:
                             AtLocation("Resources", () => {
-                                humidifierParameter.Resource = (Humidifier.Resource)Substitute(humidifierParameter.Resource, ReportMissingReference);
+                                humidifier.Resource = (Humidifier.Resource)Substitute(humidifier.Resource, ReportMissingReference);
                             });
                             AtLocation("DependsOn", () => {
-                                humidifierParameter.DependsOn = humidifierParameter.DependsOn.Select(dependency => module.GetEntry(dependency).LogicalId).ToList();
+                                humidifier.DependsOn = humidifier.DependsOn.Select(dependency => module.GetEntry(dependency).LogicalId).ToList();
                             });
                             break;
-                        case FunctionEntry functionParameter:
+                        case FunctionEntry function:
                             AtLocation("Environment", () => {
-                                functionParameter.Environment = (IDictionary<string, object>)Substitute(functionParameter.Environment, ReportMissingReference);
+                                function.Environment = (IDictionary<string, object>)Substitute(function.Environment, ReportMissingReference);
                             });
                             AtLocation("Function", () => {
-                                functionParameter.Function = (Humidifier.Lambda.Function)Substitute(functionParameter.Function, ReportMissingReference);
+                                function.Function = (Humidifier.Lambda.Function)Substitute(function.Function, ReportMissingReference);
                             });
+
+                            // initialize function environment variables
+                            var environment = function.Function.Environment.Variables;
+
+                            // add all entries scoped to this function
+                            foreach(var scopeEntry in module.Entries.Where(e => e.Scope.Contains(function.FullName))) {
+                                var prefix = scopeEntry.IsSecret ? "SEC_" : "STR_";
+                                var fullEnvName = prefix + scopeEntry.FullName.Replace("::", "_").ToUpperInvariant();
+                                environment[fullEnvName] = (dynamic)scopeEntry.Reference;
+                            }
+
+                            // add all explicitly listed environment variables
+                            foreach(var kv in function.Environment) {
+
+                                // add explicit environment variable as string value
+                                var fullEnvName = "STR_" + kv.Key.Replace("::", "_").ToUpperInvariant();
+                                environment[fullEnvName] = (dynamic)kv.Value;
+                            }
 
                             // update function sources
                             AtLocation("Sources", () => {
                                 var index = 0;
-                                foreach(var source in functionParameter.Sources) {
+                                foreach(var source in function.Sources) {
                                     AtLocation($"[{++index}]", () => {
                                         switch(source) {
                                         case AlexaSource alexaSource:
@@ -158,20 +198,28 @@ namespace MindTouch.LambdaSharp.Tool {
             });
 
             // resolve references in output values
-            foreach(var output in module.Outputs) {
-                switch(output) {
-                case ExportOutput exportOutput:
-                    exportOutput.Value = Substitute(exportOutput.Value, ReportMissingReference);
-                    break;
-                case CustomResourceHandlerOutput _:
-                case MacroOutput _:
-
-                    // nothing to do
-                    break;
-                default:
-                    throw new InvalidOperationException($"cannot resolve references for this type: {output?.GetType()}");
+            AtLocation("Outputs", () => {
+                foreach(var output in module.Outputs) {
+                    switch(output) {
+                    case ExportOutput exportOutput:
+                        AtLocation(exportOutput.Name, () => {
+                            AtLocation("Value", () => {
+                                exportOutput.Value = Substitute(exportOutput.Value, ReportMissingReference);
+                            });
+                        });
+                        break;
+                    case CustomResourceHandlerOutput customResourceHandlerOutput:
+                        AtLocation(customResourceHandlerOutput.CustomResourceName, () => {
+                            AtLocation("Handler", () => {
+                                customResourceHandlerOutput.Handler = Substitute(customResourceHandlerOutput.Handler, ReportMissingReference);
+                            });
+                        });
+                        break;
+                    default:
+                        throw new InvalidOperationException($"cannot resolve references for this type: {output?.GetType()}");
+                    }
                 }
-            }
+            });
 
             // resolve references in grants
             AtLocation("Grants", () => {

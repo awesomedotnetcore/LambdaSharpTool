@@ -47,6 +47,18 @@
     }
   },
   "Resources": {
+    "MacrosMyMacro": {
+      "Type": "AWS::CloudFormation::Macro",
+      "Properties": {
+        "Name": {
+          "Fn::Sub": "${@DeploymentPrefix}MyMacro"
+        },
+        "Description": "My test macro",
+        "FunctionName": {
+          "Ref": "@Function"
+        }
+      }
+    },
     "ResourceValue": {
       "Type": "AWS::SNS::Topic",
       "Properties": {}
@@ -447,18 +459,6 @@
           ]
         }
       }
-    },
-    "MyMacroMacro": {
-      "Type": "AWS::CloudFormation::Macro",
-      "Properties": {
-        "Name": {
-          "Fn::Sub": "${DeploymentPrefix}MyMacro"
-        },
-        "Description": "My test macro",
-        "FunctionName": {
-          "Ref": "Function"
-        }
-      }
     }
   },
   "Outputs": {
@@ -538,7 +538,7 @@
     },
     "TestModuleMyCustomSnsResourceHandler": {
       "Value": {
-        "Ref": "ResourceValue"
+        "Ref": "@ResourceValue"
       },
       "Export": {
         "Name": {
@@ -549,7 +549,7 @@
     },
     "TestModuleMyCustomLambdaResourceHandler": {
       "Value": {
-        "Ref": "Function"
+        "Ref": "@Function"
       },
       "Export": {
         "Name": {

@@ -297,7 +297,6 @@
     {
       "Section": "Module Settings",
       "Label": "Input Bucket",
-      "IsSecret": false,
       "Parameter": {
         "Type": "String",
         "Description": "Description for Bucket resource",
@@ -321,7 +320,8 @@
       ],
       "Reference": {
         "Ref": "@InputBucket"
-      }
+      },
+      "IsSecret": false
     },
     {
       "Resource": {},
@@ -340,7 +340,8 @@
           "@Bucket",
           "Arn"
         ]
-      }
+      },
+      "IsSecret": false
     },
     {
       "Project": null,
@@ -409,7 +410,84 @@
         },
         "Description": "My function (v1.0)",
         "Environment": {
-          "Variables": {}
+          "Variables": {
+            "MODULE_NAME": "TestModule",
+            "MODULE_ID": {
+              "Ref": "AWS::StackName"
+            },
+            "MODULE_VERSION": "1.0",
+            "LAMBDA_NAME": "Function",
+            "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "DEADLETTERQUEUE": {
+              "Fn::If": [
+                "LambdaSharpDeadLetterQueueArnIsImport",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": [
+                      "${@DeploymentPrefix}${Import}",
+                      {
+                        "Import": {
+                          "Fn::Select": [
+                            "1",
+                            {
+                              "Fn::Split": [
+                                "$",
+                                {
+                                  "Ref": "@LambdaSharpDeadLetterQueueArn"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "Ref": "@LambdaSharpDeadLetterQueueArn"
+                }
+              ]
+            },
+            "DEFAULTSECRETKEY": {
+              "Fn::If": [
+                "LambdaSharpDefaultSecretKeyArnIsImport",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": [
+                      "${@DeploymentPrefix}${Import}",
+                      {
+                        "Import": {
+                          "Fn::Select": [
+                            "1",
+                            {
+                              "Fn::Split": [
+                                "$",
+                                {
+                                  "Ref": "@LambdaSharpDefaultSecretKeyArn"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "Ref": "@LambdaSharpDefaultSecretKeyArn"
+                }
+              ]
+            },
+            "STR_INPUTBUCKET": {
+              "Ref": "@InputBucket"
+            },
+            "STR_BUCKET": {
+              "Fn::GetAtt": [
+                "@Bucket",
+                "Arn"
+              ]
+            }
+          }
         },
         "FunctionName": null,
         "Handler": "TestModule.Function::MindTouch.LambdaSharpTestModule.Function.Function::FunctionHandlerAsync",
@@ -437,20 +515,20 @@
       "Scope": [],
       "Reference": {
         "Ref": "@Function"
-      }
+      },
+      "IsSecret": false
     },
     {
-      "IsSecret": false,
       "Name": "Module",
       "FullName": "Module",
       "ResourceName": "@Module",
       "LogicalId": "Module",
       "Description": null,
       "Scope": [],
-      "Reference": ""
+      "Reference": "",
+      "IsSecret": false
     },
     {
-      "IsSecret": false,
       "Name": "Id",
       "FullName": "Module::Id",
       "ResourceName": "@ModuleId",
@@ -459,32 +537,32 @@
       "Scope": [],
       "Reference": {
         "Ref": "AWS::StackName"
-      }
+      },
+      "IsSecret": false
     },
     {
-      "IsSecret": false,
       "Name": "Name",
       "FullName": "Module::Name",
       "ResourceName": "@ModuleName",
       "LogicalId": "ModuleName",
       "Description": null,
       "Scope": [],
-      "Reference": "TestModule"
+      "Reference": "TestModule",
+      "IsSecret": false
     },
     {
-      "IsSecret": false,
       "Name": "Version",
       "FullName": "Module::Version",
       "ResourceName": "@ModuleVersion",
       "LogicalId": "ModuleVersion",
       "Description": null,
       "Scope": [],
-      "Reference": "1.0"
+      "Reference": "1.0",
+      "IsSecret": false
     },
     {
       "Section": "LambdaSharp Module Options",
       "Label": "Secret Keys (ARNs)",
-      "IsSecret": false,
       "Parameter": {
         "Type": "String",
         "Description": "Comma-separated list of optional secret keys",
@@ -506,22 +584,22 @@
       "Scope": [],
       "Reference": {
         "Ref": "@Secrets"
-      }
+      },
+      "IsSecret": false
     },
     {
-      "IsSecret": false,
       "Name": "LambdaSharp",
       "FullName": "LambdaSharp",
       "ResourceName": "@LambdaSharp",
       "LogicalId": "LambdaSharp",
       "Description": null,
       "Scope": [],
-      "Reference": ""
+      "Reference": "",
+      "IsSecret": false
     },
     {
       "Section": "LambdaSharp Dependencies",
       "Label": "Dead Letter Queue (ARN)",
-      "IsSecret": false,
       "Parameter": {
         "Type": "String",
         "Description": "Dead letter queue for functions",
@@ -570,12 +648,12 @@
             "Ref": "@LambdaSharpDeadLetterQueueArn"
           }
         ]
-      }
+      },
+      "IsSecret": false
     },
     {
       "Section": "LambdaSharp Dependencies",
       "Label": "Logging Stream (ARN)",
-      "IsSecret": false,
       "Parameter": {
         "Type": "String",
         "Description": "Logging kinesis stream for functions",
@@ -624,12 +702,12 @@
             "Ref": "@LambdaSharpLoggingStreamArn"
           }
         ]
-      }
+      },
+      "IsSecret": false
     },
     {
       "Section": "LambdaSharp Dependencies",
       "Label": "Secret Key (ARN)",
-      "IsSecret": false,
       "Parameter": {
         "Type": "String",
         "Description": "Default secret key for functions",
@@ -678,10 +756,10 @@
             "Ref": "@LambdaSharpDefaultSecretKeyArn"
           }
         ]
-      }
+      },
+      "IsSecret": false
     },
     {
-      "IsSecret": false,
       "Name": "DeadLetterQueueArn",
       "FullName": "Module::DeadLetterQueueArn",
       "ResourceName": "@ModuleDeadLetterQueueArn",
@@ -717,10 +795,10 @@
             "Ref": "@LambdaSharpDeadLetterQueueArn"
           }
         ]
-      }
+      },
+      "IsSecret": false
     },
     {
-      "IsSecret": false,
       "Name": "LoggingStreamArn",
       "FullName": "Module::LoggingStreamArn",
       "ResourceName": "@ModuleLoggingStreamArn",
@@ -756,10 +834,10 @@
             "Ref": "@LambdaSharpLoggingStreamArn"
           }
         ]
-      }
+      },
+      "IsSecret": false
     },
     {
-      "IsSecret": false,
       "Name": "DefaultSecretKeyArn",
       "FullName": "Module::DefaultSecretKeyArn",
       "ResourceName": "@ModuleDefaultSecretKeyArn",
@@ -795,12 +873,12 @@
             "Ref": "@LambdaSharpDefaultSecretKeyArn"
           }
         ]
-      }
+      },
+      "IsSecret": false
     },
     {
       "Section": "LambdaSharp Deployment Settings (DO NOT MODIFY)",
       "Label": "Deployment S3 Bucket",
-      "IsSecret": false,
       "Parameter": {
         "Type": "String",
         "Description": "Source deployment S3 bucket name",
@@ -822,12 +900,12 @@
       "Scope": [],
       "Reference": {
         "Ref": "@DeploymentBucketName"
-      }
+      },
+      "IsSecret": false
     },
     {
       "Section": "LambdaSharp Deployment Settings (DO NOT MODIFY)",
       "Label": "Deployment Prefix",
-      "IsSecret": false,
       "Parameter": {
         "Type": "String",
         "Description": "Module deployment prefix",
@@ -849,12 +927,12 @@
       "Scope": [],
       "Reference": {
         "Ref": "@DeploymentPrefix"
-      }
+      },
+      "IsSecret": false
     },
     {
       "Section": "LambdaSharp Deployment Settings (DO NOT MODIFY)",
       "Label": "Deployment Prefix (lowercase)",
-      "IsSecret": false,
       "Parameter": {
         "Type": "String",
         "Description": "Module deployment prefix (lowercase)",
@@ -876,12 +954,12 @@
       "Scope": [],
       "Reference": {
         "Ref": "@DeploymentPrefixLowercase"
-      }
+      },
+      "IsSecret": false
     },
     {
       "Section": "LambdaSharp Deployment Settings (DO NOT MODIFY)",
       "Label": "Parent Stack Name",
-      "IsSecret": false,
       "Parameter": {
         "Type": "String",
         "Description": "Parent stack name for nested deployments, blank otherwise",
@@ -903,7 +981,8 @@
       "Scope": [],
       "Reference": {
         "Ref": "@DeploymentParent"
-      }
+      },
+      "IsSecret": false
     },
     {
       "Resource": {
@@ -928,7 +1007,8 @@
       "Scope": [],
       "Reference": {
         "Ref": "AWS::NoValue"
-      }
+      },
+      "IsSecret": false
     },
     {
       "Resource": {
@@ -1080,7 +1160,8 @@
           "@ModuleRole",
           "Arn"
         ]
-      }
+      },
+      "IsSecret": false
     },
     {
       "Resource": {
@@ -1181,7 +1262,8 @@
           "@ModuleCloudWatchLogsRole",
           "Arn"
         ]
-      }
+      },
+      "IsSecret": false
     },
     {
       "Resource": {
@@ -1204,7 +1286,8 @@
           "@FunctionLogGroup",
           "Arn"
         ]
-      }
+      },
+      "IsSecret": false
     },
     {
       "Resource": {
@@ -1241,7 +1324,8 @@
           "@FunctionSource1Permission",
           "Arn"
         ]
-      }
+      },
+      "IsSecret": false
     },
     {
       "Resource": {
@@ -1285,7 +1369,8 @@
       "Scope": [],
       "Reference": {
         "Ref": "AWS::NoValue"
-      }
+      },
+      "IsSecret": false
     },
     {
       "Resource": {
@@ -1319,7 +1404,8 @@
           "@FunctionSource2Permission",
           "Arn"
         ]
-      }
+      },
+      "IsSecret": false
     },
     {
       "Resource": {
@@ -1360,7 +1446,8 @@
       "Scope": [],
       "Reference": {
         "Ref": "AWS::NoValue"
-      }
+      },
+      "IsSecret": false
     },
     {
       "Resource": {
@@ -1397,7 +1484,8 @@
       "Scope": [],
       "Reference": {
         "Ref": "AWS::NoValue"
-      }
+      },
+      "IsSecret": false
     },
     {
       "Resource": {
@@ -1459,7 +1547,8 @@
           "@FunctionLogGroupSubscription",
           "Arn"
         ]
-      }
+      },
+      "IsSecret": false
     }
   ]
 }

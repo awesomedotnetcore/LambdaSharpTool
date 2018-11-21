@@ -64,5 +64,7 @@ namespace MindTouch.LambdaSharp.Tool.Internal {
             return builder.ToString();
         }
 
+        public static string ToIdentifier(this string text)
+            => new string(text.Where(char.IsLetterOrDigit).ToArray());
     }
 }

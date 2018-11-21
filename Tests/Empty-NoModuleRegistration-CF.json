@@ -46,23 +46,6 @@
       "Default": ""
     }
   },
-  "Resources": {
-    "ModuleRegistration": {
-      "Type": "Custom::LambdaSharpRegisterModule",
-      "Properties": {
-        "ServiceToken": {
-          "Fn::ImportValue": {
-            "Fn::Sub": "${@DeploymentPrefix}CustomResource-LambdaSharp::Register::Module"
-          }
-        },
-        "ModuleId": {
-          "Ref": "AWS::StackName"
-        },
-        "ModuleName": "TestModule",
-        "ModuleVersion": "1.0"
-      }
-    }
-  },
   "Outputs": {
     "ModuleName": {
       "Value": "TestModule"
@@ -207,7 +190,9 @@
       "Version": "2018-10-22",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
-      "Pragmas": []
+      "Pragmas": [
+        "no-module-registration"
+      ]
     }
   }
 }

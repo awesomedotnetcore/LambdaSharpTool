@@ -259,7 +259,6 @@
   ],
   "Entries": [
     {
-      "IsSecret": false,
       "Name": "SourceValueParameter",
       "FullName": "SourceValueParameter",
       "ResourceName": "@SourceValueParameter",
@@ -268,10 +267,10 @@
       "Scope": [
         "Function"
       ],
-      "Reference": "This is a literal value"
+      "Reference": "This is a literal value",
+      "IsSecret": false
     },
     {
-      "IsSecret": false,
       "Name": "SourceExpressionParameter",
       "FullName": "SourceExpressionParameter",
       "ResourceName": "@SourceExpressionParameter",
@@ -280,7 +279,8 @@
       "Scope": [
         "Function"
       ],
-      "Reference": "This is a literal value"
+      "Reference": "This is a literal value",
+      "IsSecret": false
     },
     {
       "Resource": {},
@@ -296,10 +296,10 @@
       ],
       "Reference": {
         "Ref": "@SourceResourceParameter"
-      }
+      },
+      "IsSecret": false
     },
     {
-      "IsSecret": false,
       "Name": "SourceValueListParameter",
       "FullName": "SourceValueListParameter",
       "ResourceName": "@SourceValueListParameter",
@@ -308,10 +308,10 @@
       "Scope": [
         "Function"
       ],
-      "Reference": "first,second,third"
+      "Reference": "first,second,third",
+      "IsSecret": false
     },
     {
-      "IsSecret": false,
       "Name": "SourceExpressionListParameter",
       "FullName": "SourceExpressionListParameter",
       "ResourceName": "@SourceExpressionListParameter",
@@ -332,10 +332,10 @@
             "literal value"
           ]
         ]
-      }
+      },
+      "IsSecret": false
     },
     {
-      "IsSecret": false,
       "Name": "SourceParameterCollection",
       "FullName": "SourceParameterCollection",
       "ResourceName": "@SourceParameterCollection",
@@ -344,10 +344,10 @@
       "Scope": [
         "Function"
       ],
-      "Reference": ""
+      "Reference": "",
+      "IsSecret": false
     },
     {
-      "IsSecret": false,
       "Name": "FirstSourceValueParameter",
       "FullName": "SourceParameterCollection::FirstSourceValueParameter",
       "ResourceName": "@SourceParameterCollectionFirstSourceValueParameter",
@@ -356,7 +356,8 @@
       "Scope": [
         "Function"
       ],
-      "Reference": "A nested literal source value"
+      "Reference": "A nested literal source value",
+      "IsSecret": false
     },
     {
       "Resource": {
@@ -374,10 +375,10 @@
       ],
       "Reference": {
         "Ref": "@SourceParameterCollectionSecondSourceResourceParameter"
-      }
+      },
+      "IsSecret": false
     },
     {
-      "IsSecret": false,
       "Name": "SampleParameterCollection",
       "FullName": "SampleParameterCollection",
       "ResourceName": "@SampleParameterCollection",
@@ -386,10 +387,10 @@
       "Scope": [
         "Function"
       ],
-      "Reference": ""
+      "Reference": "",
+      "IsSecret": false
     },
     {
-      "IsSecret": false,
       "Name": "FirstNestedParameter",
       "FullName": "SampleParameterCollection::FirstNestedParameter",
       "ResourceName": "@SampleParameterCollectionFirstNestedParameter",
@@ -398,10 +399,10 @@
       "Scope": [
         "Function"
       ],
-      "Reference": "A literal value"
+      "Reference": "A literal value",
+      "IsSecret": false
     },
     {
-      "IsSecret": false,
       "Name": "SecondNestedParameter",
       "FullName": "SampleParameterCollection::SecondNestedParameter",
       "ResourceName": "@SampleParameterCollectionSecondNestedParameter",
@@ -410,10 +411,10 @@
       "Scope": [
         "Function"
       ],
-      "Reference": "one,two,three"
+      "Reference": "one,two,three",
+      "IsSecret": false
     },
     {
-      "IsSecret": false,
       "Name": "ThirdNestedParameter",
       "FullName": "SampleParameterCollection::ThirdNestedParameter",
       "ResourceName": "@SampleParameterCollectionThirdNestedParameter",
@@ -422,7 +423,8 @@
       "Scope": [
         "Function"
       ],
-      "Reference": "arn:aws:sns:us-east-1:123456789012:SampleTopic"
+      "Reference": "arn:aws:sns:us-east-1:123456789012:SampleTopic",
+      "IsSecret": false
     },
     {
       "Resource": {},
@@ -438,10 +440,10 @@
       ],
       "Reference": {
         "Ref": "@SampleParameterCollectionFourthNestedParameter"
-      }
+      },
+      "IsSecret": false
     },
     {
-      "IsSecret": true,
       "Name": "FifthNestedParameter",
       "FullName": "SampleParameterCollection::FifthNestedParameter",
       "ResourceName": "@SampleParameterCollectionFifthNestedParameter",
@@ -450,10 +452,10 @@
       "Scope": [
         "Function"
       ],
-      "Reference": "AQICAHjeGw7GlEczkZKnuQaQHVYq...+CXNRhA/rkOSNUThq4ikMnVU2g=="
+      "Reference": "AQICAHjeGw7GlEczkZKnuQaQHVYq...+CXNRhA/rkOSNUThq4ikMnVU2g==",
+      "IsSecret": true
     },
     {
-      "IsSecret": true,
       "Name": "SixthNestedParameter",
       "FullName": "SampleParameterCollection::SixthNestedParameter",
       "ResourceName": "@SampleParameterCollectionSixthNestedParameter",
@@ -462,10 +464,10 @@
       "Scope": [
         "Function"
       ],
-      "Reference": "AQICAHjeGw7GlEczkZKnuQaQHVYq...+CXNRhA/rkOSNUThq4ikMnVU2g==|Purpose=Security|Spe%7Ccial=Char%7Cacter"
+      "Reference": "AQICAHjeGw7GlEczkZKnuQaQHVYq...+CXNRhA/rkOSNUThq4ikMnVU2g==|Purpose=Security|Spe%7Ccial=Char%7Cacter",
+      "IsSecret": true
     },
     {
-      "IsSecret": false,
       "Name": "SeventhParameter",
       "FullName": "SampleParameterCollection::SeventhParameter",
       "ResourceName": "@SampleParameterCollectionSeventhParameter",
@@ -474,10 +476,10 @@
       "Scope": [
         "Function"
       ],
-      "Reference": "arn:aws:sns:*:*:*"
+      "Reference": "arn:aws:sns:*:*:*",
+      "IsSecret": false
     },
     {
-      "IsSecret": false,
       "Name": "OtherParameterCollection",
       "FullName": "OtherParameterCollection",
       "ResourceName": "@OtherParameterCollection",
@@ -486,10 +488,10 @@
       "Scope": [
         "Function"
       ],
-      "Reference": "This collection has a value"
+      "Reference": "This collection has a value",
+      "IsSecret": false
     },
     {
-      "IsSecret": false,
       "Name": "FirstNestedParameter",
       "FullName": "OtherParameterCollection::FirstNestedParameter",
       "ResourceName": "@OtherParameterCollectionFirstNestedParameter",
@@ -498,10 +500,10 @@
       "Scope": [
         "Function"
       ],
-      "Reference": "Another literal value"
+      "Reference": "Another literal value",
+      "IsSecret": false
     },
     {
-      "IsSecret": false,
       "Name": "SingleResourceParameter",
       "FullName": "SingleResourceParameter",
       "ResourceName": "@SingleResourceParameter",
@@ -510,10 +512,10 @@
       "Scope": [
         "Function"
       ],
-      "Reference": "arn:aws:sns:*:*:*"
+      "Reference": "arn:aws:sns:*:*:*",
+      "IsSecret": false
     },
     {
-      "IsSecret": false,
       "Name": "MultiResourceParameter",
       "FullName": "MultiResourceParameter",
       "ResourceName": "@MultiResourceParameter",
@@ -525,10 +527,10 @@
       "Reference": [
         "arn:aws:sns:*:*:*",
         "arn:aws:sns:*:*:*:*"
-      ]
+      ],
+      "IsSecret": false
     },
     {
-      "IsSecret": false,
       "Name": "SourceSubExpressions",
       "FullName": "SourceSubExpressions",
       "ResourceName": "@SourceSubExpressions",
@@ -576,10 +578,10 @@
             }
           ]
         ]
-      }
+      },
+      "IsSecret": false
     },
     {
-      "IsSecret": false,
       "Name": "MyModuleName",
       "FullName": "MyModuleName",
       "ResourceName": "@MyModuleName",
@@ -588,10 +590,10 @@
       "Scope": [
         "Function"
       ],
-      "Reference": "TestModule"
+      "Reference": "TestModule",
+      "IsSecret": false
     },
     {
-      "IsSecret": false,
       "Name": "MyModuleId",
       "FullName": "MyModuleId",
       "ResourceName": "@MyModuleId",
@@ -602,10 +604,10 @@
       ],
       "Reference": {
         "Ref": "AWS::StackName"
-      }
+      },
+      "IsSecret": false
     },
     {
-      "IsSecret": false,
       "Name": "MyModuleVersion",
       "FullName": "MyModuleVersion",
       "ResourceName": "@MyModuleVersion",
@@ -614,17 +616,18 @@
       "Scope": [
         "Function"
       ],
-      "Reference": "1.0"
+      "Reference": "1.0",
+      "IsSecret": false
     },
     {
-      "IsSecret": false,
       "Name": "RekognitionService",
       "FullName": "RekognitionService",
       "ResourceName": "@RekognitionService",
       "LogicalId": "RekognitionService",
       "Description": null,
       "Scope": [],
-      "Reference": "*"
+      "Reference": "*",
+      "IsSecret": false
     },
     {
       "Project": null,
@@ -674,7 +677,161 @@
         },
         "Description": "My function (v1.0)",
         "Environment": {
-          "Variables": {}
+          "Variables": {
+            "MODULE_NAME": "TestModule",
+            "MODULE_ID": {
+              "Ref": "AWS::StackName"
+            },
+            "MODULE_VERSION": "1.0",
+            "LAMBDA_NAME": "Function",
+            "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "DEADLETTERQUEUE": {
+              "Fn::If": [
+                "LambdaSharpDeadLetterQueueArnIsImport",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": [
+                      "${@DeploymentPrefix}${Import}",
+                      {
+                        "Import": {
+                          "Fn::Select": [
+                            "1",
+                            {
+                              "Fn::Split": [
+                                "$",
+                                {
+                                  "Ref": "@LambdaSharpDeadLetterQueueArn"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "Ref": "@LambdaSharpDeadLetterQueueArn"
+                }
+              ]
+            },
+            "DEFAULTSECRETKEY": {
+              "Fn::If": [
+                "LambdaSharpDefaultSecretKeyArnIsImport",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": [
+                      "${@DeploymentPrefix}${Import}",
+                      {
+                        "Import": {
+                          "Fn::Select": [
+                            "1",
+                            {
+                              "Fn::Split": [
+                                "$",
+                                {
+                                  "Ref": "@LambdaSharpDefaultSecretKeyArn"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "Ref": "@LambdaSharpDefaultSecretKeyArn"
+                }
+              ]
+            },
+            "STR_SOURCEVALUEPARAMETER": "This is a literal value",
+            "STR_SOURCEEXPRESSIONPARAMETER": "This is a literal value",
+            "STR_SOURCERESOURCEPARAMETER": {
+              "Ref": "@SourceResourceParameter"
+            },
+            "STR_SOURCEVALUELISTPARAMETER": "first,second,third",
+            "STR_SOURCEEXPRESSIONLISTPARAMETER": {
+              "Fn::Join": [
+                ",",
+                [
+                  "This is a literal value",
+                  "This is a literal value",
+                  {
+                    "Ref": "@SourceResourceParameter"
+                  },
+                  "literal value"
+                ]
+              ]
+            },
+            "STR_SOURCEPARAMETERCOLLECTION": "",
+            "STR_SOURCEPARAMETERCOLLECTION_FIRSTSOURCEVALUEPARAMETER": "A nested literal source value",
+            "STR_SOURCEPARAMETERCOLLECTION_SECONDSOURCERESOURCEPARAMETER": {
+              "Ref": "@SourceParameterCollectionSecondSourceResourceParameter"
+            },
+            "STR_SAMPLEPARAMETERCOLLECTION": "",
+            "STR_SAMPLEPARAMETERCOLLECTION_FIRSTNESTEDPARAMETER": "A literal value",
+            "STR_SAMPLEPARAMETERCOLLECTION_SECONDNESTEDPARAMETER": "one,two,three",
+            "STR_SAMPLEPARAMETERCOLLECTION_THIRDNESTEDPARAMETER": "arn:aws:sns:us-east-1:123456789012:SampleTopic",
+            "STR_SAMPLEPARAMETERCOLLECTION_FOURTHNESTEDPARAMETER": {
+              "Ref": "@SampleParameterCollectionFourthNestedParameter"
+            },
+            "SEC_SAMPLEPARAMETERCOLLECTION_FIFTHNESTEDPARAMETER": "AQICAHjeGw7GlEczkZKnuQaQHVYq...+CXNRhA/rkOSNUThq4ikMnVU2g==",
+            "SEC_SAMPLEPARAMETERCOLLECTION_SIXTHNESTEDPARAMETER": "AQICAHjeGw7GlEczkZKnuQaQHVYq...+CXNRhA/rkOSNUThq4ikMnVU2g==|Purpose=Security|Spe%7Ccial=Char%7Cacter",
+            "STR_SAMPLEPARAMETERCOLLECTION_SEVENTHPARAMETER": "arn:aws:sns:*:*:*",
+            "STR_OTHERPARAMETERCOLLECTION": "This collection has a value",
+            "STR_OTHERPARAMETERCOLLECTION_FIRSTNESTEDPARAMETER": "Another literal value",
+            "STR_SINGLERESOURCEPARAMETER": "arn:aws:sns:*:*:*",
+            "STR_MULTIRESOURCEPARAMETER": [
+              "arn:aws:sns:*:*:*",
+              "arn:aws:sns:*:*:*:*"
+            ],
+            "STR_SOURCESUBEXPRESSIONS": {
+              "Fn::Join": [
+                ",",
+                [
+                  "This is a literal value",
+                  "This is a literal value",
+                  {
+                    "Fn::Sub": "${@SourceResourceParameter}"
+                  },
+                  "first,second,third",
+                  {
+                    "Fn::Sub": [
+                      "${P0}",
+                      {
+                        "P0": {
+                          "Fn::Join": [
+                            ",",
+                            [
+                              "This is a literal value",
+                              "This is a literal value",
+                              {
+                                "Ref": "@SourceResourceParameter"
+                              },
+                              "literal value"
+                            ]
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "A nested literal source value",
+                  {
+                    "Fn::Sub": "${@SourceParameterCollectionSecondSourceResourceParameter}"
+                  },
+                  {
+                    "Fn::Sub": "${SourceParameterCollection::SecondSourceResourceParameter.TopicName}"
+                  }
+                ]
+              ]
+            },
+            "STR_MYMODULENAME": "TestModule",
+            "STR_MYMODULEID": {
+              "Ref": "AWS::StackName"
+            },
+            "STR_MYMODULEVERSION": "1.0"
+          }
         },
         "FunctionName": null,
         "Handler": "TestModule.Function::MindTouch.LambdaSharpTestModule.Function.Function::FunctionHandlerAsync",
@@ -702,20 +859,20 @@
       "Scope": [],
       "Reference": {
         "Ref": "@Function"
-      }
+      },
+      "IsSecret": false
     },
     {
-      "IsSecret": false,
       "Name": "Module",
       "FullName": "Module",
       "ResourceName": "@Module",
       "LogicalId": "Module",
       "Description": null,
       "Scope": [],
-      "Reference": ""
+      "Reference": "",
+      "IsSecret": false
     },
     {
-      "IsSecret": false,
       "Name": "Id",
       "FullName": "Module::Id",
       "ResourceName": "@ModuleId",
@@ -724,32 +881,32 @@
       "Scope": [],
       "Reference": {
         "Ref": "AWS::StackName"
-      }
+      },
+      "IsSecret": false
     },
     {
-      "IsSecret": false,
       "Name": "Name",
       "FullName": "Module::Name",
       "ResourceName": "@ModuleName",
       "LogicalId": "ModuleName",
       "Description": null,
       "Scope": [],
-      "Reference": "TestModule"
+      "Reference": "TestModule",
+      "IsSecret": false
     },
     {
-      "IsSecret": false,
       "Name": "Version",
       "FullName": "Module::Version",
       "ResourceName": "@ModuleVersion",
       "LogicalId": "ModuleVersion",
       "Description": null,
       "Scope": [],
-      "Reference": "1.0"
+      "Reference": "1.0",
+      "IsSecret": false
     },
     {
       "Section": "LambdaSharp Module Options",
       "Label": "Secret Keys (ARNs)",
-      "IsSecret": false,
       "Parameter": {
         "Type": "String",
         "Description": "Comma-separated list of optional secret keys",
@@ -771,22 +928,22 @@
       "Scope": [],
       "Reference": {
         "Ref": "@Secrets"
-      }
+      },
+      "IsSecret": false
     },
     {
-      "IsSecret": false,
       "Name": "LambdaSharp",
       "FullName": "LambdaSharp",
       "ResourceName": "@LambdaSharp",
       "LogicalId": "LambdaSharp",
       "Description": null,
       "Scope": [],
-      "Reference": ""
+      "Reference": "",
+      "IsSecret": false
     },
     {
       "Section": "LambdaSharp Dependencies",
       "Label": "Dead Letter Queue (ARN)",
-      "IsSecret": false,
       "Parameter": {
         "Type": "String",
         "Description": "Dead letter queue for functions",
@@ -835,12 +992,12 @@
             "Ref": "@LambdaSharpDeadLetterQueueArn"
           }
         ]
-      }
+      },
+      "IsSecret": false
     },
     {
       "Section": "LambdaSharp Dependencies",
       "Label": "Logging Stream (ARN)",
-      "IsSecret": false,
       "Parameter": {
         "Type": "String",
         "Description": "Logging kinesis stream for functions",
@@ -889,12 +1046,12 @@
             "Ref": "@LambdaSharpLoggingStreamArn"
           }
         ]
-      }
+      },
+      "IsSecret": false
     },
     {
       "Section": "LambdaSharp Dependencies",
       "Label": "Secret Key (ARN)",
-      "IsSecret": false,
       "Parameter": {
         "Type": "String",
         "Description": "Default secret key for functions",
@@ -943,10 +1100,10 @@
             "Ref": "@LambdaSharpDefaultSecretKeyArn"
           }
         ]
-      }
+      },
+      "IsSecret": false
     },
     {
-      "IsSecret": false,
       "Name": "DeadLetterQueueArn",
       "FullName": "Module::DeadLetterQueueArn",
       "ResourceName": "@ModuleDeadLetterQueueArn",
@@ -982,10 +1139,10 @@
             "Ref": "@LambdaSharpDeadLetterQueueArn"
           }
         ]
-      }
+      },
+      "IsSecret": false
     },
     {
-      "IsSecret": false,
       "Name": "LoggingStreamArn",
       "FullName": "Module::LoggingStreamArn",
       "ResourceName": "@ModuleLoggingStreamArn",
@@ -1021,10 +1178,10 @@
             "Ref": "@LambdaSharpLoggingStreamArn"
           }
         ]
-      }
+      },
+      "IsSecret": false
     },
     {
-      "IsSecret": false,
       "Name": "DefaultSecretKeyArn",
       "FullName": "Module::DefaultSecretKeyArn",
       "ResourceName": "@ModuleDefaultSecretKeyArn",
@@ -1060,12 +1217,12 @@
             "Ref": "@LambdaSharpDefaultSecretKeyArn"
           }
         ]
-      }
+      },
+      "IsSecret": false
     },
     {
       "Section": "LambdaSharp Deployment Settings (DO NOT MODIFY)",
       "Label": "Deployment S3 Bucket",
-      "IsSecret": false,
       "Parameter": {
         "Type": "String",
         "Description": "Source deployment S3 bucket name",
@@ -1087,12 +1244,12 @@
       "Scope": [],
       "Reference": {
         "Ref": "@DeploymentBucketName"
-      }
+      },
+      "IsSecret": false
     },
     {
       "Section": "LambdaSharp Deployment Settings (DO NOT MODIFY)",
       "Label": "Deployment Prefix",
-      "IsSecret": false,
       "Parameter": {
         "Type": "String",
         "Description": "Module deployment prefix",
@@ -1114,12 +1271,12 @@
       "Scope": [],
       "Reference": {
         "Ref": "@DeploymentPrefix"
-      }
+      },
+      "IsSecret": false
     },
     {
       "Section": "LambdaSharp Deployment Settings (DO NOT MODIFY)",
       "Label": "Deployment Prefix (lowercase)",
-      "IsSecret": false,
       "Parameter": {
         "Type": "String",
         "Description": "Module deployment prefix (lowercase)",
@@ -1141,12 +1298,12 @@
       "Scope": [],
       "Reference": {
         "Ref": "@DeploymentPrefixLowercase"
-      }
+      },
+      "IsSecret": false
     },
     {
       "Section": "LambdaSharp Deployment Settings (DO NOT MODIFY)",
       "Label": "Parent Stack Name",
-      "IsSecret": false,
       "Parameter": {
         "Type": "String",
         "Description": "Parent stack name for nested deployments, blank otherwise",
@@ -1168,7 +1325,8 @@
       "Scope": [],
       "Reference": {
         "Ref": "@DeploymentParent"
-      }
+      },
+      "IsSecret": false
     },
     {
       "Resource": {
@@ -1193,7 +1351,8 @@
       "Scope": [],
       "Reference": {
         "Ref": "AWS::NoValue"
-      }
+      },
+      "IsSecret": false
     },
     {
       "Resource": {
@@ -1345,7 +1504,8 @@
           "@ModuleRole",
           "Arn"
         ]
-      }
+      },
+      "IsSecret": false
     },
     {
       "Resource": {
@@ -1446,7 +1606,8 @@
           "@ModuleCloudWatchLogsRole",
           "Arn"
         ]
-      }
+      },
+      "IsSecret": false
     },
     {
       "Resource": {
@@ -1469,7 +1630,8 @@
           "@FunctionLogGroup",
           "Arn"
         ]
-      }
+      },
+      "IsSecret": false
     },
     {
       "Resource": {
@@ -1506,7 +1668,8 @@
       "Scope": [],
       "Reference": {
         "Ref": "AWS::NoValue"
-      }
+      },
+      "IsSecret": false
     },
     {
       "Resource": {
@@ -1568,7 +1731,8 @@
           "@FunctionLogGroupSubscription",
           "Arn"
         ]
-      }
+      },
+      "IsSecret": false
     }
   ]
 }

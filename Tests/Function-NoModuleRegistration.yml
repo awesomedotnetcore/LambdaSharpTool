@@ -1,0 +1,11 @@
+Module: TestModule
+Description: LambdaSharp CloudFormation Test
+Pragmas:
+  - no-module-registration
+
+Functions:
+
+  - Function: Function
+    Description: My function
+    Memory: 128
+    Timeout: 30

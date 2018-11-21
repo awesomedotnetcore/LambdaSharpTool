@@ -65,6 +65,7 @@ namespace MindTouch.LambdaSharp.Tool {
             });
 
             // convert collections
+            ForEach("Pragmas", module.Pragmas, (index, pragma) => _builder.AddPragma(pragma));
             ForEach("Secrets", module.Secrets, ConvertSecret);
             ForEach("Inputs", module.Inputs, ConvertInput);
             ForEach("Outputs", module.Outputs, ConvertOutput);

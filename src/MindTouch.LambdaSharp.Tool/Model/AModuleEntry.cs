@@ -36,7 +36,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             string name,
             string description,
             object reference,
-            IList<string> scope
+            IList<string> scope,
+            bool isSecret
         ) {
             Name = name ?? throw new ArgumentNullException(nameof(name));;
             if(name.Any(c => !char.IsLetterOrDigit(c))) {
@@ -51,6 +52,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             ResourceName = "@" + LogicalId;
             Reference = reference;
             Scope = scope ?? new string[0];
+            IsSecret = isSecret;
         }
 
         //--- Properties ---
@@ -61,6 +63,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public string Description { get; }
         public IList<string> Scope { get; set; }
         public object Reference { get; set; }
+        public bool IsSecret { get; }
     }
 
     public class ValueEntry : AModuleEntry {
@@ -73,12 +76,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             object reference,
             IList<string> scope,
             bool isSecret
-        ) : base(parent, name, description, reference, scope) {
-            IsSecret = isSecret;
-        }
-
-        //--- Properties ---
-        public bool IsSecret { get; }
+        ) : base(parent, name, description, reference, scope, isSecret) { }
     }
 
     public class PackageEntry : AModuleEntry {
@@ -91,7 +89,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             IList<string> scope,
             string sourceFilepath,
             Humidifier.CustomResource package
-        ) : base(parent, name, description, null, scope) {
+        ) : base(parent, name, description, null, scope, false) {
             SourceFilepath = sourceFilepath ?? throw new ArgumentNullException(nameof(sourceFilepath));
             Package = package ?? throw new ArgumentNullException(nameof(package));
         }
@@ -114,7 +112,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             Humidifier.Resource resource,
             IList<string> dependsOn,
             string condition
-        ) : base(parent, name, description, reference, scope) {
+        ) : base(parent, name, description, reference, scope, false) {
             Resource = resource ?? throw new ArgumentNullException(nameof(resource));
             DependsOn = dependsOn ?? new string[0];
             Condition = condition;
@@ -139,17 +137,15 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             string label,
             bool isSecret,
             Humidifier.Parameter parameter
-        ) : base(parent, name, description, reference, scope) {
+        ) : base(parent, name, description, reference, scope, isSecret) {
             Section = section ?? "Module Settings";
             Label = label ?? StringEx.PascalCaseToLabel(name);
-            IsSecret = isSecret;
             Parameter = parameter;
         }
 
         //--- Properties ---
         public string Section { get; }
         public string Label { get; }
-        public bool IsSecret { get; }
         public Humidifier.Parameter Parameter { get; }
     }
 
@@ -168,7 +164,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             IList<AFunctionSource> sources,
             IList<object> pragmas,
             Humidifier.Lambda.Function function
-        ) : base(parent, name, description, reference, scope) {
+        ) : base(parent, name, description, reference, scope, false) {
             Project = project;
             Language = language;
             Environment = environment;

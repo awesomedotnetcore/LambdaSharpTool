@@ -59,6 +59,9 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         [JsonIgnore]
         public bool HasModuleRegistration => !HasPragma("no-module-registration");
 
+        [JsonIgnore]
+        public bool HasLambdaSharpDependencies => !HasPragma("no-lambdasharp-dependencies");
+
         //--- Methods ---
         public bool HasPragma(string pragma) => Pragmas?.Contains(pragma) == true;
         public AModuleEntry GetEntry(string fullName) => _entriesByFullName[fullName];

@@ -2,10 +2,6 @@
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "LambdaSharp CloudFormation Test (v1.0)",
   "Parameters": {
-    "InputTable": {
-      "Type": "String",
-      "Description": "Description for DynamoDB input table"
-    },
     "Secrets": {
       "Type": "String",
       "Description": "Comma-separated list of optional secret keys",
@@ -51,27 +47,6 @@
     }
   },
   "Resources": {
-    "Table": {
-      "Type": "AWS::DynamoDB::Table",
-      "Properties": {
-        "AttributeDefinitions": [
-          {
-            "AttributeName": "MessageId",
-            "AttributeType": "S"
-          }
-        ],
-        "KeySchema": [
-          {
-            "AttributeName": "MessageId",
-            "KeyType": "HASH"
-          }
-        ],
-        "ProvisionedThroughput": {
-          "ReadCapacityUnits": "1",
-          "WriteCapacityUnits": "1"
-        }
-      }
-    },
     "Function": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
@@ -178,15 +153,6 @@
                 {
                   "Ref": "@LambdaSharpDefaultSecretKeyArn"
                 }
-              ]
-            },
-            "STR_INPUTTABLE": {
-              "Ref": "@InputTable"
-            },
-            "STR_TABLE": {
-              "Fn::GetAtt": [
-                "@Table",
-                "Arn"
               ]
             }
           }
@@ -402,37 +368,6 @@
         "RetentionInDays": 7
       }
     },
-    "FunctionSource1EventMapping": {
-      "Type": "AWS::Lambda::EventSourceMapping",
-      "Properties": {
-        "BatchSize": 100,
-        "Enabled": true,
-        "EventSourceArn": {
-          "Fn::GetAtt": [
-            "@Table",
-            "Arn"
-          ]
-        },
-        "FunctionName": {
-          "Ref": "@Function"
-        },
-        "StartingPosition": "LATEST"
-      }
-    },
-    "FunctionSource2EventMapping": {
-      "Type": "AWS::Lambda::EventSourceMapping",
-      "Properties": {
-        "BatchSize": 100,
-        "Enabled": true,
-        "EventSourceArn": {
-          "Ref": "@InputTable"
-        },
-        "FunctionName": {
-          "Ref": "@Function"
-        },
-        "StartingPosition": "LATEST"
-      }
-    },
     "FunctionRegistration": {
       "Type": "Custom::LambdaSharpRegisterFunction",
       "Properties": {
@@ -593,9 +528,6 @@
   "Metadata": {
     "AWS::CloudFormation::Interface": {
       "ParameterLabels": {
-        "InputTable": {
-          "default": "Input Table"
-        },
         "Secrets": {
           "default": "Secret Keys (ARNs)"
         },
@@ -622,14 +554,6 @@
         }
       },
       "ParameterGroups": [
-        {
-          "Label": {
-            "default": "Module Settings"
-          },
-          "Parameters": [
-            "InputTable"
-          ]
-        },
         {
           "Label": {
             "default": "LambdaSharp Module Options"

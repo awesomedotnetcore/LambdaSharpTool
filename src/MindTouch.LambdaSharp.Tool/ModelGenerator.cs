@@ -77,42 +77,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 Value = _module.Version.ToString()
             });
             foreach(var output in module.Outputs) {
-                switch(output) {
-                case ExportOutput exportOutput:
-                    _stack.Add(exportOutput.Name, new Humidifier.Output {
-                        Description = exportOutput.Description,
-                        Value = exportOutput.Value
-                    });
-                    _stack.Add($"{exportOutput.Name}Export", new Humidifier.Output {
-                        Description = exportOutput.Description,
-                        Value = exportOutput.Value,
-                        Export = new Dictionary<string, dynamic> {
-                            ["Name"] = Fn.Sub($"${{AWS::StackName}}::{exportOutput.Name}")
-                        },
-                        Condition = "ModuleIsNotNested"
-                    });
-                    break;
-                case CustomResourceHandlerOutput customResourceHandlerOutput:
-                    _stack.Add($"{new string(customResourceHandlerOutput.CustomResourceName.Where(char.IsLetterOrDigit).ToArray())}Handler", new Humidifier.Output {
-                        Description = customResourceHandlerOutput.Description,
-                        Value = Fn.Ref(customResourceHandlerOutput.Handler),
-                        Export = new Dictionary<string, dynamic> {
-                            ["Name"] = Fn.Sub($"${{DeploymentPrefix}}CustomResource-{customResourceHandlerOutput.CustomResourceName}")
-                        }
-                    });
-                    break;
-                case MacroOutput macroOutput:
-                    _stack.Add($"{macroOutput.Macro}Macro", new CustomResource("AWS::CloudFormation::Macro") {
-
-                        // TODO (2018-10-30, bjorg): we may want to set 'LogGroupName' and 'LogRoleARN' as well
-                        ["Name"] = Fn.Sub("${DeploymentPrefix}" + macroOutput.Macro),
-                        ["Description"] = macroOutput.Description ?? "",
-                        ["FunctionName"] = Fn.Ref(macroOutput.Handler)
-                    });
-                    break;
-                default:
-                    throw new InvalidOperationException($"cannot generate output for this type: {output?.GetType()}");
-                }
+                AddOutput(output);
             }
 
             // add interface for presenting inputs
@@ -145,83 +110,72 @@ namespace MindTouch.LambdaSharp.Tool {
             return template;
         }
 
+        private void AddOutput(AOutput output) {
+            switch(output) {
+            case ExportOutput exportOutput:
+                _stack.Add(exportOutput.Name, new Humidifier.Output {
+                    Description = exportOutput.Description,
+                    Value = exportOutput.Value
+                });
+                _stack.Add($"{exportOutput.Name}Export", new Humidifier.Output {
+                    Description = exportOutput.Description,
+                    Value = exportOutput.Value,
+                    Export = new Dictionary<string, dynamic> {
+                        ["Name"] = Fn.Sub($"${{AWS::StackName}}::{exportOutput.Name}")
+                    },
+                    Condition = "ModuleIsNotNested"
+                });
+                break;
+            case CustomResourceHandlerOutput customResourceHandlerOutput:
+                _stack.Add($"{customResourceHandlerOutput.CustomResourceName.ToIdentifier()}Handler", new Humidifier.Output {
+                    Description = customResourceHandlerOutput.Description,
+                    Value = customResourceHandlerOutput.Handler,
+                    Export = new Dictionary<string, dynamic> {
+                        ["Name"] = Fn.Sub($"${{DeploymentPrefix}}CustomResource-{customResourceHandlerOutput.CustomResourceName}")
+                    }
+                });
+                break;
+            default:
+                throw new InvalidOperationException($"cannot generate output for this type: {output?.GetType()}");
+            }
+        }
+
         private void AddResource(AModuleEntry entry) {
-            var fullEnvName = entry.FullName.Replace("::", "_").ToUpperInvariant();
             var logicalId = entry.LogicalId;
             switch(entry) {
-            case ValueEntry valueParameter:
-                AddEnvironmentParameter(valueParameter.IsSecret, GetReference());
+            case ValueEntry value:
+
+                // nothing to do
                 break;
-            case PackageEntry packageParameter:
-                _stack.Add(logicalId, packageParameter.Package);
-                AddEnvironmentParameter(isSecret: false, value: GetReference());
+            case PackageEntry package:
+                _stack.Add(logicalId, package.Package);
                 break;
-            case HumidifierEntry humidifierParameter:
+            case HumidifierEntry humidifier:
                 _stack.Add(
                     logicalId,
-                    humidifierParameter.Resource,
-                    humidifierParameter.Condition,
-                    dependsOn: humidifierParameter.DependsOn.ToArray()
+                    humidifier.Resource,
+                    humidifier.Condition,
+                    dependsOn: humidifier.DependsOn.ToArray()
                 );
-                AddEnvironmentParameter(isSecret: false, value: GetReference());
                 break;
-            case InputEntry inputParameter: {
-                    _stack.Add(logicalId, inputParameter.Parameter);
-                    AddEnvironmentParameter(inputParameter.IsSecret, GetReference());
-                }
+            case InputEntry input:
+                _stack.Add(logicalId, input.Parameter);
                 break;
             case FunctionEntry function:
-                AddFunction(_module, function);
+
+                // TODO: make sure all these fields get set
+                // _stack.Add(function.Name, new Lambda.Function {
+                //     Code = new Lambda.FunctionTypes.Code {
+                //         S3Bucket = FnRef("DeploymentBucketName"),
+                //         S3Key = FnSub($"Modules/{module.Name}/Assets/{Path.GetFileName(function.PackagePath)}")
+                //     },
+                // });
+
+                _stack.Add(function.LogicalId, function.Function);
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(entry), entry, "unknown parameter type");
             }
-
-            // local function
-            void AddEnvironmentParameter(bool isSecret, object value) {
-
-                // TODO: let's make this a tad more efficient!
-                foreach(var function in entry.Scope.Select(name => _module.Entries.OfType<FunctionEntry>().First(f => f.FullName == name))) {
-                    var environment = function.Function.Environment.Variables;
-                    if(isSecret) {
-                        environment["SEC_" + fullEnvName] = value;
-                    } else {
-                        environment["STR_" + fullEnvName] = value;
-                    }
-                }
-            }
-
-            object GetReference() => _module.GetReference(entry.FullName);
-        }
-
-        private void AddFunction(Module module, FunctionEntry function) {
-
-            // initialize function environment variables
-            var environment = function.Function.Environment.Variables;
-            foreach(var kv in function.Environment) {
-
-                // add explicit environment variable as string value
-                var key = "STR_" + kv.Key.Replace("::", "_").ToUpperInvariant();
-                environment[key] = (dynamic)kv.Value;
-            }
-            environment["MODULE_NAME"] = module.Name;
-            environment["MODULE_ID"] = FnRef("AWS::StackName");
-            environment["MODULE_VERSION"] = module.Version.ToString();
-            environment["LAMBDA_NAME"] = function.Name;
-            environment["LAMBDA_RUNTIME"] = function.Function.Runtime;
-            environment["DEADLETTERQUEUE"] = module.GetReference("LambdaSharp::DeadLetterQueueArn");
-            environment["DEFAULTSECRETKEY"] = module.GetReference("LambdaSharp::DefaultSecretKeyArn");
-
-            // TODO: make sure all these fields get set
-            // _stack.Add(function.Name, new Lambda.Function {
-            //     Code = new Lambda.FunctionTypes.Code {
-            //         S3Bucket = FnRef("DeploymentBucketName"),
-            //         S3Key = FnSub($"Modules/{module.Name}/Assets/{Path.GetFileName(function.PackagePath)}")
-            //     },
-            // });
-
-            // create function definition
-            _stack.Add(function.Name, function.Function);
         }
     }
 }

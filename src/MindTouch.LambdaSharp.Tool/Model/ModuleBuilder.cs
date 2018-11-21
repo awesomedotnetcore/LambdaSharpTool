@@ -45,6 +45,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public AModuleEntry GetEntry(string fullName) =>  _module.GetEntry(fullName);
         public void AddCondition(string name, object condition) => _module.Conditions.Add(name, condition);
         public void AddResourceStatement(Humidifier.Statement statement) => _module.ResourceStatements.Add(statement);
+        public void AddPragma(object pragma) => _module.Pragmas.Add(pragma);
 
         public bool AddSecret(object secret) {
             if(secret is string textSecret) {
@@ -236,16 +237,40 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             _module.Outputs.Add(new CustomResourceHandlerOutput {
                 CustomResourceName = customResourceName,
                 Description = description,
-                Handler = handler
+                Handler = FnRef(handler)
             });
         }
 
         public void AddMacro(string macroName, string description, string handler) {
-            _module.Outputs.Add(new MacroOutput {
-                Macro = macroName,
-                Description = description,
-                Handler = handler
-            });
+
+            // check if a root macros collection needs to be created
+            if(!_module.TryGetEntry("Macros", out AModuleEntry macrosEntry)) {
+                macrosEntry = AddValue(
+                    parent: null,
+                    name: "Macros",
+                    description: "Macro definitions",
+                    reference: "",
+                    scope: null,
+                    isSecret: false
+                );
+            }
+
+            // add macro resource
+            AddResource(
+                parent: macrosEntry,
+                name: macroName,
+                description: description,
+                scope: null,
+                resource: new Humidifier.CustomResource("AWS::CloudFormation::Macro") {
+
+                    // TODO (2018-10-30, bjorg): we may want to set 'LogGroupName' and 'LogRoleARN' as well
+                    ["Name"] = FnSub("${DeploymentPrefix}" + macroName),
+                    ["Description"] = description ?? "",
+                    ["FunctionName"] = FnRef(handler)
+                },
+                dependsOn: null,
+                condition: null
+            );
         }
 
         public AModuleEntry AddResource(
@@ -349,7 +374,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                     SecurityGroupIds = securityGroups
                 };
             }
-            return AddEntry(new FunctionEntry(
+            var result = new FunctionEntry(
                 parent: parent,
                 name: name,
                 description: description,
@@ -371,14 +396,17 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                     Handler = handler,
                     VpcConfig = vpc,
                     Role = FnGetAtt("Module::Role", "Arn"),
-                    DeadLetterConfig = new Humidifier.Lambda.FunctionTypes.DeadLetterConfig {
-                        TargetArn = FnRef("Module::DeadLetterQueueArn")
-                    },
                     Environment = new Humidifier.Lambda.FunctionTypes.Environment {
                         Variables = new Dictionary<string, dynamic>()
                     }
                 }
-            ));
+            );
+            if(_module.HasLambdaSharpDependencies) {
+                result.Function.DeadLetterConfig = new Humidifier.Lambda.FunctionTypes.DeadLetterConfig {
+                    TargetArn = FnRef("Module::DeadLetterQueueArn")
+                };
+            }
+            return AddEntry(result);
         }
 
         public void AddGrant(string sid, string awsType, object reference, object awsAllow) {
