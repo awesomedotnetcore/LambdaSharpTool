@@ -99,6 +99,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 defaultValue: ""
             );
 
+            // TODO (2018-11-20, bjorg): this code will fail with `no-lambdasharp-dependencies` because `module.Secrets` will be empty
             // add decryption permission for secret
             _builder.AddResourceStatement(new Humidifier.Statement {
                 Sid = "SecretsDecryption",
@@ -346,150 +347,146 @@ namespace MindTouch.LambdaSharp.Tool {
                     AddFunction(module, function);
                 }
 
-                // check if RestApi resources need to be added
-                if(functions.Any(f => f.Sources.OfType<ApiGatewaySource>().Any())) {
+                // check if an API gateway needs to be created
+                if(_apiGatewayRoutes.Any()) {
 
-                    // check if an API gateway needs to be created
-                    if(_apiGatewayRoutes.Any()) {
+                    // create a RestApi
+                    var restApiEntry = _builder.AddResource(
+                        parent: moduleEntry,
+                        name: "RestApi",
+                        description: "Module REST API",
+                        scope: null,
+                        resource: new Humidifier.ApiGateway.RestApi {
+                            Name = FnSub("${AWS::StackName} Module API"),
+                            Description = "${Module::Name} API (v${Module::Version})",
+                            FailOnWarnings = true
+                        },
+                        dependsOn: null,
+                        condition: null
+                    );
 
-                        // create a RestApi
-                        var restApiEntry = _builder.AddResource(
-                            parent: moduleEntry,
-                            name: "RestApi",
-                            description: "Module REST API",
-                            scope: null,
-                            resource: new Humidifier.ApiGateway.RestApi {
-                                Name = FnSub("${AWS::StackName} Module API"),
-                                Description = "${Module::Name} API (v${Module::Version})",
-                                FailOnWarnings = true
-                            },
-                            dependsOn: null,
-                            condition: null
-                        );
+                    // recursively create resources as needed
+                    var apiMethods = new List<KeyValuePair<string, object>>();
+                    AddApiResource(restApiEntry, FnRef(restApiEntry.FullName), FnGetAtt(restApiEntry.FullName, "RootResourceId"), 0, _apiGatewayRoutes, apiMethods);
 
-                        // recursively create resources as needed
-                        var apiMethods = new List<KeyValuePair<string, object>>();
-                        AddApiResource(restApiEntry, FnRef(restApiEntry.FullName), FnGetAtt(restApiEntry.FullName, "RootResourceId"), 0, _apiGatewayRoutes, apiMethods);
+                    // RestApi deployment depends on all methods and their hash (to force redeployment in case of change)
+                    var methodSignature = string.Join("\n", apiMethods
+                        .OrderBy(kv => kv.Key)
+                        .Select(kv => JsonConvert.SerializeObject(kv.Value))
+                    );
+                    string methodsHash = methodSignature.ToMD5Hash();
 
-                        // RestApi deployment depends on all methods and their hash (to force redeployment in case of change)
-                        var methodSignature = string.Join("\n", apiMethods
-                            .OrderBy(kv => kv.Key)
-                            .Select(kv => JsonConvert.SerializeObject(kv.Value))
-                        );
-                        string methodsHash = methodSignature.ToMD5Hash();
+                    // add RestApi url
+                    _builder.AddValue(
+                        restApiEntry,
+                        name: "Url",
+                        description: "Module REST API URL",
+                        scope: null,
+                        reference: FnSub("https://${Module::RestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/LATEST/"),
+                        isSecret: false
+                    );
 
-                        // add RestApi url
-                        _builder.AddValue(
-                            restApiEntry,
-                            name: "Url",
-                            description: "Module REST API URL",
-                            scope: null,
-                            reference: FnSub("https://${Module::RestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/LATEST/"),
-                            isSecret: false
-                        );
-
-                        // create a RestApi role that can write logs
-                        _builder.AddResource(
-                            parent: restApiEntry,
-                            name: "Role",
-                            description: "Module REST API Role",
-                            scope: null,
-                            resource: new Humidifier.IAM.Role {
-                                AssumeRolePolicyDocument = new Humidifier.PolicyDocument {
-                                    Version = "2012-10-17",
-                                    Statement = new[] {
-                                        new Humidifier.Statement {
-                                            Sid = "Module::RestApi::Invocation",
-                                            Effect = "Allow",
-                                            Principal = new Humidifier.Principal {
-                                                Service = "apigateway.amazonaws.com"
-                                            },
-                                            Action = "sts:AssumeRole"
-                                        }
-                                    }.ToList()
-                                },
-                                Policies = new[] {
-                                    new Humidifier.IAM.Policy {
-                                        PolicyName = FnSub("${AWS::StackName}ModuleRestApiPolicy"),
-                                        PolicyDocument = new Humidifier.PolicyDocument {
-                                            Version = "2012-10-17",
-                                            Statement = new[] {
-                                                new Humidifier.Statement {
-                                                    Sid = "Module::RestApi::Logging",
-                                                    Effect = "Allow",
-                                                    Action = new[] {
-                                                        "logs:CreateLogGroup",
-                                                        "logs:CreateLogStream",
-                                                        "logs:DescribeLogGroups",
-                                                        "logs:DescribeLogStreams",
-                                                        "logs:PutLogEvents",
-                                                        "logs:GetLogEvents",
-                                                        "logs:FilterLogEvents"
-                                                    },
-                                                    Resource = "*"
-                                                }
-                                            }.ToList()
-                                        }
+                    // create a RestApi role that can write logs
+                    _builder.AddResource(
+                        parent: restApiEntry,
+                        name: "Role",
+                        description: "Module REST API Role",
+                        scope: null,
+                        resource: new Humidifier.IAM.Role {
+                            AssumeRolePolicyDocument = new Humidifier.PolicyDocument {
+                                Version = "2012-10-17",
+                                Statement = new[] {
+                                    new Humidifier.Statement {
+                                        Sid = "Module::RestApi::Invocation",
+                                        Effect = "Allow",
+                                        Principal = new Humidifier.Principal {
+                                            Service = "apigateway.amazonaws.com"
+                                        },
+                                        Action = "sts:AssumeRole"
                                     }
                                 }.ToList()
                             },
-                            dependsOn: null,
-                            condition: null
-                        );
-
-                        // create a RestApi account which uses the RestApi role
-                        _builder.AddResource(
-                            parent: restApiEntry,
-                            name: "Account",
-                            description: "Module REST API Account",
-                            scope: null,
-                            resource: new Humidifier.ApiGateway.Account {
-                                CloudWatchRoleArn = FnGetAtt("Module::RestApi::Role", "Arn")
-                            },
-                            dependsOn: null,
-                            condition: null
-                        );
-
-                        // NOTE (2018-06-21, bjorg): the RestApi deployment resource depends on ALL methods resources having been created;
-                        //  a new name is used for the deployment to force the stage to be updated
-                        _builder.AddResource(
-                            parent: restApiEntry,
-                            name: "Deployment" + methodsHash,
-                            description: "Module REST API Deployment",
-                            scope: null,
-                            resource: new Humidifier.ApiGateway.Deployment {
-                                RestApiId = FnRef("Module::RestApi"),
-                                Description = FnSub($"${{AWS::StackName}} API [{methodsHash}]")
-                            },
-                            dependsOn: null, // TODO: depends on all AWS::ApiGateway::Method
-                            condition: null
-                        );
-
-                        // RestApi stage depends on API gateway deployment and API gateway account
-                        // NOTE (2018-06-21, bjorg): the stage resource depends on the account resource having been granted
-                        //  the necessary permissions for logging
-                        _builder.AddResource(
-                            parent: restApiEntry,
-                            name: "Stage",
-                            description: "Module REST API Stage",
-                            scope: null,
-                            resource: new Humidifier.ApiGateway.Stage {
-                                RestApiId = FnRef("Module::RestApi"),
-                                DeploymentId = FnRef("Module::RestApi::Deployment" + methodsHash),
-                                StageName = "LATEST",
-                                MethodSettings = new[] {
-                                    new Humidifier.ApiGateway.StageTypes.MethodSetting {
-                                        DataTraceEnabled = true,
-                                        HttpMethod = "*",
-                                        LoggingLevel = "INFO",
-                                        ResourcePath = "/*"
+                            Policies = new[] {
+                                new Humidifier.IAM.Policy {
+                                    PolicyName = FnSub("${AWS::StackName}ModuleRestApiPolicy"),
+                                    PolicyDocument = new Humidifier.PolicyDocument {
+                                        Version = "2012-10-17",
+                                        Statement = new[] {
+                                            new Humidifier.Statement {
+                                                Sid = "Module::RestApi::Logging",
+                                                Effect = "Allow",
+                                                Action = new[] {
+                                                    "logs:CreateLogGroup",
+                                                    "logs:CreateLogStream",
+                                                    "logs:DescribeLogGroups",
+                                                    "logs:DescribeLogStreams",
+                                                    "logs:PutLogEvents",
+                                                    "logs:GetLogEvents",
+                                                    "logs:FilterLogEvents"
+                                                },
+                                                Resource = "*"
+                                            }
+                                        }.ToList()
                                     }
-                                }.ToList()
-                            },
-                            dependsOn: new[] { "Module::RestApi::Account" },
-                            condition: null
-                        );
-                    }
+                                }
+                            }.ToList()
+                        },
+                        dependsOn: null,
+                        condition: null
+                    );
+
+                    // create a RestApi account which uses the RestApi role
+                    _builder.AddResource(
+                        parent: restApiEntry,
+                        name: "Account",
+                        description: "Module REST API Account",
+                        scope: null,
+                        resource: new Humidifier.ApiGateway.Account {
+                            CloudWatchRoleArn = FnGetAtt("Module::RestApi::Role", "Arn")
+                        },
+                        dependsOn: null,
+                        condition: null
+                    );
+
+                    // NOTE (2018-06-21, bjorg): the RestApi deployment resource depends on ALL methods resources having been created;
+                    //  a new name is used for the deployment to force the stage to be updated
+                    _builder.AddResource(
+                        parent: restApiEntry,
+                        name: "Deployment" + methodsHash,
+                        description: "Module REST API Deployment",
+                        scope: null,
+                        resource: new Humidifier.ApiGateway.Deployment {
+                            RestApiId = FnRef("Module::RestApi"),
+                            Description = FnSub($"${{AWS::StackName}} API [{methodsHash}]")
+                        },
+                        dependsOn: null, // TODO: depends on all AWS::ApiGateway::Method
+                        condition: null
+                    );
+
+                    // RestApi stage depends on API gateway deployment and API gateway account
+                    // NOTE (2018-06-21, bjorg): the stage resource depends on the account resource having been granted
+                    //  the necessary permissions for logging
+                    _builder.AddResource(
+                        parent: restApiEntry,
+                        name: "Stage",
+                        description: "Module REST API Stage",
+                        scope: null,
+                        resource: new Humidifier.ApiGateway.Stage {
+                            RestApiId = FnRef("Module::RestApi"),
+                            DeploymentId = FnRef("Module::RestApi::Deployment" + methodsHash),
+                            StageName = "LATEST",
+                            MethodSettings = new[] {
+                                new Humidifier.ApiGateway.StageTypes.MethodSetting {
+                                    DataTraceEnabled = true,
+                                    HttpMethod = "*",
+                                    LoggingLevel = "INFO",
+                                    ResourcePath = "/*"
+                                }
+                            }.ToList()
+                        },
+                        dependsOn: new[] { "Module::RestApi::Account" },
+                        condition: null
+                    );
                 }
             }
         }

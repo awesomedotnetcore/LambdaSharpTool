@@ -65,13 +65,17 @@ namespace MindTouch.LambdaSharp.Tool {
             });
 
             // convert collections
-            ForEach("Pragmas", module.Pragmas, (index, pragma) => _builder.AddPragma(pragma));
+            ForEach("Pragmas", module.Pragmas, ConvertPragma);
             ForEach("Secrets", module.Secrets, ConvertSecret);
             ForEach("Inputs", module.Inputs, ConvertInput);
             ForEach("Outputs", module.Outputs, ConvertOutput);
             ForEach("Variables", module.Variables, ConvertParameter);
             ForEach("Functions",  module.Functions, ConvertFunction);
             return _builder.ToModule();
+        }
+
+        private void ConvertPragma(int index, object pragma) {
+            AtLocation($"[{index}]", () => _builder.AddPragma(pragma));
         }
 
         private void ConvertSecret(int index, object secret) {
@@ -101,7 +105,6 @@ namespace MindTouch.LambdaSharp.Tool {
                     input.Resource?.Type,
                     input.Resource?.Allow,
                     input.Resource?.Properties
-
                 ));
                 break;
             case "Import":
