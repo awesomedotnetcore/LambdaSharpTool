@@ -41,9 +41,17 @@ namespace MindTouch.LambdaSharpS3PackageLoader.ResourceHandler {
 
         //--- Properties ---
         public string DestinationBucketName { get; set; }
+        public string DestinationBucketArn { get; set; }
         public string DestinationKeyPrefix { get; set; }
         public string SourceBucketName { get; set; }
         public string SourcePackageKey { get; set; }
+
+        //--- Methods ---
+        public void SetDestinationBucketName() {
+            if(DestinationBucketArn != null) {
+                DestinationBucketName = AwsConverters.ConvertBucketArnToName(DestinationBucketArn);
+            }
+        }
     }
 
     public class ResponseProperties {
@@ -82,7 +90,8 @@ namespace MindTouch.LambdaSharpS3PackageLoader.ResourceHandler {
         }
 
         private async Task<Response<ResponseProperties>> UploadFiles(RequestProperties properties) {
-            LogInfo($"uploading package {properties.SourcePackageKey} to S3 bucket {properties.DestinationBucketName}");
+            properties.SetDestinationBucketName();
+            LogInfo($"uploading package s3://{properties.SourceBucketName}/{properties.SourcePackageKey} to S3 bucket {properties.DestinationBucketName}");
 
             // download package and copy all files to destination bucket
             var entries = new List<string>();
@@ -125,6 +134,7 @@ namespace MindTouch.LambdaSharpS3PackageLoader.ResourceHandler {
         }
 
         private async Task<Response<ResponseProperties>> DeleteFiles(RequestProperties properties) {
+            properties.SetDestinationBucketName();
             LogInfo($"deleting package {properties.SourcePackageKey} from S3 bucket {properties.DestinationBucketName}");
 
             // download package manifest
