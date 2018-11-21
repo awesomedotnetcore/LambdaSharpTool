@@ -94,7 +94,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         ) : base(parent, name, description, null, scope, false) {
             SourceFilepath = sourceFilepath ?? throw new ArgumentNullException(nameof(sourceFilepath));
             Package = new Humidifier.CustomResource("LambdaSharp::S3::Package") {
-                ["DestinationBucketName"] = destinationBucket,
+                ["DestinationBucketArn"] = destinationBucket,
                 ["DestinationKeyPrefix"] = destinationKeyPrefix,
                 ["SourceBucketName"] = AModelProcessor.FnRef("DeploymentBucketName"),
                 ["SourcePackageKey"] = "<MISSING>"
