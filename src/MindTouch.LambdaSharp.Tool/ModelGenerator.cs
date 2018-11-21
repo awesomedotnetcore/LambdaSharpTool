@@ -29,6 +29,7 @@ using Humidifier.Logs;
 using MindTouch.LambdaSharp.Tool.Internal;
 using MindTouch.LambdaSharp.Tool.Model;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace MindTouch.LambdaSharp.Tool {
     using ApiGateway = Humidifier.ApiGateway;
@@ -38,6 +39,14 @@ namespace MindTouch.LambdaSharp.Tool {
     using SNS = Humidifier.SNS;
 
     public class ModelGenerator : AModelProcessor {
+
+        //--- Types ---
+        public class OrderedContractResolver : DefaultContractResolver {
+
+            //--- Methods ---
+            protected override System.Collections.Generic.IList<JsonProperty> CreateProperties(System.Type type, MemberSerialization memberSerialization)
+                => base.CreateProperties(type, memberSerialization).OrderBy(p => p.PropertyName).ToList();
+        }
 
         //--- Fields ---
         private Module _module;
@@ -101,7 +110,7 @@ namespace MindTouch.LambdaSharp.Tool {
             _stack.AddTemplateMetadata("LambdaSharp::Manifest", new ModuleManifest {
                 ModuleName = module.Name,
                 ModuleVersion = module.Version.ToString(),
-                Hash = new JsonStackSerializer().Serialize(_stack).ToMD5Hash(),
+                Hash = GenerateStackHash(),
                 GitSha = gitSha,
                 Pragmas = module.Pragmas,
                 Assets = module.Assets.ToList()
@@ -178,6 +187,21 @@ namespace MindTouch.LambdaSharp.Tool {
             default:
                 throw new ArgumentOutOfRangeException(nameof(entry), entry, "unknown parameter type");
             }
+        }
+
+        private string GenerateStackHash() {
+
+            // convert stack to string using the Humidifier serializer
+            var json = new JsonStackSerializer().Serialize(_stack);
+
+            // parse json into a generic object
+            var value = JsonConvert.DeserializeObject(json);
+
+            // convert value to json, but sort the properties to achieve a stable hash
+            json = JsonConvert.SerializeObject(_stack, Formatting.None, new JsonSerializerSettings() {
+                ContractResolver = new OrderedContractResolver()
+            });
+            return json.ToMD5Hash();
         }
     }
 }
