@@ -47,12 +47,6 @@ namespace MindTouch.LambdaSharp.Tool {
 
         //--- Methods ---
         public void Resolve(Module module) {
-<<<<<<< HEAD
-=======
-            var functionNames = new HashSet<string>(module.Functions.Select(function => function.Name));
-            var freeParameters = new Dictionary<string, AParameter>();
-            var boundParameters = new Dictionary<string, AParameter>();
->>>>>>> master
 
             // resolve scopes
             AtLocation("Entries", () => {
@@ -498,7 +492,6 @@ namespace MindTouch.LambdaSharp.Tool {
                     return true;
                 }
 
-<<<<<<< HEAD
                 // check if the requested key can be resolved using a free entry
                 var visited = new HashSet<string>();
             again:
@@ -531,28 +524,6 @@ namespace MindTouch.LambdaSharp.Tool {
                         case HumidifierEntry _:
                             found = FnGetAtt(key, attribute);
                             break;
-=======
-                // check if key is referring to a function
-                if(functionNames.Contains(key)) {
-                    found = (attribute != null)
-                        ? FnGetAtt(key, attribute)
-                        : FnRef(key);
-                    return true;
-                }
-
-                // see if the requested key can be resolved using a free parameter
-                found = null;
-                if(freeParameters.TryGetValue(key, out AParameter freeParameter)) {
-                    switch(freeParameter) {
-                    case ValueParameter _:
-                    case SecretParameter _:
-                    case PackageParameter _:
-                    case ReferencedResourceParameter _:
-                    case ValueInputParameter _:
-                    case ImportInputParameter _:
-                        if(attribute != null) {
-                            AddError($"reference '{key}' must resolved to a CloudFormation resource to be used with an Fn::GetAtt expression");
->>>>>>> master
                         }
                     } else {
                         found = freeEntry.Reference;

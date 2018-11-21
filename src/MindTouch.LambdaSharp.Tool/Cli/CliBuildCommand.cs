@@ -252,8 +252,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         string moduleSource = null;
                         if(Directory.Exists(argument)) {
 
-                            // check if argument is pointing to a folder containing a module definition
-                            if(File.Exists(Path.Combine(argument, "manifest.json"))) {
+                            // check if argument is pointing to a folder containing a cloudformation file
+                            if(File.Exists(Path.Combine(argument, "cloudformation.json"))) {
                                 settings.WorkingDirectory = Path.GetFullPath(argument);
                                 settings.OutputDirectory = settings.WorkingDirectory;
                             } else {
@@ -261,7 +261,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                             }
                         } else if((Path.GetExtension(argument) == ".yml") || (Path.GetExtension(argument) == ".yaml")) {
                             moduleSource = Path.GetFullPath(argument);
-                        } else if(Path.GetFileName(argument) == "manifest.json") {
+                        } else if(Path.GetFileName(argument) == "cloudformation.json") {
                             settings.WorkingDirectory = Path.GetDirectoryName(argument);
                             settings.OutputDirectory = settings.WorkingDirectory;
                         } else {
@@ -369,8 +369,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         string moduleSource = null;
                         if(Directory.Exists(argument)) {
 
-                            // check if argument is pointing to a folder containing a module definition
-                            if(File.Exists(Path.Combine(argument, "manifest.json"))) {
+                            // check if argument is pointing to a folder containing a cloudformation file
+                            if(File.Exists(Path.Combine(argument, "cloudformation.json"))) {
                                 settings.WorkingDirectory = Path.GetFullPath(argument);
                                 settings.OutputDirectory = settings.WorkingDirectory;
                             } else {
@@ -378,7 +378,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                             }
                         } else if((Path.GetExtension(argument) == ".yml") || (Path.GetExtension(argument) == ".yaml")) {
                             moduleSource = Path.GetFullPath(argument);
-                        } else if(Path.GetFileName(argument) == "manifest.json") {
+                        } else if(Path.GetFileName(argument) == "cloudformation.json") {
                             settings.WorkingDirectory = Path.GetDirectoryName(argument);
                             settings.OutputDirectory = settings.WorkingDirectory;
                         } else {
@@ -469,7 +469,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 // package all functions
                 new ModelFunctionPackager(settings, moduleSource).Process(
                     module,
-                    settings.ToolVersion,
                     skipCompile: skipFunctionBuild,
                     skipAssemblyValidation: skipAssemblyValidation,
                     gitsha: gitsha,
@@ -497,43 +496,17 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     Directory.CreateDirectory(outputCloudFormationDirectory);
                 }
 
-var moduleJson = Path.ChangeExtension(outputCloudFormationFilePath, null) + "-module.json";
-File.WriteAllText(moduleJson, JsonConvert.SerializeObject(module, Formatting.Indented));
-Console.WriteLine($"{moduleJson} generated");
-//return false;
+// TODO: make this optional
+// var moduleJson = Path.ChangeExtension(outputCloudFormationFilePath, null) + "-module.json";
+// File.WriteAllText(moduleJson, JsonConvert.SerializeObject(module, Formatting.Indented));
+// Console.WriteLine($"{moduleJson} generated");
 
                 // generate & save cloudformation template
-                var template = new ModelGenerator(settings, moduleSource).Generate(module);
+                var template = new ModelGenerator(settings, moduleSource).Generate(module, gitsha);
                 if(HasErrors) {
                     return false;
                 }
                 File.WriteAllText(outputCloudFormationFilePath, template);
-
-                // generate & save module manifest
-                var functions = module.Entries.OfType<FunctionEntry>()
-                    .Select(entry => entry.Function)
-                    .Where(f => f?.Code?.ZipFile != null)
-                    .Select(f => Path.GetRelativePath(settings.OutputDirectory, (string)f.Code.ZipFile))
-                    .ToList();
-                var packages = module.Entries.OfType<PackageEntry>()
-                    .Select(entry => entry)
-                    .Select(p => Path.GetRelativePath(settings.OutputDirectory, p.PackagePath))
-                    .ToList();
-                var manifest = new ModuleManifest {
-                    ModuleName = module.Name,
-                    ModuleVersion = module.Version.ToString(),
-                    Hash = template.ToMD5Hash(),
-                    GitSha = gitsha,
-                    Pragmas = module.Pragmas,
-                    Template = Path.GetRelativePath(settings.OutputDirectory, outputCloudFormationFilePath),
-                    FunctionAssets = functions,
-                    PackageAssets = packages
-                };
-                var manifestFilePath = Path.Combine(settings.OutputDirectory, "manifest.json");
-                if(!Directory.Exists(settings.OutputDirectory)) {
-                    Directory.CreateDirectory(settings.OutputDirectory);
-                }
-                File.WriteAllText(manifestFilePath, JsonConvert.SerializeObject(manifest, Formatting.Indented));
                 Console.WriteLine("=> Module compilation done");
                 return true;
             } catch(Exception e) {
@@ -543,14 +516,19 @@ Console.WriteLine($"{moduleJson} generated");
         }
 
         public async Task<string> PublishStepAsync(Settings settings) {
-            var manifestFile = Path.Combine(settings.OutputDirectory, "manifest.json");
-            if(!File.Exists(manifestFile)) {
-                AddError("folder does not contain a module manifest for publishing");
+            var cloudformationFile = Path.Combine(settings.OutputDirectory, "cloudformation.json");
+            if(!File.Exists(cloudformationFile)) {
+                AddError("folder does not contain a CloudFormation file for publishing");
                 return null;
             }
-            // load manifest file
-            var manifestText = File.ReadAllText(manifestFile);
-            var manifest = JsonConvert.DeserializeObject<ModuleManifest>(manifestText);
+            // load cloudformation file
+            var cloudformationText = File.ReadAllText(cloudformationFile);
+            var cloudformation = JsonConvert.DeserializeObject<Dictionary<string, object>>(cloudformationText);
+            if(!cloudformation.TryGetValue("LambdaSharp::Manifest", out object manifestObject)) {
+                AddError("CloudFormation file does not contain a LambdaSharp manifest");
+                return null;
+            }
+            var manifest = JsonConvert.DeserializeObject<ModuleManifest>(JsonConvert.SerializeObject(manifestObject));
             await PopulateToolSettingsAsync(settings);
 
             // make sure there is a deployment bucket
@@ -560,8 +538,7 @@ Console.WriteLine($"{moduleJson} generated");
             }
 
             // publish module
-            var templateFilePath = manifest.Template;
-            return await new ModelPublisher(settings, manifestFile).PublishAsync(manifest);
+            return await new ModelPublisher(settings, cloudformationFile).PublishAsync(manifest);
         }
 
         public async Task<bool> DeployStepAsync(
@@ -583,17 +560,17 @@ Console.WriteLine($"{moduleJson} generated");
 
             var originalDeploymentBucketName = settings.DeploymentBucketName;
             try {
-                string manifestPath;
+                string cloudformationPath = null;
                 if(moduleKey.StartsWith("s3://", StringComparison.Ordinal)) {
                     var uri = new Uri(moduleKey);
                     settings.DeploymentBucketName = uri.Host;
 
                     // absolute path always starts with '/', which needs to be removed
                     var path = uri.AbsolutePath.Substring(1);
-                    if(!path.EndsWith("/manifest.json", StringComparison.Ordinal)) {
-                        manifestPath = path.TrimEnd('/') + "/manifest.json";
+                    if(!path.EndsWith("/cloudformation.json", StringComparison.Ordinal)) {
+                        cloudformationPath = path.TrimEnd('/') + "/cloudformation.json";
                     } else {
-                        manifestPath = path;
+                        cloudformationPath = path;
                     }
                 } else {
                     VersionInfo requestedVersion = null;
@@ -612,7 +589,6 @@ Console.WriteLine($"{moduleJson} generated");
                     }
 
                     // attempt to find the module in the deployment bucket and then the regional lambdasharp bucket
-                    manifestPath = null;
                     foreach(var bucket in new[] {
                         settings.DeploymentBucketName,
                         $"lambdasharp-{settings.AwsRegion}"
@@ -625,21 +601,26 @@ Console.WriteLine($"{moduleJson} generated");
                         if(foundVersion == null) {
                             continue;
                         }
-                        manifestPath = $"Modules/{moduleName}/Versions/{foundVersion}/manifest.json";
+                        cloudformationPath = $"Modules/{moduleName}/Versions/{foundVersion}/cloudformation.json";
                     }
-                    if(manifestPath == null) {
+                    if(cloudformationPath == null) {
                         AddError($"could not find module: {moduleName} (v{requestedVersion})");
                         return false;
                     }
                 }
 
                 // download manifest
-                var manifestText = await GetS3ObjectContents(settings, manifestPath);
-                if(manifestText == null) {
-                    AddError($"could not load manifest from s3://{settings.DeploymentBucketName}/{manifestPath}");
+                var cloudformationText = await GetS3ObjectContents(settings, cloudformationPath);
+                if(cloudformationText == null) {
+                    AddError($"could not load CloudFormation template from s3://{settings.DeploymentBucketName}/{cloudformationPath}");
                     return false;
                 }
-                var manifest = JsonConvert.DeserializeObject<ModuleManifest>(manifestText);
+                var cloudformation = JsonConvert.DeserializeObject<Dictionary<string, object>>(cloudformationText);
+                if(!cloudformation.TryGetValue("LambdaSharp::Manifest", out object manifestObject)) {
+                    AddError("CloudFormation file does not contain a LambdaSharp manifest");
+                    return false;
+                }
+                var manifest = JsonConvert.DeserializeObject<ModuleManifest>(JsonConvert.SerializeObject(manifestObject));
 
                 // check that the LambdaSharp runtime & CLI versions match
                 if(settings.RuntimeVersion == null) {
@@ -661,6 +642,7 @@ Console.WriteLine($"{moduleJson} generated");
                     try {
                         return await new ModelUpdater(settings, sourceFilename: null).DeployAsync(
                             manifest,
+                            cloudformationPath,
                             instanceName,
                             allowDataLoos,
                             protectStack,

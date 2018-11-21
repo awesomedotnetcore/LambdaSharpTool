@@ -47,7 +47,7 @@ namespace MindTouch.LambdaSharp.Tool {
         public ModelGenerator(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
 
         //--- Methods ---
-        public string Generate(Module module) {
+        public string Generate(Module module, string gitSha) {
             _module = module;
 
             // stack header
@@ -98,11 +98,13 @@ namespace MindTouch.LambdaSharp.Tool {
             });
 
             // add module manifest
-            _stack.AddTemplateMetadata("LambdaSharp::Manifest", new Dictionary<string, object> {
-                ["Version"] = "2018-10-22",
-                ["ModuleName"] = _module.Name,
-                ["ModuleVersion"] = _module.Version.ToString(),
-                ["Pragmas"] = _module.Pragmas
+            _stack.AddTemplateMetadata("LambdaSharp::Manifest", new ModuleManifest {
+                ModuleName = module.Name,
+                ModuleVersion = module.Version.ToString(),
+                Hash = new JsonStackSerializer().Serialize(_stack).ToMD5Hash(),
+                GitSha = gitSha,
+                Pragmas = module.Pragmas,
+                Assets = module.Assets.ToList()
             });
 
             // generate JSON template

@@ -19,6 +19,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using MindTouch.LambdaSharp.Tool.Internal;
@@ -44,6 +45,9 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         [JsonIgnore]
         private readonly List<AModuleEntry> _entries = new List<AModuleEntry>();
 
+        [JsonIgnore]
+        private readonly List<string> _assets = new List<string>();
+
         //--- Properties ---
         public string Name { get; set; }
         public VersionInfo Version { get; set; }
@@ -54,6 +58,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public IDictionary<string, object> Conditions  { get; set; } = new Dictionary<string, object>();
         public List<Humidifier.Statement> ResourceStatements { get; } = new List<Humidifier.Statement>();
         public IList<ModuleGrant> Grants { get; } = new List<ModuleGrant>();
+        public IEnumerable<string> Assets => _assets;
         public IEnumerable<AModuleEntry> Entries => _entries;
 
         [JsonIgnore]
@@ -73,5 +78,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             _entries.Add(entry);
             return entry;
         }
+
+        public void AddAsset(string filepath) => _assets.Add(filepath ?? throw new ArgumentNullException(nameof(filepath)));
     }
 }

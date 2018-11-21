@@ -43,7 +43,6 @@ namespace MindTouch.LambdaSharp.Tool {
 
         public void Process(
             Module module,
-            VersionInfo version,
             bool skipCompile,
             bool skipAssemblyValidation,
             string gitsha,
@@ -54,7 +53,6 @@ namespace MindTouch.LambdaSharp.Tool {
                     Process(
                         module,
                         function,
-                        version,
                         skipCompile,
                         skipAssemblyValidation,
                         gitsha,
@@ -67,7 +65,6 @@ namespace MindTouch.LambdaSharp.Tool {
         private void Process(
             Module module,
             FunctionEntry function,
-            VersionInfo version,
             bool skipCompile,
             bool skipAssemblyValidation,
             string gitsha,
@@ -107,7 +104,6 @@ namespace MindTouch.LambdaSharp.Tool {
                 ProcessDotNet(
                     module,
                     function,
-                    version,
                     skipCompile,
                     skipAssemblyValidation,
                     gitsha,
@@ -119,7 +115,6 @@ namespace MindTouch.LambdaSharp.Tool {
                 ProcessJavascript(
                     module,
                     function,
-                    version,
                     skipCompile,
                     skipAssemblyValidation,
                     gitsha,
@@ -136,7 +131,6 @@ namespace MindTouch.LambdaSharp.Tool {
         private void ProcessDotNet(
             Module module,
             FunctionEntry function,
-            VersionInfo version,
             bool skipCompile,
             bool skipAssemblyValidation,
             string gitsha,
@@ -209,7 +203,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     .Where(elem => elem.Attribute("Include")?.Value.StartsWith("MindTouch.LambdaSharp", StringComparison.Ordinal) ?? false);
                 if(includes != null) {
                     foreach(var include in includes) {
-                        var expectedVersion = VersionInfo.Parse($"{version.Major}.{version.Minor}{version.Suffix}");
+                        var expectedVersion = VersionInfo.Parse($"{Settings.ToolVersion.Major}.{Settings.ToolVersion.Minor}{Settings.ToolVersion.Suffix}");
                         var library = include.Attribute("Include").Value;
                         var libraryVersionText = include.Attribute("Version")?.Value;
                         if(libraryVersionText == null) {
@@ -226,9 +220,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
             }
             if(skipCompile) {
-                function.Function.Code = new Humidifier.Lambda.FunctionTypes.Code {
-                    ZipFile = $"{function.Name}-NOCOMPILE.zip"
-                };
+                function.UpdatePackagePath($"{function.Name}-NOCOMPILE.zip");
                 return;
             }
 
@@ -270,9 +262,9 @@ namespace MindTouch.LambdaSharp.Tool {
                         return;
                     }
                 }
-                function.Function.Code = new Humidifier.Lambda.FunctionTypes.Code {
-                    ZipFile = CreatePackage(function.Name, gitsha, tempDirectory)
-                };
+                var package = CreatePackage(function.Name, gitsha, tempDirectory);
+                function.UpdatePackagePath(package);
+                module.AddAsset(package);
             } finally {
                 if(Directory.Exists(tempDirectory)) {
                     try {
@@ -343,7 +335,6 @@ namespace MindTouch.LambdaSharp.Tool {
         private void ProcessJavascript(
             Module module,
             FunctionEntry function,
-            VersionInfo version,
             bool skipCompile,
             bool skipAssemblyValidation,
             string gitsha,
@@ -362,15 +353,13 @@ namespace MindTouch.LambdaSharp.Tool {
                 function.Function.Runtime = "nodejs8.10";
             }
             if(skipCompile) {
-                function.Function.Code = new Humidifier.Lambda.FunctionTypes.Code {
-                    ZipFile = $"{function.Name}-NOCOMPILE.zip"
-                };
+                function.UpdatePackagePath($"{function.Name}-NOCOMPILE.zip");
                 return;
             }
             Console.WriteLine($"=> Building function {function.Name} [{function.Function.Runtime}]");
-            function.Function.Code = new Humidifier.Lambda.FunctionTypes.Code {
-                ZipFile = CreatePackage(function.Name, gitsha, Path.GetDirectoryName(project))
-            };
+            var package = CreatePackage(function.Name, gitsha, Path.GetDirectoryName(project));
+            function.UpdatePackagePath(package);
+            module.AddAsset(package);
         }
 
         private string CreatePackage(string functionName, string gitsha, string folder) {

@@ -5,11 +5,7 @@
     <NoWarn>CS1998</NoWarn>
 
     <PackageId>MindTouch.LambdaSharp.Tool</PackageId>
-<<<<<<< HEAD
-    <VersionPrefix>0.4.0.1</VersionPrefix>
-=======
     <VersionPrefix>0.4.0.2</VersionPrefix>
->>>>>>> master
     <Title>MindTouch λ#</Title>
     <Description>A serverless framework for rapid application development on AWS Lambda</Description>
     <Company>MindTouch, Inc.</Company>

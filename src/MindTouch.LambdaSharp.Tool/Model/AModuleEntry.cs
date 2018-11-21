@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using MindTouch.LambdaSharp.Tool.Internal;
 using Newtonsoft.Json;
@@ -87,17 +88,29 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             string name,
             string description,
             IList<string> scope,
-            string sourceFilepath,
-            Humidifier.CustomResource package
+            object destinationBucket,
+            object destinationKeyPrefix,
+            string sourceFilepath
         ) : base(parent, name, description, null, scope, false) {
             SourceFilepath = sourceFilepath ?? throw new ArgumentNullException(nameof(sourceFilepath));
-            Package = package ?? throw new ArgumentNullException(nameof(package));
+            Package = new Humidifier.CustomResource("LambdaSharp::S3::Package") {
+                ["DestinationBucketName"] = destinationBucket,
+                ["DestinationKeyPrefix"] = destinationKeyPrefix,
+                ["SourceBucketName"] = AModelProcessor.FnRef("DeploymentBucketName"),
+                ["SourcePackageKey"] = "<MISSING>"
+            };
         }
 
         //--- Properties ---
         public string SourceFilepath { get; set; }
-        public string PackagePath { get; set; }
+        public string PackagePath { get; private set; }
         public Humidifier.CustomResource Package { get; set; }
+
+        //--- Methods ---
+        public void UpdatePackagePath(string package) {
+            PackagePath = package ?? throw new ArgumentNullException(nameof(package));
+            Package["SourcePackageKey"] = AModelProcessor.FnSub($"Modules/${{Module::Name}}/Assets/{Path.GetFileName(package)}");
+        }
     }
 
     public class HumidifierEntry : AModuleEntry {
@@ -184,5 +197,12 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         //--- Methods ---
         public bool HasPragma(string pragma) => Pragmas?.Contains(pragma) == true;
+
+        public void UpdatePackagePath(string package) {
+            Function.Code = new Humidifier.Lambda.FunctionTypes.Code {
+                S3Bucket = AModelProcessor.FnRef("DeploymentBucketName"),
+                S3Key = AModelProcessor.FnSub($"Modules/${{Module::Name}}/Assets/{Path.GetFileName(package)}")
+            };
+        }
    }
 }

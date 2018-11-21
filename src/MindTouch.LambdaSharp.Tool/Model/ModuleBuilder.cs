@@ -337,12 +337,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 description: description,
                 scope: ConvertScope(scope),
                 sourceFilepath: sourceFilepath,
-                package: new Humidifier.CustomResource("LambdaSharp::S3::Package") {
-                    ["DestinationBucketName"] = destinationBucket,
-                    ["DestinationKeyPrefix"] = destinationKeyPrefix,
-                    ["SourceBucketName"] = FnRef("DeploymentBucketName"),
-                    // ["SourcePackageKey"] = $"Modules/{_module.Name}/Assets/{Path.GetFileName(packageParameter.PackagePath)}"
-                }
+                destinationBucket: destinationBucket,
+                destinationKeyPrefix: destinationKeyPrefix
             );
             result.Reference = FnGetAtt(result.ResourceName, "Url");
             return AddEntry(result);

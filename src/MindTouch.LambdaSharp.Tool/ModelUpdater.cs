@@ -45,6 +45,7 @@ namespace MindTouch.LambdaSharp.Tool {
         //--- Methods ---
         public async Task<bool> DeployAsync(
             ModuleManifest manifest,
+            string cloudformationPath,
             string altModuleName,
             bool allowDataLoss,
             bool protectStack,
@@ -169,7 +170,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // create/update cloudformation stack
             var success = false;
-            var templateUrl = $"https://{Settings.DeploymentBucketName}.s3.amazonaws.com/{manifest.Template}";
+            var templateUrl = $"https://{Settings.DeploymentBucketName}.s3.amazonaws.com/{cloudformationPath}";
             if(mostRecentStackEventId != null) {
                 try {
                     Console.WriteLine($"=> Stack update initiated for {stackName}");

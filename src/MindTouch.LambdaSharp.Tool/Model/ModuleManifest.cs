@@ -29,15 +29,13 @@ namespace MindTouch.LambdaSharp.Tool.Model {
     public class ModuleManifest {
 
         //--- Properties ---
-        public string Version { get; set; } = "2018-10-22";
+        public string Version { get; set; } = "2018-11-22";
         public string ModuleName { get; set; }
         public string ModuleVersion { get; set; }
         public string Hash { get; set; }
         public string GitSha { get; set; }
         public IList<object> Pragmas { get; set; }
-        public string Template { get; set; }
-        public IList<string> FunctionAssets { get; set; }
-        public IList<string> PackageAssets { get; set; }
+        public IList<string> Assets { get; set; }
 
         //--- Methods ---
         public bool HasPragma(string pragma) => Pragmas?.Contains(pragma) == true;
