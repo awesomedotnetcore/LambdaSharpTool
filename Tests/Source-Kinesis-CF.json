@@ -61,7 +61,10 @@
       "Type": "AWS::Lambda::Function",
       "Properties": {
         "Code": {
-          "ZipFile": "Function-NOCOMPILE.zip"
+          "S3Bucket": {
+            "Ref": "@DeploymentBucketName"
+          },
+          "S3Key": "Modules/TestModule/Assets/Function-NOCOMPILE.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -638,10 +641,13 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2018-10-22",
+      "Version": "2018-11-22",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
-      "Pragmas": []
+      "Hash": "091FF6EA57711BCF53C637071C3F2903",
+      "GitSha": "bac0d834f9477ef0d6ff6b499b699ef8c533f3fb",
+      "Pragmas": [],
+      "Assets": []
     }
   }
 }

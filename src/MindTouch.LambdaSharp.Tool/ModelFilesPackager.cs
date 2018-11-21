@@ -104,7 +104,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     }
                 }
                 parameter.UpdatePackagePath(package);
-                _module.AddAsset(package);
+                _module.AddAsset(Path.GetRelativePath(Settings.OutputDirectory, package));
             });
         }
     }

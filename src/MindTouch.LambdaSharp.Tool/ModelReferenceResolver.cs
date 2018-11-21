@@ -136,12 +136,16 @@ namespace MindTouch.LambdaSharp.Tool {
                         switch(entry) {
                         case InputEntry _:
                         case ValueEntry _:
-                        case PackageEntry _:
 
                             // nothing to do
                             break;
+                        case PackageEntry package:
+                            AtLocation("Package", () => {
+                                package.Package = (Humidifier.CustomResource)Substitute(package.Package, ReportMissingReference);
+                            });
+                            break;
                         case HumidifierEntry humidifier:
-                            AtLocation("Resources", () => {
+                            AtLocation("Resource", () => {
                                 humidifier.Resource = (Humidifier.Resource)Substitute(humidifier.Resource, ReportMissingReference);
                             });
                             AtLocation("DependsOn", () => {

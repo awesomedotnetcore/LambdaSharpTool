@@ -221,10 +221,13 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2018-10-22",
+      "Version": "2018-11-22",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
-      "Pragmas": []
+      "Hash": "5F961F76EA070517F4DB957BC938F0F2",
+      "GitSha": "bac0d834f9477ef0d6ff6b499b699ef8c533f3fb",
+      "Pragmas": [],
+      "Assets": []
     }
   }
 }

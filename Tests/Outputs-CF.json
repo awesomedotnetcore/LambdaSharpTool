@@ -67,7 +67,10 @@
       "Type": "AWS::Lambda::Function",
       "Properties": {
         "Code": {
-          "ZipFile": "Function-NOCOMPILE.zip"
+          "S3Bucket": {
+            "Ref": "@DeploymentBucketName"
+          },
+          "S3Key": "Modules/TestModule/Assets/Function-NOCOMPILE.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -522,20 +525,12 @@
     },
     "MyFunction": {
       "Value": {
-<<<<<<< HEAD
         "Ref": "@Function"
-=======
-        "Ref": "Function"
->>>>>>> master
       }
     },
     "MyFunctionExport": {
       "Value": {
-<<<<<<< HEAD
         "Ref": "@Function"
-=======
-        "Ref": "Function"
->>>>>>> master
       },
       "Export": {
         "Name": {
@@ -700,10 +695,13 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2018-10-22",
+      "Version": "2018-11-22",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
-      "Pragmas": []
+      "Hash": "B58DA173922CF178090CB5C51E3AE561",
+      "GitSha": "bac0d834f9477ef0d6ff6b499b699ef8c533f3fb",
+      "Pragmas": [],
+      "Assets": []
     }
   }
 }

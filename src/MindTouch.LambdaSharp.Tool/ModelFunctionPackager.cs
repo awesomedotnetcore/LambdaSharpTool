@@ -264,7 +264,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
                 var package = CreatePackage(function.Name, gitsha, tempDirectory);
                 function.UpdatePackagePath(package);
-                module.AddAsset(package);
+                module.AddAsset(Path.GetRelativePath(Settings.OutputDirectory, package));
             } finally {
                 if(Directory.Exists(tempDirectory)) {
                     try {
@@ -359,7 +359,7 @@ namespace MindTouch.LambdaSharp.Tool {
             Console.WriteLine($"=> Building function {function.Name} [{function.Function.Runtime}]");
             var package = CreatePackage(function.Name, gitsha, Path.GetDirectoryName(project));
             function.UpdatePackagePath(package);
-            module.AddAsset(package);
+            module.AddAsset(Path.GetRelativePath(Settings.OutputDirectory, package));
         }
 
         private string CreatePackage(string functionName, string gitsha, string folder) {
