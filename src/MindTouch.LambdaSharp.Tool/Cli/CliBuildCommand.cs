@@ -443,6 +443,10 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     return false;
                 }
 
+                // delete output files
+                File.Delete(Path.Combine(settings.OutputDirectory, "manifest.json"));
+                File.Delete(outputCloudFormationFilePath);
+
                 // read input file
                 Console.WriteLine();
                 Console.WriteLine($"Compiling module: {Path.GetRelativePath(Directory.GetCurrentDirectory(), moduleSource)}");
