@@ -522,12 +522,20 @@
     },
     "MyFunction": {
       "Value": {
+<<<<<<< HEAD
         "Ref": "@Function"
+=======
+        "Ref": "Function"
+>>>>>>> master
       }
     },
     "MyFunctionExport": {
       "Value": {
+<<<<<<< HEAD
         "Ref": "@Function"
+=======
+        "Ref": "Function"
+>>>>>>> master
       },
       "Export": {
         "Name": {

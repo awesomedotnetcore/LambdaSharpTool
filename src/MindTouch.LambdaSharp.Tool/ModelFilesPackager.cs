@@ -42,9 +42,15 @@ namespace MindTouch.LambdaSharp.Tool {
         //--- Methods ---
         public void Process(Module module) {
             _module = module;
+<<<<<<< HEAD
             foreach(var entry in module.Entries.OfType<PackageEntry>()) {
                 AtLocation(entry.FullName, () => {
                     ProcessParameter(entry);
+=======
+            foreach(var parameter in module.Variables.Where(p => p.Package != null)) {
+                AtLocation(parameter.Package, () => {
+                    ProcessParameter(parameter);
+>>>>>>> master
                 });
             }
         }
@@ -85,6 +91,7 @@ namespace MindTouch.LambdaSharp.Tool {
                             }
                         }
                     }
+<<<<<<< HEAD
                     package = Path.Combine(Settings.OutputDirectory, $"package_{parameter.Name}_{md5.ComputeHash(bytes.ToArray()).ToHexString()}.zip");
                 }
 
@@ -92,6 +99,15 @@ namespace MindTouch.LambdaSharp.Tool {
                 Console.WriteLine($"=> Building {parameter.Name} package");
                 if(Directory.Exists(Settings.OutputDirectory)) {
                     foreach(var file in Directory.GetFiles(Settings.OutputDirectory, $"package_{parameter.Name}*.zip")) {
+=======
+                    package = Path.Combine(Settings.OutputDirectory, $"package_{parameter.Package}_{md5.ComputeHash(bytes.ToArray()).ToHexString()}.zip");
+                }
+
+                // create zip package
+                Console.WriteLine($"=> Building {parameter.Package} package");
+                if(Directory.Exists(Settings.OutputDirectory)) {
+                    foreach(var file in Directory.GetFiles(Settings.OutputDirectory, $"package_{parameter.Package}*.zip")) {
+>>>>>>> master
                         try {
                             File.Delete(file);
                         } catch { }
