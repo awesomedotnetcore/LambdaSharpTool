@@ -8,6 +8,21 @@ Inputs:
 
 Variables:
 
+  - Var: MyQueue
+    Scope: "*"
+    Resource:
+      Type: AWS::SQS::Queue
+
+  - Var: ConstantValue
+    Value:
+      - Hello
+      - World
+
+  - Var: DynamicValue
+    Value:
+      - Queue ARN
+      - !GetAtt MyQueue.Arn
+
   - Var: MyResource
     Description: A CloudFormation dummy resource
     Resource:
@@ -17,3 +32,8 @@ Variables:
           - www.${Domain}
           - Domain: !Ref RootDomainName
         Result2: !Sub 'arn:aws:ec2:${AWS::Region}:${AWS::AccountId}'
+        Result3: !Sub '${MyQueue}/*'
+        Result4: !Sub '${MyQueue.Arn}/*'
+        Result5: !Sub 'Value: ${ConstantValue}'
+        Result6: !Sub 'Value: ${DynamicValue}'
+

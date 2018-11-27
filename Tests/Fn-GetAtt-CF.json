@@ -227,8 +227,8 @@
       "Version": "2018-11-22",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
-      "Hash": "0E4C797D53CD82739248DF3E290F45F6",
-      "GitSha": "bac0d834f9477ef0d6ff6b499b699ef8c533f3fb",
+      "Hash": "07E15F9082A2096386818CDD82BCF5BB",
+      "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Pragmas": [],
       "Assets": []
     }

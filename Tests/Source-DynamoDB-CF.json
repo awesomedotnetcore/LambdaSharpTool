@@ -243,6 +243,93 @@
               "Version": "2012-10-17",
               "Statement": [
                 {
+                  "Sid": "InputTable",
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:DescribeStream",
+                    "dynamodb:GetRecords",
+                    "dynamodb:GetShardIterator",
+                    "dynamodb:ListStreams"
+                  ],
+                  "Resource": [
+                    {
+                      "Ref": "@InputTable"
+                    },
+                    {
+                      "Fn::Join": [
+                        "/",
+                        [
+                          {
+                            "Ref": "@InputTable"
+                          },
+                          "stream",
+                          "*"
+                        ]
+                      ]
+                    },
+                    {
+                      "Fn::Join": [
+                        "/",
+                        [
+                          {
+                            "Ref": "@InputTable"
+                          },
+                          "index",
+                          "*"
+                        ]
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "Sid": "Table",
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:DescribeStream",
+                    "dynamodb:GetRecords",
+                    "dynamodb:GetShardIterator",
+                    "dynamodb:ListStreams"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::GetAtt": [
+                        "@Table",
+                        "Arn"
+                      ]
+                    },
+                    {
+                      "Fn::Join": [
+                        "/",
+                        [
+                          {
+                            "Fn::GetAtt": [
+                              "@Table",
+                              "Arn"
+                            ]
+                          },
+                          "stream",
+                          "*"
+                        ]
+                      ]
+                    },
+                    {
+                      "Fn::Join": [
+                        "/",
+                        [
+                          {
+                            "Fn::GetAtt": [
+                              "@Table",
+                              "Arn"
+                            ]
+                          },
+                          "index",
+                          "*"
+                        ]
+                      ]
+                    }
+                  ]
+                },
+                {
                   "Sid": "SecretsDecryption",
                   "Effect": "Allow",
                   "Action": [
@@ -499,10 +586,7 @@
         },
         "FilterPattern": "-\"*** \"",
         "LogGroupName": {
-          "Fn::GetAtt": [
-            "@FunctionLogGroup",
-            "Arn"
-          ]
+          "Ref": "@FunctionLogGroup"
         },
         "RoleArn": {
           "Fn::GetAtt": [
@@ -668,8 +752,8 @@
       "Version": "2018-11-22",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
-      "Hash": "B67CF7E91806B6094418F8DD9D8083B0",
-      "GitSha": "bac0d834f9477ef0d6ff6b499b699ef8c533f3fb",
+      "Hash": "AC18934225B22E2CA6B6CA775D5B1411",
+      "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Pragmas": [],
       "Assets": []
     }

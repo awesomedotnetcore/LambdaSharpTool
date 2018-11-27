@@ -99,12 +99,14 @@ namespace MindTouch.LambdaSharp.Tool {
                 defaultValue: ""
             );
 
-            // TODO (2018-11-20, bjorg): this code will fail with `no-lambdasharp-dependencies` because `module.Secrets` will be empty
+            // TODO (2018-11-20, bjorg): the following code will fail with `no-lambdasharp-dependencies`
+            // because `module.Secrets` will be empty since the default encryption key will not have been added.
+
             // add decryption permission for secret
-            _builder.AddResourceStatement(new Humidifier.Statement {
-                Sid = "SecretsDecryption",
-                Effect = "Allow",
-                Resource = FnSplit(
+            _builder.AddGrant(
+                sid: "SecretsDecryption",
+                awsType: null,
+                reference: FnSplit(
                     ",",
                     FnIf(
                         "SecretsIsEmpty",
@@ -118,13 +120,13 @@ namespace MindTouch.LambdaSharp.Tool {
                         )
                     )
                 ),
-                Action = new List<string> {
+                allow: new[] {
                     "kms:Decrypt",
                     "kms:Encrypt",
                     "kms:GenerateDataKey",
                     "kms:GenerateDataKeyWithoutPlaintext"
                 }
-            });
+            );
             _builder.AddCondition("SecretsIsEmpty", FnEquals(FnRef("Secrets"), ""));
 
             // add standard parameters (unless requested otherwise)
@@ -179,14 +181,14 @@ namespace MindTouch.LambdaSharp.Tool {
                 );
 
                 // permissions needed for dead-letter queue
-                _builder.AddResourceStatement(new Humidifier.Statement {
-                    Sid = "ModuleDeadLetterQueueLogging",
-                    Effect = "Allow",
-                    Resource = FnRef("Module::DeadLetterQueueArn"),
-                    Action = new List<string> {
+                _builder.AddGrant(
+                    sid: "ModuleDeadLetterQueueLogging",
+                    awsType: null,
+                    reference: FnRef("Module::DeadLetterQueueArn"),
+                    allow: new[] {
                         "sqs:SendMessage"
                     }
-                });
+                );
             }
 
             // add LambdaSharp Deployment Settings
@@ -229,6 +231,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         ["ModuleName"] = module.Name,
                         ["ModuleVersion"] = module.Version.ToString()
                     },
+                    resourceArnAttribute: null,
                     dependsOn: null,
                     condition: null
                 );
@@ -268,33 +271,34 @@ namespace MindTouch.LambdaSharp.Tool {
                             }
                         }.ToList()
                     },
+                    resourceArnAttribute: null,
                     dependsOn: null,
                     condition: null
                 );
 
                 // permission needed for writing to log streams (but not for creating log groups!)
-                _builder.AddResourceStatement(new Humidifier.Statement {
-                    Sid = "ModuleLogStreamAccess",
-                    Effect = "Allow",
-                    Resource = "arn:aws:logs:*:*:*",
-                    Action = new List<string> {
+                _builder.AddGrant(
+                    sid: "ModuleLogStreamAccess",
+                    awsType: null,
+                    reference: "arn:aws:logs:*:*:*",
+                    allow: new[] {
                         "logs:CreateLogStream",
                         "logs:PutLogEvents"
                     }
-                });
+                );
 
                 // permissions needed for lambda functions to exist in a VPC
                 if(functions.Any(function => function.Function.VpcConfig != null)) {
-                    _builder.AddResourceStatement(new Humidifier.Statement {
-                        Sid = "ModuleVpcNetworkInterfaces",
-                        Effect = "Allow",
-                        Resource = "*",
-                        Action = new List<string> {
+                    _builder.AddGrant(
+                        sid: "ModuleVpcNetworkInterfaces",
+                        awsType: null,
+                        reference: "*",
+                        allow: new[] {
                             "ec2:DescribeNetworkInterfaces",
                             "ec2:CreateNetworkInterface",
                             "ec2:DeleteNetworkInterface"
                         }
-                    });
+                    );
                 }
 
                 // create function registration
@@ -337,6 +341,7 @@ namespace MindTouch.LambdaSharp.Tool {
                                 }
                             }.ToList()
                         },
+                        resourceArnAttribute: null,
                         dependsOn: null,
                         condition: null
                     );
@@ -361,13 +366,14 @@ namespace MindTouch.LambdaSharp.Tool {
                             Description = "${Module::Name} API (v${Module::Version})",
                             FailOnWarnings = true
                         },
+                        resourceArnAttribute: null,
                         dependsOn: null,
                         condition: null
                     );
 
                     // recursively create resources as needed
                     var apiMethods = new List<KeyValuePair<string, object>>();
-                    AddApiResource(restApiEntry, FnRef(restApiEntry.FullName), FnGetAtt(restApiEntry.FullName, "RootResourceId"), 0, _apiGatewayRoutes, apiMethods);
+                    AddApiResource(restApiEntry, FnRef(restApiEntry.ResourceName), FnGetAtt(restApiEntry.ResourceName, "RootResourceId"), 0, _apiGatewayRoutes, apiMethods);
 
                     // RestApi deployment depends on all methods and their hash (to force redeployment in case of change)
                     var methodSignature = string.Join("\n", apiMethods
@@ -431,6 +437,7 @@ namespace MindTouch.LambdaSharp.Tool {
                                 }
                             }.ToList()
                         },
+                        resourceArnAttribute: null,
                         dependsOn: null,
                         condition: null
                     );
@@ -444,6 +451,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         resource: new Humidifier.ApiGateway.Account {
                             CloudWatchRoleArn = FnGetAtt("Module::RestApi::Role", "Arn")
                         },
+                        resourceArnAttribute: null,
                         dependsOn: null,
                         condition: null
                     );
@@ -459,6 +467,7 @@ namespace MindTouch.LambdaSharp.Tool {
                             RestApiId = FnRef("Module::RestApi"),
                             Description = FnSub($"${{AWS::StackName}} API [{methodsHash}]")
                         },
+                        resourceArnAttribute: null,
                         dependsOn: null, // TODO: depends on all AWS::ApiGateway::Method
                         condition: null
                     );
@@ -484,6 +493,7 @@ namespace MindTouch.LambdaSharp.Tool {
                                 }
                             }.ToList()
                         },
+                        resourceArnAttribute: null,
                         dependsOn: new[] { "Module::RestApi::Account" },
                         condition: null
                     );
@@ -516,6 +526,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     description: null,
                     scope: null,
                     resource: apiMethod,
+                    resourceArnAttribute: null,
                     dependsOn: null,
                     condition: null
                 );
@@ -528,14 +539,15 @@ namespace MindTouch.LambdaSharp.Tool {
                     scope: null,
                     resource: new Humidifier.Lambda.Permission {
                         Action = "lambda:InvokeFunction",
-                        FunctionName = FnGetAtt(method.Function.FullName, "Arn"),
+                        FunctionName = FnGetAtt(method.Function.ResourceName, "Arn"),
                         Principal = "apigateway.amazonaws.com",
                         SourceArn = FnSub($"arn:aws:execute-api:${{AWS::Region}}:${{AWS::AccountId}}:${{Module::RestApi}}/LATEST/{method.Method}/{string.Join("/", method.Path)}")
                     },
+                    resourceArnAttribute: null,
                     dependsOn: null,
                     condition: null
                 );
-                apiMethods.Add(new KeyValuePair<string, object>(methodEntry.FullName, apiMethod));
+                apiMethods.Add(new KeyValuePair<string, object>(methodEntry.ResourceName, apiMethod));
             }
 
             // find sub-routes and group common sub-route prefix
@@ -557,10 +569,11 @@ namespace MindTouch.LambdaSharp.Tool {
                         ParentId = parentId,
                         PathPart = subRoute.Key
                     },
+                    resourceArnAttribute: null,
                     dependsOn: null,
                     condition: null
                 );
-                AddApiResource(resource, restApiId, FnRef(resource.FullName), level + 1, subRoute, apiMethods);
+                AddApiResource(resource, restApiId, FnRef(resource.ResourceName), level + 1, subRoute, apiMethods);
             }
 
             Humidifier.ApiGateway.Method CreateRequestResponseApiMethod(ApiRoute method) {
@@ -577,7 +590,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         Uri = FnSub(
                             "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Arn}/invocations",
                             new Dictionary<string, object> {
-                                ["Arn"] = FnGetAtt(method.Function.FullName, "Arn")
+                                ["Arn"] = FnGetAtt(method.Function.ResourceName, "Arn")
                             }
                         )
                     }
@@ -657,6 +670,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     //  see https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutRetentionPolicy.html
                     RetentionInDays = 7
                 },
+                resourceArnAttribute: null,
                 dependsOn: null,
                 condition: null
             );
@@ -674,10 +688,11 @@ namespace MindTouch.LambdaSharp.Tool {
                             description: null,
                             scope: null,
                             resource: new Humidifier.SNS.Subscription {
-                                Endpoint = FnGetAtt(function.FullName, "Arn"),
+                                Endpoint = FnGetAtt(function.ResourceName, "Arn"),
                                 Protocol = "lambda",
                                 TopicArn = arn
                             },
+                            resourceArnAttribute: null,
                             dependsOn: null,
                             condition: null
                         );
@@ -689,9 +704,10 @@ namespace MindTouch.LambdaSharp.Tool {
                             resource: new Humidifier.Lambda.Permission {
                                 Action = "lambda:InvokeFunction",
                                 SourceArn = arn,
-                                FunctionName = FnGetAtt(function.FullName, "Arn"),
+                                FunctionName = FnGetAtt(function.ResourceName, "Arn"),
                                 Principal = "sns.amazonaws.com"
                             },
+                            resourceArnAttribute: null,
                             dependsOn: null,
                             condition: null
                         );
@@ -708,7 +724,7 @@ namespace MindTouch.LambdaSharp.Tool {
                                 Targets = new[] {
                                     new Humidifier.Events.RuleTypes.Target {
                                         Id = FnSub($"${{AWS::StackName}}-{function.LogicalId}Source{sourceSuffix}ScheduleEvent"),
-                                        Arn = FnGetAtt(function.FullName, "Arn"),
+                                        Arn = FnGetAtt(function.ResourceName, "Arn"),
                                         InputTransformer = new Humidifier.Events.RuleTypes.InputTransformer {
                                             InputPathsMap = new Dictionary<string, object> {
                                                 ["version"] = "$.version",
@@ -732,6 +748,7 @@ namespace MindTouch.LambdaSharp.Tool {
                                     }
                                 }.ToList()
                             },
+                            resourceArnAttribute: null,
                             dependsOn: null,
                             condition: null
                         );
@@ -742,10 +759,11 @@ namespace MindTouch.LambdaSharp.Tool {
                             scope: null,
                             resource: new Humidifier.Lambda.Permission {
                                 Action = "lambda:InvokeFunction",
-                                SourceArn = FnGetAtt(schedule.FullName, "Arn"),
-                                FunctionName = FnGetAtt(function.FullName, "Arn"),
+                                SourceArn = FnGetAtt(schedule.ResourceName, "Arn"),
+                                FunctionName = FnGetAtt(function.ResourceName, "Arn"),
                                 Principal = "events.amazonaws.com"
                             },
+                            resourceArnAttribute: null,
                             dependsOn: null,
                             condition: null
                         );
@@ -772,9 +790,10 @@ namespace MindTouch.LambdaSharp.Tool {
                                 Action = "lambda:InvokeFunction",
                                 SourceAccount = FnRef("AWS::AccountId"),
                                 SourceArn = arn,
-                                FunctionName = FnGetAtt(function.FullName, "Arn"),
+                                FunctionName = FnGetAtt(function.ResourceName, "Arn"),
                                 Principal = "s3.amazonaws.com"
                             },
+                            resourceArnAttribute: null,
                             dependsOn: null,
                             condition: null
                         );
@@ -785,13 +804,14 @@ namespace MindTouch.LambdaSharp.Tool {
                             scope: null,
                             resource: new Humidifier.CustomResource("LambdaSharp::S3::Subscription") {
                                 ["BucketArn"] = arn,
-                                ["FunctionArn"] = FnGetAtt(function.FullName, "Arn"),
+                                ["FunctionArn"] = FnGetAtt(function.ResourceName, "Arn"),
                                 ["Filters"] = new List<object> {
 
                                     // TODO (2018-11-18, bjorg): we need to group filters from the same function for the same bucket
                                     ConvertS3Source()
                                 }
                             },
+                            resourceArnAttribute: null,
                             dependsOn: new[] { permission.FullName },
                             condition: null
                         );
@@ -822,8 +842,9 @@ namespace MindTouch.LambdaSharp.Tool {
                                 BatchSize = sqsSource.BatchSize,
                                 Enabled = true,
                                 EventSourceArn = arn,
-                                FunctionName = FnRef(function.FullName)
+                                FunctionName = FnRef(function.ResourceName)
                             },
+                            resourceArnAttribute: null,
                             dependsOn: null,
                             condition: null
                         );
@@ -855,10 +876,11 @@ namespace MindTouch.LambdaSharp.Tool {
                             scope: null,
                             resource: new Humidifier.Lambda.Permission {
                                 Action = "lambda:InvokeFunction",
-                                FunctionName = FnGetAtt(function.FullName, "Arn"),
+                                FunctionName = FnGetAtt(function.ResourceName, "Arn"),
                                 Principal = "alexa-appkit.amazon.com",
                                 EventSourceToken = eventSourceToken
                             },
+                            resourceArnAttribute: null,
                             dependsOn: null,
                             condition: null
                         );
@@ -876,8 +898,9 @@ namespace MindTouch.LambdaSharp.Tool {
                                 StartingPosition = dynamoDbSource.StartingPosition,
                                 Enabled = true,
                                 EventSourceArn = arn,
-                                FunctionName = FnRef(function.FullName)
+                                FunctionName = FnRef(function.ResourceName)
                             },
+                            resourceArnAttribute: null,
                             dependsOn: null,
                             condition: null
                         );
@@ -895,8 +918,9 @@ namespace MindTouch.LambdaSharp.Tool {
                                 StartingPosition = kinesisSource.StartingPosition,
                                 Enabled = true,
                                 EventSourceArn = arn,
-                                FunctionName = FnRef(function.FullName)
+                                FunctionName = FnRef(function.ResourceName)
                             },
+                            resourceArnAttribute: null,
                             dependsOn: null,
                             condition: null
                         );
@@ -916,7 +940,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     scope: null,
                     resource: new Humidifier.CustomResource("LambdaSharp::Register::Function") {
                         ["ModuleId"] = FnRef("AWS::StackName"),
-                        ["FunctionId"] = FnRef(function.FullName),
+                        ["FunctionId"] = FnRef(function.ResourceName),
                         ["FunctionName"] = function.Name,
                         ["FunctionLogGroupName"] = FnSub($"/aws/lambda/${{{function.LogicalId}}}"),
                         ["FunctionPlatform"] = "AWS Lambda",
@@ -925,6 +949,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         ["FunctionMaxMemory"] = function.Function.MemorySize,
                         ["FunctionMaxDuration"] = function.Function.Timeout
                     },
+                    resourceArnAttribute: null,
                     dependsOn: new[] { "Module::Registration" },
                     condition: null
                 );
@@ -936,9 +961,10 @@ namespace MindTouch.LambdaSharp.Tool {
                     resource: new Humidifier.Logs.SubscriptionFilter {
                         DestinationArn = FnRef("Module::LoggingStreamArn"),
                         FilterPattern = "-\"*** \"",
-                        LogGroupName = FnRef(logGroup.FullName),
+                        LogGroupName = FnRef(logGroup.ResourceName),
                         RoleArn = FnGetAtt("Module::CloudWatchLogsRole", "Arn")
                     },
+                    resourceArnAttribute: null,
                     dependsOn: null,
                     condition: null
                 );
@@ -947,11 +973,9 @@ namespace MindTouch.LambdaSharp.Tool {
 
         private void Enumerate(string fullName, Action<string, AModuleEntry, object> action) {
             var entry = _builder.GetEntry(fullName);
-            var variable = FnRef(fullName);
-            if(variable is IList list) {
+            if(entry.Reference is IList list) {
                 switch(list.Count) {
                 case 0:
-                    action("", entry, variable);
                     break;
                 case 1:
                     action("", entry, list[0]);
@@ -963,7 +987,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     break;
                 }
             } else {
-                action("", entry, variable);
+                action("", entry, entry.GetExportReference());
             }
         }
    }

@@ -217,6 +217,26 @@
               "Version": "2012-10-17",
               "Statement": [
                 {
+                  "Sid": "InputTopic",
+                  "Effect": "Allow",
+                  "Action": [
+                    "sns:Subscribe"
+                  ],
+                  "Resource": {
+                    "Ref": "@InputTopic"
+                  }
+                },
+                {
+                  "Sid": "Topic",
+                  "Effect": "Allow",
+                  "Action": [
+                    "sns:Subscribe"
+                  ],
+                  "Resource": {
+                    "Ref": "@Topic"
+                  }
+                },
+                {
                   "Sid": "SecretsDecryption",
                   "Effect": "Allow",
                   "Action": [
@@ -384,7 +404,7 @@
       "Properties": {
         "Endpoint": {
           "Fn::GetAtt": [
-            "Function",
+            "@Function",
             "Arn"
           ]
         },
@@ -400,7 +420,7 @@
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
           "Fn::GetAtt": [
-            "Function",
+            "@Function",
             "Arn"
           ]
         },
@@ -415,7 +435,7 @@
       "Properties": {
         "Endpoint": {
           "Fn::GetAtt": [
-            "Function",
+            "@Function",
             "Arn"
           ]
         },
@@ -431,7 +451,7 @@
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
           "Fn::GetAtt": [
-            "Function",
+            "@Function",
             "Arn"
           ]
         },
@@ -504,10 +524,7 @@
         },
         "FilterPattern": "-\"*** \"",
         "LogGroupName": {
-          "Fn::GetAtt": [
-            "@FunctionLogGroup",
-            "Arn"
-          ]
+          "Ref": "@FunctionLogGroup"
         },
         "RoleArn": {
           "Fn::GetAtt": [
@@ -673,8 +690,8 @@
       "Version": "2018-11-22",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
-      "Hash": "A35A73D8A3B32E691853B42F53EB6D79",
-      "GitSha": "bac0d834f9477ef0d6ff6b499b699ef8c533f3fb",
+      "Hash": "4582F8F72B12A6FDE5C220008A804899",
+      "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Pragmas": [],
       "Assets": []
     }

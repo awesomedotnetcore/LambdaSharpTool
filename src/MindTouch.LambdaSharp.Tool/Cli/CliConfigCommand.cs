@@ -155,9 +155,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 var response = await cfClient.CreateStackAsync(request);
                 var outcome = await cfClient.TrackStackUpdateAsync(stackName, mostRecentStackEventId: null);
                 if(outcome.Success) {
-                    Console.WriteLine($"=> Stack creation finished (finished: {DateTime.Now:yyyy-MM-dd HH:mm:ss})");
+                    Console.WriteLine("=> Stack creation finished");
                 } else {
-                    Console.WriteLine($"=> Stack creation FAILED (finished: {DateTime.Now:yyyy-MM-dd HH:mm:ss})");
+                    Console.WriteLine("=> Stack creation FAILED");
                 }
             } else {
 
@@ -211,14 +211,14 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     var response = await cfClient.UpdateStackAsync(request);
                     var outcome = await cfClient.TrackStackUpdateAsync(stackName, mostRecentStackEventId);
                     if(outcome.Success) {
-                        Console.WriteLine($"=> Stack update finished (finished: {DateTime.Now:yyyy-MM-dd HH:mm:ss})");
+                        Console.WriteLine("=> Stack update finished");
                     } else {
-                        Console.WriteLine($"=> Stack update FAILED (finished: {DateTime.Now:yyyy-MM-dd HH:mm:ss})");
+                        Console.WriteLine("=> Stack update FAILED");
                     }
                 } catch(AmazonCloudFormationException e) when(e.Message == "No updates are to be performed.") {
 
                     // this error is thrown when no required updates where found
-                    Console.WriteLine($"=> No stack update required (finished: {DateTime.Now:yyyy-MM-dd HH:mm:ss})");
+                    Console.WriteLine("=> No stack update required");
                 }
             }
 

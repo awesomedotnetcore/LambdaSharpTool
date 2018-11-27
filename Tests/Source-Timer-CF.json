@@ -379,7 +379,7 @@
           {
             "Arn": {
               "Fn::GetAtt": [
-                "Function",
+                "@Function",
                 "Arn"
               ]
             },
@@ -407,14 +407,14 @@
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
           "Fn::GetAtt": [
-            "Function",
+            "@Function",
             "Arn"
           ]
         },
         "Principal": "events.amazonaws.com",
         "SourceArn": {
           "Fn::GetAtt": [
-            "Function::Source1ScheduleEvent",
+            "@FunctionSource1ScheduleEvent",
             "Arn"
           ]
         }
@@ -483,10 +483,7 @@
         },
         "FilterPattern": "-\"*** \"",
         "LogGroupName": {
-          "Fn::GetAtt": [
-            "@FunctionLogGroup",
-            "Arn"
-          ]
+          "Ref": "@FunctionLogGroup"
         },
         "RoleArn": {
           "Fn::GetAtt": [
@@ -641,8 +638,8 @@
       "Version": "2018-11-22",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
-      "Hash": "1B2858A7B4D5474CF9933F8193525069",
-      "GitSha": "bac0d834f9477ef0d6ff6b499b699ef8c533f3fb",
+      "Hash": "22B79E8F0A46CEDA31D24498E3E61788",
+      "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Pragmas": [],
       "Assets": []
     }

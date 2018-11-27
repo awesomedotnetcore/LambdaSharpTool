@@ -226,6 +226,104 @@
               "Version": "2012-10-17",
               "Statement": [
                 {
+                  "Sid": "InputBucket",
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:AbortMultipartUpload",
+                    "s3:CreateBucket",
+                    "s3:DeleteObject",
+                    "s3:DeleteObjectTagging",
+                    "s3:DeleteObjectVersion",
+                    "s3:DeleteObjectVersionTagging",
+                    "s3:GetBucketLocation",
+                    "s3:GetObject",
+                    "s3:GetObjectAcl",
+                    "s3:GetObjectTagging",
+                    "s3:GetObjectTorrent",
+                    "s3:GetObjectVersion",
+                    "s3:GetObjectVersionAcl",
+                    "s3:GetObjectVersionTagging",
+                    "s3:GetObjectVersionTorrent",
+                    "s3:ListBucket",
+                    "s3:ListBucketMultipartUploads",
+                    "s3:ListMultipartUploadParts",
+                    "s3:PutObject",
+                    "s3:PutObjectAcl",
+                    "s3:PutObjectTagging",
+                    "s3:PutObjectVersionAcl",
+                    "s3:PutObjectVersionTagging",
+                    "s3:RestoreObject"
+                  ],
+                  "Resource": [
+                    {
+                      "Ref": "@InputBucket"
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          {
+                            "Ref": "@InputBucket"
+                          },
+                          "/*"
+                        ]
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "Sid": "Bucket",
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:AbortMultipartUpload",
+                    "s3:CreateBucket",
+                    "s3:DeleteObject",
+                    "s3:DeleteObjectTagging",
+                    "s3:DeleteObjectVersion",
+                    "s3:DeleteObjectVersionTagging",
+                    "s3:GetBucketLocation",
+                    "s3:GetObject",
+                    "s3:GetObjectAcl",
+                    "s3:GetObjectTagging",
+                    "s3:GetObjectTorrent",
+                    "s3:GetObjectVersion",
+                    "s3:GetObjectVersionAcl",
+                    "s3:GetObjectVersionTagging",
+                    "s3:GetObjectVersionTorrent",
+                    "s3:ListBucket",
+                    "s3:ListBucketMultipartUploads",
+                    "s3:ListMultipartUploadParts",
+                    "s3:PutObject",
+                    "s3:PutObjectAcl",
+                    "s3:PutObjectTagging",
+                    "s3:PutObjectVersionAcl",
+                    "s3:PutObjectVersionTagging",
+                    "s3:RestoreObject"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::GetAtt": [
+                        "@Bucket",
+                        "Arn"
+                      ]
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          {
+                            "Fn::GetAtt": [
+                              "@Bucket",
+                              "Arn"
+                            ]
+                          },
+                          "/*"
+                        ]
+                      ]
+                    }
+                  ]
+                },
+                {
                   "Sid": "SecretsDecryption",
                   "Effect": "Allow",
                   "Action": [
@@ -394,7 +492,7 @@
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
           "Fn::GetAtt": [
-            "Function",
+            "@Function",
             "Arn"
           ]
         },
@@ -426,7 +524,7 @@
         },
         "FunctionArn": {
           "Fn::GetAtt": [
-            "Function",
+            "@Function",
             "Arn"
           ]
         },
@@ -451,7 +549,7 @@
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
           "Fn::GetAtt": [
-            "Function",
+            "@Function",
             "Arn"
           ]
         },
@@ -477,7 +575,7 @@
         },
         "FunctionArn": {
           "Fn::GetAtt": [
-            "Function",
+            "@Function",
             "Arn"
           ]
         },
@@ -559,10 +657,7 @@
         },
         "FilterPattern": "-\"*** \"",
         "LogGroupName": {
-          "Fn::GetAtt": [
-            "@FunctionLogGroup",
-            "Arn"
-          ]
+          "Ref": "@FunctionLogGroup"
         },
         "RoleArn": {
           "Fn::GetAtt": [
@@ -728,8 +823,8 @@
       "Version": "2018-11-22",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
-      "Hash": "461FA2E44DB0C6DDAD94BD55344C618F",
-      "GitSha": "bac0d834f9477ef0d6ff6b499b699ef8c533f3fb",
+      "Hash": "472C98613D9271FA63B096578BBE6045",
+      "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Pragmas": [],
       "Assets": []
     }

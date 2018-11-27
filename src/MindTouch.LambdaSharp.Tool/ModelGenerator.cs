@@ -73,7 +73,7 @@ namespace MindTouch.LambdaSharp.Tool {
             }
             _stack.Add($"ModuleIsNotNested", new Condition(Fn.Equals(Fn.Ref("DeploymentParent"), "")));
 
-            // add parameters
+            // add resources
             foreach(var entry in _module.Entries) {
                 AddResource(entry);
             }

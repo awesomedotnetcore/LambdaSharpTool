@@ -56,30 +56,30 @@
       "Properties": {
         "ServiceToken": {
           "Fn::ImportValue": {
-            "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::S3::Package"
+            "Fn::Sub": "${@DeploymentPrefix}CustomResource-LambdaSharp::S3::Package"
           }
         },
-        "DestinationBucketName": {
-          "Ref": "MyBucket"
+        "DestinationBucketArn": {
+          "Fn::GetAtt": [
+            "@MyBucket",
+            "Arn"
+          ]
         },
         "DestinationKeyPrefix": "Bucket/Folder/",
         "SourceBucketName": {
-          "Ref": "DeploymentBucketName"
+          "Ref": "@DeploymentBucketName"
         },
-<<<<<<< HEAD
         "SourcePackageKey": "Modules/TestModule/Assets/package_MyPackage_60BC4F4B0D9DC088E061E7C1EEBAF6D1.zip"
-=======
-        "SourcePackageKey": {
-          "Fn::Sub": "Modules/TestModule/Assets/package_MyPackage_60BC4F4B0D9DC088E061E7C1EEBAF6D1.zip"
-        }
->>>>>>> master
       }
     },
     "Function": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
         "Code": {
-          "ZipFile": "Function-NOCOMPILE.zip"
+          "S3Bucket": {
+            "Ref": "@DeploymentBucketName"
+          },
+          "S3Key": "Modules/TestModule/Assets/Function-NOCOMPILE.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -233,6 +233,42 @@
             "PolicyDocument": {
               "Version": "2012-10-17",
               "Statement": [
+                {
+                  "Sid": "MyBucket",
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetObject",
+                    "s3:GetObjectAcl",
+                    "s3:GetObjectTagging",
+                    "s3:GetObjectTorrent",
+                    "s3:GetObjectVersion",
+                    "s3:GetObjectVersionAcl",
+                    "s3:GetObjectVersionTagging",
+                    "s3:GetObjectVersionTorrent"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::GetAtt": [
+                        "@MyBucket",
+                        "Arn"
+                      ]
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          {
+                            "Fn::GetAtt": [
+                              "@MyBucket",
+                              "Arn"
+                            ]
+                          },
+                          "/*"
+                        ]
+                      ]
+                    }
+                  ]
+                },
                 {
                   "Sid": "SecretsDecryption",
                   "Effect": "Allow",
@@ -459,10 +495,7 @@
         },
         "FilterPattern": "-\"*** \"",
         "LogGroupName": {
-          "Fn::GetAtt": [
-            "@FunctionLogGroup",
-            "Arn"
-          ]
+          "Ref": "@FunctionLogGroup"
         },
         "RoleArn": {
           "Fn::GetAtt": [
@@ -614,10 +647,15 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2018-10-22",
+      "Version": "2018-11-22",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
-      "Pragmas": []
+      "Hash": "D0FC644A1522D176720D2B329779EAA9",
+      "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
+      "Pragmas": [],
+      "Assets": [
+        "package_MyPackage_60BC4F4B0D9DC088E061E7C1EEBAF6D1.zip"
+      ]
     }
   }
 }

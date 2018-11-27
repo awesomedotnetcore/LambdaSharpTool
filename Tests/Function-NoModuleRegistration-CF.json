@@ -434,8 +434,8 @@
       "Version": "2018-11-22",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
-      "Hash": "E9CE0FD2414F5E9E8232495BF0F4960C",
-      "GitSha": "bac0d834f9477ef0d6ff6b499b699ef8c533f3fb",
+      "Hash": "3858018FEDBA56697F90E20522F6F9B7",
+      "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Pragmas": [
         "no-module-registration"
       ],

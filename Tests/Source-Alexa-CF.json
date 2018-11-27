@@ -381,7 +381,7 @@
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
           "Fn::GetAtt": [
-            "Function",
+            "@Function",
             "Arn"
           ]
         },
@@ -395,7 +395,7 @@
         "EventSourceToken": "amzn1.ask.skill.xxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
         "FunctionName": {
           "Fn::GetAtt": [
-            "Function",
+            "@Function",
             "Arn"
           ]
         },
@@ -419,7 +419,7 @@
         },
         "FunctionName": {
           "Fn::GetAtt": [
-            "Function",
+            "@Function",
             "Arn"
           ]
         },
@@ -489,10 +489,7 @@
         },
         "FilterPattern": "-\"*** \"",
         "LogGroupName": {
-          "Fn::GetAtt": [
-            "@FunctionLogGroup",
-            "Arn"
-          ]
+          "Ref": "@FunctionLogGroup"
         },
         "RoleArn": {
           "Fn::GetAtt": [
@@ -666,8 +663,8 @@
       "Version": "2018-11-22",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
-      "Hash": "6182F06CB3C80D9C6AACB7C3093F6664",
-      "GitSha": "bac0d834f9477ef0d6ff6b499b699ef8c533f3fb",
+      "Hash": "671E8A8512B5227F630E07F1E00F0CB9",
+      "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Pragmas": [],
       "Assets": []
     }

@@ -51,6 +51,10 @@
     }
   },
   "Resources": {
+    "MyQueue": {
+      "Type": "AWS::SQS::Queue",
+      "Properties": {}
+    },
     "MyResource": {
       "Type": "Custom::CustomResourceHandler",
       "Properties": {
@@ -66,6 +70,34 @@
         },
         "Result2": {
           "Fn::Sub": "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}"
+        },
+        "Result3": {
+          "Fn::Sub": "${@MyQueue}/*"
+        },
+        "Result4": {
+          "Fn::Sub": "${MyQueue.Arn}/*"
+        },
+        "Result5": "Value: Hello,World",
+        "Result6": {
+          "Fn::Sub": [
+            "Value: ${P0}",
+            {
+              "P0": {
+                "Fn::Join": [
+                  ",",
+                  [
+                    "Queue ARN",
+                    {
+                      "Fn::GetAtt": [
+                        "MyQueue",
+                        "Arn"
+                      ]
+                    }
+                  ]
+                ]
+              }
+            }
+          ]
         },
         "ServiceToken": {
           "Fn::ImportValue": {
@@ -245,8 +277,8 @@
       "Version": "2018-11-22",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
-      "Hash": "970567C3C74A154F3959FBA305D03B97",
-      "GitSha": "bac0d834f9477ef0d6ff6b499b699ef8c533f3fb",
+      "Hash": "224DDC22BA3456483679E562F00A08A6",
+      "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Pragmas": [],
       "Assets": []
     }

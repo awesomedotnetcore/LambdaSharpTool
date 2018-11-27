@@ -104,7 +104,8 @@ namespace MindTouch.LambdaSharp.Tool {
                     input.MinValue,
                     input.Resource?.Type,
                     input.Resource?.Allow,
-                    input.Resource?.Properties
+                    input.Resource?.Properties,
+                    input.Resource?.ArnAttribute
                 ));
                 break;
             case "Import":
@@ -152,17 +153,13 @@ namespace MindTouch.LambdaSharp.Tool {
                         scope: parameter.Scope,
                         awsType: parameter.Resource.Type,
                         awsProperties: parameter.Resource.Properties,
+                        awsArnAttribute: parameter.Resource.ArnAttribute,
                         dependsOn: ConvertToStringList(parameter.Resource.DependsOn),
                         condition: null
                     );
 
-                    // register managed resource reference
-                    result.Reference = (parameter.Resource.ArnAttribute != null)
-                        ? FnGetAtt(result.ResourceName, parameter.Resource.ArnAttribute)
-                        : ResourceMapping.GetArnReference(parameter.Resource.Type, result.ResourceName);
-
                     // request managed resource grants
-                    _builder.AddGrant(result.LogicalId, parameter.Resource.Type, result.Reference, parameter.Resource.Allow);
+                    _builder.AddGrant(result.LogicalId, parameter.Resource.Type, result.GetExportReference(), parameter.Resource.Allow);
 
                     // recurse
                     ConvertParameters(result);
@@ -269,14 +266,11 @@ namespace MindTouch.LambdaSharp.Tool {
                         description: parameter.Description,
                         scope: parameter.Scope,
                         destinationBucket: (parameter.Bucket is string bucketParameter)
-                            ? FnRef(bucketParameter)
+                            ? _builder.GetEntry(bucketParameter).GetExportReference()
                             : parameter.Bucket,
                         destinationKeyPrefix: parameter.Prefix ?? "",
                         sourceFilepath: parameter.Files
                     );
-
-                    // register package resource reference
-                    result.Reference = FnGetAtt(result.ResourceName, "Url");
 
                     // recurse
                     ConvertParameters(result);

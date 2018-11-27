@@ -49,7 +49,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 : parent.FullName + "::" + name;
             LogicalId = (parent == null)
                 ? name
-                : parent.FullName + name;
+                : parent.LogicalId + name;
             ResourceName = "@" + LogicalId;
             Reference = reference;
             Scope = scope ?? new string[0];
@@ -65,6 +65,9 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public IList<string> Scope { get; set; }
         public object Reference { get; set; }
         public bool IsSecret { get; }
+
+        //--- Abstract Methods ---
+        public abstract object GetExportReference();
     }
 
     public class ValueEntry : AModuleEntry {
@@ -78,6 +81,9 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             IList<string> scope,
             bool isSecret
         ) : base(parent, name, description, reference, scope, isSecret) { }
+
+        //--- Methods ---
+        public override object GetExportReference() => Reference;
     }
 
     public class PackageEntry : AModuleEntry {
@@ -107,6 +113,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public Humidifier.CustomResource Package { get; set; }
 
         //--- Methods ---
+        public override object GetExportReference() => Reference;
+
         public void UpdatePackagePath(string package) {
             PackagePath = package ?? throw new ArgumentNullException(nameof(package));
             Package["SourcePackageKey"] = AModelProcessor.FnSub($"Modules/${{Module::Name}}/Assets/{Path.GetFileName(package)}");
@@ -123,18 +131,27 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             object reference,
             IList<string> scope,
             Humidifier.Resource resource,
+            string resourceArnAttribute,
             IList<string> dependsOn,
             string condition
         ) : base(parent, name, description, reference, scope, false) {
             Resource = resource ?? throw new ArgumentNullException(nameof(resource));
+            ResourceArnAttribute = resourceArnAttribute;
             DependsOn = dependsOn ?? new string[0];
             Condition = condition;
         }
 
         //--- Properties ---
         public Humidifier.Resource Resource { get; set; }
+        public string ResourceArnAttribute { get; set; }
         public IList<string> DependsOn { get; set; } = new string[0];
         public string Condition { get; set; }
+
+        //--- Methods ---
+        public override object GetExportReference()
+            => (ResourceArnAttribute != null)
+                ? AModelProcessor.FnGetAtt(ResourceName, ResourceArnAttribute)
+                : ResourceMapping.GetArnReference(Resource.AWSTypeName, ResourceName);
     }
 
     public class InputEntry : AModuleEntry {
@@ -160,6 +177,9 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public string Section { get; }
         public string Label { get; }
         public Humidifier.Parameter Parameter { get; }
+
+        //--- Methods ---
+        public override object GetExportReference() => Reference;
     }
 
     public class FunctionEntry : AModuleEntry {
@@ -196,6 +216,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public bool HasFunctionRegistration => !HasPragma("no-function-registration");
 
         //--- Methods ---
+        public override object GetExportReference() => ResourceMapping.GetArnReference(Function.AWSTypeName, ResourceName);
         public bool HasPragma(string pragma) => Pragmas?.Contains(pragma) == true;
 
         public void UpdatePackagePath(string package) {

@@ -57,7 +57,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public IList<AOutput> Outputs { get; } = new List<AOutput>();
         public IDictionary<string, object> Conditions  { get; set; } = new Dictionary<string, object>();
         public List<Humidifier.Statement> ResourceStatements { get; } = new List<Humidifier.Statement>();
-        public IList<ModuleGrant> Grants { get; } = new List<ModuleGrant>();
         public IEnumerable<string> Assets => _assets;
         public IEnumerable<AModuleEntry> Entries => _entries;
 

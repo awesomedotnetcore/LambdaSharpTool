@@ -44,7 +44,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public Module ToModule() => _module;
         public AModuleEntry GetEntry(string fullName) =>  _module.GetEntry(fullName);
         public void AddCondition(string name, object condition) => _module.Conditions.Add(name, condition);
-        public void AddResourceStatement(Humidifier.Statement statement) => _module.ResourceStatements.Add(statement);
         public void AddPragma(object pragma) => _module.Pragmas.Add(pragma);
 
         public bool AddSecret(object secret) {
@@ -93,7 +92,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             int? minValue = null,
             string awsType = null,
             object awsAllow = null,
-            IDictionary<string, object> awsProperties = null
+            IDictionary<string, object> awsProperties = null,
+            string arnAttribute = null
         ) {
 
             // create input parameter entry
@@ -141,6 +141,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                     scope: null,
                     awsType: awsType,
                     awsProperties: awsProperties,
+                    awsArnAttribute: arnAttribute,
                     dependsOn: null,
                     condition: condition
                 );
@@ -148,7 +149,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 // register input parameter reference
                 result.Reference = FnIf(
                     condition,
-                    ResourceMapping.GetArnReference(awsType, instance.ResourceName),
+                    instance.GetExportReference(),
                     FnRef(result.ResourceName)
                 );
 
@@ -268,6 +269,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                     ["Description"] = description ?? "",
                     ["FunctionName"] = FnRef(handler)
                 },
+                resourceArnAttribute: null,
                 dependsOn: null,
                 condition: null
             );
@@ -279,6 +281,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             string description,
             object scope,
             Humidifier.Resource resource,
+            string resourceArnAttribute,
             IList<string> dependsOn,
             string condition
         ) {
@@ -289,10 +292,10 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 reference: null,
                 scope: ConvertScope(scope),
                 resource: resource,
+                resourceArnAttribute: resourceArnAttribute,
                 dependsOn: dependsOn,
                 condition: condition
             );
-            result.Reference = ResourceMapping.GetArnReference(resource.AWSTypeName, result.ResourceName);
             return AddEntry(result);
         }
 
@@ -303,11 +306,10 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             object scope,
             string awsType,
             IDictionary<string, object> awsProperties,
+            string awsArnAttribute,
             IList<string> dependsOn,
             string condition
         ) {
-            // TODO: missing => default attribute selector for reference
-
             var result = new HumidifierEntry(
                 parent: parent,
                 name: name,
@@ -315,10 +317,10 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 reference: null,
                 scope: ConvertScope(scope),
                 resource: new Humidifier.CustomResource(awsType, awsProperties),
+                resourceArnAttribute: awsArnAttribute,
                 dependsOn: dependsOn,
                 condition: condition
             );
-            result.Reference = ResourceMapping.GetArnReference(awsType, result.ResourceName);
             return AddEntry(result);
         }
 
@@ -405,11 +407,11 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             return AddEntry(result);
         }
 
-        public void AddGrant(string sid, string awsType, object reference, object awsAllow) {
+        public void AddGrant(string sid, string awsType, object reference, object allow) {
 
             // resolve shorthands and deduplicate statements
             var allowStatements = new List<string>();
-            foreach(var allowStatement in ConvertToStringList(awsAllow)) {
+            foreach(var allowStatement in ConvertToStringList(allow)) {
                 if(allowStatement == "None") {
 
                     // nothing to do
@@ -427,11 +429,12 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 return;
             }
 
-            // add grant
-            _module.Grants.Add(new ModuleGrant {
+            // add role resource statement
+            _module.ResourceStatements.Add(new Humidifier.Statement {
                 Sid = sid,
-                References = ResourceMapping.ExpandResourceReference(awsType, reference),
-                Allow = allowStatements.Distinct().OrderBy(text => text).ToList()
+                Effect = "Allow",
+                Resource = ResourceMapping.ExpandResourceReference(awsType, reference),
+                Action = allowStatements.Distinct().OrderBy(text => text).ToList()
             });
         }
 

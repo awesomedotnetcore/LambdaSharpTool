@@ -7,6 +7,7 @@ lash() {
         --dryrun:cloudformation \
         --aws-account-id 123456789012 \
         --aws-region us-east-1 \
+        --gitsha 0123456789ABCDEF0123456789ABCDEF01234567 \
         --runtime-version 0.4 \
         --cli-version 0.4 \
         --deployment-bucket-name lambdasharp-bucket-name \

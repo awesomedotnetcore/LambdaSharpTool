@@ -434,10 +434,7 @@
         },
         "FilterPattern": "-\"*** \"",
         "LogGroupName": {
-          "Fn::GetAtt": [
-            "@FunctionLogGroup",
-            "Arn"
-          ]
+          "Ref": "@FunctionLogGroup"
         },
         "RoleArn": {
           "Fn::GetAtt": [
@@ -457,25 +454,22 @@
         }
       }
     },
-    "Module::RestApiItemsResource": {
+    "ModuleRestApiItemsResource": {
       "Type": "AWS::ApiGateway::Resource",
       "Properties": {
         "ParentId": {
           "Fn::GetAtt": [
-            "Module::RestApi",
+            "@ModuleRestApi",
             "RootResourceId"
           ]
         },
         "PathPart": "items",
         "RestApiId": {
-          "Fn::GetAtt": [
-            "@ModuleRestApi",
-            "Arn"
-          ]
+          "Ref": "@ModuleRestApi"
         }
       }
     },
-    "Module::RestApi::ItemsResourceGET": {
+    "ModuleRestApiItemsResourceGET": {
       "Type": "AWS::ApiGateway::Method",
       "Properties": {
         "AuthorizationType": "NONE",
@@ -489,7 +483,7 @@
               {
                 "Arn": {
                   "Fn::GetAtt": [
-                    "Function",
+                    "@Function",
                     "Arn"
                   ]
                 }
@@ -498,46 +492,30 @@
           }
         },
         "ResourceId": {
-          "Fn::GetAtt": [
-            "@Module::RestApiItemsResource",
-            "Arn"
-          ]
+          "Ref": "@ModuleRestApiItemsResource"
         },
         "RestApiId": {
-          "Fn::GetAtt": [
-            "@ModuleRestApi",
-            "Arn"
-          ]
+          "Ref": "@ModuleRestApi"
         }
       }
     },
-    "Module::RestApi::ItemsResource::GETPermission": {
+    "ModuleRestApiItemsResourceGETPermission": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
           "Fn::GetAtt": [
-            "Function",
+            "@Function",
             "Arn"
           ]
         },
         "Principal": "apigateway.amazonaws.com",
         "SourceArn": {
-          "Fn::Sub": [
-            "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${P0}/LATEST/GET/items",
-            {
-              "P0": {
-                "Fn::GetAtt": [
-                  "@ModuleRestApi",
-                  "Arn"
-                ]
-              }
-            }
-          ]
+          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${@ModuleRestApi}/LATEST/GET/items"
         }
       }
     },
-    "Module::RestApi::ItemsResourcePOST": {
+    "ModuleRestApiItemsResourcePOST": {
       "Type": "AWS::ApiGateway::Method",
       "Properties": {
         "AuthorizationType": "NONE",
@@ -551,7 +529,7 @@
               {
                 "Arn": {
                   "Fn::GetAtt": [
-                    "Function",
+                    "@Function",
                     "Arn"
                   ]
                 }
@@ -560,64 +538,42 @@
           }
         },
         "ResourceId": {
-          "Fn::GetAtt": [
-            "@Module::RestApiItemsResource",
-            "Arn"
-          ]
+          "Ref": "@ModuleRestApiItemsResource"
         },
         "RestApiId": {
-          "Fn::GetAtt": [
-            "@ModuleRestApi",
-            "Arn"
-          ]
+          "Ref": "@ModuleRestApi"
         }
       }
     },
-    "Module::RestApi::ItemsResource::POSTPermission": {
+    "ModuleRestApiItemsResourcePOSTPermission": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
           "Fn::GetAtt": [
-            "Function",
+            "@Function",
             "Arn"
           ]
         },
         "Principal": "apigateway.amazonaws.com",
         "SourceArn": {
-          "Fn::Sub": [
-            "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${P0}/LATEST/POST/items",
-            {
-              "P0": {
-                "Fn::GetAtt": [
-                  "@ModuleRestApi",
-                  "Arn"
-                ]
-              }
-            }
-          ]
+          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${@ModuleRestApi}/LATEST/POST/items"
         }
       }
     },
-    "Module::RestApi::ItemsResourceIdResource": {
+    "ModuleRestApiItemsResourceIdResource": {
       "Type": "AWS::ApiGateway::Resource",
       "Properties": {
         "ParentId": {
-          "Fn::GetAtt": [
-            "@Module::RestApiItemsResource",
-            "Arn"
-          ]
+          "Ref": "@ModuleRestApiItemsResource"
         },
         "PathPart": "{id}",
         "RestApiId": {
-          "Fn::GetAtt": [
-            "@ModuleRestApi",
-            "Arn"
-          ]
+          "Ref": "@ModuleRestApi"
         }
       }
     },
-    "Module::RestApi::ItemsResource::IdResourceGET": {
+    "ModuleRestApiItemsResourceIdResourceGET": {
       "Type": "AWS::ApiGateway::Method",
       "Properties": {
         "AuthorizationType": "NONE",
@@ -631,7 +587,7 @@
               {
                 "Arn": {
                   "Fn::GetAtt": [
-                    "Function",
+                    "@Function",
                     "Arn"
                   ]
                 }
@@ -640,46 +596,30 @@
           }
         },
         "ResourceId": {
-          "Fn::GetAtt": [
-            "@Module::RestApi::ItemsResourceIdResource",
-            "Arn"
-          ]
+          "Ref": "@ModuleRestApiItemsResourceIdResource"
         },
         "RestApiId": {
-          "Fn::GetAtt": [
-            "@ModuleRestApi",
-            "Arn"
-          ]
+          "Ref": "@ModuleRestApi"
         }
       }
     },
-    "Module::RestApi::ItemsResource::IdResource::GETPermission": {
+    "ModuleRestApiItemsResourceIdResourceGETPermission": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
           "Fn::GetAtt": [
-            "Function",
+            "@Function",
             "Arn"
           ]
         },
         "Principal": "apigateway.amazonaws.com",
         "SourceArn": {
-          "Fn::Sub": [
-            "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${P0}/LATEST/GET/items/{id}",
-            {
-              "P0": {
-                "Fn::GetAtt": [
-                  "@ModuleRestApi",
-                  "Arn"
-                ]
-              }
-            }
-          ]
+          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${@ModuleRestApi}/LATEST/GET/items/{id}"
         }
       }
     },
-    "Module::RestApi::ItemsResource::IdResourcePUT": {
+    "ModuleRestApiItemsResourceIdResourcePUT": {
       "Type": "AWS::ApiGateway::Method",
       "Properties": {
         "AuthorizationType": "NONE",
@@ -693,7 +633,7 @@
               {
                 "Arn": {
                   "Fn::GetAtt": [
-                    "Function",
+                    "@Function",
                     "Arn"
                   ]
                 }
@@ -703,46 +643,30 @@
         },
         "OperationName": "UpdateItem",
         "ResourceId": {
-          "Fn::GetAtt": [
-            "@Module::RestApi::ItemsResourceIdResource",
-            "Arn"
-          ]
+          "Ref": "@ModuleRestApiItemsResourceIdResource"
         },
         "RestApiId": {
-          "Fn::GetAtt": [
-            "@ModuleRestApi",
-            "Arn"
-          ]
+          "Ref": "@ModuleRestApi"
         }
       }
     },
-    "Module::RestApi::ItemsResource::IdResource::PUTPermission": {
+    "ModuleRestApiItemsResourceIdResourcePUTPermission": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
           "Fn::GetAtt": [
-            "Function",
+            "@Function",
             "Arn"
           ]
         },
         "Principal": "apigateway.amazonaws.com",
         "SourceArn": {
-          "Fn::Sub": [
-            "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${P0}/LATEST/PUT/items/{id}",
-            {
-              "P0": {
-                "Fn::GetAtt": [
-                  "@ModuleRestApi",
-                  "Arn"
-                ]
-              }
-            }
-          ]
+          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${@ModuleRestApi}/LATEST/PUT/items/{id}"
         }
       }
     },
-    "Module::RestApi::ItemsResource::IdResourceDELETE": {
+    "ModuleRestApiItemsResourceIdResourceDELETE": {
       "Type": "AWS::ApiGateway::Method",
       "Properties": {
         "ApiKeyRequired": true,
@@ -757,7 +681,7 @@
               {
                 "Arn": {
                   "Fn::GetAtt": [
-                    "Function",
+                    "@Function",
                     "Arn"
                   ]
                 }
@@ -766,46 +690,30 @@
           }
         },
         "ResourceId": {
-          "Fn::GetAtt": [
-            "@Module::RestApi::ItemsResourceIdResource",
-            "Arn"
-          ]
+          "Ref": "@ModuleRestApiItemsResourceIdResource"
         },
         "RestApiId": {
-          "Fn::GetAtt": [
-            "@ModuleRestApi",
-            "Arn"
-          ]
+          "Ref": "@ModuleRestApi"
         }
       }
     },
-    "Module::RestApi::ItemsResource::IdResource::DELETEPermission": {
+    "ModuleRestApiItemsResourceIdResourceDELETEPermission": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
           "Fn::GetAtt": [
-            "Function",
+            "@Function",
             "Arn"
           ]
         },
         "Principal": "apigateway.amazonaws.com",
         "SourceArn": {
-          "Fn::Sub": [
-            "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${P0}/LATEST/DELETE/items/{id}",
-            {
-              "P0": {
-                "Fn::GetAtt": [
-                  "@ModuleRestApi",
-                  "Arn"
-                ]
-              }
-            }
-          ]
+          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${@ModuleRestApi}/LATEST/DELETE/items/{id}"
         }
       }
     },
-    "Module::RestApiRole": {
+    "ModuleRestApiRole": {
       "Type": "AWS::IAM::Role",
       "Properties": {
         "AssumeRolePolicyDocument": {
@@ -849,7 +757,7 @@
         ]
       }
     },
-    "Module::RestApiAccount": {
+    "ModuleRestApiAccount": {
       "Type": "AWS::ApiGateway::Account",
       "Properties": {
         "CloudWatchRoleArn": {
@@ -860,28 +768,22 @@
         }
       }
     },
-    "Module::RestApiDeployment8257107B13775FFA2B1DBD1C67D34D91": {
+    "ModuleRestApiDeployment20273C27E4AF26B14EA1715D0449041C": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
         "Description": {
-          "Fn::Sub": "${AWS::StackName} API [8257107B13775FFA2B1DBD1C67D34D91]"
+          "Fn::Sub": "${AWS::StackName} API [20273C27E4AF26B14EA1715D0449041C]"
         },
         "RestApiId": {
-          "Fn::GetAtt": [
-            "@ModuleRestApi",
-            "Arn"
-          ]
+          "Ref": "@ModuleRestApi"
         }
       }
     },
-    "Module::RestApiStage": {
+    "ModuleRestApiStage": {
       "Type": "AWS::ApiGateway::Stage",
       "Properties": {
         "DeploymentId": {
-          "Fn::GetAtt": [
-            "@Module::RestApiDeployment8257107B13775FFA2B1DBD1C67D34D91",
-            "Arn"
-          ]
+          "Ref": "@ModuleRestApiDeployment20273C27E4AF26B14EA1715D0449041C"
         },
         "MethodSettings": [
           {
@@ -892,15 +794,12 @@
           }
         ],
         "RestApiId": {
-          "Fn::GetAtt": [
-            "@ModuleRestApi",
-            "Arn"
-          ]
+          "Ref": "@ModuleRestApi"
         },
         "StageName": "LATEST"
       },
       "DependsOn": [
-        "Module::RestApiAccount"
+        "ModuleRestApiAccount"
       ]
     }
   },
@@ -1048,8 +947,8 @@
       "Version": "2018-11-22",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
-      "Hash": "E1C0E06504F94E33FC8475B14A17F03E",
-      "GitSha": "bac0d834f9477ef0d6ff6b499b699ef8c533f3fb",
+      "Hash": "4BCB0D9D4EABA0D88CCA4FECE686886D",
+      "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Pragmas": [],
       "Assets": []
     }

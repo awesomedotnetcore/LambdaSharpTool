@@ -442,10 +442,7 @@
         },
         "FilterPattern": "-\"*** \"",
         "LogGroupName": {
-          "Fn::GetAtt": [
-            "@FunctionLogGroup",
-            "Arn"
-          ]
+          "Ref": "@FunctionLogGroup"
         },
         "RoleArn": {
           "Fn::GetAtt": [
@@ -465,25 +462,22 @@
         }
       }
     },
-    "Module::RestApiSlackResource": {
+    "ModuleRestApiSlackResource": {
       "Type": "AWS::ApiGateway::Resource",
       "Properties": {
         "ParentId": {
           "Fn::GetAtt": [
-            "Module::RestApi",
+            "@ModuleRestApi",
             "RootResourceId"
           ]
         },
         "PathPart": "slack",
         "RestApiId": {
-          "Fn::GetAtt": [
-            "@ModuleRestApi",
-            "Arn"
-          ]
+          "Ref": "@ModuleRestApi"
         }
       }
     },
-    "Module::RestApi::SlackResourcePOST": {
+    "ModuleRestApiSlackResourcePOST": {
       "Type": "AWS::ApiGateway::Method",
       "Properties": {
         "AuthorizationType": "NONE",
@@ -518,46 +512,30 @@
           }
         ],
         "ResourceId": {
-          "Fn::GetAtt": [
-            "@Module::RestApiSlackResource",
-            "Arn"
-          ]
+          "Ref": "@ModuleRestApiSlackResource"
         },
         "RestApiId": {
-          "Fn::GetAtt": [
-            "@ModuleRestApi",
-            "Arn"
-          ]
+          "Ref": "@ModuleRestApi"
         }
       }
     },
-    "Module::RestApi::SlackResource::POSTPermission": {
+    "ModuleRestApiSlackResourcePOSTPermission": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
           "Fn::GetAtt": [
-            "Function",
+            "@Function",
             "Arn"
           ]
         },
         "Principal": "apigateway.amazonaws.com",
         "SourceArn": {
-          "Fn::Sub": [
-            "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${P0}/LATEST/POST/slack",
-            {
-              "P0": {
-                "Fn::GetAtt": [
-                  "@ModuleRestApi",
-                  "Arn"
-                ]
-              }
-            }
-          ]
+          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${@ModuleRestApi}/LATEST/POST/slack"
         }
       }
     },
-    "Module::RestApiRole": {
+    "ModuleRestApiRole": {
       "Type": "AWS::IAM::Role",
       "Properties": {
         "AssumeRolePolicyDocument": {
@@ -601,7 +579,7 @@
         ]
       }
     },
-    "Module::RestApiAccount": {
+    "ModuleRestApiAccount": {
       "Type": "AWS::ApiGateway::Account",
       "Properties": {
         "CloudWatchRoleArn": {
@@ -612,28 +590,22 @@
         }
       }
     },
-    "Module::RestApiDeploymentA47243E772D0FDCD60E309EDDC8CF9C0": {
+    "ModuleRestApiDeploymentD821156F7E820C91FFC421C518C3F583": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
         "Description": {
-          "Fn::Sub": "${AWS::StackName} API [A47243E772D0FDCD60E309EDDC8CF9C0]"
+          "Fn::Sub": "${AWS::StackName} API [D821156F7E820C91FFC421C518C3F583]"
         },
         "RestApiId": {
-          "Fn::GetAtt": [
-            "@ModuleRestApi",
-            "Arn"
-          ]
+          "Ref": "@ModuleRestApi"
         }
       }
     },
-    "Module::RestApiStage": {
+    "ModuleRestApiStage": {
       "Type": "AWS::ApiGateway::Stage",
       "Properties": {
         "DeploymentId": {
-          "Fn::GetAtt": [
-            "@Module::RestApiDeploymentA47243E772D0FDCD60E309EDDC8CF9C0",
-            "Arn"
-          ]
+          "Ref": "@ModuleRestApiDeploymentD821156F7E820C91FFC421C518C3F583"
         },
         "MethodSettings": [
           {
@@ -644,15 +616,12 @@
           }
         ],
         "RestApiId": {
-          "Fn::GetAtt": [
-            "@ModuleRestApi",
-            "Arn"
-          ]
+          "Ref": "@ModuleRestApi"
         },
         "StageName": "LATEST"
       },
       "DependsOn": [
-        "Module::RestApiAccount"
+        "ModuleRestApiAccount"
       ]
     }
   },
@@ -811,8 +780,8 @@
       "Version": "2018-11-22",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
-      "Hash": "056FEE2D311F35F7DC7F564067DDBE75",
-      "GitSha": "bac0d834f9477ef0d6ff6b499b699ef8c533f3fb",
+      "Hash": "03513298D4C316C1C37C900228339B51",
+      "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Pragmas": [],
       "Assets": []
     }

@@ -188,16 +188,16 @@ namespace MindTouch.LambdaSharp.Tool {
                     var response = await Settings.CfClient.UpdateStackAsync(request);
                     var outcome = await Settings.CfClient.TrackStackUpdateAsync(stackName, mostRecentStackEventId);
                     if(outcome.Success) {
-                        Console.WriteLine($"=> Stack update finished (finished: {DateTime.Now:yyyy-MM-dd HH:mm:ss})");
+                        Console.WriteLine("=> Stack update finished");
                         ShowStackResult(outcome.Stack);
                         success = true;
                     } else {
-                        Console.WriteLine($"=> Stack update FAILED (finished: {DateTime.Now:yyyy-MM-dd HH:mm:ss})");
+                        Console.WriteLine("=> Stack update FAILED");
                     }
                 } catch(AmazonCloudFormationException e) when(e.Message == "No updates are to be performed.") {
 
                     // this error is thrown when no required updates where found
-                    Console.WriteLine($"=> No stack update required (finished: {DateTime.Now:yyyy-MM-dd HH:mm:ss})");
+                    Console.WriteLine("=> No stack update required");
                     success = true;
                 }
             } else {
@@ -217,11 +217,11 @@ namespace MindTouch.LambdaSharp.Tool {
                 var response = await Settings.CfClient.CreateStackAsync(request);
                 var outcome = await Settings.CfClient.TrackStackUpdateAsync(stackName, mostRecentStackEventId);
                 if(outcome.Success) {
-                    Console.WriteLine($"=> Stack creation finished (finished: {DateTime.Now:yyyy-MM-dd HH:mm:ss})");
+                    Console.WriteLine("=> Stack creation finished");
                     ShowStackResult(outcome.Stack);
                     success = true;
                 } else {
-                    Console.WriteLine($"=> Stack creation FAILED (finished: {DateTime.Now:yyyy-MM-dd HH:mm:ss})");
+                    Console.WriteLine("=> Stack creation FAILED");
                 }
             }
             return success;

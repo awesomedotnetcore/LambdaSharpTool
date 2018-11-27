@@ -397,6 +397,178 @@
               "Version": "2012-10-17",
               "Statement": [
                 {
+                  "Sid": "ResourceInputParameter",
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetObject",
+                    "s3:GetObjectAcl",
+                    "s3:GetObjectTagging",
+                    "s3:GetObjectTorrent",
+                    "s3:GetObjectVersion",
+                    "s3:GetObjectVersionAcl",
+                    "s3:GetObjectVersionTagging",
+                    "s3:GetObjectVersionTorrent"
+                  ],
+                  "Resource": [
+                    {
+                      "Ref": "@ResourceInputParameter"
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          {
+                            "Ref": "@ResourceInputParameter"
+                          },
+                          "/*"
+                        ]
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "Sid": "ResourceInputParameterOrCreateResource",
+                  "Effect": "Allow",
+                  "Action": [
+                    "sns:Publish"
+                  ],
+                  "Resource": {
+                    "Fn::If": [
+                      "ResourceInputParameterOrCreateCreated",
+                      {
+                        "Ref": "@ResourceInputParameterOrCreateResource"
+                      },
+                      {
+                        "Ref": "@ResourceInputParameterOrCreate"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "Sid": "OtherModuleExportResource",
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:BatchGetItem",
+                    "dynamodb:DescribeStream",
+                    "dynamodb:DescribeTable",
+                    "dynamodb:GetItem",
+                    "dynamodb:GetRecords",
+                    "dynamodb:GetShardIterator",
+                    "dynamodb:Query",
+                    "dynamodb:Scan"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::If": [
+                        "OtherModuleExportResourceIsImport",
+                        {
+                          "Fn::ImportValue": {
+                            "Fn::Sub": [
+                              "${@DeploymentPrefix}${Import}",
+                              {
+                                "Import": {
+                                  "Fn::Select": [
+                                    "1",
+                                    {
+                                      "Fn::Split": [
+                                        "$",
+                                        {
+                                          "Ref": "@OtherModuleExportResource"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "Ref": "@OtherModuleExportResource"
+                        }
+                      ]
+                    },
+                    {
+                      "Fn::Join": [
+                        "/",
+                        [
+                          {
+                            "Fn::If": [
+                              "OtherModuleExportResourceIsImport",
+                              {
+                                "Fn::ImportValue": {
+                                  "Fn::Sub": [
+                                    "${@DeploymentPrefix}${Import}",
+                                    {
+                                      "Import": {
+                                        "Fn::Select": [
+                                          "1",
+                                          {
+                                            "Fn::Split": [
+                                              "$",
+                                              {
+                                                "Ref": "@OtherModuleExportResource"
+                                              }
+                                            ]
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  ]
+                                }
+                              },
+                              {
+                                "Ref": "@OtherModuleExportResource"
+                              }
+                            ]
+                          },
+                          "stream",
+                          "*"
+                        ]
+                      ]
+                    },
+                    {
+                      "Fn::Join": [
+                        "/",
+                        [
+                          {
+                            "Fn::If": [
+                              "OtherModuleExportResourceIsImport",
+                              {
+                                "Fn::ImportValue": {
+                                  "Fn::Sub": [
+                                    "${@DeploymentPrefix}${Import}",
+                                    {
+                                      "Import": {
+                                        "Fn::Select": [
+                                          "1",
+                                          {
+                                            "Fn::Split": [
+                                              "$",
+                                              {
+                                                "Ref": "@OtherModuleExportResource"
+                                              }
+                                            ]
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  ]
+                                }
+                              },
+                              {
+                                "Ref": "@OtherModuleExportResource"
+                              }
+                            ]
+                          },
+                          "index",
+                          "*"
+                        ]
+                      ]
+                    }
+                  ]
+                },
+                {
                   "Sid": "SecretsDecryption",
                   "Effect": "Allow",
                   "Action": [
@@ -622,10 +794,7 @@
         },
         "FilterPattern": "-\"*** \"",
         "LogGroupName": {
-          "Fn::GetAtt": [
-            "@FunctionLogGroup",
-            "Arn"
-          ]
+          "Ref": "@FunctionLogGroup"
         },
         "RoleArn": {
           "Fn::GetAtt": [
@@ -895,8 +1064,8 @@
       "Version": "2018-11-22",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
-      "Hash": "BCE9D556316E7025DE7E456638D28F7E",
-      "GitSha": "bac0d834f9477ef0d6ff6b499b699ef8c533f3fb",
+      "Hash": "3BC392FC08A80265D8874313ADF6B39B",
+      "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Pragmas": [],
       "Assets": []
     }

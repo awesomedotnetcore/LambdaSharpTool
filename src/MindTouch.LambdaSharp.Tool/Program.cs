@@ -92,7 +92,7 @@ namespace MindTouch.LambdaSharp.Tool {
             } finally {
                 if(!showHelp) {
                     Console.WriteLine();
-                    Console.WriteLine($"Done (duration: {stopwatch.Elapsed:c})");
+                    Console.WriteLine($"Done (finished: {DateTime.Now}; duration: {stopwatch.Elapsed:c})");
                 }
             }
         }

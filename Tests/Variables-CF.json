@@ -309,6 +309,73 @@
               "Version": "2012-10-17",
               "Statement": [
                 {
+                  "Sid": "SourceResourceParameter",
+                  "Effect": "Allow",
+                  "Action": [
+                    "sns:Publish"
+                  ],
+                  "Resource": {
+                    "Ref": "@SourceResourceParameter"
+                  }
+                },
+                {
+                  "Sid": "SourceParameterCollectionSecondSourceResourceParameter",
+                  "Effect": "Allow",
+                  "Action": [
+                    "sns:Publish"
+                  ],
+                  "Resource": {
+                    "Ref": "@SourceParameterCollectionSecondSourceResourceParameter"
+                  }
+                },
+                {
+                  "Sid": "SampleParameterCollectionThirdNestedParameter",
+                  "Effect": "Allow",
+                  "Action": [
+                    "sns:Publish"
+                  ],
+                  "Resource": "arn:aws:sns:us-east-1:123456789012:SampleTopic"
+                },
+                {
+                  "Sid": "SampleParameterCollectionFourthNestedParameter",
+                  "Effect": "Allow",
+                  "Action": [
+                    "sns:Subscribe"
+                  ],
+                  "Resource": {
+                    "Ref": "@SampleParameterCollectionFourthNestedParameter"
+                  }
+                },
+                {
+                  "Sid": "SingleResourceParameter",
+                  "Effect": "Allow",
+                  "Action": [
+                    "sns:Publish"
+                  ],
+                  "Resource": "arn:aws:sns:*:*:*"
+                },
+                {
+                  "Sid": "MultiResourceParameter",
+                  "Effect": "Allow",
+                  "Action": [
+                    "sns:Publish"
+                  ],
+                  "Resource": [
+                    "arn:aws:sns:*:*:*",
+                    "arn:aws:sns:*:*:*:*"
+                  ]
+                },
+                {
+                  "Sid": "RekognitionService",
+                  "Effect": "Allow",
+                  "Action": [
+                    "rekognition:DetectFaces",
+                    "rekognition:IndexFaces",
+                    "rekognition:SearchFacesByImage"
+                  ],
+                  "Resource": "*"
+                },
+                {
                   "Sid": "SecretsDecryption",
                   "Effect": "Allow",
                   "Action": [
@@ -534,10 +601,7 @@
         },
         "FilterPattern": "-\"*** \"",
         "LogGroupName": {
-          "Fn::GetAtt": [
-            "@FunctionLogGroup",
-            "Arn"
-          ]
+          "Ref": "@FunctionLogGroup"
         },
         "RoleArn": {
           "Fn::GetAtt": [
@@ -692,8 +756,8 @@
       "Version": "2018-11-22",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
-      "Hash": "6781ED191F3105190A8678B51D41E5B8",
-      "GitSha": "bac0d834f9477ef0d6ff6b499b699ef8c533f3fb",
+      "Hash": "288007F4B6098649DED597BA7EC01391",
+      "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Pragmas": [],
       "Assets": []
     }

@@ -153,7 +153,6 @@ namespace MindTouch.LambdaSharp.Tool {
             };
 
         //--- Fields ---
-        public readonly ResourceMapping ResourceMapping = new ResourceMapping();
         private readonly Settings _settings;
         private Stack<string> _locations = new Stack<string>();
         private string _sourceFilename;

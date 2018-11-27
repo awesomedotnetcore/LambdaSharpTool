@@ -221,6 +221,63 @@
               "Version": "2012-10-17",
               "Statement": [
                 {
+                  "Sid": "InputSqs",
+                  "Effect": "Allow",
+                  "Action": [
+                    "sqs:ChangeMessageVisibility",
+                    "sqs:ChangeMessageVisibilityBatch",
+                    "sqs:DeleteMessage",
+                    "sqs:DeleteMessageBatch",
+                    "sqs:GetQueueAttributes",
+                    "sqs:GetQueueUrl",
+                    "sqs:ListQueueTags",
+                    "sqs:ReceiveMessage"
+                  ],
+                  "Resource": {
+                    "Ref": "@InputSqs"
+                  }
+                },
+                {
+                  "Sid": "Sqs1",
+                  "Effect": "Allow",
+                  "Action": [
+                    "sqs:ChangeMessageVisibility",
+                    "sqs:ChangeMessageVisibilityBatch",
+                    "sqs:DeleteMessage",
+                    "sqs:DeleteMessageBatch",
+                    "sqs:GetQueueAttributes",
+                    "sqs:GetQueueUrl",
+                    "sqs:ListQueueTags",
+                    "sqs:ReceiveMessage"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "@Sqs1",
+                      "Arn"
+                    ]
+                  }
+                },
+                {
+                  "Sid": "Sqs2",
+                  "Effect": "Allow",
+                  "Action": [
+                    "sqs:ChangeMessageVisibility",
+                    "sqs:ChangeMessageVisibilityBatch",
+                    "sqs:DeleteMessage",
+                    "sqs:DeleteMessageBatch",
+                    "sqs:GetQueueAttributes",
+                    "sqs:GetQueueUrl",
+                    "sqs:ListQueueTags",
+                    "sqs:ReceiveMessage"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "@Sqs2",
+                      "Arn"
+                    ]
+                  }
+                },
+                {
                   "Sid": "SecretsDecryption",
                   "Effect": "Allow",
                   "Action": [
@@ -491,10 +548,7 @@
         },
         "FilterPattern": "-\"*** \"",
         "LogGroupName": {
-          "Fn::GetAtt": [
-            "@FunctionLogGroup",
-            "Arn"
-          ]
+          "Ref": "@FunctionLogGroup"
         },
         "RoleArn": {
           "Fn::GetAtt": [
@@ -660,8 +714,8 @@
       "Version": "2018-11-22",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
-      "Hash": "C394BBBC2DDA5402037B04359BC9A3F4",
-      "GitSha": "bac0d834f9477ef0d6ff6b499b699ef8c533f3fb",
+      "Hash": "931240D94694E91A1678D9932A5FB3B7",
+      "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Pragmas": [],
       "Assets": []
     }
