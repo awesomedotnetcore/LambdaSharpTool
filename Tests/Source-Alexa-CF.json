@@ -56,7 +56,7 @@
       "Properties": {
         "Code": {
           "S3Bucket": {
-            "Ref": "@DeploymentBucketName"
+            "Ref": "DeploymentBucketName"
           },
           "S3Key": "Modules/TestModule/Assets/Function-NOCOMPILE.zip"
         },
@@ -67,7 +67,7 @@
               {
                 "Fn::ImportValue": {
                   "Fn::Sub": [
-                    "${@DeploymentPrefix}${Import}",
+                    "${DeploymentPrefix}${Import}",
                     {
                       "Import": {
                         "Fn::Select": [
@@ -76,7 +76,7 @@
                             "Fn::Split": [
                               "$",
                               {
-                                "Ref": "@LambdaSharpDeadLetterQueueArn"
+                                "Ref": "LambdaSharpDeadLetterQueueArn"
                               }
                             ]
                           }
@@ -87,7 +87,7 @@
                 }
               },
               {
-                "Ref": "@LambdaSharpDeadLetterQueueArn"
+                "Ref": "LambdaSharpDeadLetterQueueArn"
               }
             ]
           }
@@ -108,7 +108,7 @@
                 {
                   "Fn::ImportValue": {
                     "Fn::Sub": [
-                      "${@DeploymentPrefix}${Import}",
+                      "${DeploymentPrefix}${Import}",
                       {
                         "Import": {
                           "Fn::Select": [
@@ -117,7 +117,7 @@
                               "Fn::Split": [
                                 "$",
                                 {
-                                  "Ref": "@LambdaSharpDeadLetterQueueArn"
+                                  "Ref": "LambdaSharpDeadLetterQueueArn"
                                 }
                               ]
                             }
@@ -128,7 +128,7 @@
                   }
                 },
                 {
-                  "Ref": "@LambdaSharpDeadLetterQueueArn"
+                  "Ref": "LambdaSharpDeadLetterQueueArn"
                 }
               ]
             },
@@ -138,7 +138,7 @@
                 {
                   "Fn::ImportValue": {
                     "Fn::Sub": [
-                      "${@DeploymentPrefix}${Import}",
+                      "${DeploymentPrefix}${Import}",
                       {
                         "Import": {
                           "Fn::Select": [
@@ -147,7 +147,7 @@
                               "Fn::Split": [
                                 "$",
                                 {
-                                  "Ref": "@LambdaSharpDefaultSecretKeyArn"
+                                  "Ref": "LambdaSharpDefaultSecretKeyArn"
                                 }
                               ]
                             }
@@ -158,7 +158,7 @@
                   }
                 },
                 {
-                  "Ref": "@LambdaSharpDefaultSecretKeyArn"
+                  "Ref": "LambdaSharpDefaultSecretKeyArn"
                 }
               ]
             }
@@ -181,7 +181,7 @@
       "Properties": {
         "ServiceToken": {
           "Fn::ImportValue": {
-            "Fn::Sub": "${@DeploymentPrefix}CustomResource-LambdaSharp::Register::Module"
+            "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::Register::Module"
           }
         },
         "ModuleId": {
@@ -234,7 +234,7 @@
                               [
                                 "",
                                 {
-                                  "Ref": "@Secrets"
+                                  "Ref": "Secrets"
                                 }
                               ]
                             ]
@@ -256,7 +256,7 @@
                       {
                         "Fn::ImportValue": {
                           "Fn::Sub": [
-                            "${@DeploymentPrefix}${Import}",
+                            "${DeploymentPrefix}${Import}",
                             {
                               "Import": {
                                 "Fn::Select": [
@@ -265,7 +265,7 @@
                                     "Fn::Split": [
                                       "$",
                                       {
-                                        "Ref": "@LambdaSharpDeadLetterQueueArn"
+                                        "Ref": "LambdaSharpDeadLetterQueueArn"
                                       }
                                     ]
                                   }
@@ -276,7 +276,7 @@
                         }
                       },
                       {
-                        "Ref": "@LambdaSharpDeadLetterQueueArn"
+                        "Ref": "LambdaSharpDeadLetterQueueArn"
                       }
                     ]
                   }
@@ -332,7 +332,7 @@
                       {
                         "Fn::ImportValue": {
                           "Fn::Sub": [
-                            "${@DeploymentPrefix}${Import}",
+                            "${DeploymentPrefix}${Import}",
                             {
                               "Import": {
                                 "Fn::Select": [
@@ -341,7 +341,7 @@
                                     "Fn::Split": [
                                       "$",
                                       {
-                                        "Ref": "@LambdaSharpLoggingStreamArn"
+                                        "Ref": "LambdaSharpLoggingStreamArn"
                                       }
                                     ]
                                   }
@@ -352,7 +352,7 @@
                         }
                       },
                       {
-                        "Ref": "@LambdaSharpLoggingStreamArn"
+                        "Ref": "LambdaSharpLoggingStreamArn"
                       }
                     ]
                   }
@@ -370,7 +370,7 @@
       "Type": "AWS::Logs::LogGroup",
       "Properties": {
         "LogGroupName": {
-          "Fn::Sub": "/aws/lambda/${@Function}"
+          "Fn::Sub": "/aws/lambda/${Function}"
         },
         "RetentionInDays": 7
       }
@@ -381,7 +381,7 @@
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
           "Fn::GetAtt": [
-            "@Function",
+            "Function",
             "Arn"
           ]
         },
@@ -395,7 +395,7 @@
         "EventSourceToken": "amzn1.ask.skill.xxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
         "FunctionName": {
           "Fn::GetAtt": [
-            "@Function",
+            "Function",
             "Arn"
           ]
         },
@@ -413,13 +413,13 @@
               "Ref": "AWS::NoValue"
             },
             {
-              "Ref": "@AlexaSkillId"
+              "Ref": "AlexaSkillId"
             }
           ]
         },
         "FunctionName": {
           "Fn::GetAtt": [
-            "@Function",
+            "Function",
             "Arn"
           ]
         },
@@ -431,18 +431,18 @@
       "Properties": {
         "ServiceToken": {
           "Fn::ImportValue": {
-            "Fn::Sub": "${@DeploymentPrefix}CustomResource-LambdaSharp::Register::Function"
+            "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::Register::Function"
           }
         },
         "ModuleId": {
           "Ref": "AWS::StackName"
         },
         "FunctionId": {
-          "Ref": "@Function"
+          "Ref": "Function"
         },
         "FunctionName": "Function",
         "FunctionLogGroupName": {
-          "Fn::Sub": "/aws/lambda/${@Function}"
+          "Fn::Sub": "/aws/lambda/${Function}"
         },
         "FunctionPlatform": "AWS Lambda",
         "FunctionFramework": "dotnetcore2.1",
@@ -463,7 +463,7 @@
             {
               "Fn::ImportValue": {
                 "Fn::Sub": [
-                  "${@DeploymentPrefix}${Import}",
+                  "${DeploymentPrefix}${Import}",
                   {
                     "Import": {
                       "Fn::Select": [
@@ -472,7 +472,7 @@
                           "Fn::Split": [
                             "$",
                             {
-                              "Ref": "@LambdaSharpLoggingStreamArn"
+                              "Ref": "LambdaSharpLoggingStreamArn"
                             }
                           ]
                         }
@@ -483,13 +483,13 @@
               }
             },
             {
-              "Ref": "@LambdaSharpLoggingStreamArn"
+              "Ref": "LambdaSharpLoggingStreamArn"
             }
           ]
         },
         "FilterPattern": "-\"*** \"",
         "LogGroupName": {
-          "Ref": "@FunctionLogGroup"
+          "Ref": "FunctionLogGroup"
         },
         "RoleArn": {
           "Fn::GetAtt": [
@@ -512,7 +512,7 @@
     "SecretsIsEmpty": {
       "Fn::Equals": [
         {
-          "Ref": "@Secrets"
+          "Ref": "Secrets"
         },
         ""
       ]
@@ -526,7 +526,7 @@
               "Fn::Split": [
                 "$",
                 {
-                  "Ref": "@LambdaSharpDeadLetterQueueArn"
+                  "Ref": "LambdaSharpDeadLetterQueueArn"
                 }
               ]
             }
@@ -544,7 +544,7 @@
               "Fn::Split": [
                 "$",
                 {
-                  "Ref": "@LambdaSharpLoggingStreamArn"
+                  "Ref": "LambdaSharpLoggingStreamArn"
                 }
               ]
             }
@@ -562,7 +562,7 @@
               "Fn::Split": [
                 "$",
                 {
-                  "Ref": "@LambdaSharpDefaultSecretKeyArn"
+                  "Ref": "LambdaSharpDefaultSecretKeyArn"
                 }
               ]
             }
@@ -574,7 +574,7 @@
     "FunctionSource3AlexaIsBlank": {
       "Fn::Equals": [
         {
-          "Ref": "@AlexaSkillId"
+          "Ref": "AlexaSkillId"
         },
         "*"
       ]
@@ -663,7 +663,7 @@
       "Version": "2018-11-22",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
-      "Hash": "671E8A8512B5227F630E07F1E00F0CB9",
+      "Hash": "F9526188826D6AF23CB76A5533AC1B54",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Pragmas": [],
       "Assets": []

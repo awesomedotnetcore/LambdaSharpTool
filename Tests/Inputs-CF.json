@@ -97,7 +97,7 @@
       "Properties": {
         "Code": {
           "S3Bucket": {
-            "Ref": "@DeploymentBucketName"
+            "Ref": "DeploymentBucketName"
           },
           "S3Key": "Modules/TestModule/Assets/Function-NOCOMPILE.zip"
         },
@@ -108,7 +108,7 @@
               {
                 "Fn::ImportValue": {
                   "Fn::Sub": [
-                    "${@DeploymentPrefix}${Import}",
+                    "${DeploymentPrefix}${Import}",
                     {
                       "Import": {
                         "Fn::Select": [
@@ -117,7 +117,7 @@
                             "Fn::Split": [
                               "$",
                               {
-                                "Ref": "@LambdaSharpDeadLetterQueueArn"
+                                "Ref": "LambdaSharpDeadLetterQueueArn"
                               }
                             ]
                           }
@@ -128,7 +128,7 @@
                 }
               },
               {
-                "Ref": "@LambdaSharpDeadLetterQueueArn"
+                "Ref": "LambdaSharpDeadLetterQueueArn"
               }
             ]
           }
@@ -149,7 +149,7 @@
                 {
                   "Fn::ImportValue": {
                     "Fn::Sub": [
-                      "${@DeploymentPrefix}${Import}",
+                      "${DeploymentPrefix}${Import}",
                       {
                         "Import": {
                           "Fn::Select": [
@@ -158,7 +158,7 @@
                               "Fn::Split": [
                                 "$",
                                 {
-                                  "Ref": "@LambdaSharpDeadLetterQueueArn"
+                                  "Ref": "LambdaSharpDeadLetterQueueArn"
                                 }
                               ]
                             }
@@ -169,7 +169,7 @@
                   }
                 },
                 {
-                  "Ref": "@LambdaSharpDeadLetterQueueArn"
+                  "Ref": "LambdaSharpDeadLetterQueueArn"
                 }
               ]
             },
@@ -179,7 +179,7 @@
                 {
                   "Fn::ImportValue": {
                     "Fn::Sub": [
-                      "${@DeploymentPrefix}${Import}",
+                      "${DeploymentPrefix}${Import}",
                       {
                         "Import": {
                           "Fn::Select": [
@@ -188,7 +188,7 @@
                               "Fn::Split": [
                                 "$",
                                 {
-                                  "Ref": "@LambdaSharpDefaultSecretKeyArn"
+                                  "Ref": "LambdaSharpDefaultSecretKeyArn"
                                 }
                               ]
                             }
@@ -199,7 +199,7 @@
                   }
                 },
                 {
-                  "Ref": "@LambdaSharpDefaultSecretKeyArn"
+                  "Ref": "LambdaSharpDefaultSecretKeyArn"
                 }
               ]
             },
@@ -209,7 +209,7 @@
                 {
                   "Fn::ImportValue": {
                     "Fn::Sub": [
-                      "${@DeploymentPrefix}${Import}",
+                      "${DeploymentPrefix}${Import}",
                       {
                         "Import": {
                           "Fn::Select": [
@@ -218,7 +218,7 @@
                               "Fn::Split": [
                                 "$",
                                 {
-                                  "Ref": "@OtherModuleExportSecret"
+                                  "Ref": "OtherModuleExportSecret"
                                 }
                               ]
                             }
@@ -229,21 +229,21 @@
                   }
                 },
                 {
-                  "Ref": "@OtherModuleExportSecret"
+                  "Ref": "OtherModuleExportSecret"
                 }
               ]
             },
             "STR_RESOURCEINPUTPARAMETER": {
-              "Ref": "@ResourceInputParameter"
+              "Ref": "ResourceInputParameter"
             },
             "STR_RESOURCEINPUTPARAMETERORCREATE": {
               "Fn::If": [
                 "ResourceInputParameterOrCreateCreated",
                 {
-                  "Ref": "@ResourceInputParameterOrCreateResource"
+                  "Ref": "ResourceInputParameterOrCreateResource"
                 },
                 {
-                  "Ref": "@ResourceInputParameterOrCreate"
+                  "Ref": "ResourceInputParameterOrCreate"
                 }
               ]
             },
@@ -253,7 +253,7 @@
                 {
                   "Fn::ImportValue": {
                     "Fn::Sub": [
-                      "${@DeploymentPrefix}${Import}",
+                      "${DeploymentPrefix}${Import}",
                       {
                         "Import": {
                           "Fn::Select": [
@@ -262,7 +262,7 @@
                               "Fn::Split": [
                                 "$",
                                 {
-                                  "Ref": "@OtherModuleExportResource"
+                                  "Ref": "OtherModuleExportResource"
                                 }
                               ]
                             }
@@ -273,18 +273,18 @@
                   }
                 },
                 {
-                  "Ref": "@OtherModuleExportResource"
+                  "Ref": "OtherModuleExportResource"
                 }
               ]
             },
             "STR_INPUT": {
-              "Ref": "@InputParameter"
+              "Ref": "InputParameter"
             },
             "STR_INPUTWITHDEFAULT": {
-              "Ref": "@InputParameterWithDefault"
+              "Ref": "InputParameterWithDefault"
             },
             "STR_SECRETINPUT": {
-              "Ref": "@SecretInputParameter"
+              "Ref": "SecretInputParameter"
             },
             "STR_IMPORTEDINPUT": {
               "Fn::If": [
@@ -292,7 +292,7 @@
                 {
                   "Fn::ImportValue": {
                     "Fn::Sub": [
-                      "${@DeploymentPrefix}${Import}",
+                      "${DeploymentPrefix}${Import}",
                       {
                         "Import": {
                           "Fn::Select": [
@@ -301,7 +301,7 @@
                               "Fn::Split": [
                                 "$",
                                 {
-                                  "Ref": "@OtherModuleExportValue"
+                                  "Ref": "OtherModuleExportValue"
                                 }
                               ]
                             }
@@ -312,7 +312,7 @@
                   }
                 },
                 {
-                  "Ref": "@OtherModuleExportValue"
+                  "Ref": "OtherModuleExportValue"
                 }
               ]
             },
@@ -322,7 +322,7 @@
                 {
                   "Fn::ImportValue": {
                     "Fn::Sub": [
-                      "${@DeploymentPrefix}${Import}",
+                      "${DeploymentPrefix}${Import}",
                       {
                         "Import": {
                           "Fn::Select": [
@@ -331,7 +331,7 @@
                               "Fn::Split": [
                                 "$",
                                 {
-                                  "Ref": "@LambdaSharpLoggingStreamArn"
+                                  "Ref": "LambdaSharpLoggingStreamArn"
                                 }
                               ]
                             }
@@ -342,7 +342,7 @@
                   }
                 },
                 {
-                  "Ref": "@LambdaSharpLoggingStreamArn"
+                  "Ref": "LambdaSharpLoggingStreamArn"
                 }
               ]
             }
@@ -365,7 +365,7 @@
       "Properties": {
         "ServiceToken": {
           "Fn::ImportValue": {
-            "Fn::Sub": "${@DeploymentPrefix}CustomResource-LambdaSharp::Register::Module"
+            "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::Register::Module"
           }
         },
         "ModuleId": {
@@ -411,14 +411,14 @@
                   ],
                   "Resource": [
                     {
-                      "Ref": "@ResourceInputParameter"
+                      "Ref": "ResourceInputParameter"
                     },
                     {
                       "Fn::Join": [
                         "",
                         [
                           {
-                            "Ref": "@ResourceInputParameter"
+                            "Ref": "ResourceInputParameter"
                           },
                           "/*"
                         ]
@@ -436,10 +436,10 @@
                     "Fn::If": [
                       "ResourceInputParameterOrCreateCreated",
                       {
-                        "Ref": "@ResourceInputParameterOrCreateResource"
+                        "Ref": "ResourceInputParameterOrCreateResource"
                       },
                       {
-                        "Ref": "@ResourceInputParameterOrCreate"
+                        "Ref": "ResourceInputParameterOrCreate"
                       }
                     ]
                   }
@@ -464,7 +464,7 @@
                         {
                           "Fn::ImportValue": {
                             "Fn::Sub": [
-                              "${@DeploymentPrefix}${Import}",
+                              "${DeploymentPrefix}${Import}",
                               {
                                 "Import": {
                                   "Fn::Select": [
@@ -473,7 +473,7 @@
                                       "Fn::Split": [
                                         "$",
                                         {
-                                          "Ref": "@OtherModuleExportResource"
+                                          "Ref": "OtherModuleExportResource"
                                         }
                                       ]
                                     }
@@ -484,7 +484,7 @@
                           }
                         },
                         {
-                          "Ref": "@OtherModuleExportResource"
+                          "Ref": "OtherModuleExportResource"
                         }
                       ]
                     },
@@ -498,7 +498,7 @@
                               {
                                 "Fn::ImportValue": {
                                   "Fn::Sub": [
-                                    "${@DeploymentPrefix}${Import}",
+                                    "${DeploymentPrefix}${Import}",
                                     {
                                       "Import": {
                                         "Fn::Select": [
@@ -507,7 +507,7 @@
                                             "Fn::Split": [
                                               "$",
                                               {
-                                                "Ref": "@OtherModuleExportResource"
+                                                "Ref": "OtherModuleExportResource"
                                               }
                                             ]
                                           }
@@ -518,7 +518,7 @@
                                 }
                               },
                               {
-                                "Ref": "@OtherModuleExportResource"
+                                "Ref": "OtherModuleExportResource"
                               }
                             ]
                           },
@@ -537,7 +537,7 @@
                               {
                                 "Fn::ImportValue": {
                                   "Fn::Sub": [
-                                    "${@DeploymentPrefix}${Import}",
+                                    "${DeploymentPrefix}${Import}",
                                     {
                                       "Import": {
                                         "Fn::Select": [
@@ -546,7 +546,7 @@
                                             "Fn::Split": [
                                               "$",
                                               {
-                                                "Ref": "@OtherModuleExportResource"
+                                                "Ref": "OtherModuleExportResource"
                                               }
                                             ]
                                           }
@@ -557,7 +557,7 @@
                                 }
                               },
                               {
-                                "Ref": "@OtherModuleExportResource"
+                                "Ref": "OtherModuleExportResource"
                               }
                             ]
                           },
@@ -590,7 +590,7 @@
                               [
                                 "",
                                 {
-                                  "Ref": "@Secrets"
+                                  "Ref": "Secrets"
                                 }
                               ]
                             ]
@@ -612,7 +612,7 @@
                       {
                         "Fn::ImportValue": {
                           "Fn::Sub": [
-                            "${@DeploymentPrefix}${Import}",
+                            "${DeploymentPrefix}${Import}",
                             {
                               "Import": {
                                 "Fn::Select": [
@@ -621,7 +621,7 @@
                                     "Fn::Split": [
                                       "$",
                                       {
-                                        "Ref": "@LambdaSharpDeadLetterQueueArn"
+                                        "Ref": "LambdaSharpDeadLetterQueueArn"
                                       }
                                     ]
                                   }
@@ -632,7 +632,7 @@
                         }
                       },
                       {
-                        "Ref": "@LambdaSharpDeadLetterQueueArn"
+                        "Ref": "LambdaSharpDeadLetterQueueArn"
                       }
                     ]
                   }
@@ -688,7 +688,7 @@
                       {
                         "Fn::ImportValue": {
                           "Fn::Sub": [
-                            "${@DeploymentPrefix}${Import}",
+                            "${DeploymentPrefix}${Import}",
                             {
                               "Import": {
                                 "Fn::Select": [
@@ -697,7 +697,7 @@
                                     "Fn::Split": [
                                       "$",
                                       {
-                                        "Ref": "@LambdaSharpLoggingStreamArn"
+                                        "Ref": "LambdaSharpLoggingStreamArn"
                                       }
                                     ]
                                   }
@@ -708,7 +708,7 @@
                         }
                       },
                       {
-                        "Ref": "@LambdaSharpLoggingStreamArn"
+                        "Ref": "LambdaSharpLoggingStreamArn"
                       }
                     ]
                   }
@@ -726,7 +726,7 @@
       "Type": "AWS::Logs::LogGroup",
       "Properties": {
         "LogGroupName": {
-          "Fn::Sub": "/aws/lambda/${@Function}"
+          "Fn::Sub": "/aws/lambda/${Function}"
         },
         "RetentionInDays": 7
       }
@@ -736,18 +736,18 @@
       "Properties": {
         "ServiceToken": {
           "Fn::ImportValue": {
-            "Fn::Sub": "${@DeploymentPrefix}CustomResource-LambdaSharp::Register::Function"
+            "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::Register::Function"
           }
         },
         "ModuleId": {
           "Ref": "AWS::StackName"
         },
         "FunctionId": {
-          "Ref": "@Function"
+          "Ref": "Function"
         },
         "FunctionName": "Function",
         "FunctionLogGroupName": {
-          "Fn::Sub": "/aws/lambda/${@Function}"
+          "Fn::Sub": "/aws/lambda/${Function}"
         },
         "FunctionPlatform": "AWS Lambda",
         "FunctionFramework": "dotnetcore2.1",
@@ -768,7 +768,7 @@
             {
               "Fn::ImportValue": {
                 "Fn::Sub": [
-                  "${@DeploymentPrefix}${Import}",
+                  "${DeploymentPrefix}${Import}",
                   {
                     "Import": {
                       "Fn::Select": [
@@ -777,7 +777,7 @@
                           "Fn::Split": [
                             "$",
                             {
-                              "Ref": "@LambdaSharpLoggingStreamArn"
+                              "Ref": "LambdaSharpLoggingStreamArn"
                             }
                           ]
                         }
@@ -788,13 +788,13 @@
               }
             },
             {
-              "Ref": "@LambdaSharpLoggingStreamArn"
+              "Ref": "LambdaSharpLoggingStreamArn"
             }
           ]
         },
         "FilterPattern": "-\"*** \"",
         "LogGroupName": {
-          "Ref": "@FunctionLogGroup"
+          "Ref": "FunctionLogGroup"
         },
         "RoleArn": {
           "Fn::GetAtt": [
@@ -823,7 +823,7 @@
               "Fn::Split": [
                 "$",
                 {
-                  "Ref": "@OtherModuleExportValue"
+                  "Ref": "OtherModuleExportValue"
                 }
               ]
             }
@@ -841,7 +841,7 @@
               "Fn::Split": [
                 "$",
                 {
-                  "Ref": "@OtherModuleExportSecret"
+                  "Ref": "OtherModuleExportSecret"
                 }
               ]
             }
@@ -853,7 +853,7 @@
     "ResourceInputParameterOrCreateCreated": {
       "Fn::Equals": [
         {
-          "Ref": "@ResourceInputParameterOrCreate"
+          "Ref": "ResourceInputParameterOrCreate"
         },
         ""
       ]
@@ -867,7 +867,7 @@
               "Fn::Split": [
                 "$",
                 {
-                  "Ref": "@OtherModuleExportResource"
+                  "Ref": "OtherModuleExportResource"
                 }
               ]
             }
@@ -879,7 +879,7 @@
     "SecretsIsEmpty": {
       "Fn::Equals": [
         {
-          "Ref": "@Secrets"
+          "Ref": "Secrets"
         },
         ""
       ]
@@ -893,7 +893,7 @@
               "Fn::Split": [
                 "$",
                 {
-                  "Ref": "@LambdaSharpDeadLetterQueueArn"
+                  "Ref": "LambdaSharpDeadLetterQueueArn"
                 }
               ]
             }
@@ -911,7 +911,7 @@
               "Fn::Split": [
                 "$",
                 {
-                  "Ref": "@LambdaSharpLoggingStreamArn"
+                  "Ref": "LambdaSharpLoggingStreamArn"
                 }
               ]
             }
@@ -929,7 +929,7 @@
               "Fn::Split": [
                 "$",
                 {
-                  "Ref": "@LambdaSharpDefaultSecretKeyArn"
+                  "Ref": "LambdaSharpDefaultSecretKeyArn"
                 }
               ]
             }
@@ -1064,7 +1064,7 @@
       "Version": "2018-11-22",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
-      "Hash": "3BC392FC08A80265D8874313ADF6B39B",
+      "Hash": "8172CE3DD277384D5A93DD7F1326CC2D",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Pragmas": [],
       "Assets": []

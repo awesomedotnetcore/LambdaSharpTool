@@ -66,7 +66,7 @@
       "Properties": {
         "Code": {
           "S3Bucket": {
-            "Ref": "@DeploymentBucketName"
+            "Ref": "DeploymentBucketName"
           },
           "S3Key": "Modules/TestModule/Assets/Function-NOCOMPILE.zip"
         },
@@ -77,7 +77,7 @@
               {
                 "Fn::ImportValue": {
                   "Fn::Sub": [
-                    "${@DeploymentPrefix}${Import}",
+                    "${DeploymentPrefix}${Import}",
                     {
                       "Import": {
                         "Fn::Select": [
@@ -86,7 +86,7 @@
                             "Fn::Split": [
                               "$",
                               {
-                                "Ref": "@LambdaSharpDeadLetterQueueArn"
+                                "Ref": "LambdaSharpDeadLetterQueueArn"
                               }
                             ]
                           }
@@ -97,7 +97,7 @@
                 }
               },
               {
-                "Ref": "@LambdaSharpDeadLetterQueueArn"
+                "Ref": "LambdaSharpDeadLetterQueueArn"
               }
             ]
           }
@@ -118,7 +118,7 @@
                 {
                   "Fn::ImportValue": {
                     "Fn::Sub": [
-                      "${@DeploymentPrefix}${Import}",
+                      "${DeploymentPrefix}${Import}",
                       {
                         "Import": {
                           "Fn::Select": [
@@ -127,7 +127,7 @@
                               "Fn::Split": [
                                 "$",
                                 {
-                                  "Ref": "@LambdaSharpDeadLetterQueueArn"
+                                  "Ref": "LambdaSharpDeadLetterQueueArn"
                                 }
                               ]
                             }
@@ -138,7 +138,7 @@
                   }
                 },
                 {
-                  "Ref": "@LambdaSharpDeadLetterQueueArn"
+                  "Ref": "LambdaSharpDeadLetterQueueArn"
                 }
               ]
             },
@@ -148,7 +148,7 @@
                 {
                   "Fn::ImportValue": {
                     "Fn::Sub": [
-                      "${@DeploymentPrefix}${Import}",
+                      "${DeploymentPrefix}${Import}",
                       {
                         "Import": {
                           "Fn::Select": [
@@ -157,7 +157,7 @@
                               "Fn::Split": [
                                 "$",
                                 {
-                                  "Ref": "@LambdaSharpDefaultSecretKeyArn"
+                                  "Ref": "LambdaSharpDefaultSecretKeyArn"
                                 }
                               ]
                             }
@@ -168,14 +168,14 @@
                   }
                 },
                 {
-                  "Ref": "@LambdaSharpDefaultSecretKeyArn"
+                  "Ref": "LambdaSharpDefaultSecretKeyArn"
                 }
               ]
             },
             "STR_SOURCEVALUEPARAMETER": "This is a literal value",
             "STR_SOURCEEXPRESSIONPARAMETER": "This is a literal value",
             "STR_SOURCERESOURCEPARAMETER": {
-              "Ref": "@SourceResourceParameter"
+              "Ref": "SourceResourceParameter"
             },
             "STR_SOURCEVALUELISTPARAMETER": "first,second,third",
             "STR_SOURCEEXPRESSIONLISTPARAMETER": {
@@ -185,7 +185,7 @@
                   "This is a literal value",
                   "This is a literal value",
                   {
-                    "Ref": "@SourceResourceParameter"
+                    "Ref": "SourceResourceParameter"
                   },
                   "literal value"
                 ]
@@ -194,14 +194,14 @@
             "STR_SOURCEPARAMETERCOLLECTION": "",
             "STR_SOURCEPARAMETERCOLLECTION_FIRSTSOURCEVALUEPARAMETER": "A nested literal source value",
             "STR_SOURCEPARAMETERCOLLECTION_SECONDSOURCERESOURCEPARAMETER": {
-              "Ref": "@SourceParameterCollectionSecondSourceResourceParameter"
+              "Ref": "SourceParameterCollectionSecondSourceResourceParameter"
             },
             "STR_SAMPLEPARAMETERCOLLECTION": "",
             "STR_SAMPLEPARAMETERCOLLECTION_FIRSTNESTEDPARAMETER": "A literal value",
             "STR_SAMPLEPARAMETERCOLLECTION_SECONDNESTEDPARAMETER": "one,two,three",
             "STR_SAMPLEPARAMETERCOLLECTION_THIRDNESTEDPARAMETER": "arn:aws:sns:us-east-1:123456789012:SampleTopic",
             "STR_SAMPLEPARAMETERCOLLECTION_FOURTHNESTEDPARAMETER": {
-              "Ref": "@SampleParameterCollectionFourthNestedParameter"
+              "Ref": "SampleParameterCollectionFourthNestedParameter"
             },
             "SEC_SAMPLEPARAMETERCOLLECTION_FIFTHNESTEDPARAMETER": "AQICAHjeGw7GlEczkZKnuQaQHVYq...+CXNRhA/rkOSNUThq4ikMnVU2g==",
             "SEC_SAMPLEPARAMETERCOLLECTION_SIXTHNESTEDPARAMETER": "AQICAHjeGw7GlEczkZKnuQaQHVYq...+CXNRhA/rkOSNUThq4ikMnVU2g==|Purpose=Security|Spe%7Ccial=Char%7Cacter",
@@ -220,7 +220,7 @@
                   "This is a literal value",
                   "This is a literal value",
                   {
-                    "Fn::Sub": "${@SourceResourceParameter}"
+                    "Fn::Sub": "${SourceResourceParameter}"
                   },
                   "first,second,third",
                   {
@@ -234,7 +234,7 @@
                               "This is a literal value",
                               "This is a literal value",
                               {
-                                "Ref": "@SourceResourceParameter"
+                                "Ref": "SourceResourceParameter"
                               },
                               "literal value"
                             ]
@@ -245,7 +245,7 @@
                   },
                   "A nested literal source value",
                   {
-                    "Fn::Sub": "${@SourceParameterCollectionSecondSourceResourceParameter}"
+                    "Fn::Sub": "${SourceParameterCollectionSecondSourceResourceParameter}"
                   },
                   {
                     "Fn::Sub": "${SourceParameterCollection::SecondSourceResourceParameter.TopicName}"
@@ -277,7 +277,7 @@
       "Properties": {
         "ServiceToken": {
           "Fn::ImportValue": {
-            "Fn::Sub": "${@DeploymentPrefix}CustomResource-LambdaSharp::Register::Module"
+            "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::Register::Module"
           }
         },
         "ModuleId": {
@@ -315,7 +315,7 @@
                     "sns:Publish"
                   ],
                   "Resource": {
-                    "Ref": "@SourceResourceParameter"
+                    "Ref": "SourceResourceParameter"
                   }
                 },
                 {
@@ -325,7 +325,7 @@
                     "sns:Publish"
                   ],
                   "Resource": {
-                    "Ref": "@SourceParameterCollectionSecondSourceResourceParameter"
+                    "Ref": "SourceParameterCollectionSecondSourceResourceParameter"
                   }
                 },
                 {
@@ -343,7 +343,7 @@
                     "sns:Subscribe"
                   ],
                   "Resource": {
-                    "Ref": "@SampleParameterCollectionFourthNestedParameter"
+                    "Ref": "SampleParameterCollectionFourthNestedParameter"
                   }
                 },
                 {
@@ -397,7 +397,7 @@
                               [
                                 "",
                                 {
-                                  "Ref": "@Secrets"
+                                  "Ref": "Secrets"
                                 }
                               ]
                             ]
@@ -419,7 +419,7 @@
                       {
                         "Fn::ImportValue": {
                           "Fn::Sub": [
-                            "${@DeploymentPrefix}${Import}",
+                            "${DeploymentPrefix}${Import}",
                             {
                               "Import": {
                                 "Fn::Select": [
@@ -428,7 +428,7 @@
                                     "Fn::Split": [
                                       "$",
                                       {
-                                        "Ref": "@LambdaSharpDeadLetterQueueArn"
+                                        "Ref": "LambdaSharpDeadLetterQueueArn"
                                       }
                                     ]
                                   }
@@ -439,7 +439,7 @@
                         }
                       },
                       {
-                        "Ref": "@LambdaSharpDeadLetterQueueArn"
+                        "Ref": "LambdaSharpDeadLetterQueueArn"
                       }
                     ]
                   }
@@ -495,7 +495,7 @@
                       {
                         "Fn::ImportValue": {
                           "Fn::Sub": [
-                            "${@DeploymentPrefix}${Import}",
+                            "${DeploymentPrefix}${Import}",
                             {
                               "Import": {
                                 "Fn::Select": [
@@ -504,7 +504,7 @@
                                     "Fn::Split": [
                                       "$",
                                       {
-                                        "Ref": "@LambdaSharpLoggingStreamArn"
+                                        "Ref": "LambdaSharpLoggingStreamArn"
                                       }
                                     ]
                                   }
@@ -515,7 +515,7 @@
                         }
                       },
                       {
-                        "Ref": "@LambdaSharpLoggingStreamArn"
+                        "Ref": "LambdaSharpLoggingStreamArn"
                       }
                     ]
                   }
@@ -533,7 +533,7 @@
       "Type": "AWS::Logs::LogGroup",
       "Properties": {
         "LogGroupName": {
-          "Fn::Sub": "/aws/lambda/${@Function}"
+          "Fn::Sub": "/aws/lambda/${Function}"
         },
         "RetentionInDays": 7
       }
@@ -543,18 +543,18 @@
       "Properties": {
         "ServiceToken": {
           "Fn::ImportValue": {
-            "Fn::Sub": "${@DeploymentPrefix}CustomResource-LambdaSharp::Register::Function"
+            "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::Register::Function"
           }
         },
         "ModuleId": {
           "Ref": "AWS::StackName"
         },
         "FunctionId": {
-          "Ref": "@Function"
+          "Ref": "Function"
         },
         "FunctionName": "Function",
         "FunctionLogGroupName": {
-          "Fn::Sub": "/aws/lambda/${@Function}"
+          "Fn::Sub": "/aws/lambda/${Function}"
         },
         "FunctionPlatform": "AWS Lambda",
         "FunctionFramework": "dotnetcore2.1",
@@ -575,7 +575,7 @@
             {
               "Fn::ImportValue": {
                 "Fn::Sub": [
-                  "${@DeploymentPrefix}${Import}",
+                  "${DeploymentPrefix}${Import}",
                   {
                     "Import": {
                       "Fn::Select": [
@@ -584,7 +584,7 @@
                           "Fn::Split": [
                             "$",
                             {
-                              "Ref": "@LambdaSharpLoggingStreamArn"
+                              "Ref": "LambdaSharpLoggingStreamArn"
                             }
                           ]
                         }
@@ -595,13 +595,13 @@
               }
             },
             {
-              "Ref": "@LambdaSharpLoggingStreamArn"
+              "Ref": "LambdaSharpLoggingStreamArn"
             }
           ]
         },
         "FilterPattern": "-\"*** \"",
         "LogGroupName": {
-          "Ref": "@FunctionLogGroup"
+          "Ref": "FunctionLogGroup"
         },
         "RoleArn": {
           "Fn::GetAtt": [
@@ -624,7 +624,7 @@
     "SecretsIsEmpty": {
       "Fn::Equals": [
         {
-          "Ref": "@Secrets"
+          "Ref": "Secrets"
         },
         ""
       ]
@@ -638,7 +638,7 @@
               "Fn::Split": [
                 "$",
                 {
-                  "Ref": "@LambdaSharpDeadLetterQueueArn"
+                  "Ref": "LambdaSharpDeadLetterQueueArn"
                 }
               ]
             }
@@ -656,7 +656,7 @@
               "Fn::Split": [
                 "$",
                 {
-                  "Ref": "@LambdaSharpLoggingStreamArn"
+                  "Ref": "LambdaSharpLoggingStreamArn"
                 }
               ]
             }
@@ -674,7 +674,7 @@
               "Fn::Split": [
                 "$",
                 {
-                  "Ref": "@LambdaSharpDefaultSecretKeyArn"
+                  "Ref": "LambdaSharpDefaultSecretKeyArn"
                 }
               ]
             }
@@ -756,7 +756,7 @@
       "Version": "2018-11-22",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
-      "Hash": "288007F4B6098649DED597BA7EC01391",
+      "Hash": "B7EE4EB7AAD6039404825903EE1EDE3E",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Pragmas": [],
       "Assets": []

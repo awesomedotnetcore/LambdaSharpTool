@@ -58,7 +58,7 @@
         },
         "ServiceToken": {
           "Fn::ImportValue": {
-            "Fn::Sub": "${@DeploymentPrefix}CustomResource-CustomResource::Handler"
+            "Fn::Sub": "${DeploymentPrefix}CustomResource-CustomResource::Handler"
           }
         }
       }
@@ -68,7 +68,7 @@
       "Properties": {
         "ServiceToken": {
           "Fn::ImportValue": {
-            "Fn::Sub": "${@DeploymentPrefix}CustomResource-LambdaSharp::Register::Module"
+            "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::Register::Module"
           }
         },
         "ModuleId": {
@@ -91,7 +91,7 @@
     "SecretsIsEmpty": {
       "Fn::Equals": [
         {
-          "Ref": "@Secrets"
+          "Ref": "Secrets"
         },
         ""
       ]
@@ -105,7 +105,7 @@
               "Fn::Split": [
                 "$",
                 {
-                  "Ref": "@LambdaSharpDeadLetterQueueArn"
+                  "Ref": "LambdaSharpDeadLetterQueueArn"
                 }
               ]
             }
@@ -123,7 +123,7 @@
               "Fn::Split": [
                 "$",
                 {
-                  "Ref": "@LambdaSharpLoggingStreamArn"
+                  "Ref": "LambdaSharpLoggingStreamArn"
                 }
               ]
             }
@@ -141,7 +141,7 @@
               "Fn::Split": [
                 "$",
                 {
-                  "Ref": "@LambdaSharpDefaultSecretKeyArn"
+                  "Ref": "LambdaSharpDefaultSecretKeyArn"
                 }
               ]
             }
@@ -223,7 +223,7 @@
       "Version": "2018-11-22",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
-      "Hash": "CEBB115522A46704B2B3E84AC701550F",
+      "Hash": "3FF8EDF27514F2205F8C1E24170B92F5",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Pragmas": [],
       "Assets": []

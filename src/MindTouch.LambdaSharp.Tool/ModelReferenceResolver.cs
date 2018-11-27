@@ -78,6 +78,8 @@ namespace MindTouch.LambdaSharp.Tool {
                 foreach(var function in module.Entries.OfType<FunctionEntry>()) {
                     AtLocation(function.FullName, () => {
                         var environment = function.Function.Environment.Variables;
+
+                        // set default environment variables
                         environment["MODULE_NAME"] = module.Name;
                         environment["MODULE_ID"] = FnRef("AWS::StackName");
                         environment["MODULE_VERSION"] = module.Version.ToString();
@@ -86,6 +88,21 @@ namespace MindTouch.LambdaSharp.Tool {
                         if(module.HasLambdaSharpDependencies) {
                             environment["DEADLETTERQUEUE"] = FnRef("Module::DeadLetterQueueArn");
                             environment["DEFAULTSECRETKEY"] = FnRef("Module::DefaultSecretKeyArn");
+                        }
+
+                        // add all entries scoped to this function
+                        foreach(var scopeEntry in module.Entries.Where(e => e.Scope.Contains(function.FullName))) {
+                            var prefix = scopeEntry.IsSecret ? "SEC_" : "STR_";
+                            var fullEnvName = prefix + scopeEntry.FullName.Replace("::", "_").ToUpperInvariant();
+                            environment[fullEnvName] = (dynamic)scopeEntry.GetExportReference();
+                        }
+
+                        // add all explicitly listed environment variables
+                        foreach(var kv in function.Environment) {
+
+                            // add explicit environment variable as string value
+                            var fullEnvName = "STR_" + kv.Key.Replace("::", "_").ToUpperInvariant();
+                            environment[fullEnvName] = (dynamic)kv.Value;
                         }
                     });
                 }
@@ -127,111 +144,9 @@ namespace MindTouch.LambdaSharp.Tool {
                 return;
             }
 
-            // resolve references in secrets
-            AtLocation("Secrets", () => {
-                module.Secrets = (IList<object>)Substitute(module.Secrets);
-            });
-
-            // resolve references in conditions
-            AtLocation("Conditions", () => {
-                module.Conditions = (IDictionary<string, object>)Substitute(module.Conditions);
-            });
-
-            // resolve references in entries
-            AtLocation("Entries", () => {
-                foreach(var entry in module.Entries) {
-                    AtLocation(entry.FullName, () => {
-                        switch(entry) {
-                        case InputEntry _:
-                        case ValueEntry _:
-
-                            // nothing to do
-                            break;
-                        case PackageEntry package:
-                            AtLocation("Package", () => {
-                                package.Package = (Humidifier.CustomResource)Substitute(package.Package, ReportMissingReference);
-                            });
-                            break;
-                        case HumidifierEntry humidifier:
-                            AtLocation("Resource", () => {
-                                humidifier.Resource = (Humidifier.Resource)Substitute(humidifier.Resource, ReportMissingReference);
-                            });
-                            AtLocation("DependsOn", () => {
-                                humidifier.DependsOn = humidifier.DependsOn.Select(dependency => module.GetEntry(dependency).LogicalId).ToList();
-                            });
-                            break;
-                        case FunctionEntry function:
-                            AtLocation("Environment", () => {
-                                function.Environment = (IDictionary<string, object>)Substitute(function.Environment, ReportMissingReference);
-                            });
-                            AtLocation("Function", () => {
-                                function.Function = (Humidifier.Lambda.Function)Substitute(function.Function, ReportMissingReference);
-                            });
-
-                            // initialize function environment variables
-                            var environment = function.Function.Environment.Variables;
-
-                            // add all entries scoped to this function
-                            foreach(var scopeEntry in module.Entries.Where(e => e.Scope.Contains(function.FullName))) {
-                                var prefix = scopeEntry.IsSecret ? "SEC_" : "STR_";
-                                var fullEnvName = prefix + scopeEntry.FullName.Replace("::", "_").ToUpperInvariant();
-                                environment[fullEnvName] = (dynamic)scopeEntry.GetExportReference();
-                            }
-
-                            // add all explicitly listed environment variables
-                            foreach(var kv in function.Environment) {
-
-                                // add explicit environment variable as string value
-                                var fullEnvName = "STR_" + kv.Key.Replace("::", "_").ToUpperInvariant();
-                                environment[fullEnvName] = (dynamic)kv.Value;
-                            }
-
-                            // update function sources
-                            AtLocation("Sources", () => {
-                                var index = 0;
-                                foreach(var source in function.Sources) {
-                                    AtLocation($"[{++index}]", () => {
-                                        switch(source) {
-                                        case AlexaSource alexaSource:
-                                            if(alexaSource.EventSourceToken != null) {
-                                                alexaSource.EventSourceToken = Substitute(alexaSource.EventSourceToken, ReportMissingReference);
-                                            }
-                                            break;
-                                        }
-                                    });
-                                }
-                            });
-                            break;
-                        default:
-                            throw new ApplicationException($"unexpected type: {entry.GetType()}");
-                        }
-                    });
-                }
-            });
-
-            // resolve references in output values
-            AtLocation("Outputs", () => {
-                foreach(var output in module.Outputs) {
-                    switch(output) {
-                    case ExportOutput exportOutput:
-                        AtLocation(exportOutput.Name, () => {
-                            AtLocation("Value", () => {
-                                exportOutput.Value = Substitute(exportOutput.Value, ReportMissingReference);
-                            });
-                        });
-                        break;
-                    case CustomResourceHandlerOutput customResourceHandlerOutput:
-                        AtLocation(customResourceHandlerOutput.CustomResourceName, () => {
-                            AtLocation("Handler", () => {
-                                customResourceHandlerOutput.Handler = Substitute(customResourceHandlerOutput.Handler, ReportMissingReference);
-                            });
-                        });
-                        break;
-                    default:
-                        throw new InvalidOperationException($"cannot resolve references for this type: {output?.GetType()}");
-                    }
-                }
-            });
+            // resolve all references
+            VisitAll(module, item => Substitute(item, ReportMissingReference));
+            VisitAll(module, Finalize);
 
             // local functions
             void DiscoverEntries() {
@@ -313,7 +228,104 @@ namespace MindTouch.LambdaSharp.Tool {
                     AddError($"could not find !Ref dependency '{missingName}'");
                 }
             }
+        }
 
+        private void VisitAll(Module module, Func<object, object> visitor) {
+            if(visitor == null) {
+                throw new ArgumentNullException(nameof(visitor));
+            }
+
+            // resolve references in secrets
+            AtLocation("Secrets", () => {
+                module.Secrets = (IList<object>)visitor(module.Secrets);
+            });
+
+            // resolve references in conditions
+            AtLocation("Conditions", () => {
+                module.Conditions = (IDictionary<string, object>)visitor(module.Conditions);
+            });
+
+            // resolve references in entries
+            AtLocation("Entries", () => {
+                foreach(var entry in module.Entries) {
+                    AtLocation(entry.FullName, () => {
+                        switch(entry) {
+                        case InputEntry _:
+                        case ValueEntry _:
+
+                            // nothing to do
+                            break;
+                        case PackageEntry package:
+                            AtLocation("Package", () => {
+                                package.Package = (Humidifier.CustomResource)visitor(package.Package);
+                            });
+                            break;
+                        case HumidifierEntry humidifier:
+                            AtLocation("Resource", () => {
+                                humidifier.Resource = (Humidifier.Resource)visitor(humidifier.Resource);
+                            });
+                            AtLocation("DependsOn", () => {
+                                humidifier.DependsOn = humidifier.DependsOn.Select(dependency => {
+                                    var reference = ((IDictionary<string, object>)visitor(FnRef(dependency)))
+                                        .TryGetValue("Ref", out object result);
+                                    return (string)result;
+                                }).ToList();
+                            });
+                            break;
+                        case FunctionEntry function:
+                            AtLocation("Environment", () => {
+                                function.Environment = (IDictionary<string, object>)visitor(function.Environment);
+                            });
+                            AtLocation("Function", () => {
+                                function.Function = (Humidifier.Lambda.Function)visitor(function.Function);
+                            });
+
+                            // update function sources
+                            AtLocation("Sources", () => {
+                                var index = 0;
+                                foreach(var source in function.Sources) {
+                                    AtLocation($"[{++index}]", () => {
+                                        switch(source) {
+                                        case AlexaSource alexaSource:
+                                            if(alexaSource.EventSourceToken != null) {
+                                                alexaSource.EventSourceToken = visitor(alexaSource.EventSourceToken);
+                                            }
+                                            break;
+                                        }
+                                    });
+                                }
+                            });
+                            break;
+                        default:
+                            throw new ApplicationException($"unexpected type: {entry.GetType()}");
+                        }
+                    });
+                }
+            });
+
+            // resolve references in output values
+            AtLocation("Outputs", () => {
+                foreach(var output in module.Outputs) {
+                    switch(output) {
+                    case ExportOutput exportOutput:
+                        AtLocation(exportOutput.Name, () => {
+                            AtLocation("Value", () => {
+                                exportOutput.Value = visitor(exportOutput.Value);
+                            });
+                        });
+                        break;
+                    case CustomResourceHandlerOutput customResourceHandlerOutput:
+                        AtLocation(customResourceHandlerOutput.CustomResourceName, () => {
+                            AtLocation("Handler", () => {
+                                customResourceHandlerOutput.Handler = visitor(customResourceHandlerOutput.Handler);
+                            });
+                        });
+                        break;
+                    default:
+                        throw new InvalidOperationException($"cannot resolve references for this type: {output?.GetType()}");
+                    }
+                }
+            });
         }
 
         private object Substitute(object root, Action<string> missing = null) {
@@ -435,14 +447,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     return true;
                 } else if(key.StartsWith("@", StringComparison.Ordinal)) {
 
-                    // TODO: remove @ prefix from resource names
-                    // if(final) {
-                    //     found = (attribute != null)
-                    //         ? FnGetAtt(key.Substring(1), attribute)
-                    //         : FnRef(key.Substring(1));
-                    // }
-
-                    // module resource names can be kept as-is
+                    // module resource names must be kept as-is
                     return true;
                 }
 
@@ -469,6 +474,73 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
                 return false;
             }
+        }
+
+        private object Finalize(object root) {
+            return Visit(root, value => {
+                if((value is IDictionary<string, object> map) && (map.Count == 1)) {
+
+                    // handle !Ref expression
+                    if(map.TryGetValue("Ref", out object refObject) && (refObject is string refKey) && refKey.StartsWith("@", StringComparison.Ordinal)) {
+                        return FnRef(refKey.Substring(1));
+                    }
+
+                    // handle !GetAtt expression
+                    if(
+                        map.TryGetValue("Fn::GetAtt", out object getAttObject)
+                        && (getAttObject is IList<object> getAttArgs)
+                        && (getAttArgs.Count == 2)
+                        && getAttArgs[0] is string getAttKey
+                        && getAttArgs[1] is string getAttAttribute
+                        && getAttKey.StartsWith("@", StringComparison.Ordinal)
+                    ) {
+                        return FnGetAtt(getAttKey.Substring(1), getAttAttribute);
+                    }
+
+                    // handle !Sub expression
+                    if(map.TryGetValue("Fn::Sub", out object subObject)) {
+                        string subPattern;
+                        IDictionary<string, object> subArgs = null;
+
+                        // determine which form of !Sub is being used
+                        if(subObject is string) {
+                            subPattern = (string)subObject;
+                            subArgs = new Dictionary<string, object>();
+                        } else if(
+                            (subObject is IList<object> subList)
+                            && (subList.Count == 2)
+                            && (subList[0] is string)
+                            && (subList[1] is IDictionary<string, object>)
+                        ) {
+                            subPattern = (string)subList[0];
+                            subArgs = (IDictionary<string, object>)subList[1];
+                        } else {
+                            DebugWriteLine(() => $"INVALID Fn::Sub => {map}");
+                            return value;
+                        }
+
+                        // replace as many ${VAR} occurrences as possible
+                        subPattern = Regex.Replace(subPattern, SUBVARIABLE_PATTERN, match => {
+                            var matchText = match.ToString();
+                            var name = matchText.Substring(2, matchText.Length - 3).Trim().Split('.', 2);
+                            var suffix = (name.Length == 2) ? ("." + name[1]) : null;
+                            var subRefKey = name[0];
+                            if(!subArgs.ContainsKey(subRefKey) && subRefKey.StartsWith("@", StringComparison.Ordinal)) {
+                                return "${" + subRefKey.Substring(1) + suffix + "}";
+                            }
+                            return matchText;
+                        });
+
+                        // determine which form of !Sub to construct
+                        return subArgs.Any()
+                            ? FnSub(subPattern, subArgs)
+                            : Regex.IsMatch(subPattern, SUBVARIABLE_PATTERN)
+                            ? FnSub(subPattern)
+                            : subPattern;
+                    }
+                }
+                return value;
+            });
         }
 
         private object Visit(object value, Func<object, object> visitor) {

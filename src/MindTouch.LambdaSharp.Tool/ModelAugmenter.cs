@@ -587,12 +587,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     Integration = new Humidifier.ApiGateway.MethodTypes.Integration {
                         Type = "AWS_PROXY",
                         IntegrationHttpMethod = "POST",
-                        Uri = FnSub(
-                            "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Arn}/invocations",
-                            new Dictionary<string, object> {
-                                ["Arn"] = FnGetAtt(method.Function.ResourceName, "Arn")
-                            }
-                        )
+                        Uri = FnSub($"arn:aws:apigateway:${{AWS::Region}}:lambda:path/2015-03-31/functions/${{{method.Function.ResourceName}.Arn}}/invocations")
                     }
                 };
             }

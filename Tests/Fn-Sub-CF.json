@@ -63,7 +63,7 @@
             "www.${Domain}",
             {
               "Domain": {
-                "Ref": "@RootDomainName"
+                "Ref": "RootDomainName"
               }
             }
           ]
@@ -72,7 +72,7 @@
           "Fn::Sub": "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}"
         },
         "Result3": {
-          "Fn::Sub": "${@MyQueue}/*"
+          "Fn::Sub": "${MyQueue}/*"
         },
         "Result4": {
           "Fn::Sub": "${MyQueue.Arn}/*"
@@ -101,7 +101,7 @@
         },
         "ServiceToken": {
           "Fn::ImportValue": {
-            "Fn::Sub": "${@DeploymentPrefix}CustomResource-CustomResource::Handler"
+            "Fn::Sub": "${DeploymentPrefix}CustomResource-CustomResource::Handler"
           }
         }
       }
@@ -111,7 +111,7 @@
       "Properties": {
         "ServiceToken": {
           "Fn::ImportValue": {
-            "Fn::Sub": "${@DeploymentPrefix}CustomResource-LambdaSharp::Register::Module"
+            "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::Register::Module"
           }
         },
         "ModuleId": {
@@ -134,7 +134,7 @@
     "SecretsIsEmpty": {
       "Fn::Equals": [
         {
-          "Ref": "@Secrets"
+          "Ref": "Secrets"
         },
         ""
       ]
@@ -148,7 +148,7 @@
               "Fn::Split": [
                 "$",
                 {
-                  "Ref": "@LambdaSharpDeadLetterQueueArn"
+                  "Ref": "LambdaSharpDeadLetterQueueArn"
                 }
               ]
             }
@@ -166,7 +166,7 @@
               "Fn::Split": [
                 "$",
                 {
-                  "Ref": "@LambdaSharpLoggingStreamArn"
+                  "Ref": "LambdaSharpLoggingStreamArn"
                 }
               ]
             }
@@ -184,7 +184,7 @@
               "Fn::Split": [
                 "$",
                 {
-                  "Ref": "@LambdaSharpDefaultSecretKeyArn"
+                  "Ref": "LambdaSharpDefaultSecretKeyArn"
                 }
               ]
             }
@@ -277,7 +277,7 @@
       "Version": "2018-11-22",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
-      "Hash": "224DDC22BA3456483679E562F00A08A6",
+      "Hash": "B30D970BC3D7D2C7CEEB068B4978AA06",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Pragmas": [],
       "Assets": []

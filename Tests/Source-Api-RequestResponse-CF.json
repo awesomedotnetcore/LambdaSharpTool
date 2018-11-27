@@ -52,7 +52,7 @@
       "Properties": {
         "Code": {
           "S3Bucket": {
-            "Ref": "@DeploymentBucketName"
+            "Ref": "DeploymentBucketName"
           },
           "S3Key": "Modules/TestModule/Assets/Function-NOCOMPILE.zip"
         },
@@ -63,7 +63,7 @@
               {
                 "Fn::ImportValue": {
                   "Fn::Sub": [
-                    "${@DeploymentPrefix}${Import}",
+                    "${DeploymentPrefix}${Import}",
                     {
                       "Import": {
                         "Fn::Select": [
@@ -72,7 +72,7 @@
                             "Fn::Split": [
                               "$",
                               {
-                                "Ref": "@LambdaSharpDeadLetterQueueArn"
+                                "Ref": "LambdaSharpDeadLetterQueueArn"
                               }
                             ]
                           }
@@ -83,7 +83,7 @@
                 }
               },
               {
-                "Ref": "@LambdaSharpDeadLetterQueueArn"
+                "Ref": "LambdaSharpDeadLetterQueueArn"
               }
             ]
           }
@@ -104,7 +104,7 @@
                 {
                   "Fn::ImportValue": {
                     "Fn::Sub": [
-                      "${@DeploymentPrefix}${Import}",
+                      "${DeploymentPrefix}${Import}",
                       {
                         "Import": {
                           "Fn::Select": [
@@ -113,7 +113,7 @@
                               "Fn::Split": [
                                 "$",
                                 {
-                                  "Ref": "@LambdaSharpDeadLetterQueueArn"
+                                  "Ref": "LambdaSharpDeadLetterQueueArn"
                                 }
                               ]
                             }
@@ -124,7 +124,7 @@
                   }
                 },
                 {
-                  "Ref": "@LambdaSharpDeadLetterQueueArn"
+                  "Ref": "LambdaSharpDeadLetterQueueArn"
                 }
               ]
             },
@@ -134,7 +134,7 @@
                 {
                   "Fn::ImportValue": {
                     "Fn::Sub": [
-                      "${@DeploymentPrefix}${Import}",
+                      "${DeploymentPrefix}${Import}",
                       {
                         "Import": {
                           "Fn::Select": [
@@ -143,7 +143,7 @@
                               "Fn::Split": [
                                 "$",
                                 {
-                                  "Ref": "@LambdaSharpDefaultSecretKeyArn"
+                                  "Ref": "LambdaSharpDefaultSecretKeyArn"
                                 }
                               ]
                             }
@@ -154,7 +154,7 @@
                   }
                 },
                 {
-                  "Ref": "@LambdaSharpDefaultSecretKeyArn"
+                  "Ref": "LambdaSharpDefaultSecretKeyArn"
                 }
               ]
             }
@@ -177,7 +177,7 @@
       "Properties": {
         "ServiceToken": {
           "Fn::ImportValue": {
-            "Fn::Sub": "${@DeploymentPrefix}CustomResource-LambdaSharp::Register::Module"
+            "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::Register::Module"
           }
         },
         "ModuleId": {
@@ -230,7 +230,7 @@
                               [
                                 "",
                                 {
-                                  "Ref": "@Secrets"
+                                  "Ref": "Secrets"
                                 }
                               ]
                             ]
@@ -252,7 +252,7 @@
                       {
                         "Fn::ImportValue": {
                           "Fn::Sub": [
-                            "${@DeploymentPrefix}${Import}",
+                            "${DeploymentPrefix}${Import}",
                             {
                               "Import": {
                                 "Fn::Select": [
@@ -261,7 +261,7 @@
                                     "Fn::Split": [
                                       "$",
                                       {
-                                        "Ref": "@LambdaSharpDeadLetterQueueArn"
+                                        "Ref": "LambdaSharpDeadLetterQueueArn"
                                       }
                                     ]
                                   }
@@ -272,7 +272,7 @@
                         }
                       },
                       {
-                        "Ref": "@LambdaSharpDeadLetterQueueArn"
+                        "Ref": "LambdaSharpDeadLetterQueueArn"
                       }
                     ]
                   }
@@ -328,7 +328,7 @@
                       {
                         "Fn::ImportValue": {
                           "Fn::Sub": [
-                            "${@DeploymentPrefix}${Import}",
+                            "${DeploymentPrefix}${Import}",
                             {
                               "Import": {
                                 "Fn::Select": [
@@ -337,7 +337,7 @@
                                     "Fn::Split": [
                                       "$",
                                       {
-                                        "Ref": "@LambdaSharpLoggingStreamArn"
+                                        "Ref": "LambdaSharpLoggingStreamArn"
                                       }
                                     ]
                                   }
@@ -348,7 +348,7 @@
                         }
                       },
                       {
-                        "Ref": "@LambdaSharpLoggingStreamArn"
+                        "Ref": "LambdaSharpLoggingStreamArn"
                       }
                     ]
                   }
@@ -366,7 +366,7 @@
       "Type": "AWS::Logs::LogGroup",
       "Properties": {
         "LogGroupName": {
-          "Fn::Sub": "/aws/lambda/${@Function}"
+          "Fn::Sub": "/aws/lambda/${Function}"
         },
         "RetentionInDays": 7
       }
@@ -376,18 +376,18 @@
       "Properties": {
         "ServiceToken": {
           "Fn::ImportValue": {
-            "Fn::Sub": "${@DeploymentPrefix}CustomResource-LambdaSharp::Register::Function"
+            "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::Register::Function"
           }
         },
         "ModuleId": {
           "Ref": "AWS::StackName"
         },
         "FunctionId": {
-          "Ref": "@Function"
+          "Ref": "Function"
         },
         "FunctionName": "Function",
         "FunctionLogGroupName": {
-          "Fn::Sub": "/aws/lambda/${@Function}"
+          "Fn::Sub": "/aws/lambda/${Function}"
         },
         "FunctionPlatform": "AWS Lambda",
         "FunctionFramework": "dotnetcore2.1",
@@ -408,7 +408,7 @@
             {
               "Fn::ImportValue": {
                 "Fn::Sub": [
-                  "${@DeploymentPrefix}${Import}",
+                  "${DeploymentPrefix}${Import}",
                   {
                     "Import": {
                       "Fn::Select": [
@@ -417,7 +417,7 @@
                           "Fn::Split": [
                             "$",
                             {
-                              "Ref": "@LambdaSharpLoggingStreamArn"
+                              "Ref": "LambdaSharpLoggingStreamArn"
                             }
                           ]
                         }
@@ -428,13 +428,13 @@
               }
             },
             {
-              "Ref": "@LambdaSharpLoggingStreamArn"
+              "Ref": "LambdaSharpLoggingStreamArn"
             }
           ]
         },
         "FilterPattern": "-\"*** \"",
         "LogGroupName": {
-          "Ref": "@FunctionLogGroup"
+          "Ref": "FunctionLogGroup"
         },
         "RoleArn": {
           "Fn::GetAtt": [
@@ -459,13 +459,13 @@
       "Properties": {
         "ParentId": {
           "Fn::GetAtt": [
-            "@ModuleRestApi",
+            "ModuleRestApi",
             "RootResourceId"
           ]
         },
         "PathPart": "items",
         "RestApiId": {
-          "Ref": "@ModuleRestApi"
+          "Ref": "ModuleRestApi"
         }
       }
     },
@@ -478,24 +478,14 @@
           "IntegrationHttpMethod": "POST",
           "Type": "AWS_PROXY",
           "Uri": {
-            "Fn::Sub": [
-              "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Arn}/invocations",
-              {
-                "Arn": {
-                  "Fn::GetAtt": [
-                    "@Function",
-                    "Arn"
-                  ]
-                }
-              }
-            ]
+            "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Function.Arn}/invocations"
           }
         },
         "ResourceId": {
-          "Ref": "@ModuleRestApiItemsResource"
+          "Ref": "ModuleRestApiItemsResource"
         },
         "RestApiId": {
-          "Ref": "@ModuleRestApi"
+          "Ref": "ModuleRestApi"
         }
       }
     },
@@ -505,13 +495,13 @@
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
           "Fn::GetAtt": [
-            "@Function",
+            "Function",
             "Arn"
           ]
         },
         "Principal": "apigateway.amazonaws.com",
         "SourceArn": {
-          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${@ModuleRestApi}/LATEST/GET/items"
+          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleRestApi}/LATEST/GET/items"
         }
       }
     },
@@ -524,24 +514,14 @@
           "IntegrationHttpMethod": "POST",
           "Type": "AWS_PROXY",
           "Uri": {
-            "Fn::Sub": [
-              "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Arn}/invocations",
-              {
-                "Arn": {
-                  "Fn::GetAtt": [
-                    "@Function",
-                    "Arn"
-                  ]
-                }
-              }
-            ]
+            "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Function.Arn}/invocations"
           }
         },
         "ResourceId": {
-          "Ref": "@ModuleRestApiItemsResource"
+          "Ref": "ModuleRestApiItemsResource"
         },
         "RestApiId": {
-          "Ref": "@ModuleRestApi"
+          "Ref": "ModuleRestApi"
         }
       }
     },
@@ -551,13 +531,13 @@
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
           "Fn::GetAtt": [
-            "@Function",
+            "Function",
             "Arn"
           ]
         },
         "Principal": "apigateway.amazonaws.com",
         "SourceArn": {
-          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${@ModuleRestApi}/LATEST/POST/items"
+          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleRestApi}/LATEST/POST/items"
         }
       }
     },
@@ -565,11 +545,11 @@
       "Type": "AWS::ApiGateway::Resource",
       "Properties": {
         "ParentId": {
-          "Ref": "@ModuleRestApiItemsResource"
+          "Ref": "ModuleRestApiItemsResource"
         },
         "PathPart": "{id}",
         "RestApiId": {
-          "Ref": "@ModuleRestApi"
+          "Ref": "ModuleRestApi"
         }
       }
     },
@@ -582,24 +562,14 @@
           "IntegrationHttpMethod": "POST",
           "Type": "AWS_PROXY",
           "Uri": {
-            "Fn::Sub": [
-              "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Arn}/invocations",
-              {
-                "Arn": {
-                  "Fn::GetAtt": [
-                    "@Function",
-                    "Arn"
-                  ]
-                }
-              }
-            ]
+            "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Function.Arn}/invocations"
           }
         },
         "ResourceId": {
-          "Ref": "@ModuleRestApiItemsResourceIdResource"
+          "Ref": "ModuleRestApiItemsResourceIdResource"
         },
         "RestApiId": {
-          "Ref": "@ModuleRestApi"
+          "Ref": "ModuleRestApi"
         }
       }
     },
@@ -609,13 +579,13 @@
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
           "Fn::GetAtt": [
-            "@Function",
+            "Function",
             "Arn"
           ]
         },
         "Principal": "apigateway.amazonaws.com",
         "SourceArn": {
-          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${@ModuleRestApi}/LATEST/GET/items/{id}"
+          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleRestApi}/LATEST/GET/items/{id}"
         }
       }
     },
@@ -628,25 +598,15 @@
           "IntegrationHttpMethod": "POST",
           "Type": "AWS_PROXY",
           "Uri": {
-            "Fn::Sub": [
-              "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Arn}/invocations",
-              {
-                "Arn": {
-                  "Fn::GetAtt": [
-                    "@Function",
-                    "Arn"
-                  ]
-                }
-              }
-            ]
+            "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Function.Arn}/invocations"
           }
         },
         "OperationName": "UpdateItem",
         "ResourceId": {
-          "Ref": "@ModuleRestApiItemsResourceIdResource"
+          "Ref": "ModuleRestApiItemsResourceIdResource"
         },
         "RestApiId": {
-          "Ref": "@ModuleRestApi"
+          "Ref": "ModuleRestApi"
         }
       }
     },
@@ -656,13 +616,13 @@
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
           "Fn::GetAtt": [
-            "@Function",
+            "Function",
             "Arn"
           ]
         },
         "Principal": "apigateway.amazonaws.com",
         "SourceArn": {
-          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${@ModuleRestApi}/LATEST/PUT/items/{id}"
+          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleRestApi}/LATEST/PUT/items/{id}"
         }
       }
     },
@@ -676,24 +636,14 @@
           "IntegrationHttpMethod": "POST",
           "Type": "AWS_PROXY",
           "Uri": {
-            "Fn::Sub": [
-              "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Arn}/invocations",
-              {
-                "Arn": {
-                  "Fn::GetAtt": [
-                    "@Function",
-                    "Arn"
-                  ]
-                }
-              }
-            ]
+            "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Function.Arn}/invocations"
           }
         },
         "ResourceId": {
-          "Ref": "@ModuleRestApiItemsResourceIdResource"
+          "Ref": "ModuleRestApiItemsResourceIdResource"
         },
         "RestApiId": {
-          "Ref": "@ModuleRestApi"
+          "Ref": "ModuleRestApi"
         }
       }
     },
@@ -703,13 +653,13 @@
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
           "Fn::GetAtt": [
-            "@Function",
+            "Function",
             "Arn"
           ]
         },
         "Principal": "apigateway.amazonaws.com",
         "SourceArn": {
-          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${@ModuleRestApi}/LATEST/DELETE/items/{id}"
+          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleRestApi}/LATEST/DELETE/items/{id}"
         }
       }
     },
@@ -768,14 +718,14 @@
         }
       }
     },
-    "ModuleRestApiDeployment20273C27E4AF26B14EA1715D0449041C": {
+    "ModuleRestApiDeploymentB76494426287A08CA2B55AA7C16D8D64": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
         "Description": {
-          "Fn::Sub": "${AWS::StackName} API [20273C27E4AF26B14EA1715D0449041C]"
+          "Fn::Sub": "${AWS::StackName} API [B76494426287A08CA2B55AA7C16D8D64]"
         },
         "RestApiId": {
-          "Ref": "@ModuleRestApi"
+          "Ref": "ModuleRestApi"
         }
       }
     },
@@ -783,7 +733,7 @@
       "Type": "AWS::ApiGateway::Stage",
       "Properties": {
         "DeploymentId": {
-          "Ref": "@ModuleRestApiDeployment20273C27E4AF26B14EA1715D0449041C"
+          "Ref": "ModuleRestApiDeploymentB76494426287A08CA2B55AA7C16D8D64"
         },
         "MethodSettings": [
           {
@@ -794,7 +744,7 @@
           }
         ],
         "RestApiId": {
-          "Ref": "@ModuleRestApi"
+          "Ref": "ModuleRestApi"
         },
         "StageName": "LATEST"
       },
@@ -815,7 +765,7 @@
     "SecretsIsEmpty": {
       "Fn::Equals": [
         {
-          "Ref": "@Secrets"
+          "Ref": "Secrets"
         },
         ""
       ]
@@ -829,7 +779,7 @@
               "Fn::Split": [
                 "$",
                 {
-                  "Ref": "@LambdaSharpDeadLetterQueueArn"
+                  "Ref": "LambdaSharpDeadLetterQueueArn"
                 }
               ]
             }
@@ -847,7 +797,7 @@
               "Fn::Split": [
                 "$",
                 {
-                  "Ref": "@LambdaSharpLoggingStreamArn"
+                  "Ref": "LambdaSharpLoggingStreamArn"
                 }
               ]
             }
@@ -865,7 +815,7 @@
               "Fn::Split": [
                 "$",
                 {
-                  "Ref": "@LambdaSharpDefaultSecretKeyArn"
+                  "Ref": "LambdaSharpDefaultSecretKeyArn"
                 }
               ]
             }
@@ -947,7 +897,7 @@
       "Version": "2018-11-22",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
-      "Hash": "4BCB0D9D4EABA0D88CCA4FECE686886D",
+      "Hash": "3F52C00E42C6AEF7710D1F79E70D7B5D",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Pragmas": [],
       "Assets": []
