@@ -151,7 +151,9 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public override object GetExportReference()
             => (ResourceArnAttribute != null)
                 ? AModelProcessor.FnGetAtt(ResourceName, ResourceArnAttribute)
-                : ResourceMapping.GetArnReference(Resource.AWSTypeName, ResourceName);
+                : ResourceMapping.HasAttribute(Resource.AWSTypeName, "Arn")
+                ? AModelProcessor.FnGetAtt(ResourceName, "Arn")
+                : AModelProcessor.FnRef(ResourceName);
     }
 
     public class InputEntry : AModuleEntry {
@@ -216,7 +218,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public bool HasFunctionRegistration => !HasPragma("no-function-registration");
 
         //--- Methods ---
-        public override object GetExportReference() => ResourceMapping.GetArnReference(Function.AWSTypeName, ResourceName);
+        public override object GetExportReference() => AModelProcessor.FnGetAtt(ResourceName, "Arn");
+
         public bool HasPragma(string pragma) => Pragmas?.Contains(pragma) == true;
 
         public void UpdatePackagePath(string package) {
