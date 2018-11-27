@@ -117,8 +117,7 @@ namespace MindTouch.LambdaSharp.Tool {
             });
 
             // generate JSON template
-            var template = new JsonStackSerializer().Serialize(_stack);
-            return template;
+            return new JsonStackSerializer().Serialize(_stack);
         }
 
         private void AddOutput(AOutput output) {
@@ -173,15 +172,6 @@ namespace MindTouch.LambdaSharp.Tool {
                 _stack.Add(logicalId, input.Parameter);
                 break;
             case FunctionEntry function:
-
-                // TODO: make sure all these fields get set
-                // _stack.Add(function.Name, new Lambda.Function {
-                //     Code = new Lambda.FunctionTypes.Code {
-                //         S3Bucket = FnRef("DeploymentBucketName"),
-                //         S3Key = FnSub($"Modules/{module.Name}/Assets/{Path.GetFileName(function.PackagePath)}")
-                //     },
-                // });
-
                 _stack.Add(function.LogicalId, function.Function);
                 break;
             default:
