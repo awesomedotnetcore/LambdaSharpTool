@@ -506,7 +506,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 // Console.WriteLine($"{moduleJson} generated");
 
                 // generate & save cloudformation template
-                var template = new ModelGenerator(settings, moduleSource).Generate(module, gitsha);
+                var template = new ModelGenerator(settings, moduleSource).Generate(module.ToModule(), gitsha);
                 if(HasErrors) {
                     return false;
                 }

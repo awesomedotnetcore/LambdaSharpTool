@@ -105,22 +105,14 @@
                     "kms:GenerateDataKeyWithoutPlaintext"
                   ],
                   "Resource": {
-                    "Fn::Split": [
-                      ",",
+                    "Fn::If": [
+                      "SecretsIsEmpty",
+                      "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/12345678-1234-1234-1234-123456789012",
                       {
-                        "Fn::If": [
-                          "SecretsIsEmpty",
-                          "",
+                        "Fn::Split": [
+                          ",",
                           {
-                            "Fn::Join": [
-                              ",",
-                              [
-                                "",
-                                {
-                                  "Ref": "Secrets"
-                                }
-                              ]
-                            ]
+                            "Ref": "Secrets"
                           }
                         ]
                       }
@@ -226,7 +218,7 @@
       "Version": "2018-11-22",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
-      "Hash": "4CE81362BFA279B7CDC03A42D76FE119",
+      "Hash": "DE974117D3E15CF19190646394116775",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Pragmas": [
         "no-lambdasharp-dependencies"

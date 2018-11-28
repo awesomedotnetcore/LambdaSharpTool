@@ -209,38 +209,6 @@
               "Version": "2012-10-17",
               "Statement": [
                 {
-                  "Sid": "SecretsDecryption",
-                  "Effect": "Allow",
-                  "Action": [
-                    "kms:Decrypt",
-                    "kms:Encrypt",
-                    "kms:GenerateDataKey",
-                    "kms:GenerateDataKeyWithoutPlaintext"
-                  ],
-                  "Resource": {
-                    "Fn::Split": [
-                      ",",
-                      {
-                        "Fn::If": [
-                          "SecretsIsEmpty",
-                          "",
-                          {
-                            "Fn::Join": [
-                              ",",
-                              [
-                                "",
-                                {
-                                  "Ref": "Secrets"
-                                }
-                              ]
-                            ]
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                },
-                {
                   "Sid": "ModuleDeadLetterQueueLogging",
                   "Effect": "Allow",
                   "Action": [
@@ -273,6 +241,96 @@
                       },
                       {
                         "Ref": "LambdaSharpDeadLetterQueueArn"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "Sid": "SecretsDecryption",
+                  "Effect": "Allow",
+                  "Action": [
+                    "kms:Decrypt",
+                    "kms:Encrypt",
+                    "kms:GenerateDataKey",
+                    "kms:GenerateDataKeyWithoutPlaintext"
+                  ],
+                  "Resource": {
+                    "Fn::Split": [
+                      ",",
+                      {
+                        "Fn::If": [
+                          "SecretsIsEmpty",
+                          {
+                            "Fn::If": [
+                              "LambdaSharpDefaultSecretKeyArnIsImport",
+                              {
+                                "Fn::ImportValue": {
+                                  "Fn::Sub": [
+                                    "${DeploymentPrefix}${Import}",
+                                    {
+                                      "Import": {
+                                        "Fn::Select": [
+                                          "1",
+                                          {
+                                            "Fn::Split": [
+                                              "$",
+                                              {
+                                                "Ref": "LambdaSharpDefaultSecretKeyArn"
+                                              }
+                                            ]
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  ]
+                                }
+                              },
+                              {
+                                "Ref": "LambdaSharpDefaultSecretKeyArn"
+                              }
+                            ]
+                          },
+                          {
+                            "Fn::Join": [
+                              ",",
+                              [
+                                {
+                                  "Fn::If": [
+                                    "LambdaSharpDefaultSecretKeyArnIsImport",
+                                    {
+                                      "Fn::ImportValue": {
+                                        "Fn::Sub": [
+                                          "${DeploymentPrefix}${Import}",
+                                          {
+                                            "Import": {
+                                              "Fn::Select": [
+                                                "1",
+                                                {
+                                                  "Fn::Split": [
+                                                    "$",
+                                                    {
+                                                      "Ref": "LambdaSharpDefaultSecretKeyArn"
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    {
+                                      "Ref": "LambdaSharpDefaultSecretKeyArn"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "Ref": "Secrets"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
                       }
                     ]
                   }
@@ -897,7 +955,7 @@
       "Version": "2018-11-22",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
-      "Hash": "3F52C00E42C6AEF7710D1F79E70D7B5D",
+      "Hash": "A4827AE855EE54802F4EC4C9F1EFCEE4",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Pragmas": [],
       "Assets": []

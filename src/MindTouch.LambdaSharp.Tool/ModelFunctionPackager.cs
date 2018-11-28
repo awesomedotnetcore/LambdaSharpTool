@@ -38,20 +38,23 @@ namespace MindTouch.LambdaSharp.Tool {
         //--- Constants ---
         private const string GITSHAFILE = "gitsha.txt";
 
+        //--- Fields ---
+        private ModuleBuilder _builder;
+
         //--- Constructors ---
         public ModelFunctionPackager(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
 
         public void Process(
-            Module module,
+            ModuleBuilder builder,
             bool skipCompile,
             bool skipAssemblyValidation,
             string gitsha,
             string buildConfiguration
         ) {
-            foreach(var function in module.Entries.OfType<FunctionEntry>()) {
+            _builder = builder;
+            foreach(var function in builder.Entries.OfType<FunctionEntry>()) {
                 AtLocation(function.FullName, () => {
                     Process(
-                        module,
                         function,
                         skipCompile,
                         skipAssemblyValidation,
@@ -63,7 +66,6 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         private void Process(
-            Module module,
             FunctionEntry function,
             bool skipCompile,
             bool skipAssemblyValidation,
@@ -74,7 +76,7 @@ namespace MindTouch.LambdaSharp.Tool {
             // identify folder for function
             var folderName = new[] {
                 function.Name,
-                $"{module.Name}.{function.Name}"
+                $"{_builder.Name}.{function.Name}"
             }.FirstOrDefault(name => Directory.Exists(Path.Combine(Settings.WorkingDirectory, name)));
             if(folderName == null) {
                 AddError($"could not locate function directory");
@@ -102,7 +104,6 @@ namespace MindTouch.LambdaSharp.Tool {
             switch(Path.GetExtension(projectPath).ToLowerInvariant()) {
             case ".csproj":
                 ProcessDotNet(
-                    module,
                     function,
                     skipCompile,
                     skipAssemblyValidation,
@@ -113,7 +114,6 @@ namespace MindTouch.LambdaSharp.Tool {
                 break;
             case ".js":
                 ProcessJavascript(
-                    module,
                     function,
                     skipCompile,
                     skipAssemblyValidation,
@@ -129,7 +129,6 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         private void ProcessDotNet(
-            Module module,
             FunctionEntry function,
             bool skipCompile,
             bool skipAssemblyValidation,
@@ -264,7 +263,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
                 var package = CreatePackage(function.Name, gitsha, tempDirectory);
                 function.UpdatePackagePath(package);
-                module.AddAsset(Path.GetRelativePath(Settings.OutputDirectory, package));
+                _builder.AddAsset(Path.GetRelativePath(Settings.OutputDirectory, package));
             } finally {
                 if(Directory.Exists(tempDirectory)) {
                     try {
@@ -333,7 +332,6 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         private void ProcessJavascript(
-            Module module,
             FunctionEntry function,
             bool skipCompile,
             bool skipAssemblyValidation,
@@ -359,7 +357,7 @@ namespace MindTouch.LambdaSharp.Tool {
             Console.WriteLine($"=> Building function {function.Name} [{function.Function.Runtime}]");
             var package = CreatePackage(function.Name, gitsha, Path.GetDirectoryName(project));
             function.UpdatePackagePath(package);
-            module.AddAsset(Path.GetRelativePath(Settings.OutputDirectory, package));
+            _builder.AddAsset(Path.GetRelativePath(Settings.OutputDirectory, package));
         }
 
         private string CreatePackage(string functionName, string gitsha, string folder) {

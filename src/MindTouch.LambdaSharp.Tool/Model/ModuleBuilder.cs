@@ -29,43 +29,78 @@ namespace MindTouch.LambdaSharp.Tool.Model {
     public class ModuleBuilder : AModelProcessor {
 
         //--- Fields ---
-        private readonly Module _module;
+        private readonly string _name;
+        private readonly VersionInfo _version;
+        private readonly string _description;
+        private IList<object> _pragmas;
+        private IList<object> _secrets;
+        private IDictionary<string, AModuleEntry> _entriesByFullName;
+        private IList<AModuleEntry> _entries;
+        private IDictionary<string, object> _conditions;
+        private IList<AOutput> _outputs;
+        private IList<Humidifier.Statement> _resourceStatements = new List<Humidifier.Statement>();
+        private IList<string> _assets;
 
         //--- Constructors ---
         public ModuleBuilder(Settings settings, string sourceFilename, Module module) : base(settings, sourceFilename) {
-            _module = module ?? throw new ArgumentNullException(nameof(module));
+            _name = module.Name;
+            _version = module.Version;
+            _description = module.Description;
+            _pragmas = new List<object>(module.Pragmas ?? new object[0]);
+            _secrets = new List<object>(module.Secrets ?? new object[0]);
+            _entries = new List<AModuleEntry>(module.Entries ?? new AModuleEntry[0]);
+            _entriesByFullName = _entries.ToDictionary(entry => entry.FullName);
+            _conditions = new Dictionary<string, object>(module.Conditions ?? new KeyValuePair<string, object>[0]);
+            _outputs = new List<AOutput>(module.Outputs ?? new AOutput[0]);
+            _assets = new List<string>(module.Assets ?? new string[0]);
+
+            // extract existing resource statements when they exist
+            if(TryGetEntry("Module::Role", out AModuleEntry moduleRoleEntry)) {
+                var role = (Humidifier.IAM.Role)((HumidifierEntry)moduleRoleEntry).Resource;
+                _resourceStatements = new List<Humidifier.Statement>(role.Policies[0].PolicyDocument.Statement);
+                role.Policies[0].PolicyDocument.Statement = new List<Humidifier.Statement>();
+            } else {
+                _resourceStatements = new List<Humidifier.Statement>();
+            }
         }
 
         //--- Properties ---
-        public VersionInfo Version => _module.Version;
-        public bool HasPragma(string pragma) => _module.HasPragma(pragma);
+        public string Name => _name;
+        public VersionInfo Version => _version;
+        public IEnumerable<object> Secrets => _secrets;
+        public IEnumerable<AModuleEntry> Entries => _entries;
+        public IEnumerable<AOutput> Outputs => _outputs;
+        public bool HasPragma(string pragma) => _pragmas.Contains(pragma);
+        public bool HasModuleRegistration => !HasPragma("no-module-registration");
+        public bool HasLambdaSharpDependencies => !HasPragma("no-lambdasharp-dependencies");
 
         //--- Methods ---
-        public Module ToModule() => _module;
-        public AModuleEntry GetEntry(string fullName) =>  _module.GetEntry(fullName);
-        public void AddCondition(string name, object condition) => _module.Conditions.Add(name, condition);
-        public void AddPragma(object pragma) => _module.Pragmas.Add(pragma);
+        public AModuleEntry GetEntry(string fullName) => _entriesByFullName[fullName];
+        public void AddCondition(string name, object condition) => _conditions.Add(name, condition);
+        public void AddPragma(object pragma) => _pragmas.Add(pragma);
+        public bool TryGetEntry(string fullName, out AModuleEntry entry) => _entriesByFullName.TryGetValue(fullName, out entry);
+        public void AddAsset(string asset) => _assets.Add(asset);
 
         public bool AddSecret(object secret) {
             if(secret is string textSecret) {
                 if(textSecret.StartsWith("arn:")) {
 
                     // decryption keys provided with their ARN can be added as is; no further steps required
-                    _module.Secrets.Add(secret);
+                    _secrets.Add(secret);
                     return true;
                 }
 
                 // assume key name is an alias and resolve it to its ARN
                 try {
                     var response = Settings.KmsClient.DescribeKeyAsync(textSecret).Result;
-                    _module.Secrets.Add(response.KeyMetadata.Arn);
+                    _secrets.Add(response.KeyMetadata.Arn);
                     return true;
                 } catch(Exception e) {
                     AddError($"failed to resolve key alias: {textSecret}", e);
                     return false;
                 }
             } else {
-                _module.Secrets.Add(secret);
+                _secrets.Add(secret);
                 return true;
             }
         }
@@ -175,7 +210,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             var exportName = parts[1];
 
             // find or create root module import collection node
-            var rootParameter = _module.TryGetEntry(exportModule, out AModuleEntry existingEntry)
+            var rootParameter = TryGetEntry(exportModule, out AModuleEntry existingEntry)
                 ? existingEntry
                 : AddValue(
                     parent: null,
@@ -227,7 +262,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         }
 
         public void AddExport(string name, string description, object value) {
-            _module.Outputs.Add(new ExportOutput {
+            _outputs.Add(new ExportOutput {
                 Name = name,
                 Description = description,
                 Value = value
@@ -235,7 +270,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         }
 
         public void AddCustomResource(string customResourceName, string description, string handler) {
-            _module.Outputs.Add(new CustomResourceHandlerOutput {
+            _outputs.Add(new CustomResourceHandlerOutput {
                 CustomResourceName = customResourceName,
                 Description = description,
                 Handler = FnRef(handler)
@@ -245,7 +280,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public void AddMacro(string macroName, string description, string handler) {
 
             // check if a root macros collection needs to be created
-            if(!_module.TryGetEntry("Macros", out AModuleEntry macrosEntry)) {
+            if(!TryGetEntry("Macros", out AModuleEntry macrosEntry)) {
                 macrosEntry = AddValue(
                     parent: null,
                     name: "Macros",
@@ -385,7 +420,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 pragmas: pragmas ?? new object[0],
                 function: new Humidifier.Lambda.Function {
                     Description = (description != null)
-                        ? description.TrimEnd() + $" (v{_module.Version})"
+                        ? description.TrimEnd() + $" (v{_version})"
                         : null,
                     Timeout = timeout,
                     Runtime = runtime,
@@ -399,7 +434,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                     }
                 }
             );
-            if(_module.HasLambdaSharpDependencies) {
+            if(HasLambdaSharpDependencies) {
                 result.Function.DeadLetterConfig = new Humidifier.Lambda.FunctionTypes.DeadLetterConfig {
                     TargetArn = FnRef("Module::DeadLetterQueueArn")
                 };
@@ -430,12 +465,142 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             }
 
             // add role resource statement
-            _module.ResourceStatements.Add(new Humidifier.Statement {
+            var statement = new Humidifier.Statement {
                 Sid = sid,
                 Effect = "Allow",
                 Resource = ResourceMapping.ExpandResourceReference(awsType, reference),
                 Action = allowStatements.Distinct().OrderBy(text => text).ToList()
+            };
+            for(var i = 0; i < _resourceStatements.Count; ++i) {
+                if(_resourceStatements[i].Sid == sid) {
+                    _resourceStatements[i] = statement;
+                    return;
+                }
+            }
+            _resourceStatements.Add(statement);
+        }
+
+        public void VisitAll(Func<object, object> visitor) {
+            if(visitor == null) {
+                throw new ArgumentNullException(nameof(visitor));
+            }
+
+            // resolve references in secrets
+            AtLocation("Secrets", () => {
+                _secrets = (IList<object>)visitor(_secrets);
             });
+
+            // resolve references in entries
+            AtLocation("Entries", () => {
+                foreach(var entry in _entries) {
+                    AtLocation(entry.FullName, () => {
+                        switch(entry) {
+                        case InputEntry _:
+                        case ValueEntry _:
+
+                            // nothing to do
+                            break;
+                        case PackageEntry package:
+                            AtLocation("Package", () => {
+                                package.Package = (Humidifier.CustomResource)visitor(package.Package);
+                            });
+                            break;
+                        case HumidifierEntry humidifier:
+                            AtLocation("Resource", () => {
+                                humidifier.Resource = (Humidifier.Resource)visitor(humidifier.Resource);
+                            });
+                            AtLocation("DependsOn", () => {
+                                humidifier.DependsOn = humidifier.DependsOn.Select(dependency => {
+                                    var reference = ((IDictionary<string, object>)visitor(FnRef(dependency)))
+                                        .TryGetValue("Ref", out object result);
+                                    return (string)result;
+                                }).ToList();
+                            });
+                            break;
+                        case FunctionEntry function:
+                            AtLocation("Environment", () => {
+                                function.Environment = (IDictionary<string, object>)visitor(function.Environment);
+                            });
+                            AtLocation("Function", () => {
+                                function.Function = (Humidifier.Lambda.Function)visitor(function.Function);
+                            });
+
+                            // update function sources
+                            AtLocation("Sources", () => {
+                                var index = 0;
+                                foreach(var source in function.Sources) {
+                                    AtLocation($"[{++index}]", () => {
+                                        switch(source) {
+                                        case AlexaSource alexaSource:
+                                            if(alexaSource.EventSourceToken != null) {
+                                                alexaSource.EventSourceToken = visitor(alexaSource.EventSourceToken);
+                                            }
+                                            break;
+                                        }
+                                    });
+                                }
+                            });
+                            break;
+                        default:
+                            throw new ApplicationException($"unexpected type: {entry.GetType()}");
+                        }
+                    });
+                }
+            });
+
+            // resolve references in conditions
+            AtLocation("Conditions", () => {
+                _conditions = (IDictionary<string, object>)visitor(_conditions);
+            });
+
+            // resolve references in output values
+            AtLocation("Outputs", () => {
+                foreach(var output in _outputs) {
+                    switch(output) {
+                    case ExportOutput exportOutput:
+                        AtLocation(exportOutput.Name, () => {
+                            AtLocation("Value", () => {
+                                exportOutput.Value = visitor(exportOutput.Value);
+                            });
+                        });
+                        break;
+                    case CustomResourceHandlerOutput customResourceHandlerOutput:
+                        AtLocation(customResourceHandlerOutput.CustomResourceName, () => {
+                            AtLocation("Handler", () => {
+                                customResourceHandlerOutput.Handler = visitor(customResourceHandlerOutput.Handler);
+                            });
+                        });
+                        break;
+                    default:
+                        throw new InvalidOperationException($"cannot resolve references for this type: {output?.GetType()}");
+                    }
+                }
+            });
+
+            // resolve references in output values
+            AtLocation("ResourceStatements", () => {
+                _resourceStatements = (IList<Humidifier.Statement>)visitor(_resourceStatements);
+            });
+        }
+
+        public Module ToModule() {
+
+            // update existing resource statements when they exist
+            if(TryGetEntry("Module::Role", out AModuleEntry moduleRoleEntry)) {
+                var role = (Humidifier.IAM.Role)((HumidifierEntry)moduleRoleEntry).Resource;
+                role.Policies[0].PolicyDocument.Statement = _resourceStatements.ToList();
+            }
+            return new Module {
+                Name = _name,
+                Version = _version,
+                Description = _description,
+                Pragmas = _pragmas,
+                Secrets = _secrets,
+                Outputs = _outputs,
+                Conditions = _conditions,
+                Entries = _entries,
+                Assets = _assets
+            };
         }
 
         private IList<string> ConvertScope(object scope) {
@@ -457,7 +622,9 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             }
 
             // add entry
-            return _module.AddEntry(entry);
+            _entriesByFullName.Add(entry.FullName, entry);
+            _entries.Add(entry);
+            return entry;
         }
 
         private string ConvertInputType(string type)

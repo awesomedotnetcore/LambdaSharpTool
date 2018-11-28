@@ -59,11 +59,12 @@ namespace MindTouch.LambdaSharp.Tool {
                 ["Fn::ImportValue"] = sharedValueToImport
             };
 
-        public static object FnJoin(string separator, IList<object> parameters) {
-            if(parameters.Count == 0) {
+        public static object FnJoin(string separator, IEnumerable<object> parameters) {
+            var count = parameters.Count();
+            if(count == 0) {
                 return "";
             }
-            if(parameters.Count == 1) {
+            if(count == 1) {
                 return parameters.First();
             }
             if(parameters.All(value => value is string)) {

@@ -28,56 +28,17 @@ using YamlDotNet.Serialization;
 
 namespace MindTouch.LambdaSharp.Tool.Model {
 
-    public class ModuleGrant {
-
-        //--- Properties ---
-        public string Sid { get; set; }
-        public object References { get; set; }
-        public IList<string> Allow { get; set; }
-    }
-
     public class Module {
-
-        //--- Fields ---
-        [JsonIgnore]
-        private readonly Dictionary<string, AModuleEntry> _entriesByFullName = new Dictionary<string, AModuleEntry>();
-
-        [JsonIgnore]
-        private readonly List<AModuleEntry> _entries = new List<AModuleEntry>();
-
-        [JsonIgnore]
-        private readonly List<string> _assets = new List<string>();
 
         //--- Properties ---
         public string Name { get; set; }
         public VersionInfo Version { get; set; }
         public string Description { get; set; }
-        public IList<object> Pragmas { get; } = new List<object>();
-        public IList<object> Secrets { get; set; } = new List<object>();
-        public IList<AOutput> Outputs { get; } = new List<AOutput>();
-        public IDictionary<string, object> Conditions  { get; set; } = new Dictionary<string, object>();
-        public List<Humidifier.Statement> ResourceStatements { get; } = new List<Humidifier.Statement>();
-        public IEnumerable<string> Assets => _assets;
-        public IEnumerable<AModuleEntry> Entries => _entries;
-
-        [JsonIgnore]
-        public bool HasModuleRegistration => !HasPragma("no-module-registration");
-
-        [JsonIgnore]
-        public bool HasLambdaSharpDependencies => !HasPragma("no-lambdasharp-dependencies");
-
-        //--- Methods ---
-        public bool HasPragma(string pragma) => Pragmas?.Contains(pragma) == true;
-        public AModuleEntry GetEntry(string fullName) => _entriesByFullName[fullName];
-        public object GetReference(string fullName) => GetEntry(fullName).Reference;
-        public bool TryGetEntry(string fullName, out AModuleEntry entry) => _entriesByFullName.TryGetValue(fullName, out entry);
-
-        public AModuleEntry AddEntry(AModuleEntry entry) {
-            _entriesByFullName.Add(entry.FullName, entry);
-            _entries.Add(entry);
-            return entry;
-        }
-
-        public void AddAsset(string filepath) => _assets.Add(filepath ?? throw new ArgumentNullException(nameof(filepath)));
+        public IEnumerable<object> Pragmas { get; set; }
+        public IEnumerable<object> Secrets { get; set; }
+        public IEnumerable<AOutput> Outputs { get; set; }
+        public IEnumerable<KeyValuePair<string, object>> Conditions { get; set; }
+        public IEnumerable<string> Assets { get; set; }
+        public IEnumerable<AModuleEntry> Entries { get; set; }
     }
 }

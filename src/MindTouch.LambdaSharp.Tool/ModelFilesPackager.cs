@@ -34,15 +34,15 @@ namespace MindTouch.LambdaSharp.Tool {
     public class ModelFilesPackager : AModelProcessor {
 
         //--- Fields ---
-        private Module _module;
+        private ModuleBuilder _builder;
 
         //--- Constructors ---
         public ModelFilesPackager(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
 
         //--- Methods ---
-        public void Process(Module module) {
-            _module = module;
-            foreach(var entry in module.Entries.OfType<PackageEntry>()) {
+        public void Process(ModuleBuilder builder) {
+            _builder = builder;
+            foreach(var entry in builder.Entries.OfType<PackageEntry>()) {
                 AtLocation(entry.FullName, () => {
                     ProcessParameter(entry);
                 });
@@ -104,7 +104,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     }
                 }
                 parameter.UpdatePackagePath(package);
-                _module.AddAsset(Path.GetRelativePath(Settings.OutputDirectory, package));
+                _builder.AddAsset(Path.GetRelativePath(Settings.OutputDirectory, package));
             });
         }
     }

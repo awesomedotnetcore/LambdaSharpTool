@@ -50,16 +50,16 @@ namespace MindTouch.LambdaSharp.Tool {
         public ModelReferenceResolver(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
 
         //--- Methods ---
-        public void Resolve(Module module) {
+        public void Resolve(ModuleBuilder builder) {
             _freeEntries.Clear();
             _boundEntries.Clear();
 
             // compute scopes
             AtLocation("Entries", () => {
-                var functionNames = module.Entries.OfType<FunctionEntry>()
+                var functionNames = builder.Entries.OfType<FunctionEntry>()
                     .Select(function => function.FullName)
                     .ToList();
-                foreach(var entry in module.Entries) {
+                foreach(var entry in builder.Entries) {
                     AtLocation(entry.FullName, () => {
                         if(entry.Scope.Contains("*")) {
                             entry.Scope = entry.Scope
@@ -75,23 +75,23 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // compute function environments
             AtLocation("Functions", () => {
-                foreach(var function in module.Entries.OfType<FunctionEntry>()) {
+                foreach(var function in builder.Entries.OfType<FunctionEntry>()) {
                     AtLocation(function.FullName, () => {
                         var environment = function.Function.Environment.Variables;
 
                         // set default environment variables
-                        environment["MODULE_NAME"] = module.Name;
+                        environment["MODULE_NAME"] = builder.Name;
                         environment["MODULE_ID"] = FnRef("AWS::StackName");
-                        environment["MODULE_VERSION"] = module.Version.ToString();
+                        environment["MODULE_VERSION"] = builder.Version.ToString();
                         environment["LAMBDA_NAME"] = function.FullName;
                         environment["LAMBDA_RUNTIME"] = function.Function.Runtime;
-                        if(module.HasLambdaSharpDependencies) {
+                        if(builder.HasLambdaSharpDependencies) {
                             environment["DEADLETTERQUEUE"] = FnRef("Module::DeadLetterQueueArn");
                             environment["DEFAULTSECRETKEY"] = FnRef("Module::DefaultSecretKeyArn");
                         }
 
                         // add all entries scoped to this function
-                        foreach(var scopeEntry in module.Entries.Where(e => e.Scope.Contains(function.FullName))) {
+                        foreach(var scopeEntry in builder.Entries.Where(e => e.Scope.Contains(function.FullName))) {
                             var prefix = scopeEntry.IsSecret ? "SEC_" : "STR_";
                             var fullEnvName = prefix + scopeEntry.FullName.Replace("::", "_").ToUpperInvariant();
                             environment[fullEnvName] = (dynamic)scopeEntry.GetExportReference();
@@ -110,7 +110,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // compute exports
             AtLocation("Outputs", () => {
-                foreach(var output in module.Outputs.OfType<ExportOutput>()) {
+                foreach(var output in builder.Outputs.OfType<ExportOutput>()) {
                     AtLocation(output.Name, () => {
                         if(output.Value == null) {
 
@@ -118,7 +118,7 @@ namespace MindTouch.LambdaSharp.Tool {
                             //  entry name; if it does, we export the ARN value of that parameter; in
                             //  addition, we copy its description if none is provided.
 
-                            if(!module.TryGetEntry(output.Name, out AModuleEntry entry)) {
+                            if(!builder.TryGetEntry(output.Name, out AModuleEntry entry)) {
                                 AddError("could not find matching entry");
                                 output.Value = "<BAD>";
                             } else {
@@ -145,12 +145,12 @@ namespace MindTouch.LambdaSharp.Tool {
             }
 
             // resolve all references
-            VisitAll(module, item => Substitute(item, ReportMissingReference));
-            VisitAll(module, Finalize);
+            builder.VisitAll(item => Substitute(item, ReportMissingReference));
+            builder.VisitAll(Finalize);
 
             // local functions
             void DiscoverEntries() {
-                foreach(var entry in module.Entries) {
+                foreach(var entry in builder.Entries) {
                     AtLocation(entry.FullName, () => {
                         switch(entry.Reference) {
                         case null:
@@ -214,7 +214,7 @@ namespace MindTouch.LambdaSharp.Tool {
             }
 
             void ReportUnresolvedEntries() {
-                foreach(var entry in module.Entries) {
+                foreach(var entry in builder.Entries) {
                     AtLocation(entry.FullName, () => {
                         Substitute(entry.Reference, ReportMissingReference);
                     });
@@ -228,104 +228,6 @@ namespace MindTouch.LambdaSharp.Tool {
                     AddError($"could not find !Ref dependency '{missingName}'");
                 }
             }
-        }
-
-        private void VisitAll(Module module, Func<object, object> visitor) {
-            if(visitor == null) {
-                throw new ArgumentNullException(nameof(visitor));
-            }
-
-            // resolve references in secrets
-            AtLocation("Secrets", () => {
-                module.Secrets = (IList<object>)visitor(module.Secrets);
-            });
-
-            // resolve references in conditions
-            AtLocation("Conditions", () => {
-                module.Conditions = (IDictionary<string, object>)visitor(module.Conditions);
-            });
-
-            // resolve references in entries
-            AtLocation("Entries", () => {
-                foreach(var entry in module.Entries) {
-                    AtLocation(entry.FullName, () => {
-                        switch(entry) {
-                        case InputEntry _:
-                        case ValueEntry _:
-
-                            // nothing to do
-                            break;
-                        case PackageEntry package:
-                            AtLocation("Package", () => {
-                                package.Package = (Humidifier.CustomResource)visitor(package.Package);
-                            });
-                            break;
-                        case HumidifierEntry humidifier:
-                            AtLocation("Resource", () => {
-                                humidifier.Resource = (Humidifier.Resource)visitor(humidifier.Resource);
-                            });
-                            AtLocation("DependsOn", () => {
-                                humidifier.DependsOn = humidifier.DependsOn.Select(dependency => {
-                                    var reference = ((IDictionary<string, object>)visitor(FnRef(dependency)))
-                                        .TryGetValue("Ref", out object result);
-                                    return (string)result;
-                                }).ToList();
-                            });
-                            break;
-                        case FunctionEntry function:
-                            AtLocation("Environment", () => {
-                                function.Environment = (IDictionary<string, object>)visitor(function.Environment);
-                            });
-                            AtLocation("Function", () => {
-                                function.Function = (Humidifier.Lambda.Function)visitor(function.Function);
-                            });
-
-                            // update function sources
-                            AtLocation("Sources", () => {
-                                var index = 0;
-                                foreach(var source in function.Sources) {
-                                    AtLocation($"[{++index}]", () => {
-                                        switch(source) {
-                                        case AlexaSource alexaSource:
-                                            if(alexaSource.EventSourceToken != null) {
-                                                alexaSource.EventSourceToken = visitor(alexaSource.EventSourceToken);
-                                            }
-                                            break;
-                                        }
-                                    });
-                                }
-                            });
-                            break;
-                        default:
-                            throw new ApplicationException($"unexpected type: {entry.GetType()}");
-                        }
-                    });
-                }
-            });
-
-            // resolve references in output values
-            AtLocation("Outputs", () => {
-                foreach(var output in module.Outputs) {
-                    switch(output) {
-                    case ExportOutput exportOutput:
-                        AtLocation(exportOutput.Name, () => {
-                            AtLocation("Value", () => {
-                                exportOutput.Value = visitor(exportOutput.Value);
-                            });
-                        });
-                        break;
-                    case CustomResourceHandlerOutput customResourceHandlerOutput:
-                        AtLocation(customResourceHandlerOutput.CustomResourceName, () => {
-                            AtLocation("Handler", () => {
-                                customResourceHandlerOutput.Handler = visitor(customResourceHandlerOutput.Handler);
-                            });
-                        });
-                        break;
-                    default:
-                        throw new InvalidOperationException($"cannot resolve references for this type: {output?.GetType()}");
-                    }
-                }
-            });
         }
 
         private object Substitute(object root, Action<string> missing = null) {

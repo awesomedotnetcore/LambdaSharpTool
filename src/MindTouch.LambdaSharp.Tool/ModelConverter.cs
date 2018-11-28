@@ -44,7 +44,7 @@ namespace MindTouch.LambdaSharp.Tool {
         public ModelConverter(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
 
         //--- Methods ---
-        public Module Process(ModuleNode module) {
+        public ModuleBuilder Process(ModuleNode module) {
 
             // convert module definition
             try {
@@ -55,7 +55,7 @@ namespace MindTouch.LambdaSharp.Tool {
             }
         }
 
-        private Module Convert(ModuleNode module) {
+        private ModuleBuilder Convert(ModuleNode module) {
 
             // initialize module
             _builder = new ModuleBuilder(Settings, SourceFilename, new Module {
@@ -71,7 +71,7 @@ namespace MindTouch.LambdaSharp.Tool {
             ForEach("Outputs", module.Outputs, ConvertOutput);
             ForEach("Variables", module.Variables, ConvertParameter);
             ForEach("Functions",  module.Functions, ConvertFunction);
-            return _builder.ToModule();
+            return _builder;
         }
 
         private void ConvertPragma(int index, object pragma) {

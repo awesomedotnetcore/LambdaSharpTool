@@ -52,8 +52,8 @@ namespace MindTouch.LambdaSharp.Tool {
         public ModelAugmenter(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
 
         //--- Methods ---
-        public void Augment(Module module) {
-            _builder = new ModuleBuilder(Settings, SourceFilename, module);
+        public void Augment(ModuleBuilder builder) {
+            _builder = builder;
 
             // add module variables
             var moduleEntry = _builder.AddValue(
@@ -76,7 +76,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 parent: moduleEntry,
                 name: "Name",
                 description: "Module Name",
-                module.Name,
+                reference: _builder.Name,
                 scope: null,
                 isSecret: false
             );
@@ -84,7 +84,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 parent: moduleEntry,
                 name: "Version",
                 description: "Module Version",
-                module.Version.ToString(),
+                reference: _builder.Version.ToString(),
                 scope: null,
                 isSecret: false
             );
@@ -97,35 +97,6 @@ namespace MindTouch.LambdaSharp.Tool {
                 label: "Secret Keys (ARNs)",
                 description: "Comma-separated list of optional secret keys",
                 defaultValue: ""
-            );
-
-            // TODO (2018-11-20, bjorg): the following code will fail with `no-lambdasharp-dependencies`
-            // because `module.Secrets` will be empty since the default encryption key will not have been added.
-
-            // add decryption permission for secret
-            _builder.AddGrant(
-                sid: "SecretsDecryption",
-                awsType: null,
-                reference: FnSplit(
-                    ",",
-                    FnIf(
-                        "SecretsIsEmpty",
-                        FnJoin(",", module.Secrets),
-                        FnJoin(
-                            ",",
-                            new List<object> {
-                                FnJoin(",", module.Secrets),
-                                FnRef("Secrets")
-                            }
-                        )
-                    )
-                ),
-                allow: new[] {
-                    "kms:Decrypt",
-                    "kms:Encrypt",
-                    "kms:GenerateDataKey",
-                    "kms:GenerateDataKeyWithoutPlaintext"
-                }
             );
             _builder.AddCondition("SecretsIsEmpty", FnEquals(FnRef("Secrets"), ""));
 
@@ -191,6 +162,38 @@ namespace MindTouch.LambdaSharp.Tool {
                 );
             }
 
+            // add decryption permission for secrets
+            var secretsReference = _builder.Secrets.Any()
+                ? FnSplit(
+                    ",",
+                    FnIf(
+                        "SecretsIsEmpty",
+                        FnJoin(",", _builder.Secrets),
+                        FnJoin(
+                            ",",
+                            _builder.Secrets.Append(FnRef("Secrets")).ToList()
+                        )
+                    )
+                )
+                : FnIf(
+                    "SecretsIsEmpty",
+
+                    // NOTE (2018-11-26, bjorg): we use a dummy KMS key, because an empty value would fail
+                    "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/12345678-1234-1234-1234-123456789012",
+                    FnSplit(",", FnRef("Secrets"))
+                );
+            _builder.AddGrant(
+                sid: "SecretsDecryption",
+                awsType: null,
+                reference: secretsReference,
+                allow: new[] {
+                    "kms:Decrypt",
+                    "kms:Encrypt",
+                    "kms:GenerateDataKey",
+                    "kms:GenerateDataKeyWithoutPlaintext"
+                }
+            );
+
             // add LambdaSharp Deployment Settings
             section = "LambdaSharp Deployment Settings (DO NOT MODIFY)";
             _builder.AddInput(
@@ -228,8 +231,8 @@ namespace MindTouch.LambdaSharp.Tool {
                     scope: null,
                     resource: new Humidifier.CustomResource("LambdaSharp::Register::Module") {
                         ["ModuleId"] = FnRef("AWS::StackName"),
-                        ["ModuleName"] = module.Name,
-                        ["ModuleVersion"] = module.Version.ToString()
+                        ["ModuleName"] = _builder.Name,
+                        ["ModuleVersion"] = _builder.Version.ToString()
                     },
                     resourceArnAttribute: null,
                     dependsOn: null,
@@ -238,7 +241,7 @@ namespace MindTouch.LambdaSharp.Tool {
             }
 
             // create module IAM role used by all functions
-            var functions = module.Entries.OfType<FunctionEntry>().ToList();
+            var functions = _builder.Entries.OfType<FunctionEntry>().ToList();
             if(functions.Any()) {
 
                 // create module role
@@ -266,7 +269,7 @@ namespace MindTouch.LambdaSharp.Tool {
                                 PolicyName = FnSub("${AWS::StackName}ModulePolicy"),
                                 PolicyDocument = new Humidifier.PolicyDocument {
                                     Version = "2012-10-17",
-                                    Statement = module.ResourceStatements
+                                    Statement = new List<Humidifier.Statement>()
                                 }
                             }
                         }.ToList()
@@ -302,7 +305,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
 
                 // create function registration
-                if(module.HasModuleRegistration && module.HasLambdaSharpDependencies) {
+                if(_builder.HasModuleRegistration && _builder.HasLambdaSharpDependencies) {
 
                     // create CloudWatch Logs IAM role to invoke kinesis stream
                      _builder.AddResource(
@@ -349,7 +352,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
                 // add functions
                 foreach(var function in functions) {
-                    AddFunction(module, function);
+                    AddFunction(function);
                 }
 
                 // check if an API gateway needs to be created
@@ -650,7 +653,7 @@ namespace MindTouch.LambdaSharp.Tool {
             }
         }
 
-        private void AddFunction(Module module, FunctionEntry function) {
+        private void AddFunction(FunctionEntry function) {
 
             // create function log-group with retention window
             var logGroup = _builder.AddResource(
@@ -862,7 +865,7 @@ namespace MindTouch.LambdaSharp.Tool {
                                 FnRef("AWS::NoValue"),
                                 alexaSource.EventSourceToken
                             );
-                            module.Conditions.Add(condition, FnEquals(alexaSource.EventSourceToken, "*"));
+                            _builder.AddCondition(condition, FnEquals(alexaSource.EventSourceToken, "*"));
                         }
                         _builder.AddResource(
                             parent: function,
@@ -927,7 +930,7 @@ namespace MindTouch.LambdaSharp.Tool {
             }
 
             // check if function should be registered
-            if(module.HasModuleRegistration && function.HasFunctionRegistration && module.HasLambdaSharpDependencies) {
+            if(_builder.HasModuleRegistration && function.HasFunctionRegistration && _builder.HasLambdaSharpDependencies) {
                 _builder.AddResource(
                     parent: function,
                     name: "Registration",
