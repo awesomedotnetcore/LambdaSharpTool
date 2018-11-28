@@ -18,7 +18,7 @@
 # limitations under the License.
 
 Module: LambdaSharpS3Subscriber
-Version: 0.4
+Version: 0.5-WIP
 Description: LambdaSharp S3 Lambda Function Subscriber
 
 Outputs:

@@ -18,7 +18,7 @@
 # limitations under the License.
 
 Module: LambdaSharpS3PackageLoader
-Version: 0.4
+Version: 0.5-WIP
 Description: LambdaSharp S3 Package Loader
 
 Outputs:

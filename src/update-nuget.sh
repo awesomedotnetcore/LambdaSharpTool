@@ -3,8 +3,8 @@
 # - allow LAMBDASHARP_SUFFIX to be passed in
 
 # Set version SUFFIX
-LAMBDASHARP_PREFIX=0.4.0.2
-LAMBDASHARP_SUFFIX=
+LAMBDASHARP_PREFIX=0.5
+LAMBDASHARP_SUFFIX=WIP
 
 update() {
     rm bin/Release/*.nupkg

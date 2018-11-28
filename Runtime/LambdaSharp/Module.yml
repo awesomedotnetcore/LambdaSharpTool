@@ -18,7 +18,7 @@
 # limitations under the License.
 
 Module: LambdaSharp
-Version: 0.4
+Version: 0.5-WIP
 Description: LambdaSharp Runtime
 Pragmas:
   - no-runtime-version-check

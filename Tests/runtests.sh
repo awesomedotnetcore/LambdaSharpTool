@@ -8,8 +8,8 @@ lash() {
         --aws-account-id 123456789012 \
         --aws-region us-east-1 \
         --gitsha 0123456789ABCDEF0123456789ABCDEF01234567 \
-        --runtime-version 0.4 \
-        --cli-version 0.4 \
+        --runtime-version 0.5-WIP \
+        --cli-version 0.5-WIP \
         --deployment-bucket-name lambdasharp-bucket-name \
         --deployment-notifications-topic-arn  arn:aws:sns:us-east-1:123456789012:LambdaSharp-DeploymentNotificationTopic \
         $1.yml
@@ -23,8 +23,8 @@ if [ -z "$1" ]; then
         --tier Test \
         --aws-account-id 123456789012 \
         --aws-region us-east-1 \
-        --runtime-version 0.4 \
-        --cli-version 0.4 \
+        --runtime-version 0.5-WIP \
+        --cli-version 0.5-WIP \
         --deployment-bucket-name lambdasharp-bucket-name \
         --deployment-notifications-topic-arn  arn:aws:sns:us-east-1:123456789012:LambdaSharp-DeploymentNotificationTopic
 
@@ -74,8 +74,8 @@ else
         --aws-account-id 123456789012 \
         --aws-region us-east-1 \
         --gitsha 0123456789ABCDEF0123456789ABCDEF01234567 \
-        --runtime-version 0.4 \
-        --cli-version 0.4 \
+        --runtime-version 0.5-WIP \
+        --cli-version 0.5-WIP \
         --deployment-bucket-name lambdasharp-bucket-name \
         --deployment-notifications-topic-arn  arn:aws:sns:us-east-1:123456789012:LambdaSharp-DeploymentNotificationTopic \
         $1.yml
