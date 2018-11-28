@@ -28,6 +28,7 @@ using Amazon.S3.Model;
 using MindTouch.LambdaSharp.Tool.Model;
 using Newtonsoft.Json;
 using System.Collections.Generic;
+using Newtonsoft.Json.Linq;
 
 namespace MindTouch.LambdaSharp.Tool {
 
@@ -86,8 +87,8 @@ namespace MindTouch.LambdaSharp.Tool {
         private async Task<string> UploadTemplateFileAsync(ModuleManifest manifest, string description) {
 
             // update cloudformation template with manifest and minify it
-            var cloudformation = JsonConvert.DeserializeObject<Dictionary<string, object>>(File.ReadAllText(SourceFilename));
-            cloudformation["LambdaSharp::Manifest"] = manifest;
+            var cloudformation = JsonConvert.DeserializeObject<JObject>(File.ReadAllText(SourceFilename));
+            ((JObject)cloudformation["Metadata"])["LambdaSharp::Manifest"] = JObject.FromObject(manifest);
             var minified = JsonConvert.SerializeObject(cloudformation, Formatting.None);
 
             // upload minified json

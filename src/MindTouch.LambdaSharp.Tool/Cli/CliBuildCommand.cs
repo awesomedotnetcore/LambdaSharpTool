@@ -33,6 +33,7 @@ using McMaster.Extensions.CommandLineUtils;
 using MindTouch.LambdaSharp.Tool.Internal;
 using MindTouch.LambdaSharp.Tool.Model;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -527,12 +528,12 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             }
             // load cloudformation file
             var cloudformationText = File.ReadAllText(cloudformationFile);
-            var cloudformation = JsonConvert.DeserializeObject<Dictionary<string, object>>(cloudformationText);
-            if(!cloudformation.TryGetValue("LambdaSharp::Manifest", out object manifestObject)) {
+            var cloudformation = JsonConvert.DeserializeObject<JObject>(cloudformationText);
+            var manifest = GetManifest(cloudformation);
+            if(manifest == null) {
                 AddError("CloudFormation file does not contain a LambdaSharp manifest");
                 return null;
             }
-            var manifest = JsonConvert.DeserializeObject<ModuleManifest>(JsonConvert.SerializeObject(manifestObject));
             await PopulateToolSettingsAsync(settings);
 
             // make sure there is a deployment bucket
@@ -619,12 +620,12 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     AddError($"could not load CloudFormation template from s3://{settings.DeploymentBucketName}/{cloudformationPath}");
                     return false;
                 }
-                var cloudformation = JsonConvert.DeserializeObject<Dictionary<string, object>>(cloudformationText);
-                if(!cloudformation.TryGetValue("LambdaSharp::Manifest", out object manifestObject)) {
+                var cloudformation = JsonConvert.DeserializeObject<JObject>(cloudformationText);
+                var manifest = GetManifest(cloudformation);
+                if(manifest == null) {
                     AddError("CloudFormation file does not contain a LambdaSharp manifest");
                     return false;
                 }
-                var manifest = JsonConvert.DeserializeObject<ModuleManifest>(JsonConvert.SerializeObject(manifestObject));
 
                 // check that the LambdaSharp runtime & CLI versions match
                 if(settings.RuntimeVersion == null) {
@@ -704,6 +705,17 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             } catch {
                 return null;
             }
+        }
+
+        private ModuleManifest GetManifest(JObject cloudformation) {
+            if(
+                cloudformation.TryGetValue("Metadata", out JToken metadataToken)
+                && (metadataToken is JObject metadata)
+                && metadata.TryGetValue("LambdaSharp::Manifest", out JToken manifestToken)
+            ) {
+                return JsonConvert.DeserializeObject<ModuleManifest>(JsonConvert.SerializeObject(manifestToken));
+            }
+            return null;
         }
     }
 }
