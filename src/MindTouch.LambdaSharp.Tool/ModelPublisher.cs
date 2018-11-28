@@ -81,7 +81,7 @@ namespace MindTouch.LambdaSharp.Tool {
             } else {
                 Console.WriteLine($"=> No changes found to publish");
             }
-            return $"s3://{Settings.DeploymentBucketName}/Modules/{manifest.ModuleName}/Versions/{manifest.ModuleVersion}/manifest.json";
+            return $"s3://{Settings.DeploymentBucketName}/Modules/{manifest.ModuleName}/Versions/{manifest.ModuleVersion}/cloudformation.json";
         }
 
         private async Task<string> UploadTemplateFileAsync(ModuleManifest manifest, string description) {
