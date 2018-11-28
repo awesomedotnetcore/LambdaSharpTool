@@ -28,8 +28,11 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
     public class ModuleManifest {
 
+        //--- Constants ---
+        public const string CurrentVersion = "2018-11-22";
+
         //--- Properties ---
-        public string Version { get; set; } = "2018-11-22";
+        public string Version { get; set; } = CurrentVersion;
         public string ModuleName { get; set; }
         public string ModuleVersion { get; set; }
         public string Hash { get; set; }

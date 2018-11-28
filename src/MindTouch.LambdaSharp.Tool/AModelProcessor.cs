@@ -34,6 +34,12 @@ namespace MindTouch.LambdaSharp.Tool {
         //--- Constants ---
         protected const string CLOUDFORMATION_ID_PATTERN = "[a-zA-Z][a-zA-Z0-9]*";
 
+        //--- Class Fields ---
+        private static Stack<string> _locations = new Stack<string>();
+
+        //--- Class Properties ---
+        public static string LocationPath => string.Join("/", _locations.Reverse());
+
         //--- Class Methods ---
 
         // TODO (2018-11-14): move these functions to their own class
@@ -155,7 +161,6 @@ namespace MindTouch.LambdaSharp.Tool {
 
         //--- Fields ---
         private readonly Settings _settings;
-        private Stack<string> _locations = new Stack<string>();
         private string _sourceFilename;
 
         //--- Constructors ---
@@ -167,7 +172,6 @@ namespace MindTouch.LambdaSharp.Tool {
         //--- Properties ---
         public Settings Settings => _settings;
         public string SourceFilename => _sourceFilename;
-        public string LocationPath => string.Join("/", _locations.Reverse());
 
         //--- Methods ---
         protected void AtLocation(string location, Action action) {

@@ -164,7 +164,7 @@
         "MemorySize": "128",
         "Role": {
           "Fn::GetAtt": [
-            "Module::Role",
+            "ModuleRole",
             "Arn"
           ]
         },
@@ -574,7 +574,7 @@
       "Version": "2018-11-22",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
-      "Hash": "0409823DA196B1838801117302E31A0F",
+      "Hash": "12395B007AD1E5697789847C0F039103",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Pragmas": [],
       "Assets": []

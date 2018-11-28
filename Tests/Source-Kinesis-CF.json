@@ -174,7 +174,7 @@
         "MemorySize": "128",
         "Role": {
           "Fn::GetAtt": [
-            "Module::Role",
+            "ModuleRole",
             "Arn"
           ]
         },
@@ -537,7 +537,7 @@
         },
         "RoleArn": {
           "Fn::GetAtt": [
-            "Module::CloudWatchLogsRole",
+            "ModuleCloudWatchLogsRole",
             "Arn"
           ]
         }
@@ -699,7 +699,7 @@
       "Version": "2018-11-22",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
-      "Hash": "442DC5D13542E5D4AA32FC65BE0A03AC",
+      "Hash": "BA1A8D3ABD99FC2F3AD986C56E7B5872",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Pragmas": [],
       "Assets": []

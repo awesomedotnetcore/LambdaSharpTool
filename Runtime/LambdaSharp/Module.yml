@@ -148,7 +148,7 @@ Variables:
     Resource:
       Type: AWS::CloudFormation::Stack
       Properties:
-        NotificationARNS: !Ref AWS::NotificationARNs
+        NotificationARNs: !Ref AWS::NotificationARNs
         Parameters:
           RollbarReadAccessToken: !Ref RollbarReadAccessToken
           RollbarWriteAccessToken: !Ref RollbarWriteAccessToken
@@ -172,7 +172,7 @@ Variables:
       Type: AWS::CloudFormation::Stack
       DependsOn: Registrar
       Properties:
-        NotificationARNS: !Ref AWS::NotificationARNs
+        NotificationARNs: !Ref AWS::NotificationARNs
         Parameters:
           Secrets: !Ref Secrets
           LambdaSharpDeadLetterQueueArn: !Ref DeadLetterQueueArn
@@ -191,7 +191,7 @@ Variables:
       Type: AWS::CloudFormation::Stack
       DependsOn: Registrar
       Properties:
-        NotificationARNS: !Ref AWS::NotificationARNs
+        NotificationARNs: !Ref AWS::NotificationARNs
         Parameters:
           Secrets: !Ref Secrets
           LambdaSharpDeadLetterQueueArn: !Ref DeadLetterQueueArn

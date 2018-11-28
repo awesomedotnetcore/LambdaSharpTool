@@ -111,7 +111,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 ModuleName = module.Name,
                 ModuleVersion = module.Version.ToString(),
                 Hash = GenerateStackHash(),
-                GitSha = gitSha,
+                GitSha = gitSha ?? "",
                 Pragmas = module.Pragmas.ToList(),
                 Assets = module.Assets.ToList()
             });

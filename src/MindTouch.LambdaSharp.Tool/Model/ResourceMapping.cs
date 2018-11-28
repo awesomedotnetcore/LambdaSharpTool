@@ -67,21 +67,27 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             case "AWS::S3::Bucket":
 
                 // S3 Bucket resources must be granted permissions on the bucket AND the keys
-                return new object[] {
-                    arnReference,
-                    AModelProcessor.FnJoin("", new List<object> { arnReference, "/*" })
-                };
+                return LiftArnReference().SelectMany(reference => new object[] {
+                    reference,
+                    AModelProcessor.FnJoin("", new List<object> { reference, "/*" })
+                }).ToList();
             case "AWS::DynamoDB::Table":
 
                 // DynamoDB resources must be granted permissions on the table AND the stream
-                return new object[] {
-                    arnReference,
-                    AModelProcessor.FnJoin("/", new List<object> { arnReference, "stream/*" }),
-                    AModelProcessor.FnJoin("/", new List<object> { arnReference, "index/*" })
-                };
+                return LiftArnReference().SelectMany(reference => new object[] {
+                    reference,
+                    AModelProcessor.FnJoin("/", new List<object> { reference, "stream/*" }),
+                    AModelProcessor.FnJoin("/", new List<object> { reference, "index/*" })
+                }).ToList();
             default:
                 return arnReference;
             }
+
+            // local functions
+            IList<object> LiftArnReference()
+                => (arnReference is IList<object> arnReferences)
+                    ? arnReferences
+                    : new object[] { arnReference };
         }
 
         public static bool HasAttribute(string awsType, string attribute)
@@ -93,7 +99,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         public static bool IsResourceTypeSupported(string awsType) => GetHumidifierType(awsType) != null;
 
-        private static Type GetHumidifierType(string awsType) {
+        public static Type GetHumidifierType(string awsType) {
             const string AWS_PREFIX = "AWS::";
             if(!awsType.StartsWith(AWS_PREFIX)) {
                 return null;

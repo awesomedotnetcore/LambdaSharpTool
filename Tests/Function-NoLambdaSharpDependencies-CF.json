@@ -51,7 +51,7 @@
         "MemorySize": "128",
         "Role": {
           "Fn::GetAtt": [
-            "Module::Role",
+            "ModuleRole",
             "Arn"
           ]
         },
@@ -218,7 +218,7 @@
       "Version": "2018-11-22",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
-      "Hash": "DE974117D3E15CF19190646394116775",
+      "Hash": "D3F6BCAA9500044ACAAE7E267CB70AB2",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Pragmas": [
         "no-lambdasharp-dependencies"

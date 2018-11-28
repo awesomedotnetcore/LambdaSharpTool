@@ -365,8 +365,10 @@ namespace MindTouch.LambdaSharp.Tool {
                         case FunctionEntry _:
                         case HumidifierEntry _:
 
-                            // attributes can always be used with managed resources/functions
-                            found = FnGetAtt(key, attribute);
+                            // TODO (2018-11-28, bjorg): validate this attribute name is valid for this resource
+
+                            // attributes can be used with managed resources/functions
+                            found = FnGetAtt(freeEntry.ResourceName, attribute);
                             break;
                         }
                     } else {

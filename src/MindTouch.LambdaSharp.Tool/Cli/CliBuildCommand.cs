@@ -534,7 +534,14 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 AddError("CloudFormation file does not contain a LambdaSharp manifest");
                 return null;
             }
+            if(manifest.Version != ModuleManifest.CurrentVersion) {
+                AddError($"Incompatible LambdaSharp manifest version (found: {manifest.Version ?? "<null>"}, expected: {ModuleManifest.CurrentVersion})");
+                return null;
+            }
             await PopulateToolSettingsAsync(settings);
+            if(HasErrors) {
+                return null;
+            }
 
             // make sure there is a deployment bucket
             if(settings.DeploymentBucketName == null) {
@@ -557,7 +564,13 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             bool forceDeploy
         ) {
             await PopulateToolSettingsAsync(settings);
+            if(HasErrors) {
+                return false;
+            }
             await PopulateRuntimeSettingsAsync(settings);
+            if(HasErrors) {
+                return false;
+            }
 
             // module key formats
             // * MODULENAME:VERSION
@@ -594,24 +607,18 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     }
 
                     // attempt to find the module in the deployment bucket and then the regional lambdasharp bucket
-                    foreach(var bucket in new[] {
+                    var foundVersion = await new[] {
                         settings.DeploymentBucketName,
                         $"lambdasharp-{settings.AwsRegion}"
-                    }) {
+                    }.Select(async bucket => {
                         settings.DeploymentBucketName = bucket;
-                        var foundVersion = await FindNewestVersion(settings, moduleName, requestedVersion);
-                        if(HasErrors) {
-                            return false;
-                        }
-                        if(foundVersion == null) {
-                            continue;
-                        }
-                        cloudformationPath = $"Modules/{moduleName}/Versions/{foundVersion}/cloudformation.json";
-                    }
-                    if(cloudformationPath == null) {
+                        return await FindNewestVersion(settings, moduleName, requestedVersion);
+                    }).FirstOrDefault();
+                    if(foundVersion == null) {
                         AddError($"could not find module: {moduleName} (v{requestedVersion})");
                         return false;
                     }
+                    cloudformationPath = $"Modules/{moduleName}/Versions/{foundVersion}/cloudformation.json";
                 }
 
                 // download manifest
@@ -624,6 +631,10 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 var manifest = GetManifest(cloudformation);
                 if(manifest == null) {
                     AddError("CloudFormation file does not contain a LambdaSharp manifest");
+                    return false;
+                }
+                if(manifest.Version != ModuleManifest.CurrentVersion) {
+                    AddError($"Incompatible LambdaSharp manifest version (found: {manifest.Version ?? "<null>"}, expected: {ModuleManifest.CurrentVersion})");
                     return false;
                 }
 
@@ -713,7 +724,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 && (metadataToken is JObject metadata)
                 && metadata.TryGetValue("LambdaSharp::Manifest", out JToken manifestToken)
             ) {
-                return JsonConvert.DeserializeObject<ModuleManifest>(JsonConvert.SerializeObject(manifestToken));
+                return manifestToken.ToObject<ModuleManifest>();
             }
             return null;
         }

@@ -29,8 +29,6 @@ using MindTouch.LambdaSharp.Tool.Model;
 using MindTouch.LambdaSharp.Tool.Model.AST;
 
 namespace MindTouch.LambdaSharp.Tool {
-    using Fn = Humidifier.Fn;
-    using Condition = Humidifier.Condition;
 
     public class ModelConverter : AModelProcessor {
 

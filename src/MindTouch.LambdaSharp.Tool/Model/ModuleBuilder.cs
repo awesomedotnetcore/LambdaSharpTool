@@ -23,6 +23,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using MindTouch.LambdaSharp.Tool.Internal;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace MindTouch.LambdaSharp.Tool.Model {
 
@@ -345,6 +347,19 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             IList<string> dependsOn,
             string condition
         ) {
+            var type = ResourceMapping.GetHumidifierType(awsType);
+            if((type != null) && (awsProperties != null)) {
+                try {
+
+                    // validate fields
+                    JObject.FromObject(awsProperties)
+                        .ToObject(type, new JsonSerializer {
+                            MissingMemberHandling = MissingMemberHandling.Error
+                        });
+                } catch(JsonSerializationException e) {
+                    AddError($"{e.Message} [Resource Type: {awsType}]");
+                }
+            }
             var result = new HumidifierEntry(
                 parent: parent,
                 name: name,

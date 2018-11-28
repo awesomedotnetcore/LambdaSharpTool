@@ -248,7 +248,7 @@
                     "Fn::Sub": "${SourceParameterCollectionSecondSourceResourceParameter}"
                   },
                   {
-                    "Fn::Sub": "${SourceParameterCollection::SecondSourceResourceParameter.TopicName}"
+                    "Fn::Sub": "${SourceParameterCollectionSecondSourceResourceParameter.TopicName}"
                   }
                 ]
               ]
@@ -264,7 +264,7 @@
         "MemorySize": "128",
         "Role": {
           "Fn::GetAtt": [
-            "Module::Role",
+            "ModuleRole",
             "Arn"
           ]
         },
@@ -663,7 +663,7 @@
         },
         "RoleArn": {
           "Fn::GetAtt": [
-            "Module::CloudWatchLogsRole",
+            "ModuleCloudWatchLogsRole",
             "Arn"
           ]
         }
@@ -814,7 +814,7 @@
       "Version": "2018-11-22",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
-      "Hash": "103D4BF78A2479C75021B67E6A6600C7",
+      "Hash": "6D048BF386EACB49CB6D7185C282FCFF",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Pragmas": [],
       "Assets": []
