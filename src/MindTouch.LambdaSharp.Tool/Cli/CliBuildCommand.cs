@@ -461,12 +461,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     return false;
                 }
 
-                // validate module AST
-                new ModelAstValidator(settings, moduleSource).Validate(moduleAst);
-                if(HasErrors) {
-                    return false;
-                }
-
                 // convert module AST to model
                 var module = new ModelAstToModuleConverter(settings, moduleSource).Convert(moduleAst);
                 if(HasErrors) {

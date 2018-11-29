@@ -680,7 +680,10 @@ namespace MindTouch.LambdaSharp.Tool.Build {
         }
 
         private void Enumerate(string fullName, Action<string, AModuleEntry, object> action) {
-            var entry = _builder.GetEntry(fullName);
+            if(!_builder.TryGetEntry(fullName, out AModuleEntry entry)) {
+                AddError($"could not find function source: '{fullName}'");
+                return;
+            }
             if(entry.Reference is IList list) {
                 switch(list.Count) {
                 case 0:

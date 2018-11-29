@@ -69,6 +69,11 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                                 .OrderBy(item => item)
                                 .ToList();
                         }
+
+                        // verify that all defined scope values are valid
+                        foreach(var unknownScope in entry.Scope.Where(scope => !functionNames.Contains(scope))) {
+                            AddError($"unknown referenced function '{unknownScope}' in scope definition");
+                        }
                     });
                 }
             });

@@ -41,12 +41,11 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             bool isSecret
         ) {
             Name = name ?? throw new ArgumentNullException(nameof(name));;
-            if(name.Any(c => !char.IsLetterOrDigit(c))) {
-                throw new ArgumentException($"invalid name: {name}");
-            }
             FullName = (parent == null)
                 ? name
                 : parent.FullName + "::" + name;
+
+            // TODO (2018-11-29, bjorg): logical ID should be computed by module builder to disambiguate hierarchical names when name collisions occur
             LogicalId = (parent == null)
                 ? name
                 : parent.LogicalId + name;

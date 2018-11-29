@@ -34,6 +34,7 @@ namespace MindTouch.LambdaSharp.Tool.Build {
 
         //--- Constants ---
         private const string CUSTOM_RESOURCE_PREFIX = "Custom::";
+        private const string SECRET_ALIAS_PATTERN = "[0-9a-zA-Z/_\\-]+";
 
         //--- Fields ---
         private ModuleBuilder _builder;
@@ -47,16 +48,25 @@ namespace MindTouch.LambdaSharp.Tool.Build {
             // convert module definition
             try {
 
+                // ensure version is present
+                VersionInfo version;
+                if(module.Version == null) {
+                    version = VersionInfo.Parse("1.0");
+                } else if(!VersionInfo.TryParse(module.Version, out version)) {
+                    AddError("`Version` expected to have format: Major.Minor[.Build[.Revision]]");
+                    version = VersionInfo.Parse("0.0");
+                }
+
                 // initialize module
                 _builder = new ModuleBuilder(Settings, SourceFilename, new Module {
                     Name = module.Module,
-                    Version = VersionInfo.Parse(module.Version),
+                    Version = version,
                     Description = module.Description
                 });
 
                 // convert collections
-                ForEach("Pragmas", module.Pragmas, ConvertPragma);
-                ForEach("Secrets", module.Secrets, ConvertSecret);
+                ForEach("Pragmas", module.Pragmas ?? new List<object>(), ConvertPragma);
+                ForEach("Secrets", module.Secrets ?? new List<string>(), ConvertSecret);
                 ForEach("Inputs", module.Inputs, ConvertInput);
                 ForEach("Outputs", module.Outputs, ConvertOutput);
                 ForEach("Variables", module.Variables, ConvertParameter);
@@ -72,18 +82,41 @@ namespace MindTouch.LambdaSharp.Tool.Build {
             AtLocation($"[{index}]", () => _builder.AddPragma(pragma));
         }
 
-        private void ConvertSecret(int index, object secret) {
-            AtLocation($"[{index}]", () => _builder.AddSecret(secret));
+        private void ConvertSecret(int index, string secret) {
+            AtLocation($"[{index}]", () => {
+                if(string.IsNullOrEmpty(secret)) {
+                    AddError($"secret has no value");
+                } else if(secret.Equals("aws/ssm", StringComparison.OrdinalIgnoreCase)) {
+                    AddError($"cannot grant permission to decrypt with aws/ssm");
+                } else if(secret.StartsWith("arn:")) {
+                    if(!Regex.IsMatch(secret, $"arn:aws:kms:{Settings.AwsRegion}:{Settings.AwsAccountId}:key/[a-fA-F0-9\\-]+")) {
+                        AddError("secret key must be a valid ARN for the current region and account ID");
+                    }
+                } else if(!Regex.IsMatch(secret, SECRET_ALIAS_PATTERN)) {
+                    AddError("secret key must be a valid alias");
+                }
+                _builder.AddSecret(secret);
+            });
         }
 
         private void ConvertInput(int index, InputNode input) {
             var type = DeterminNodeType("input", index, input, InputNode.FieldCheckers, InputNode.FieldCombinations, new[] { "Parameter", "Import" });
+            var inputType = input.Type ?? "String";
             switch(type) {
             case "Parameter":
+                if(input.Resource != null) {
+                    Validate(input.Type == "String", "input 'Type' must be string");
+                    AtLocation("Resource", () => {
+                        Validate(ConvertToStringList(input.Resource.DependsOn).Any() != true, "'DependsOn' cannot be used on an input");
+                        if(input.Default == null) {
+                            Validate(input.Resource.Properties == null, "'Properties' section cannot be used with `Input` attribute unless the 'Default' is set to a blank string");
+                        }
+                    });
+                }
                 AtLocation(input.Parameter, () => _builder.AddInput(
                     input.Parameter,
                     input.Description,
-                    input.Type,
+                    inputType,
                     input.Section,
                     input.Label,
                     input.Scope,
@@ -103,10 +136,19 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                 ));
                 break;
             case "Import":
+                Validate(input.Import.Split("::").Length == 2, "incorrect format for `Import` attribute");
+                if(input.Resource != null) {
+                    Validate(inputType == "String", "input 'Type' must be string");
+                    AtLocation("Resource", () => {
+                        Validate(input.Resource.Type != null, "'Type' attribute is required");
+                        Validate(input.Resource.Allow != null, "'Allow' attribute is required");
+                        Validate(ConvertToStringList(input.Resource.DependsOn).Any() != true, "'DependsOn' cannot be used on an input");
+                    });
+                }
                 AtLocation(input.Import, () => _builder.AddImport(
                     input.Import,
                     input.Description,
-                    input.Type,
+                    inputType,
                     input.Section,
                     input.Label,
                     input.Scope,
@@ -153,7 +195,19 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                     );
 
                     // request managed resource grants
-                    _builder.AddGrant(result.LogicalId, parameter.Resource.Type, result.GetExportReference(), parameter.Resource.Allow);
+                    AtLocation("Resource", () => {
+                        if(parameter.Resource.Type == null) {
+                            AddError("missing Type attribute");
+                        } else if(
+                            parameter.Resource.Type.StartsWith("AWS::", StringComparison.Ordinal)
+                            && !ResourceMapping.IsResourceTypeSupported(parameter.Resource.Type)
+                        ) {
+                            AddError($"unsupported resource type: {parameter.Resource.Type}");
+                        } else if(!parameter.Resource.Type.StartsWith("AWS::", StringComparison.Ordinal)) {
+                            Validate(parameter.Resource.Allow == null, "'Allow' attribute is not valid for custom resources");
+                        }
+                        _builder.AddGrant(result.LogicalId, parameter.Resource.Type, result.GetExportReference(), parameter.Resource.Allow);
+                    });
 
                     // recurse
                     ConvertParameters(result);
@@ -174,8 +228,19 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                         isSecret: false
                     );
 
+                    // validate literal references are ARNs
+                    if(parameter.Value is string text) {
+                        ValidateARN(text);
+                    } else if(parameter.Value is IList<object> values) {
+                        foreach(var value in values) {
+                            ValidateARN(value);
+                        }
+                    }
+
                     // request existing resource grants
-                    _builder.AddGrant(result.LogicalId, parameter.Resource.Type, parameter.Value, parameter.Resource.Allow);
+                    AtLocation("Resource", () => {
+                        _builder.AddGrant(result.LogicalId, parameter.Resource.Type, parameter.Value, parameter.Resource.Allow);
+                    });
 
                     // recurse
                     ConvertParameters(result);
@@ -251,7 +316,21 @@ namespace MindTouch.LambdaSharp.Tool.Build {
             case "Package":
 
                 // package resource
-                AtLocation(parameter.Var, () => {
+                AtLocation(parameter.Package, () => {
+
+                    // check if required attributes are present
+                    Validate(parameter.Files != null, "missing 'Files' attribute");
+                    Validate(parameter.Bucket != null, "missing 'Bucket' attribute");
+                    if(parameter.Bucket is string bucketParameter) {
+
+                        // verify that target bucket is defined as parameter with correct type
+                        ValidateSourceParameter(bucketParameter, "AWS::S3::Bucket", "S3 bucket resource");
+                    }
+
+                    // check if package is nested
+                    if(parent != null) {
+                        AddError("parameter package cannot be nested");
+                    }
 
                     // create package resource entry
                     var result = _builder.AddPackage(
@@ -259,8 +338,8 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                         name: parameter.Package,
                         description: parameter.Description,
                         scope: parameter.Scope,
-                        destinationBucket: (parameter.Bucket is string bucketParameter)
-                            ? _builder.GetEntry(bucketParameter).GetExportReference()
+                        destinationBucket: (parameter.Bucket is string)
+                            ? _builder.GetEntry((string)parameter.Bucket).GetExportReference()
                             : parameter.Bucket,
                         destinationKeyPrefix: parameter.Prefix ?? "",
                         sourceFilepath: parameter.Files
@@ -276,10 +355,21 @@ namespace MindTouch.LambdaSharp.Tool.Build {
             void ConvertParameters(AModuleEntry result) {
                 ForEach("Variables", parameter.Variables, (i, p) => ConvertParameter(result, i, p));
             }
+
+            void ValidateARN(object resourceArn) {
+                if((resourceArn is string text) && !text.StartsWith("arn:") && (text != "*")) {
+                    AddError($"resource name must be a valid ARN or wildcard: {resourceArn}");
+                }
+            }
         }
 
         private void ConvertFunction(int index, FunctionNode function) {
             AtLocation(function.Function, () => {
+                Validate(function.Memory != null, "missing Memory attribute");
+                Validate(int.TryParse(function.Memory, out _), "invalid Memory value");
+                Validate(function.Timeout != null, "missing Name attribute");
+                Validate(int.TryParse(function.Timeout, out _), "invalid Timeout value");
+                ValidateFunctionSource(function.Sources);
 
                 // initialize VPC configuration if provided
                 object subnets = null;
@@ -422,12 +512,24 @@ namespace MindTouch.LambdaSharp.Tool.Build {
             var type = DeterminNodeType("output", index, output, OutputNode.FieldCheckers, OutputNode.FieldCombinations, new[] { "Export", "CustomResource", "Macro" });
             switch(type) {
             case "Export":
+
+                // TODO (2018-09-20, bjorg): add name validation
                 AtLocation(output.Export, () => _builder.AddExport(output.Export, output.Description, output.Value));
                 break;
             case "CustomResource":
+
+                // TODO (2018-09-20, bjorg): add custom resource name validation
+                Validate(output.Handler != null, "missing Handler attribute");
+
+                // TODO (2018-09-20, bjorg): confirm that `Handler` is set to an SNS topic or lambda function
                 AtLocation(output.CustomResource, () => _builder.AddCustomResource(output.CustomResource, output.Description, output.Handler));
                 break;
             case "Macro":
+
+                // TODO (2018-11-29, bjorg): add macro name validation
+                Validate(output.Handler != null, "missing Handler attribute");
+
+                // TODO (2018-10-30, bjorg): confirm that `Handler` is set to a lambda function
                 AtLocation(output.Macro, () => _builder.AddMacro(output.Macro, output.Description, output.Handler));
                 break;
             }
@@ -482,6 +584,105 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                 }
                 return match.Key;
             });
+        }
+
+        private void ValidateFunctionSource(IEnumerable<FunctionSourceNode> sources) {
+            var index = 0;
+            foreach(var source in sources) {
+                ++index;
+                AtLocation($"{index}", () => {
+                    if(source.Api != null) {
+
+                        // TODO (2018-11-10, bjorg): validate API expression
+                    } else if(source.Schedule != null) {
+
+                        // TODO (2018-06-27, bjorg): add cron/rate expression validation
+                    } else if(source.S3 != null) {
+
+                        // TODO (2018-06-27, bjorg): add events, prefix, suffix validation
+
+                        // verify source exists
+                        ValidateSourceParameter(source.S3, "AWS::S3::Bucket", "S3 bucket");
+                    } else if(source.SlackCommand != null) {
+
+                        // TODO (2018-11-10, bjorg): validate API expression
+                    } else if(source.Topic != null) {
+
+                        // verify source exists
+                        ValidateSourceParameter(source.Topic, "AWS::SNS::Topic", "SNS topic");
+                    } else if(source.Sqs != null) {
+
+                        // validate settings
+                        AtLocation("BatchSize", () => {
+                            if((source.BatchSize < 1) || (source.BatchSize > 10)) {
+                                AddError($"invalid BatchSize value: {source.BatchSize}");
+                            }
+                        });
+
+                        // verify source exists
+                        ValidateSourceParameter(source.Sqs, "AWS::SQS::Queue", "SQS queue");
+                    } else if(source.Alexa != null) {
+
+                        // TODO (2018-11-10, bjorg): validate Alexa Skill ID
+                    } else if(source.DynamoDB != null) {
+
+                        // validate settings
+                        AtLocation("BatchSize", () => {
+                            if((source.BatchSize < 1) || (source.BatchSize > 100)) {
+                                AddError($"invalid BatchSize value: {source.BatchSize}");
+                            }
+                        });
+                        AtLocation("StartingPosition", () => {
+                            switch(source.StartingPosition) {
+                            case "TRIM_HORIZON":
+                            case "LATEST":
+                            case null:
+                                break;
+                            default:
+                                AddError($"invalid StartingPosition value: {source.StartingPosition}");
+                                break;
+                            }
+                        });
+
+                        // verify source exists
+                        ValidateSourceParameter(source.DynamoDB, "AWS::DynamoDB::Table", "DynamoDB table");
+                    } else if(source.Kinesis != null) {
+
+                        // validate settings
+                        AtLocation("BatchSize", () => {
+                            if((source.BatchSize < 1) || (source.BatchSize > 100)) {
+                                AddError($"invalid BatchSize value: {source.BatchSize}");
+                            }
+                        });
+                        AtLocation("StartingPosition", () => {
+                            switch(source.StartingPosition) {
+                            case "TRIM_HORIZON":
+                            case "LATEST":
+                            case null:
+                                break;
+                            default:
+                                AddError($"invalid StartingPosition value: {source.StartingPosition}");
+                                break;
+                            }
+                        });
+
+                        // verify source exists
+                        ValidateSourceParameter(source.Kinesis, "AWS::Kinesis::Stream", "Kinesis stream");
+                    } else {
+                        AddError("unknown source type");
+                    }
+                });
+            }
+        }
+
+        private void ValidateSourceParameter(string fullName, string awsType, string typeDescription) {
+            if(!_builder.TryGetEntry(fullName, out AModuleEntry entry)) {
+                AddError($"could not find function source: '{fullName}'");
+                return;
+            }
+
+            // TODO (2018-11-29, bjorg): validate AWS type of referenced entry
+            // AddError($"function source must be an {typeDescription} resource: '{fullName}'");
         }
     }
 }

@@ -22,6 +22,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using MindTouch.LambdaSharp.Tool.Internal;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -347,7 +348,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             IList<string> dependsOn,
             string condition
         ) {
-            var type = ResourceMapping.GetHumidifierType(awsType);
+            var type = ResourceMapping.GetHumidifierType(awsType ?? "AWS");
             if((type != null) && (awsProperties != null)) {
                 try {
 
@@ -469,10 +470,10 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
                     // AWS permission statements always contain a `:` (e.g `ssm:GetParameter`)
                     allowStatements.Add(allowStatement);
-                } else if(ResourceMapping.TryResolveAllowShorthand(awsType, allowStatement, out IList<string> allowedList)) {
+                } else if((awsType != null) && ResourceMapping.TryResolveAllowShorthand(awsType, allowStatement, out IList<string> allowedList)) {
                     allowStatements.AddRange(allowedList);
                 } else {
-                    AddError($"could not find IAM mapping for short-hand '{allowStatement}' on AWS type '{awsType}'");
+                    AddError($"could not find IAM mapping for short-hand '{allowStatement}' on AWS type '{awsType ?? "<omitted>"}'");
                 }
             }
             if(!allowStatements.Any()) {
@@ -525,6 +526,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                                 humidifier.Resource = (Humidifier.Resource)visitor(humidifier.Resource);
                             });
                             AtLocation("DependsOn", () => {
+
+                                // TODO (2018-11-29, bjorg): we need to make sure that only other resources are referenced (no literal entries, or itself, no loops either)
                                 humidifier.DependsOn = humidifier.DependsOn.Select(dependency => {
                                     var reference = ((IDictionary<string, object>)visitor(FnRef(dependency)))
                                         .TryGetValue("Ref", out object result);
@@ -630,6 +633,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         }
 
         private AModuleEntry AddEntry(AModuleEntry entry) {
+            Validate(Regex.IsMatch(entry.Name, CLOUDFORMATION_ID_PATTERN), "name is not valid");
 
             // set default reference
             if(entry.Reference == null) {
@@ -637,8 +641,11 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             }
 
             // add entry
-            _entriesByFullName.Add(entry.FullName, entry);
-            _entries.Add(entry);
+            if(_entriesByFullName.TryAdd(entry.FullName, entry)) {
+                _entries.Add(entry);
+            } else {
+                AddError($"duplicate name '{entry.FullName}'");
+            }
             return entry;
         }
 
