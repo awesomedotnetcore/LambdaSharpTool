@@ -28,7 +28,7 @@ using MindTouch.LambdaSharp.Tool.Model;
 using MindTouch.LambdaSharp.Tool.Model.AST;
 using Newtonsoft.Json;
 
-namespace MindTouch.LambdaSharp.Tool {
+namespace MindTouch.LambdaSharp.Tool.Build {
 
     public class ModelAugmenter : AModelProcessor {
 

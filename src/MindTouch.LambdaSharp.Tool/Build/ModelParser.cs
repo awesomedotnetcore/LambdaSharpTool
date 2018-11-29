@@ -31,7 +31,7 @@ using YamlDotNet.Core.Events;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
-namespace MindTouch.LambdaSharp.Tool {
+namespace MindTouch.LambdaSharp.Tool.Build {
 
     public class ModelParser : AModelProcessor {
 

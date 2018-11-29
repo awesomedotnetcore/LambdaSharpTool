@@ -30,6 +30,7 @@ using Amazon.S3.Model;
 using Amazon.SimpleSystemsManagement;
 using Humidifier.Json;
 using McMaster.Extensions.CommandLineUtils;
+using MindTouch.LambdaSharp.Tool.Build;
 using MindTouch.LambdaSharp.Tool.Internal;
 using MindTouch.LambdaSharp.Tool.Model;
 using Newtonsoft.Json;

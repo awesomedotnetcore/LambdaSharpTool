@@ -28,7 +28,7 @@ using Humidifier;
 using MindTouch.LambdaSharp.Tool.Model;
 using Newtonsoft.Json;
 
-namespace MindTouch.LambdaSharp.Tool {
+namespace MindTouch.LambdaSharp.Tool.Build {
 
     public class ModelReferenceResolver : AModelProcessor {
 

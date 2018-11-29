@@ -31,12 +31,7 @@ using MindTouch.LambdaSharp.Tool.Model;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
-namespace MindTouch.LambdaSharp.Tool {
-    using ApiGateway = Humidifier.ApiGateway;
-    using Events = Humidifier.Events;
-    using IAM = Humidifier.IAM;
-    using Lambda = Humidifier.Lambda;
-    using SNS = Humidifier.SNS;
+namespace MindTouch.LambdaSharp.Tool.Build {
 
     public class ModelGenerator : AModelProcessor {
 
