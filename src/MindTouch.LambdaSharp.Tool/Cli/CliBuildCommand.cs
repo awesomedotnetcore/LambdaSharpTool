@@ -31,6 +31,7 @@ using Amazon.SimpleSystemsManagement;
 using Humidifier.Json;
 using McMaster.Extensions.CommandLineUtils;
 using MindTouch.LambdaSharp.Tool.Build;
+using MindTouch.LambdaSharp.Tool.Deploy;
 using MindTouch.LambdaSharp.Tool.Internal;
 using MindTouch.LambdaSharp.Tool.Model;
 using Newtonsoft.Json;
@@ -522,23 +523,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
         }
 
         public async Task<string> PublishStepAsync(Settings settings) {
-            var cloudformationFile = Path.Combine(settings.OutputDirectory, "cloudformation.json");
-            if(!File.Exists(cloudformationFile)) {
-                AddError("folder does not contain a CloudFormation file for publishing");
-                return null;
-            }
-            // load cloudformation file
-            var cloudformationText = File.ReadAllText(cloudformationFile);
-            var cloudformation = JsonConvert.DeserializeObject<JObject>(cloudformationText);
-            var manifest = GetManifest(cloudformation);
-            if(manifest == null) {
-                AddError("CloudFormation file does not contain a LambdaSharp manifest");
-                return null;
-            }
-            if(manifest.Version != ModuleManifest.CurrentVersion) {
-                AddError($"Incompatible LambdaSharp manifest version (found: {manifest.Version ?? "<null>"}, expected: {ModuleManifest.CurrentVersion})");
-                return null;
-            }
             await PopulateToolSettingsAsync(settings);
             if(HasErrors) {
                 return null;
@@ -547,6 +531,19 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             // make sure there is a deployment bucket
             if(settings.DeploymentBucketName == null) {
                 AddError("missing deployment bucket", new LambdaSharpToolConfigException(settings.ToolProfile));
+                return null;
+            }
+
+            // load cloudformation template
+            var cloudformationFile = Path.Combine(settings.OutputDirectory, "cloudformation.json");
+            if(!File.Exists(cloudformationFile)) {
+                AddError("folder does not contain a CloudFormation file for publishing");
+                return null;
+            }
+
+            // load cloudformation file
+            var manifest = await new ModelManifestLoader(settings, "cloudformation.json").LoadFromFileAsync(cloudformationFile);
+            if(manifest == null) {
                 return null;
             }
 
@@ -573,161 +570,51 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 return false;
             }
 
-            // module key formats
-            // * MODULENAME:VERSION
-            // * s3://bucket-name/Modules/{ModuleName}/{Version}/
+            // determin location of cloudformation template from module key
+            var location = await new ModelLocator(settings, moduleKey).LocateAsync(moduleKey);
+            if(location == null) {
+                return false;
+            }
 
-            var originalDeploymentBucketName = settings.DeploymentBucketName;
-            try {
-                string cloudformationPath = null;
-                if(moduleKey.StartsWith("s3://", StringComparison.Ordinal)) {
-                    var uri = new Uri(moduleKey);
-                    settings.DeploymentBucketName = uri.Host;
+            // download module manifest
+            var manifest = await new ModelManifestLoader(settings, moduleKey).LoadFromS3Async(location.BucketName, location.Path);
+            if(manifest == null) {
+                return false;
+            }
 
-                    // absolute path always starts with '/', which needs to be removed
-                    var path = uri.AbsolutePath.Substring(1);
-                    if(!path.EndsWith("/cloudformation.json", StringComparison.Ordinal)) {
-                        cloudformationPath = path.TrimEnd('/') + "/cloudformation.json";
-                    } else {
-                        cloudformationPath = path;
-                    }
-                } else {
-                    VersionInfo requestedVersion = null;
-                    string moduleName;
+            // check that the LambdaSharp runtime & CLI versions match
+            if(settings.RuntimeVersion == null) {
 
-                    // check if a version suffix is specified
-                    // NOTE: avoid matching on "C:/" strings!
-                    if(moduleKey.IndexOf(':', StringComparison.Ordinal) > 1) {
-                        var parts = moduleKey.Split(':', 2);
-                        moduleName = parts[0];
-                        if(parts[1] != "*") {
-                            requestedVersion = VersionInfo.Parse(parts[1]);
-                        }
-                    } else {
-                        moduleName = moduleKey;
-                    }
-
-                    // attempt to find the module in the deployment bucket and then the regional lambdasharp bucket
-                    var foundVersion = await new[] {
-                        settings.DeploymentBucketName,
-                        $"lambdasharp-{settings.AwsRegion}"
-                    }.Select(async bucket => {
-                        settings.DeploymentBucketName = bucket;
-                        return await FindNewestVersion(settings, moduleName, requestedVersion);
-                    }).FirstOrDefault();
-                    if(foundVersion == null) {
-                        AddError($"could not find module: {moduleName} (v{requestedVersion})");
-                        return false;
-                    }
-                    cloudformationPath = $"Modules/{moduleName}/Versions/{foundVersion}/cloudformation.json";
-                }
-
-                // download manifest
-                var cloudformationText = await GetS3ObjectContents(settings, cloudformationPath);
-                if(cloudformationText == null) {
-                    AddError($"could not load CloudFormation template from s3://{settings.DeploymentBucketName}/{cloudformationPath}");
+                // runtime module doesn't expect a deployment tier to exist
+                if(!forceDeploy && !manifest.HasPragma("no-runtime-version-check")) {
+                    AddError("could not determine the LambdaSharp runtime version; use --force-deploy to proceed anyway", new LambdaSharpDeploymentTierSetupException(settings.Tier));
                     return false;
                 }
-                var cloudformation = JsonConvert.DeserializeObject<JObject>(cloudformationText);
-                var manifest = GetManifest(cloudformation);
-                if(manifest == null) {
-                    AddError("CloudFormation file does not contain a LambdaSharp manifest");
+            } else if(!settings.ToolVersion.IsCompatibleWith(settings.RuntimeVersion)) {
+                if(!forceDeploy) {
+                    AddError($"LambdaSharp CLI (v{settings.ToolVersion}) and runtime (v{settings.RuntimeVersion}) versions do not match; use --force-deploy to proceed anyway");
                     return false;
                 }
-                if(manifest.Version != ModuleManifest.CurrentVersion) {
-                    AddError($"Incompatible LambdaSharp manifest version (found: {manifest.Version ?? "<null>"}, expected: {ModuleManifest.CurrentVersion})");
+            }
+
+            // deploy module
+            if(dryRun == null) {
+                try {
+                    return await new ModelUpdater(settings, sourceFilename: null).DeployChangeSetAsync(
+                        manifest,
+                        location,
+                        instanceName,
+                        allowDataLoos,
+                        protectStack,
+                        inputs,
+                        forceDeploy
+                    );
+                } catch(Exception e) {
+                    AddError(e);
                     return false;
                 }
-
-                // check that the LambdaSharp runtime & CLI versions match
-                if(settings.RuntimeVersion == null) {
-
-                    // runtime module doesn't expect a deployment tier to exist
-                    if(!forceDeploy && !manifest.HasPragma("no-runtime-version-check")) {
-                        AddError("could not determine the LambdaSharp runtime version; use --force-deploy to proceed anyway", new LambdaSharpDeploymentTierSetupException(settings.Tier));
-                        return false;
-                    }
-                } else if(!settings.ToolVersion.IsCompatibleWith(settings.RuntimeVersion)) {
-                    if(!forceDeploy) {
-                        AddError($"LambdaSharp CLI (v{settings.ToolVersion}) and runtime (v{settings.RuntimeVersion}) versions do not match; use --force-deploy to proceed anyway");
-                        return false;
-                    }
-                }
-
-                // deploy module
-                if(dryRun == null) {
-                    try {
-                        return await new ModelUpdater(settings, sourceFilename: null).DeployChangeSetAsync(
-                            manifest,
-                            cloudformationPath,
-                            instanceName,
-                            allowDataLoos,
-                            protectStack,
-                            inputs,
-                            forceDeploy
-                        );
-                    } catch(Exception e) {
-                        AddError(e);
-                        return false;
-                    }
-                }
-                return true;
-            } finally {
-                settings.DeploymentBucketName = originalDeploymentBucketName;
             }
-        }
-
-        private async Task<VersionInfo> FindNewestVersion(Settings settings, string moduleName, VersionInfo requestedVersion) {
-
-            // enumerate versions in bucket
-            var versions = new List<VersionInfo>();
-            var request = new ListObjectsV2Request {
-                BucketName = settings.DeploymentBucketName,
-                Prefix = $"Modules/{moduleName}/Versions/",
-                Delimiter = "/",
-                MaxKeys = 100
-            };
-            do {
-                var response = await settings.S3Client.ListObjectsV2Async(request);
-                versions.AddRange(response.CommonPrefixes
-                    .Select(prefix => prefix.Substring(request.Prefix.Length).TrimEnd('/'))
-                    .Select(found => VersionInfo.Parse(found))
-                    .Where(version => (requestedVersion == null) ? !version.IsPreRelease : version.IsCompatibleWith(requestedVersion))
-                );
-                request.ContinuationToken = response.NextContinuationToken;
-            } while(request.ContinuationToken != null);
-            if(!versions.Any()) {
-                return null;
-            }
-
-            // attempt to identify the newest version
-            return versions.Max();
-        }
-
-        private async Task<string> GetS3ObjectContents(Settings settings, string key) {
-            try {
-                var response = await settings.S3Client.GetObjectAsync(new GetObjectRequest {
-                    BucketName = settings.DeploymentBucketName,
-                    Key = key
-                });
-                using(var stream = new MemoryStream()) {
-                    await response.ResponseStream.CopyToAsync(stream);
-                    return Encoding.UTF8.GetString(stream.ToArray());
-                }
-            } catch {
-                return null;
-            }
-        }
-
-        private ModuleManifest GetManifest(JObject cloudformation) {
-            if(
-                cloudformation.TryGetValue("Metadata", out JToken metadataToken)
-                && (metadataToken is JObject metadata)
-                && metadata.TryGetValue("LambdaSharp::Manifest", out JToken manifestToken)
-            ) {
-                return manifestToken.ToObject<ModuleManifest>();
-            }
-            return null;
+            return true;
         }
     }
 }

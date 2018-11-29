@@ -19,7 +19,6 @@
  * limitations under the License.
  */
 
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -31,9 +30,8 @@ using Amazon.S3.Transfer;
 using MindTouch.LambdaSharp.Tool.Model;
 using MindTouch.LambdaSharp.Tool.Internal;
 using Newtonsoft.Json;
-using Amazon.S3.Model;
 
-namespace MindTouch.LambdaSharp.Tool {
+namespace MindTouch.LambdaSharp.Tool.Deploy {
     using CloudFormationStack = Amazon.CloudFormation.Model.Stack;
     using CloudFormationParameter = Amazon.CloudFormation.Model.Parameter;
 
@@ -64,7 +62,7 @@ namespace MindTouch.LambdaSharp.Tool {
         // TODO: delete when no longer needed
         public async Task<bool> DeployAsync(
             ModuleManifest manifest,
-            string cloudformationPath,
+            ModelLocation cloudformation,
             string altModuleName,
             bool allowDataLoss,
             bool protectStack,
@@ -177,7 +175,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 },
                 new CloudFormationParameter {
                     ParameterKey = "DeploymentBucketName",
-                    ParameterValue = Settings.DeploymentBucketName ?? ""
+                    ParameterValue = cloudformation.BucketName ?? ""
                 }
             };
             foreach(var input in inputs) {
@@ -189,7 +187,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // create/update cloudformation stack
             var success = false;
-            var templateUrl = $"https://{Settings.DeploymentBucketName}.s3.amazonaws.com/{cloudformationPath}";
+            var templateUrl = $"https://{cloudformation.BucketName}.s3.amazonaws.com/{cloudformation.Path}";
             if(mostRecentStackEventId != null) {
                 try {
                     Console.WriteLine($"=> Stack update initiated for {stackName}");
@@ -248,7 +246,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
         public async Task<bool> DeployChangeSetAsync(
             ModuleManifest manifest,
-            string cloudformationPath,
+            ModelLocation cloudformation,
             string altModuleName,
             bool allowDataLoss,
             bool protectStack,
@@ -285,7 +283,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 },
                 new CloudFormationParameter {
                     ParameterKey = "DeploymentBucketName",
-                    ParameterValue = Settings.DeploymentBucketName ?? ""
+                    ParameterValue = cloudformation.BucketName ?? ""
                 }
             };
             foreach(var input in inputs) {
@@ -298,7 +296,7 @@ namespace MindTouch.LambdaSharp.Tool {
             // create change-set
             var success = false;
             var changeSetName = $"{manifest.ModuleName}-{now:yyyy-MM-dd-hh-mm-ss}";
-            var templateUrl = $"https://{Settings.DeploymentBucketName}.s3.amazonaws.com/{cloudformationPath}";
+            var templateUrl = $"https://{cloudformation.BucketName}.s3.amazonaws.com/{cloudformation.Path}";
             var updateOrCreate = (mostRecentStackEventId != null) ? "update" : "create";
             Console.WriteLine($"=> Stack {updateOrCreate} initiated for {stackName}");
             var response = await Settings.CfClient.CreateChangeSetAsync(new CreateChangeSetRequest {
