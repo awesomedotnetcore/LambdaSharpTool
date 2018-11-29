@@ -656,7 +656,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 // deploy module
                 if(dryRun == null) {
                     try {
-                        return await new ModelUpdater(settings, sourceFilename: null).DeployAsync(
+                        return await new ModelUpdater(settings, sourceFilename: null).DeployChangeSetAsync(
                             manifest,
                             cloudformationPath,
                             instanceName,
