@@ -23,6 +23,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Amazon.S3.Model;
 
@@ -37,15 +38,14 @@ namespace MindTouch.LambdaSharp.Tool.Deploy {
 
     public class ModelLocator : AModelProcessor {
 
+        //--- Class Fields ---
+        private static readonly Regex ModuleKeyPattern = new Regex(@"^(?<ModuleName>\w+)(:(?<Version>\*|[\w\.\-]+))?(@(?<BucketName>\w+))?$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
         //--- Constructors ---
         public ModelLocator(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
 
         //--- Methods ---
         public async Task<ModelLocation> LocateAsync(string moduleKey) {
-            var searchBuckets = new[] {
-                Settings.DeploymentBucketName,
-                $"lambdasharp-{Settings.AwsRegion}"
-            };
 
             // module key formats
             // * ModuleName
@@ -68,37 +68,51 @@ namespace MindTouch.LambdaSharp.Tool.Deploy {
                     path = path.TrimEnd('/') + "/cloudformation.json";
                 }
             } else {
-                VersionInfo requestedVersion = null;
-                string moduleName;
+                var match = ModuleKeyPattern.Match(moduleKey);
+                if(match.Success) {
+                    var requestedModuleName = GetMatchValue("ModuleName");
+                    var requestedVersionText = GetMatchValue("Version");
+                    var requestedBucketName = GetMatchValue("BucketName");
 
-                // check if a version suffix is specified
-                // NOTE: avoid matching on "C:/" strings!
-                if(moduleKey.IndexOf(':', StringComparison.Ordinal) > 1) {
-                    var parts = moduleKey.Split(':', 2);
-                    moduleName = parts[0];
-                    if(parts[1] != "*") {
-                        requestedVersion = VersionInfo.Parse(parts[1]);
+                    // parse optional version
+                    var requestedVersion = ((requestedVersionText != null) && (requestedVersionText != "*"))
+                        ? VersionInfo.Parse(requestedVersionText)
+                        : null;
+
+                    // by default, attempt to find the module in the deployment bucket and then the regional lambdasharp bucket
+                    var searchBuckets = (requestedBucketName != null)
+                        ? new[] {
+                            requestedBucketName,
+                            $"{requestedBucketName}-{Settings.AwsRegion}"
+                        }
+                        :  new[] {
+                            Settings.DeploymentBucketName,
+
+                            // TODO: do we still need to default to the 'lambdasharp` bucket?
+                            $"lambdasharp-{Settings.AwsRegion}"
+                        };
+
+                    // attempt to find a matching version
+                    var found = searchBuckets.Select(bucket => new {
+                        BucketName = bucket,
+                        Version = FindNewestVersion(Settings, bucketName, requestedModuleName, requestedVersion).Result
+                    }).FirstOrDefault(result => result.Version != null);
+                    if(found == null) {
+                        AddError($"could not find module: {requestedModuleName} ({((requestedVersion != null) ? $"v{requestedVersion}" : "any version")})");
+                        return null;
+                    }
+                    bucketName = found.BucketName;
+                    path = $"Modules/{requestedModuleName}/Versions/{found.Version}/cloudformation.json";
+
+                    // local function
+                    string GetMatchValue(string groupName) {
+                        var group = match.Groups[groupName];
+                        return group.Success ? group.Value : null;
                     }
                 } else {
-                    moduleName = moduleKey;
-                }
-
-                // attempt to find the module in the deployment bucket and then the regional lambdasharp bucket
-                var found = await searchBuckets.Select(async bucket => {
-                    var version = await FindNewestVersion(Settings, bucketName, moduleName, requestedVersion);
-                    return (version != null)
-                        ? new {
-                            BucketName = bucket,
-                            Version = version
-                        }
-                        : null;
-                }).FirstOrDefault();
-                if(found == null) {
-                    AddError($"could not find module: {moduleName} (v{requestedVersion})");
+                    AddError("invalid module specifier");
                     return null;
                 }
-                bucketName = found.BucketName;
-                path = $"Modules/{moduleName}/Versions/{found.Version}/cloudformation.json";
             }
             return new ModelLocation {
                 BucketName = bucketName,

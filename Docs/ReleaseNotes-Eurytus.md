@@ -5,7 +5,10 @@
 ## What's New
 
 > TODO
+* comprehensive variable resolution
+* embedded template manifest
 * use change-sets for deploying stacks
+* new module specification for deploying: `ModuleName[:Version][@Bucket]`
 
 __Topics__
 1. [Break Changes](#breaking-changes)
