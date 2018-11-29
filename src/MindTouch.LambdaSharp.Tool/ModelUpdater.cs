@@ -335,7 +335,6 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
 
                 // execute change-set
-                Console.WriteLine($"=> Stack {updateOrCreate} initiated for {stackName}");
                 await Settings.CfClient.ExecuteChangeSetAsync(new ExecuteChangeSetRequest {
                     ChangeSetName = changeSetName,
                     StackName = stackName
