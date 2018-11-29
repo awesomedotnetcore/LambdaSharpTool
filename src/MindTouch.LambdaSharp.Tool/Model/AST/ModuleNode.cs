@@ -20,7 +20,6 @@
  */
 
 using System.Collections.Generic;
-using System.Linq;
 using YamlDotNet.Serialization;
 
 namespace MindTouch.LambdaSharp.Tool.Model.AST {
@@ -33,11 +32,11 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         public string Description { get; set; }
         public IList<object> Pragmas { get; set; } = new List<object>();
         public IList<string> Secrets { get; set; } = new List<string>();
-        public IList<ModuleDeclareNode> Declare { get; set; } = new List<ModuleDeclareNode>();
-        public IList<InputNode> Inputs { get; set; } = new List<InputNode>();
-        public IList<OutputNode> Outputs { get; set; } = new List<OutputNode>();
-        public IList<ParameterNode> Variables { get; set; } = new List<ParameterNode>();
-        public IList<FunctionNode> Functions { get; set; } = new List<FunctionNode>();
+        public IList<EntryNode> Inputs { get; set; } = new List<EntryNode>();
+        public IList<EntryNode> Outputs { get; set; } = new List<EntryNode>();
+        public IList<EntryNode> Variables { get; set; } = new List<EntryNode>();
+        public IList<EntryNode> Functions { get; set; } = new List<EntryNode>();
+        public IList<EntryNode> Entries { get; set; } = new List<EntryNode>();
         public bool HasPragma(string pragma) => Pragmas?.Contains(pragma) == true;
     }
 }

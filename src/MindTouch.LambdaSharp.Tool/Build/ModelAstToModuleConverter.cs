@@ -69,7 +69,8 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                 ForEach("Secrets", module.Secrets ?? new List<string>(), ConvertSecret);
                 ForEach("Inputs", module.Inputs, ConvertInput);
                 ForEach("Outputs", module.Outputs, ConvertOutput);
-                ForEach("Variables", module.Variables, ConvertParameter);
+                ForEach("Variables", module.Variables, ConvertVariable);
+                ForEach("Entries", module.Entries, ConvertEntry);
                 ForEach("Functions",  module.Functions, ConvertFunction);
                 return _builder;
             } catch(Exception e) {
@@ -99,75 +100,12 @@ namespace MindTouch.LambdaSharp.Tool.Build {
             });
         }
 
-        private void ConvertInput(int index, InputNode input) {
-            var type = DeterminNodeType("input", index, input, InputNode.FieldCheckers, InputNode.FieldCombinations, new[] { "Parameter", "Import" });
-            var inputType = input.Type ?? "String";
-            switch(type) {
-            case "Parameter":
-                if(input.Resource != null) {
-                    Validate(input.Type == "String", "input 'Type' must be string");
-                    AtLocation("Resource", () => {
-                        Validate(ConvertToStringList(input.Resource.DependsOn).Any() != true, "'DependsOn' cannot be used on an input");
-                        if(input.Default == null) {
-                            Validate(input.Resource.Properties == null, "'Properties' section cannot be used with `Input` attribute unless the 'Default' is set to a blank string");
-                        }
-                    });
-                }
-                AtLocation(input.Parameter, () => _builder.AddInput(
-                    input.Parameter,
-                    input.Description,
-                    inputType,
-                    input.Section,
-                    input.Label,
-                    input.Scope,
-                    input.NoEcho,
-                    input.Default,
-                    input.ConstraintDescription,
-                    input.AllowedPattern,
-                    input.AllowedValues,
-                    input.MaxLength,
-                    input.MaxValue,
-                    input.MinLength,
-                    input.MinValue,
-                    input.Resource?.Type,
-                    input.Resource?.Allow,
-                    input.Resource?.Properties,
-                    input.Resource?.ArnAttribute
-                ));
-                break;
-            case "Import":
-                Validate(input.Import.Split("::").Length == 2, "incorrect format for `Import` attribute");
-                if(input.Resource != null) {
-                    Validate(inputType == "String", "input 'Type' must be string");
-                    AtLocation("Resource", () => {
-                        Validate(input.Resource.Type != null, "'Type' attribute is required");
-                        Validate(input.Resource.Allow != null, "'Allow' attribute is required");
-                        Validate(ConvertToStringList(input.Resource.DependsOn).Any() != true, "'DependsOn' cannot be used on an input");
-                    });
-                }
-                AtLocation(input.Import, () => _builder.AddImport(
-                    input.Import,
-                    input.Description,
-                    inputType,
-                    input.Section,
-                    input.Label,
-                    input.Scope,
-                    input.NoEcho,
-                    input.Resource?.Type,
-                    input.Resource?.Allow
-                ));
-                break;
-            }
-        }
+        private void ConvertInput(int index, EntryNode node) => ConvertEntry(null, index, node, new[] { "Parameter", "Import" });
 
-        private void ConvertParameter(int index, ParameterNode parameter) => ConvertParameter(null, index, parameter);
+        private void ConvertVariable(int index, EntryNode variable) => ConvertVariable(null, index, variable);
 
-        private void ConvertParameter(
-            AModuleEntry parent,
-            int index,
-            ParameterNode parameter
-        ) {
-            var type = DeterminNodeType("variable", index, parameter, ParameterNode.FieldCheckers, ParameterNode.FieldCombinations, new[] {
+        private void ConvertVariable(AModuleEntry parent, int index, EntryNode variable)
+            => ConvertEntry(parent, index, variable, new[] {
                 "Var.Resource",
                 "Var.Reference",
                 "Var.Value",
@@ -175,245 +113,12 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                 "Var.Empty",
                 "Package"
             });
-            switch(type) {
-            case "Var.Resource":
 
-                // managed resource
-                AtLocation(parameter.Var, () => {
-
-                    // create managed resource entry
-                    var result = _builder.AddResource(
-                        parent: parent,
-                        name: parameter.Var,
-                        description: parameter.Description,
-                        scope: parameter.Scope,
-                        awsType: parameter.Resource.Type,
-                        awsProperties: parameter.Resource.Properties,
-                        awsArnAttribute: parameter.Resource.ArnAttribute,
-                        dependsOn: ConvertToStringList(parameter.Resource.DependsOn),
-                        condition: null
-                    );
-
-                    // request managed resource grants
-                    AtLocation("Resource", () => {
-                        if(parameter.Resource.Type == null) {
-                            AddError("missing Type attribute");
-                        } else if(
-                            parameter.Resource.Type.StartsWith("AWS::", StringComparison.Ordinal)
-                            && !ResourceMapping.IsResourceTypeSupported(parameter.Resource.Type)
-                        ) {
-                            AddError($"unsupported resource type: {parameter.Resource.Type}");
-                        } else if(!parameter.Resource.Type.StartsWith("AWS::", StringComparison.Ordinal)) {
-                            Validate(parameter.Resource.Allow == null, "'Allow' attribute is not valid for custom resources");
-                        }
-                        _builder.AddGrant(result.LogicalId, parameter.Resource.Type, result.GetExportReference(), parameter.Resource.Allow);
-                    });
-
-                    // recurse
-                    ConvertParameters(result);
-                });
-                break;
-            case "Var.Reference":
-
-                // existing resource
-                AtLocation(parameter.Var, () => {
-
-                    // create existing resource entry
-                    var result = _builder.AddValue(
-                        parent: parent,
-                        name: parameter.Var,
-                        description: parameter.Description,
-                        reference: parameter.Value,
-                        scope: parameter.Scope,
-                        isSecret: false
-                    );
-
-                    // validate literal references are ARNs
-                    if(parameter.Value is string text) {
-                        ValidateARN(text);
-                    } else if(parameter.Value is IList<object> values) {
-                        foreach(var value in values) {
-                            ValidateARN(value);
-                        }
-                    }
-
-                    // request existing resource grants
-                    AtLocation("Resource", () => {
-                        _builder.AddGrant(result.LogicalId, parameter.Resource.Type, parameter.Value, parameter.Resource.Allow);
-                    });
-
-                    // recurse
-                    ConvertParameters(result);
-                });
-                break;
-            case "Var.Value":
-
-                // literal value
-                AtLocation(parameter.Var, () => {
-
-                    // create literal value entry
-                    var result = _builder.AddValue(
-                        parent: parent,
-                        name: parameter.Var,
-                        description: parameter.Description,
-                        reference: (parameter.Value is IList<object> values)
-                            ? FnJoin(",", values)
-                            : parameter.Value,
-                        scope: parameter.Scope,
-                        isSecret: false
-                    );
-
-                    // recurse
-                    ConvertParameters(result);
-                });
-                break;
-            case "Var.Secret":
-
-                // encrypted value
-                AtLocation(parameter.Var, () => {
-
-                    // create encrypted value entry
-                    var result = _builder.AddValue(
-                        parent: parent,
-                        name: parameter.Var,
-                        description: parameter.Description,
-                        scope: parameter.Scope,
-                        reference: FnJoin(
-                            "|",
-                            new object[] {
-                                parameter.Secret
-                            }.Union(parameter.EncryptionContext
-                                ?.Select(kv => $"{Uri.EscapeDataString(kv.Key)}={Uri.EscapeDataString(kv.Value)}")
-                                ?? new string[0]
-                            ).ToArray()
-                        ),
-                        isSecret: true
-                    );
-
-                    // recurse
-                    ConvertParameters(result);
-                });
-                break;
-            case "Var.Empty":
-
-                // empty entry
-                AtLocation(parameter.Var, () => {
-
-                    // create empty entry
-                    var result = _builder.AddValue(
-                        parent: parent,
-                        name: parameter.Var,
-                        description: parameter.Description,
-                        reference: "",
-                        scope: parameter.Scope,
-                        isSecret: false
-                    );
-
-                    // recurse
-                    ConvertParameters(result);
-                });
-                break;
-            case "Package":
-
-                // package resource
-                AtLocation(parameter.Package, () => {
-
-                    // check if required attributes are present
-                    Validate(parameter.Files != null, "missing 'Files' attribute");
-                    Validate(parameter.Bucket != null, "missing 'Bucket' attribute");
-                    if(parameter.Bucket is string bucketParameter) {
-
-                        // verify that target bucket is defined as parameter with correct type
-                        ValidateSourceParameter(bucketParameter, "AWS::S3::Bucket", "S3 bucket resource");
-                    }
-
-                    // check if package is nested
-                    if(parent != null) {
-                        AddError("parameter package cannot be nested");
-                    }
-
-                    // create package resource entry
-                    var result = _builder.AddPackage(
-                        parent: parent,
-                        name: parameter.Package,
-                        description: parameter.Description,
-                        scope: parameter.Scope,
-                        destinationBucket: (parameter.Bucket is string)
-                            ? _builder.GetEntry((string)parameter.Bucket).GetExportReference()
-                            : parameter.Bucket,
-                        destinationKeyPrefix: parameter.Prefix ?? "",
-                        sourceFilepath: parameter.Files
-                    );
-
-                    // recurse
-                    ConvertParameters(result);
-                });
-                break;
-            }
-
-            // local functions
-            void ConvertParameters(AModuleEntry result) {
-                ForEach("Variables", parameter.Variables, (i, p) => ConvertParameter(result, i, p));
-            }
-
-            void ValidateARN(object resourceArn) {
-                if((resourceArn is string text) && !text.StartsWith("arn:") && (text != "*")) {
-                    AddError($"resource name must be a valid ARN or wildcard: {resourceArn}");
-                }
-            }
+        private void ConvertFunction(int index, EntryNode function) {
+            ConvertEntry(null, index, function, new[] { "Function" });
         }
 
-        private void ConvertFunction(int index, FunctionNode function) {
-            AtLocation(function.Function, () => {
-                Validate(function.Memory != null, "missing Memory attribute");
-                Validate(int.TryParse(function.Memory, out _), "invalid Memory value");
-                Validate(function.Timeout != null, "missing Name attribute");
-                Validate(int.TryParse(function.Timeout, out _), "invalid Timeout value");
-                ValidateFunctionSource(function.Sources);
-
-                // initialize VPC configuration if provided
-                object subnets = null;
-                object securityGroups = null;
-                if(function.VPC?.Any() == true) {
-                    AtLocation("VPC", () => {
-                        if(
-                            !function.VPC.TryGetValue("SubnetIds", out subnets)
-                            || !function.VPC.TryGetValue("SecurityGroupIds", out securityGroups)
-                        ) {
-                            AddError("Lambda function contains a VPC definition that does not include 'SubnetIds' or 'SecurityGroupIds' attributes");
-                        }
-                    });
-                }
-
-                // create function entry
-                var sources = AtLocation(
-                    "Sources",
-                    () => function.Sources
-                        ?.Select((source, eventIndex) => ConvertFunctionSource(function, eventIndex, source))
-                        .Where(evt => evt != null)
-                        .ToList()
-                );
-                var result = _builder.AddFunction(
-                    parent: null,
-                    name: function.Function,
-                    description: function.Description,
-                    project: function.Project,
-                    language: function.Language,
-                    environment: function.Environment,
-                    sources: sources,
-                    pragmas: function.Pragmas,
-                    timeout: function.Timeout,
-                    runtime: function.Runtime,
-                    reservedConcurrency: function.ReservedConcurrency,
-                    memory: function.Memory,
-                    handler: function.Handler,
-                    subnets: subnets,
-                    securityGroups: securityGroups
-                );
-            });
-        }
-
-        private AFunctionSource ConvertFunctionSource(FunctionNode function, int index, FunctionSourceNode source) {
+        private AFunctionSource ConvertFunctionSource(EntryNode function, int index, FunctionSourceNode source) {
             var type = DeterminNodeType("source", index, source, FunctionSourceNode.FieldCheckers, FunctionSourceNode.FieldCombinations, new[] {
                 "Api",
                 "Schedule",
@@ -508,30 +213,339 @@ namespace MindTouch.LambdaSharp.Tool.Build {
             return null;
         }
 
-        private void ConvertOutput(int index, OutputNode output) {
-            var type = DeterminNodeType("output", index, output, OutputNode.FieldCheckers, OutputNode.FieldCombinations, new[] { "Export", "CustomResource", "Macro" });
+        private void ConvertOutput(int index, EntryNode output) => ConvertEntry(null, index, output, new[] { "Export", "CustomResource", "Macro" });
+
+        private void ConvertEntry(int index, EntryNode node)
+            => ConvertEntry(null, index, node, new[] {
+                "Var.Resource",
+                "Var.Reference",
+                "Var.Value",
+                "Var.Secret",
+                "Var.Empty",
+                "Package",
+                "Function",
+                "Export",
+                "CustomResource",
+                "Macro"
+            });
+
+        private void ConvertEntry(AModuleEntry parent, int index, EntryNode node, IEnumerable<string> expectedTypes) {
+            var type = DeterminNodeType("output", index, node, EntryNode.FieldCheckers, EntryNode.FieldCombinations, expectedTypes);
             switch(type) {
+            case "Parameter":
+                AtLocation(node.Parameter, () => {
+                    var inputType = node.Type ?? "String";
+                    if(node.Resource != null) {
+                        AtLocation("Resource", () => {
+                            Validate(ConvertToStringList(node.Resource.DependsOn).Any() != true, "'DependsOn' cannot be used on an input");
+                            if(node.Default == null) {
+                                Validate(node.Resource.Properties == null, "'Properties' section cannot be used with `Input` attribute unless the 'Default' is set to a blank string");
+                            }
+                        });
+                    }
+                    _builder.AddInput(
+                        node.Parameter,
+                        node.Description,
+                        inputType,
+                        node.Section,
+                        node.Label,
+                        node.Scope,
+                        node.NoEcho,
+                        node.Default,
+                        node.ConstraintDescription,
+                        node.AllowedPattern,
+                        node.AllowedValues,
+                        node.MaxLength,
+                        node.MaxValue,
+                        node.MinLength,
+                        node.MinValue,
+                        node.Resource?.Type,
+                        node.Resource?.Allow,
+                        node.Resource?.Properties,
+                        node.Resource?.ArnAttribute
+                    );
+                });
+                break;
+            case "Import":
+                AtLocation(node.Import, () => {
+                    var inputType = node.Type ?? "String";
+                    Validate(node.Import.Split("::").Length == 2, "incorrect format for `Import` attribute");
+                    if(node.Resource != null) {
+                        Validate(inputType == "String", "input 'Type' must be string");
+                        AtLocation("Resource", () => {
+                            Validate(node.Resource.Type != null, "'Type' attribute is required");
+                            Validate(node.Resource.Allow != null, "'Allow' attribute is required");
+                            Validate(ConvertToStringList(node.Resource.DependsOn).Any() != true, "'DependsOn' cannot be used on an input");
+                        });
+                    }
+                    _builder.AddImport(
+                        node.Import,
+                        node.Description,
+                        inputType,
+                        node.Section,
+                        node.Label,
+                        node.Scope,
+                        node.NoEcho,
+                        node.Resource?.Type,
+                        node.Resource?.Allow
+                    );
+                });
+                break;
+            case "Var.Resource":
+
+                // managed resource
+                AtLocation(node.Var, () => {
+
+                    // create managed resource entry
+                    var result = _builder.AddResource(
+                        parent: parent,
+                        name: node.Var,
+                        description: node.Description,
+                        scope: node.Scope,
+                        awsType: node.Resource.Type,
+                        awsProperties: node.Resource.Properties,
+                        awsArnAttribute: node.Resource.ArnAttribute,
+                        dependsOn: ConvertToStringList(node.Resource.DependsOn),
+                        condition: null
+                    );
+
+                    // request managed resource grants
+                    AtLocation("Resource", () => {
+                        if(node.Resource.Type == null) {
+                            AddError("missing Type attribute");
+                        } else if(
+                            node.Resource.Type.StartsWith("AWS::", StringComparison.Ordinal)
+                            && !ResourceMapping.IsResourceTypeSupported(node.Resource.Type)
+                        ) {
+                            AddError($"unsupported resource type: {node.Resource.Type}");
+                        } else if(!node.Resource.Type.StartsWith("AWS::", StringComparison.Ordinal)) {
+                            Validate(node.Resource.Allow == null, "'Allow' attribute is not valid for custom resources");
+                        }
+                        _builder.AddGrant(result.LogicalId, node.Resource.Type, result.GetExportReference(), node.Resource.Allow);
+                    });
+
+                    // recurse
+                    ConvertVariables(result);
+                });
+                break;
+            case "Var.Reference":
+
+                // existing resource
+                AtLocation(node.Var, () => {
+
+                    // create existing resource entry
+                    var result = _builder.AddValue(
+                        parent: parent,
+                        name: node.Var,
+                        description: node.Description,
+                        reference: node.Value,
+                        scope: node.Scope,
+                        isSecret: false
+                    );
+
+                    // validate literal references are ARNs
+                    if(node.Value is string text) {
+                        ValidateARN(text);
+                    } else if(node.Value is IList<object> values) {
+                        foreach(var value in values) {
+                            ValidateARN(value);
+                        }
+                    }
+
+                    // request existing resource grants
+                    AtLocation("Resource", () => {
+                        _builder.AddGrant(result.LogicalId, node.Resource.Type, node.Value, node.Resource.Allow);
+                    });
+
+                    // recurse
+                    ConvertVariables(result);
+                });
+                break;
+            case "Var.Value":
+
+                // literal value
+                AtLocation(node.Var, () => {
+
+                    // create literal value entry
+                    var result = _builder.AddValue(
+                        parent: parent,
+                        name: node.Var,
+                        description: node.Description,
+                        reference: (node.Value is IList<object> values)
+                            ? FnJoin(",", values)
+                            : node.Value,
+                        scope: node.Scope,
+                        isSecret: false
+                    );
+
+                    // recurse
+                    ConvertVariables(result);
+                });
+                break;
+            case "Var.Secret":
+
+                // encrypted value
+                AtLocation(node.Var, () => {
+
+                    // create encrypted value entry
+                    var result = _builder.AddValue(
+                        parent: parent,
+                        name: node.Var,
+                        description: node.Description,
+                        scope: node.Scope,
+                        reference: FnJoin(
+                            "|",
+                            new object[] {
+                                node.Secret
+                            }.Union(node.EncryptionContext
+                                ?.Select(kv => $"{Uri.EscapeDataString(kv.Key)}={Uri.EscapeDataString(kv.Value)}")
+                                ?? new string[0]
+                            ).ToArray()
+                        ),
+                        isSecret: true
+                    );
+
+                    // recurse
+                    ConvertVariables(result);
+                });
+                break;
+            case "Var.Empty":
+
+                // empty entry
+                AtLocation(node.Var, () => {
+
+                    // create empty entry
+                    var result = _builder.AddValue(
+                        parent: parent,
+                        name: node.Var,
+                        description: node.Description,
+                        reference: "",
+                        scope: node.Scope,
+                        isSecret: false
+                    );
+
+                    // recurse
+                    ConvertVariables(result);
+                });
+                break;
+            case "Package":
+
+                // package resource
+                AtLocation(node.Package, () => {
+
+                    // check if required attributes are present
+                    Validate(node.Files != null, "missing 'Files' attribute");
+                    Validate(node.Bucket != null, "missing 'Bucket' attribute");
+                    if(node.Bucket is string bucketParameter) {
+
+                        // verify that target bucket is defined as parameter with correct type
+                        ValidateSourceParameter(bucketParameter, "AWS::S3::Bucket", "S3 bucket resource");
+                    }
+
+                    // check if package is nested
+                    if(parent != null) {
+                        AddError("parameter package cannot be nested");
+                    }
+
+                    // create package resource entry
+                    var result = _builder.AddPackage(
+                        parent: parent,
+                        name: node.Package,
+                        description: node.Description,
+                        scope: node.Scope,
+                        destinationBucket: (node.Bucket is string)
+                            ? _builder.GetEntry((string)node.Bucket).GetExportReference()
+                            : node.Bucket,
+                        destinationKeyPrefix: node.Prefix ?? "",
+                        sourceFilepath: node.Files
+                    );
+
+                    // recurse
+                    ConvertVariables(result);
+                });
+                break;
+            case "Function":
+                AtLocation(node.Function, () => {
+                    Validate(node.Memory != null, "missing Memory attribute");
+                    Validate(int.TryParse(node.Memory, out _), "invalid Memory value");
+                    Validate(node.Timeout != null, "missing Name attribute");
+                    Validate(int.TryParse(node.Timeout, out _), "invalid Timeout value");
+                    ValidateFunctionSource(node.Sources ?? new FunctionSourceNode[0]);
+
+                    // initialize VPC configuration if provided
+                    object subnets = null;
+                    object securityGroups = null;
+                    if(node.VPC?.Any() == true) {
+                        AtLocation("VPC", () => {
+                            if(
+                                !node.VPC.TryGetValue("SubnetIds", out subnets)
+                                || !node.VPC.TryGetValue("SecurityGroupIds", out securityGroups)
+                            ) {
+                                AddError("Lambda function contains a VPC definition that does not include 'SubnetIds' or 'SecurityGroupIds' attributes");
+                            }
+                        });
+                    }
+
+                    // create function entry
+                    var sources = AtLocation(
+                        "Sources",
+                        () => node.Sources
+                            ?.Select((source, eventIndex) => ConvertFunctionSource(node, eventIndex, source))
+                            .Where(evt => evt != null)
+                            .ToList()
+                    );
+                    var result = _builder.AddFunction(
+                        parent: null,
+                        name: node.Function,
+                        description: node.Description,
+                        project: node.Project,
+                        language: node.Language,
+                        environment: node.Environment,
+                        sources: sources,
+                        pragmas: node.Pragmas,
+                        timeout: node.Timeout,
+                        runtime: node.Runtime,
+                        reservedConcurrency: node.ReservedConcurrency,
+                        memory: node.Memory,
+                        handler: node.Handler,
+                        subnets: subnets,
+                        securityGroups: securityGroups
+                    );
+                });
+                break;
             case "Export":
 
                 // TODO (2018-09-20, bjorg): add name validation
-                AtLocation(output.Export, () => _builder.AddExport(output.Export, output.Description, output.Value));
+                AtLocation(node.Export, () => _builder.AddExport(node.Export, node.Description, node.Value));
                 break;
             case "CustomResource":
 
                 // TODO (2018-09-20, bjorg): add custom resource name validation
-                Validate(output.Handler != null, "missing Handler attribute");
+                Validate(node.Handler != null, "missing Handler attribute");
 
                 // TODO (2018-09-20, bjorg): confirm that `Handler` is set to an SNS topic or lambda function
-                AtLocation(output.CustomResource, () => _builder.AddCustomResource(output.CustomResource, output.Description, output.Handler));
+                AtLocation(node.CustomResource, () => _builder.AddCustomResource(node.CustomResource, node.Description, node.Handler));
                 break;
             case "Macro":
 
                 // TODO (2018-11-29, bjorg): add macro name validation
-                Validate(output.Handler != null, "missing Handler attribute");
+                Validate(node.Handler != null, "missing Handler attribute");
 
                 // TODO (2018-10-30, bjorg): confirm that `Handler` is set to a lambda function
-                AtLocation(output.Macro, () => _builder.AddMacro(output.Macro, output.Description, output.Handler));
+                AtLocation(node.Macro, () => _builder.AddMacro(node.Macro, node.Description, node.Handler));
                 break;
+            }
+
+            // local functions
+            void ConvertVariables(AModuleEntry result) {
+                ForEach("Variables", node.Variables, (i, p) => ConvertVariable(result, i, p));
+                ForEach("Entries", node.Entries, (i, p) => ConvertEntry(result, i, p, expectedTypes));
+            }
+
+            void ValidateARN(object resourceArn) {
+                if((resourceArn is string text) && !text.StartsWith("arn:") && (text != "*")) {
+                    AddError($"resource name must be a valid ARN or wildcard: {resourceArn}");
+                }
             }
         }
 
@@ -545,7 +559,7 @@ namespace MindTouch.LambdaSharp.Tool.Build {
         ) {
             return AtLocation($"[{index}]", () => {
 
-                // find all declaration field with a non-null value; use alphabetical order for consistency
+                // find all declaration fields with a non-null value; use alphabetical order for consistency
                 var matches = fieldCombinations
                     .OrderBy(kv => kv.Key)
                     .Where(kv => {
@@ -553,6 +567,10 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                             throw new InvalidOperationException($"missing field checker for '{kv.Key}'");
                         }
                         return checker(instance);
+                    })
+                    .Select(kv => new {
+                        EntryType = kv.Key,
+                        ValidFields = kv.Value
                     })
                     .ToArray();
                 switch(matches.Length) {
@@ -564,25 +582,25 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                     // good to go
                     break;
                 default:
-                    AddError($"ambiguous {label} type: {string.Join(", ", matches.Select(kv => kv.Key))}");
+                    AddError($"ambiguous {label} type: {string.Join(", ", matches.Select(kv => kv.EntryType))}");
                     return null;
                 }
 
                 // validate match
                 var match = matches.First();
                 foreach(var checker in fieldChecker.Where(kv =>
-                    (kv.Key != match.Key
-                    && !match.Value.Contains(kv.Key))
-                    && kv.Value(instance)
+                    (kv.Key != match.EntryType)             // don't recheck the key we already used
+                    && kv.Value(instance)                   // check if field is set
+                    && !match.ValidFields.Contains(kv.Key)  // check if field is not valid
                 )) {
-                    AddError($"'{checker.Key}' cannot be used with '{match.Key}'");
+                    AddError($"'{checker.Key}' cannot be used with '{match.EntryType}'");
                 }
-                if(!expectedTypes.Contains(match.Key)) {
-                    AddError($"unexpected node type: {match.Key}");
+                if(!expectedTypes.Contains(match.EntryType)) {
+                    AddError($"unexpected node type: {match.EntryType}");
                     return null;
 
                 }
-                return match.Key;
+                return match.EntryType;
             });
         }
 
