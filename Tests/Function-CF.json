@@ -644,13 +644,38 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2018-11-22",
+      "Version": "2018-11-28",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
-      "Hash": "1D753CEB1B5832CA59C612C97337BA34",
+      "Hash": "DE6AC5F526B893295B78F8E88FA48376",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Pragmas": [],
-      "Assets": []
+      "Assets": [],
+      "ResourceFullNames": {
+        "Function": "Function",
+        "Module": "Module",
+        "ModuleId": "Module::Id",
+        "ModuleName": "Module::Name",
+        "ModuleVersion": "Module::Version",
+        "Secrets": "Secrets",
+        "LambdaSharp": "LambdaSharp",
+        "LambdaSharpDeadLetterQueueArn": "LambdaSharp::DeadLetterQueueArn",
+        "LambdaSharpLoggingStreamArn": "LambdaSharp::LoggingStreamArn",
+        "LambdaSharpDefaultSecretKeyArn": "LambdaSharp::DefaultSecretKeyArn",
+        "ModuleDeadLetterQueueArn": "Module::DeadLetterQueueArn",
+        "ModuleLoggingStreamArn": "Module::LoggingStreamArn",
+        "ModuleDefaultSecretKeyArn": "Module::DefaultSecretKeyArn",
+        "DeploymentBucketName": "DeploymentBucketName",
+        "DeploymentPrefix": "DeploymentPrefix",
+        "DeploymentPrefixLowercase": "DeploymentPrefixLowercase",
+        "DeploymentParent": "DeploymentParent",
+        "ModuleRegistration": "Module::Registration",
+        "ModuleRole": "Module::Role",
+        "ModuleCloudWatchLogsRole": "Module::CloudWatchLogsRole",
+        "FunctionLogGroup": "Function::LogGroup",
+        "FunctionRegistration": "Function::Registration",
+        "FunctionLogGroupSubscription": "Function::LogGroupSubscription"
+      }
     }
   }
 }

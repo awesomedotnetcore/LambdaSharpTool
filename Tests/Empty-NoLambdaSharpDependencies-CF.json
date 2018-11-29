@@ -110,15 +110,27 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2018-11-22",
+      "Version": "2018-11-28",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
-      "Hash": "42AF23D1C4BE1867DD7115BF01034E5B",
+      "Hash": "1F162C636A861F0C4FF1E17FCFB47D43",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Pragmas": [
         "no-lambdasharp-dependencies"
       ],
-      "Assets": []
+      "Assets": [],
+      "ResourceFullNames": {
+        "Module": "Module",
+        "ModuleId": "Module::Id",
+        "ModuleName": "Module::Name",
+        "ModuleVersion": "Module::Version",
+        "Secrets": "Secrets",
+        "DeploymentBucketName": "DeploymentBucketName",
+        "DeploymentPrefix": "DeploymentPrefix",
+        "DeploymentPrefixLowercase": "DeploymentPrefixLowercase",
+        "DeploymentParent": "DeploymentParent",
+        "ModuleRegistration": "Module::Registration"
+      }
     }
   }
 }

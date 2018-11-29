@@ -718,13 +718,42 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2018-11-22",
+      "Version": "2018-11-28",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
-      "Hash": "0277EC45B9C9D619C2EDDDB5DB47D1BE",
+      "Hash": "35404A617E351A55B3BA877246D85E5F",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Pragmas": [],
-      "Assets": []
+      "Assets": [],
+      "ResourceFullNames": {
+        "AlexaSkillId": "AlexaSkillId",
+        "Function": "Function",
+        "Module": "Module",
+        "ModuleId": "Module::Id",
+        "ModuleName": "Module::Name",
+        "ModuleVersion": "Module::Version",
+        "Secrets": "Secrets",
+        "LambdaSharp": "LambdaSharp",
+        "LambdaSharpDeadLetterQueueArn": "LambdaSharp::DeadLetterQueueArn",
+        "LambdaSharpLoggingStreamArn": "LambdaSharp::LoggingStreamArn",
+        "LambdaSharpDefaultSecretKeyArn": "LambdaSharp::DefaultSecretKeyArn",
+        "ModuleDeadLetterQueueArn": "Module::DeadLetterQueueArn",
+        "ModuleLoggingStreamArn": "Module::LoggingStreamArn",
+        "ModuleDefaultSecretKeyArn": "Module::DefaultSecretKeyArn",
+        "DeploymentBucketName": "DeploymentBucketName",
+        "DeploymentPrefix": "DeploymentPrefix",
+        "DeploymentPrefixLowercase": "DeploymentPrefixLowercase",
+        "DeploymentParent": "DeploymentParent",
+        "ModuleRegistration": "Module::Registration",
+        "ModuleRole": "Module::Role",
+        "ModuleCloudWatchLogsRole": "Module::CloudWatchLogsRole",
+        "FunctionLogGroup": "Function::LogGroup",
+        "FunctionSource1AlexaPermission": "Function::Source1AlexaPermission",
+        "FunctionSource2AlexaPermission": "Function::Source2AlexaPermission",
+        "FunctionSource3AlexaPermission": "Function::Source3AlexaPermission",
+        "FunctionRegistration": "Function::Registration",
+        "FunctionLogGroupSubscription": "Function::LogGroupSubscription"
+      }
     }
   }
 }

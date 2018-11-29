@@ -234,13 +234,34 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2018-11-22",
+      "Version": "2018-11-28",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
-      "Hash": "F9DDC359924477EAC9771C745EF569EB",
+      "Hash": "E4135991CBED927255530BDBB3905CBE",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Pragmas": [],
-      "Assets": []
+      "Assets": [],
+      "ResourceFullNames": {
+        "MyResource": "MyResource",
+        "OtherResource": "OtherResource",
+        "Module": "Module",
+        "ModuleId": "Module::Id",
+        "ModuleName": "Module::Name",
+        "ModuleVersion": "Module::Version",
+        "Secrets": "Secrets",
+        "LambdaSharp": "LambdaSharp",
+        "LambdaSharpDeadLetterQueueArn": "LambdaSharp::DeadLetterQueueArn",
+        "LambdaSharpLoggingStreamArn": "LambdaSharp::LoggingStreamArn",
+        "LambdaSharpDefaultSecretKeyArn": "LambdaSharp::DefaultSecretKeyArn",
+        "ModuleDeadLetterQueueArn": "Module::DeadLetterQueueArn",
+        "ModuleLoggingStreamArn": "Module::LoggingStreamArn",
+        "ModuleDefaultSecretKeyArn": "Module::DefaultSecretKeyArn",
+        "DeploymentBucketName": "DeploymentBucketName",
+        "DeploymentPrefix": "DeploymentPrefix",
+        "DeploymentPrefixLowercase": "DeploymentPrefixLowercase",
+        "DeploymentParent": "DeploymentParent",
+        "ModuleRegistration": "Module::Registration"
+      }
     }
   }
 }

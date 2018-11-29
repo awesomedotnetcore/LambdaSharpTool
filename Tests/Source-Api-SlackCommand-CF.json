@@ -835,13 +835,48 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2018-11-22",
+      "Version": "2018-11-28",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
-      "Hash": "24E39D41C2D993C2EF78051AEA9E736C",
+      "Hash": "2343B48CD9BCCA18DB6A13196E391C1C",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Pragmas": [],
-      "Assets": []
+      "Assets": [],
+      "ResourceFullNames": {
+        "SlackToken": "SlackToken",
+        "Function": "Function",
+        "Module": "Module",
+        "ModuleId": "Module::Id",
+        "ModuleName": "Module::Name",
+        "ModuleVersion": "Module::Version",
+        "Secrets": "Secrets",
+        "LambdaSharp": "LambdaSharp",
+        "LambdaSharpDeadLetterQueueArn": "LambdaSharp::DeadLetterQueueArn",
+        "LambdaSharpLoggingStreamArn": "LambdaSharp::LoggingStreamArn",
+        "LambdaSharpDefaultSecretKeyArn": "LambdaSharp::DefaultSecretKeyArn",
+        "ModuleDeadLetterQueueArn": "Module::DeadLetterQueueArn",
+        "ModuleLoggingStreamArn": "Module::LoggingStreamArn",
+        "ModuleDefaultSecretKeyArn": "Module::DefaultSecretKeyArn",
+        "DeploymentBucketName": "DeploymentBucketName",
+        "DeploymentPrefix": "DeploymentPrefix",
+        "DeploymentPrefixLowercase": "DeploymentPrefixLowercase",
+        "DeploymentParent": "DeploymentParent",
+        "ModuleRegistration": "Module::Registration",
+        "ModuleRole": "Module::Role",
+        "ModuleCloudWatchLogsRole": "Module::CloudWatchLogsRole",
+        "FunctionLogGroup": "Function::LogGroup",
+        "FunctionRegistration": "Function::Registration",
+        "FunctionLogGroupSubscription": "Function::LogGroupSubscription",
+        "ModuleRestApi": "Module::RestApi",
+        "ModuleRestApiSlackResource": "Module::RestApi::SlackResource",
+        "ModuleRestApiSlackResourcePOST": "Module::RestApi::SlackResource::POST",
+        "ModuleRestApiSlackResourcePOSTPermission": "Module::RestApi::SlackResource::POST::Permission",
+        "ModuleRestApiUrl": "Module::RestApi::Url",
+        "ModuleRestApiRole": "Module::RestApi::Role",
+        "ModuleRestApiAccount": "Module::RestApi::Account",
+        "ModuleRestApiDeploymentD821156F7E820C91FFC421C518C3F583": "Module::RestApi::DeploymentD821156F7E820C91FFC421C518C3F583",
+        "ModuleRestApiStage": "Module::RestApi::Stage"
+      }
     }
   }
 }
