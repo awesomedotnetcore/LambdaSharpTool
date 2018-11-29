@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-# λ# - Damo (v0.4.0.1) - 2018-11-12
-=======
 # λ# - Damo (v0.4.0.2) - 2018-11-13
->>>>>>> master
 
 > Damo was a Pythagorean philosopher said by many to have been the daughter of Pythagoras and Theano. [(Wikipedia)](https://en.wikipedia.org/wiki/Damo_(philosopher))
 
