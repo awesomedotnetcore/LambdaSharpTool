@@ -113,7 +113,8 @@ namespace MindTouch.LambdaSharp.Tool {
                 Hash = GenerateStackHash(),
                 GitSha = gitSha ?? "",
                 Pragmas = module.Pragmas.ToList(),
-                Assets = module.Assets.ToList()
+                Assets = module.Assets.ToList(),
+                ResourceFullNames = module.Entries.ToDictionary(entry => entry.LogicalId, entry => entry.FullName)
             });
 
             // generate JSON template
@@ -191,7 +192,7 @@ namespace MindTouch.LambdaSharp.Tool {
             json = JsonConvert.SerializeObject(_stack, Formatting.None, new JsonSerializerSettings() {
                 ContractResolver = new OrderedContractResolver()
             });
-            return json.ToMD5Hash();
+            return (json + ModuleManifest.CurrentVersion).ToMD5Hash();
         }
     }
 }

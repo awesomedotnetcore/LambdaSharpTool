@@ -29,7 +29,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
     public class ModuleManifest {
 
         //--- Constants ---
-        public const string CurrentVersion = "2018-11-22";
+        public const string CurrentVersion = "2018-11-28";
 
         //--- Properties ---
         public string Version { get; set; } = CurrentVersion;
@@ -39,6 +39,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public string GitSha { get; set; }
         public IList<object> Pragmas { get; set; }
         public IList<string> Assets { get; set; }
+        public IDictionary<string, string> ResourceFullNames { get; set; }
 
         //--- Methods ---
         public bool HasPragma(string pragma) => Pragmas?.Contains(pragma) == true;
