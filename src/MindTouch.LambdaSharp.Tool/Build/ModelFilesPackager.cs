@@ -40,7 +40,7 @@ namespace MindTouch.LambdaSharp.Tool.Build {
         public ModelFilesPackager(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
 
         //--- Methods ---
-        public void Process(ModuleBuilder builder) {
+        public void Package(ModuleBuilder builder) {
             _builder = builder;
             foreach(var entry in builder.Entries.OfType<PackageEntry>()) {
                 AtLocation(entry.FullName, () => {

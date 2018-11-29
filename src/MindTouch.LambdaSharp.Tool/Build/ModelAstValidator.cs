@@ -1,4 +1,4 @@
-/*
+﻿/*
  * MindTouch λ#
  * Copyright (C) 2018 MindTouch, Inc.
  * www.mindtouch.com  oss@mindtouch.com
@@ -28,7 +28,7 @@ using MindTouch.LambdaSharp.Tool.Model.AST;
 
 namespace MindTouch.LambdaSharp.Tool.Build {
 
-    public class ModelValidation : AModelProcessor {
+    public class ModelAstValidator : AModelProcessor {
 
         //--- Constants ---
         private const string SECRET_ALIAS_PATTERN = "[0-9a-zA-Z/_\\-]+";
@@ -38,14 +38,10 @@ namespace MindTouch.LambdaSharp.Tool.Build {
         private HashSet<string> _names;
 
         //--- Constructors ---
-        public ModelValidation(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
+        public ModelAstValidator(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
 
         //--- Methods ---
-        public void Process(ModuleNode module) {
-            Validate(module);
-        }
-
-        private void Validate(ModuleNode module) {
+        public void Validate(ModuleNode module) {
             _module = module;
             _names = new HashSet<string>();
             Validate(module.Module != null, "missing module name");

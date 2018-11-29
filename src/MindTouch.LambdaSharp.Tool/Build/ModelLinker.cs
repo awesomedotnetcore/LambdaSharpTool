@@ -1,4 +1,4 @@
-/*
+﻿/*
  * MindTouch λ#
  * Copyright (C) 2018 MindTouch, Inc.
  * www.mindtouch.com  oss@mindtouch.com
@@ -30,7 +30,7 @@ using Newtonsoft.Json;
 
 namespace MindTouch.LambdaSharp.Tool.Build {
 
-    public class ModelReferenceResolver : AModelProcessor {
+    public class ModelLinker : AModelProcessor {
 
         //--- Constants ---
         private const string SUBVARIABLE_PATTERN = @"\$\{(?!\!)[^\}]+\}";
@@ -47,10 +47,10 @@ namespace MindTouch.LambdaSharp.Tool.Build {
         private Dictionary<string, AModuleEntry> _boundEntries = new Dictionary<string, AModuleEntry>();
 
         //--- Constructors ---
-        public ModelReferenceResolver(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
+        public ModelLinker(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
 
         //--- Methods ---
-        public void Resolve(ModuleBuilder builder) {
+        public void Process(ModuleBuilder builder) {
             _freeEntries.Clear();
             _boundEntries.Clear();
 

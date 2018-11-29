@@ -1,4 +1,4 @@
-/*
+﻿/*
  * MindTouch λ#
  * Copyright (C) 2018 MindTouch, Inc.
  * www.mindtouch.com  oss@mindtouch.com
@@ -30,7 +30,7 @@ using MindTouch.LambdaSharp.Tool.Model.AST;
 
 namespace MindTouch.LambdaSharp.Tool.Build {
 
-    public class ModelConverter : AModelProcessor {
+    public class ModelAstToModuleConverter : AModelProcessor {
 
         //--- Constants ---
         private const string CUSTOM_RESOURCE_PREFIX = "Custom::";
@@ -39,37 +39,33 @@ namespace MindTouch.LambdaSharp.Tool.Build {
         private ModuleBuilder _builder;
 
         //--- Constructors ---
-        public ModelConverter(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
+        public ModelAstToModuleConverter(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
 
         //--- Methods ---
-        public ModuleBuilder Process(ModuleNode module) {
+        public ModuleBuilder Convert(ModuleNode module) {
 
             // convert module definition
             try {
-                return Convert(module);
+
+                // initialize module
+                _builder = new ModuleBuilder(Settings, SourceFilename, new Module {
+                    Name = module.Module,
+                    Version = VersionInfo.Parse(module.Version),
+                    Description = module.Description
+                });
+
+                // convert collections
+                ForEach("Pragmas", module.Pragmas, ConvertPragma);
+                ForEach("Secrets", module.Secrets, ConvertSecret);
+                ForEach("Inputs", module.Inputs, ConvertInput);
+                ForEach("Outputs", module.Outputs, ConvertOutput);
+                ForEach("Variables", module.Variables, ConvertParameter);
+                ForEach("Functions",  module.Functions, ConvertFunction);
+                return _builder;
             } catch(Exception e) {
                 AddError(e);
                 return null;
             }
-        }
-
-        private ModuleBuilder Convert(ModuleNode module) {
-
-            // initialize module
-            _builder = new ModuleBuilder(Settings, SourceFilename, new Module {
-                Name = module.Module,
-                Version = VersionInfo.Parse(module.Version),
-                Description = module.Description
-            });
-
-            // convert collections
-            ForEach("Pragmas", module.Pragmas, ConvertPragma);
-            ForEach("Secrets", module.Secrets, ConvertSecret);
-            ForEach("Inputs", module.Inputs, ConvertInput);
-            ForEach("Outputs", module.Outputs, ConvertOutput);
-            ForEach("Variables", module.Variables, ConvertParameter);
-            ForEach("Functions",  module.Functions, ConvertFunction);
-            return _builder;
         }
 
         private void ConvertPragma(int index, object pragma) {

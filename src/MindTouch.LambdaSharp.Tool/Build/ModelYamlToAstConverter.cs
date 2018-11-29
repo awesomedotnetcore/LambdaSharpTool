@@ -1,4 +1,4 @@
-/*
+﻿/*
  * MindTouch λ#
  * Copyright (C) 2018 MindTouch, Inc.
  * www.mindtouch.com  oss@mindtouch.com
@@ -33,16 +33,16 @@ using YamlDotNet.Serialization.NamingConventions;
 
 namespace MindTouch.LambdaSharp.Tool.Build {
 
-    public class ModelParser : AModelProcessor {
+    public class ModelYamlToAstConverter : AModelProcessor {
 
         //--- Fields ---
         private string _selector;
 
         //--- Constructors ---
-        public ModelParser(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
+        public ModelYamlToAstConverter(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
 
         //--- Methods ---
-        public ModuleNode Parse(string source, string selector) {
+        public ModuleNode Convert(string source, string selector) {
 
             // parse text into a pre-processed YAML token stream
             IParser yamlParser;

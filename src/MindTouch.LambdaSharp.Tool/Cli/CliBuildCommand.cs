@@ -456,25 +456,31 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 var source = await File.ReadAllTextAsync(moduleSource);
 
                 // parse yaml to module AST
-                var moduleAst = new ModelParser(settings, moduleSource).Parse(source, selector);
+                var moduleAst = new ModelYamlToAstConverter(settings, moduleSource).Convert(source, selector);
                 if(HasErrors) {
                     return false;
                 }
 
                 // validate module AST
-                new ModelValidation(settings, moduleSource).Process(moduleAst);
+                new ModelAstValidator(settings, moduleSource).Validate(moduleAst);
                 if(HasErrors) {
                     return false;
                 }
 
                 // convert module AST to model
-                var module = new ModelConverter(settings, moduleSource).Process(moduleAst);
+                var module = new ModelAstToModuleConverter(settings, moduleSource).Convert(moduleAst);
+                if(HasErrors) {
+                    return false;
+                }
+
+                // augment module definitions
+                new ModelModuleInitializer(settings, moduleSource).Initialize(module);
                 if(HasErrors) {
                     return false;
                 }
 
                 // package all functions
-                new ModelFunctionPackager(settings, moduleSource).Process(
+                new ModelFunctionPackager(settings, moduleSource).Package(
                     module,
                     skipCompile: skipFunctionBuild,
                     skipAssemblyValidation: skipAssemblyValidation,
@@ -483,16 +489,16 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 );
 
                 // package all files
-                new ModelFilesPackager(settings, moduleSource).Process(module);
+                new ModelFilesPackager(settings, moduleSource).Package(module);
 
                 // augment module definitions
-                new ModelAugmenter(settings, moduleSource).Augment(module);
+                new ModelFunctionCompiler(settings, moduleSource).Compile(module);
                 if(HasErrors) {
                     return false;
                 }
 
                 // resolve all references
-                new ModelReferenceResolver(settings, moduleSource).Resolve(module);
+                new ModelLinker(settings, moduleSource).Process(module);
                 if(HasErrors) {
                     return false;
                 }
@@ -509,7 +515,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 // Console.WriteLine($"{moduleJson} generated");
 
                 // generate & save cloudformation template
-                var template = new ModelGenerator(settings, moduleSource).Generate(module.ToModule(), gitsha);
+                var template = new ModelStackGenerator(settings, moduleSource).Generate(module.ToModule(), gitsha);
                 if(HasErrors) {
                     return false;
                 }

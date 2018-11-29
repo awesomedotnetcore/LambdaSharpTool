@@ -44,7 +44,7 @@ namespace MindTouch.LambdaSharp.Tool.Build {
         //--- Constructors ---
         public ModelFunctionPackager(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
 
-        public void Process(
+        public void Package(
             ModuleBuilder builder,
             bool skipCompile,
             bool skipAssemblyValidation,

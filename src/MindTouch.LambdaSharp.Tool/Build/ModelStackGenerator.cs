@@ -1,4 +1,4 @@
-/*
+﻿/*
  * MindTouch λ#
  * Copyright (C) 2018 MindTouch, Inc.
  * www.mindtouch.com  oss@mindtouch.com
@@ -33,7 +33,7 @@ using Newtonsoft.Json.Serialization;
 
 namespace MindTouch.LambdaSharp.Tool.Build {
 
-    public class ModelGenerator : AModelProcessor {
+    public class ModelStackGenerator : AModelProcessor {
 
         //--- Types ---
         public class OrderedContractResolver : DefaultContractResolver {
@@ -48,7 +48,7 @@ namespace MindTouch.LambdaSharp.Tool.Build {
         private Stack _stack;
 
         //--- Constructors ---
-        public ModelGenerator(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
+        public ModelStackGenerator(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
 
         //--- Methods ---
         public string Generate(Module module, string gitSha) {
