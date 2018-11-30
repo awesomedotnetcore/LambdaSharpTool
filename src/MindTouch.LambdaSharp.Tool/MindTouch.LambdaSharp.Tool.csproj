@@ -24,7 +24,7 @@
     <PackageReference Include="AWSSDK.S3" Version="3.3.26.1"/>
     <PackageReference Include="AWSSDK.SecurityToken" Version="3.3.4.21"/>
     <PackageReference Include="AWSSDK.SimpleSystemsManagement" Version="3.3.34.2"/>
-    <PackageReference Include="Humidifier" Version="0.2.16"/>
+    <PackageReference Include="Humidifier" Version="0.2.18"/>
     <PackageReference Include="Humidifier.Json" Version="0.2.16"/>
     <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="2.2.5"/>
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2"/>
