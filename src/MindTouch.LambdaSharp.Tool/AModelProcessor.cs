@@ -24,6 +24,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using MindTouch.LambdaSharp.Tool.Model;
 using MindTouch.LambdaSharp.Tool.Model.AST;
 
@@ -33,6 +34,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
         //--- Constants ---
         protected const string CLOUDFORMATION_ID_PATTERN = "[a-zA-Z][a-zA-Z0-9]*";
+        protected const string SUBVARIABLE_PATTERN = @"\$\{(?!\!)[^\}]+\}";
 
         //--- Class Fields ---
         private static Stack<string> _locations = new Stack<string>();
@@ -66,20 +68,31 @@ namespace MindTouch.LambdaSharp.Tool {
             };
 
         public static object FnJoin(string separator, IEnumerable<object> parameters) {
-            var count = parameters.Count();
+
+            // attempt to concatenate as many values as possible
+            var processed = new List<object>();
+            foreach(var parameter in parameters) {
+                if(processed.Any() && (parameter is string currentText)) {
+                    if(processed.Last() is string lastText) {
+                        processed[processed.Count - 1] = lastText + separator + currentText;
+                    } else {
+                        processed.Add(parameter);
+                    }
+                } else {
+                    processed.Add(parameter);
+                }
+            }
+            var count = processed.Count();
             if(count == 0) {
                 return "";
             }
             if(count == 1) {
-                return parameters.First();
-            }
-            if(parameters.All(value => value is string)) {
-                return string.Join(separator, parameters);
+                return processed.First();
             }
             return new Dictionary<string, object> {
                 ["Fn::Join"] = new List<object> {
                     separator,
-                    parameters
+                    processed
                 }
             };
         }
@@ -111,13 +124,66 @@ namespace MindTouch.LambdaSharp.Tool {
                 ["Fn::Sub"] = input
             };
 
-        public static object FnSub(string input, IDictionary<string, object> variables)
-            => new Dictionary<string, object> {
-                ["Fn::Sub"] = new List<object> {
-                    input,
-                    variables
+        public static object FnSub(string input, IDictionary<string, object> variables) {
+
+            // check if any variables have static values or !Ref expressions
+            var staticVariables = variables.Select(kv => {
+                string value = null;
+                if(kv.Value is string text) {
+                    value = text;
+                } else if(
+                    (kv.Value is IDictionary<string, object> map)
+                    && (map.Count == 1)
+                ) {
+                    if(
+                        map.TryGetValue("Ref", out object refObject)
+                        && (refObject is string refKey)
+                    ) {
+                        value = $"${{{refKey}}}";
+                    } else if(
+                        map.TryGetValue("Fn::GetAtt", out object getAttObject)
+                        && (getAttObject is IList<object> getAttArgs)
+                        && (getAttArgs.Count == 2)
+                    ) {
+                        value = $"${{{getAttArgs[0]}.{getAttArgs[1]}}}";
+                    }
                 }
-            };
+                return new {
+                    Key = kv.Key,
+                    Value = value
+                };
+            }).Where(kv => kv.Value is string).ToDictionary(kv => kv.Key, kv => kv.Value);
+            if(staticVariables.Any()) {
+
+                // substitute static variables
+                foreach(var staticVariable in staticVariables) {
+                    input = input.Replace($"${{{staticVariable.Key}}}", (string)staticVariable.Value);
+                }
+            }
+            var remainingVariables = variables.Where(variable => !staticVariables.ContainsKey(variable.Key)).ToDictionary(kv => kv.Key, kv => kv.Value);
+
+            // check which form of Fn::Sub to generate
+            if(remainingVariables.Any()) {
+
+                // return Fn:Sub with parameters
+                return new Dictionary<string, object> {
+                    ["Fn::Sub"] = new List<object> {
+                        input,
+                        remainingVariables
+                    }
+                };
+            } else if(Regex.IsMatch(input, SUBVARIABLE_PATTERN)) {
+
+                // return Fn:Sub with inline parameters
+                return new Dictionary<string, object> {
+                    ["Fn::Sub"] = input
+                };
+            } else {
+
+                // return input string without any parameters
+                return input;
+            }
+        }
 
         public static object FnSplit(string delimiter, object sourceString)
             => new Dictionary<string, object> {
