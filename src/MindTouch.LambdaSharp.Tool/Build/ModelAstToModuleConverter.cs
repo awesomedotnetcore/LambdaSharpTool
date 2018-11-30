@@ -111,6 +111,7 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                 "Var.Value",
                 "Var.Secret",
                 "Var.Empty",
+                "Var.Module",
                 "Package"
             });
 
@@ -222,6 +223,7 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                 "Var.Value",
                 "Var.Secret",
                 "Var.Empty",
+                "Var.Module",
                 "Package",
                 "Function",
                 "Export",
@@ -422,6 +424,26 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                         reference: "",
                         scope: node.Scope,
                         isSecret: false
+                    );
+
+                    // recurse
+                    ConvertVariables(result);
+                });
+                break;
+            case "Var.Module":
+                AtLocation(node.Var, () => {
+
+                    // create module entry
+                    var result = _builder.AddModule(
+                        parent: parent,
+                        name: node.Var,
+                        description: node.Description,
+                        module: node.Module,
+                        version: node.Version,
+                        sourceBucketName: node.SourceBucketName,
+                        scope: node.Scope,
+                        dependsOn: node.DependsOn,
+                        parameters: node.Parameters
                     );
 
                     // recurse

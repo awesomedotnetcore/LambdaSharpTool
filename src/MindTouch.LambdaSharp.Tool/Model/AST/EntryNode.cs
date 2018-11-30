@@ -35,6 +35,7 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
             ["ConstraintDescription"] = entry => entry.ConstraintDescription != null,
             ["CustomResource"] = entry => entry.CustomResource != null,
             ["Default"] = entry => entry.Default != null,
+            ["DependsOn"] = entry => entry.DependsOn != null,
             ["Description"] = entry => entry.Description != null,
             ["EncryptionContext"] = entry => entry.EncryptionContext != null,
             ["Environment"] = entry => entry.Environment != null,
@@ -52,25 +53,28 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
             ["Memory"] = entry => entry.Memory != null,
             ["MinLength"] = entry => entry.MinLength != null,
             ["MinValue"] = entry => entry.MinValue != null,
+            ["Module"] = entry => entry.Module != null,
             ["NoEcho"] = entry => entry.NoEcho != null,
             ["Package"] = entry => entry.Package != null,
             ["Parameter"] = entry => entry.Parameter != null,
+            ["Parameters"] = entry => entry.Parameters != null,
             ["Pragmas"] = entry => entry.Pragmas != null,
             ["Prefix"] = entry => entry.Prefix != null,
             ["Project"] = entry => entry.Project != null,
             ["ReservedConcurrency"] = entry => entry.ReservedConcurrency != null,
             ["Resource"] = entry => entry.Resource != null,
-            ["Resource"] = entry => entry.Resource != null,
             ["Runtime"] = entry => entry.Runtime != null,
             ["Scope"] = entry => entry.Scope != null,
             ["Secret"] = entry => entry.Secret != null,
             ["Section"] = entry => entry.Section != null,
+            ["SourceBucketName"] = entry => entry.SourceBucketName != null,
             ["Sources"] = entry => entry.Sources != null,
             ["Timeout"] = entry => entry.Timeout != null,
             ["Type"] = entry => entry.Type != null,
             ["Value"] = entry => entry.Value != null,
             ["Var"] = entry => entry.Var != null,
             ["Variables"] = entry => entry.Variables != null,
+            ["Version"] = entry => entry.Version != null,
             ["VPC"] = entry => entry.VPC != null,
 
             // composite checkers
@@ -78,11 +82,13 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
             ["Var.Secret"] = entry => (entry.Var != null) && (entry.Secret != null),
             ["Var.Reference"] = entry => (entry.Var != null) && (entry.Value != null) && (entry.Resource != null),
             ["Var.Resource"] = entry => (entry.Var != null) && (entry.Value == null) && (entry.Resource != null),
+            ["Var.Module"] = entry => (entry.Var != null) && (entry.Module != null),
             ["Var.Empty"] = entry =>
                 (entry.Var != null)
                 && (entry.Value == null)
                 && (entry.Secret == null)
                 && (entry.Resource == null)
+                && (entry.Module == null)
                 && (entry.Package == null),
             ["Resource.Properties"] = entry => entry.Resource?.Properties?.Any() == true
         };
@@ -149,6 +155,16 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
                 "Resource.Properties",
                 "Variables",
                 "Entries"
+            },
+            ["Var.Module"] = new[] {
+                "Var",
+                "Description",
+                "Module",
+                "Version",
+                "SourceBucketName",
+                "Scope",
+                "DependsOn",
+                "Parameters"
             },
             ["Var.Empty"] = new[] {
                 "Var",
@@ -222,22 +238,22 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         // public bool? NoEcho { get; set; }
         // public ResourceNode Resource { get; set; }
 
-        // module export value
+        // export value
         public string Export { get; set; }
         public object Value { get; set; }
         // public string Description { get; set; }
 
-        // module export custom resource
+        // export custom resource
         public string CustomResource { get; set; }
         public string Handler { get; set; }
         // public string Description { get; set; }
 
-        // module export macro
+        // export macro
         public string Macro { get; set; }
         // public string Description { get; set; }
         // public string Handler { get; set; }
 
-        // value entry
+        // variable entry
         public string Var { get; set; }
         // public string Description { get; set; }
         // public object Scope { get; set; }
@@ -253,6 +269,16 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         // public IList<ParameterNode> Variables { get; set; }
         public string Secret { get; set; }
         public IDictionary<string, string> EncryptionContext { get; set; }
+
+        // module entry
+        // public string Var { get; set; }
+        // public string Description { get; set; }
+        // public object Scope { get; set; }
+        public object Module { get; set; }
+        public object Version { get; set; }
+        public object SourceBucketName { get; set; }
+        public object DependsOn { get; set; }
+        public Dictionary<string, object> Parameters { get; set; }
 
         // package entry
         public string Package { get; set; }

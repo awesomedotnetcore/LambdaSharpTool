@@ -32,9 +32,6 @@ namespace MindTouch.LambdaSharp.Tool.Build {
 
     public class ModelLinker : AModelProcessor {
 
-        //--- Constants ---
-        private const string SUBVARIABLE_PATTERN = @"\$\{(?!\!)[^\}]+\}";
-
         //--- Class Methods ---
         private static void DebugWriteLine(Func<string> lazyMessage) {
 #if false
@@ -303,22 +300,6 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                                     if(found is string text) {
                                         return text;
                                     }
-                                    if((found is IDictionary<string, object> subMap) && (subMap.Count == 1)) {
-
-                                        // check if found value is a !Ref expression that can be inlined
-                                        if(subMap.TryGetValue("Ref", out object subMapRefObject)) {
-                                            return "${" + subMapRefObject + suffix + "}";
-                                        }
-
-                                        // check if found value is a !GetAtt expression that can be inlined
-                                        if(
-                                            subMap.TryGetValue("Fn::GetAtt", out object subMapGetAttObject)
-                                            && (subMapGetAttObject is IList<object> subMapGetAttArgs)
-                                            && (subMapGetAttArgs.Count == 2)
-                                        ) {
-                                            return "${" + subMapGetAttArgs[0] + "." + subMapGetAttArgs[1] + "}";
-                                        }
-                                    }
 
                                     // substitute found value as new argument
                                     var argName = $"P{subArgs.Count}";
@@ -333,13 +314,7 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                         if(!substitions) {
                             return value;
                         }
-
-                        // determine which form of !Sub to construct
-                        return subArgs.Any()
-                            ? FnSub(subPattern, subArgs)
-                            : Regex.IsMatch(subPattern, SUBVARIABLE_PATTERN)
-                            ? FnSub(subPattern)
-                            : subPattern;
+                        return FnSub(subPattern, subArgs);
                     }
                 }
                 return value;
@@ -439,13 +414,7 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                             }
                             return matchText;
                         });
-
-                        // determine which form of !Sub to construct
-                        return subArgs.Any()
-                            ? FnSub(subPattern, subArgs)
-                            : Regex.IsMatch(subPattern, SUBVARIABLE_PATTERN)
-                            ? FnSub(subPattern)
-                            : subPattern;
+                        return FnSub(subPattern, subArgs);
                     }
                 }
                 return value;
@@ -483,7 +452,8 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                     return visitor(value);
                 }
             case null:
-                throw new ApplicationException("null value is not allowed");
+                AddError("null value is not allowed");
+                return value;
             default:
                 if(SkipType(value.GetType())) {
 

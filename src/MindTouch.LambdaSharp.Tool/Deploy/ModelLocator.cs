@@ -110,7 +110,7 @@ namespace MindTouch.LambdaSharp.Tool.Deploy {
                         return group.Success ? group.Value : null;
                     }
                 } else {
-                    AddError("invalid module specifier");
+                    AddError("invalid module reference");
                     return null;
                 }
             }

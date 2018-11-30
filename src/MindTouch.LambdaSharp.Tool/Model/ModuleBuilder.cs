@@ -375,6 +375,68 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             return AddEntry(result);
         }
 
+        public AModuleEntry AddModule(
+            AModuleEntry parent,
+            string name,
+            string description,
+            object module,
+            object version,
+            object sourceBucketName,
+            object scope,
+            object dependsOn,
+            IDictionary<string, object> parameters
+        ) {
+            var source = sourceBucketName ?? FnRef("DeploymentBucketName");
+            var moduleParameters = parameters.ToDictionary(kv => kv.Key, kv => kv.Value);
+            AtLocation("Parameters", () => {
+                OptionalAdd("LambdaSharpDeadLetterQueueArn", FnRef("Module::DeadLetterQueueArn"));
+                OptionalAdd("LambdaSharpLoggingStreamArn", FnRef("Module::LoggingStreamArn"));
+                OptionalAdd("LambdaSharpDefaultSecretKeyArn", FnRef("Module::DefaultSecretKeyArn"));
+                MandatoryAdd("DeploymentBucketName", source);
+                MandatoryAdd("DeploymentPrefix", FnRef("DeploymentPrefix"));
+                MandatoryAdd("DeploymentPrefixLowercase", FnRef("DeploymentPrefixLowercase"));
+                MandatoryAdd("DeploymentParent", FnRef("AWS::StackName"));
+            });
+
+            // add stack resource
+            return AddResource(
+                parent: parent,
+                name: name,
+                description: description,
+                scope: scope,
+                resource: new Humidifier.CloudFormation.Stack {
+                    NotificationARNs = FnRef("AWS::NotificationARNs"),
+                    Parameters = moduleParameters,
+                    TemplateURL = FnSub("https://${ModuleSourceBucketName}.s3.${AWS::Region}.amazonaws.com/Modules/${ModuleName}/Versions/${ModuleVersion}/cloudformation.json", new Dictionary<string, object> {
+                        ["ModuleSourceBucketName"] = source,
+                        ["ModuleName"] = module,
+                        ["ModuleVersion"] = version
+                    }),
+
+                    // TODO (2018-11-29, bjorg): make timeout configurable
+                    TimeoutInMinutes = 5
+                },
+                resourceArnAttribute: null,
+                dependsOn: ConvertToStringList(dependsOn),
+                condition: null
+            );
+
+            // local function
+            void OptionalAdd(string key, object value) {
+                if(!moduleParameters.ContainsKey(key)) {
+                    moduleParameters.Add(key, value);
+                }
+            }
+
+            void MandatoryAdd(string key, object value) {
+                if(!moduleParameters.ContainsKey(key)) {
+                    moduleParameters.Add(key, value);
+                } else {
+                    AddError("");
+                }
+            }
+        }
+
         public AModuleEntry AddPackage(
             AModuleEntry parent,
             string name,
