@@ -568,7 +568,7 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                             }
                         } else if(eventSourceToken != null) {
 
-                            // create conditional expression toi allow "*" values
+                            // create conditional expression to allow "*" values
                             var condition = $"{function.LogicalId}Source{sourceSuffix}AlexaIsBlank";
                             eventSourceToken = FnIf(
                                 condition,
