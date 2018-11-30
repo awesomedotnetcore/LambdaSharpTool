@@ -31,6 +31,7 @@ using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
 namespace MindTouch.LambdaSharp.Tool.Model {
+    using static ModelFunctions;
 
     public static class ResourceMapping {
 
@@ -69,15 +70,15 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 // S3 Bucket resources must be granted permissions on the bucket AND the keys
                 return LiftArnReference().SelectMany(reference => new object[] {
                     reference,
-                    AModelProcessor.FnJoin("", new List<object> { reference, "/*" })
+                    FnJoin("", new List<object> { reference, "/*" })
                 }).ToList();
             case "AWS::DynamoDB::Table":
 
                 // DynamoDB resources must be granted permissions on the table AND the stream
                 return LiftArnReference().SelectMany(reference => new object[] {
                     reference,
-                    AModelProcessor.FnJoin("/", new List<object> { reference, "stream/*" }),
-                    AModelProcessor.FnJoin("/", new List<object> { reference, "index/*" })
+                    FnJoin("/", new List<object> { reference, "stream/*" }),
+                    FnJoin("/", new List<object> { reference, "index/*" })
                 }).ToList();
             default:
                 return arnReference;

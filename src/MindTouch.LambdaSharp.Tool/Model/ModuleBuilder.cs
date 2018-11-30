@@ -28,6 +28,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace MindTouch.LambdaSharp.Tool.Model {
+    using static ModelFunctions;
 
     public class ModuleBuilder : AModelProcessor {
 
@@ -591,9 +592,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
                                 // TODO (2018-11-29, bjorg): we need to make sure that only other resources are referenced (no literal entries, or itself, no loops either)
                                 humidifier.DependsOn = humidifier.DependsOn.Select(dependency => {
-                                    var reference = ((IDictionary<string, object>)visitor(FnRef(dependency)))
-                                        .TryGetValue("Ref", out object result);
-                                    return (string)result;
+                                    TryGetFnRef(visitor(FnRef(dependency)), out string result);
+                                    return result ?? throw new InvalidOperationException("invalid expression returned");
                                 }).ToList();
                             });
                             break;

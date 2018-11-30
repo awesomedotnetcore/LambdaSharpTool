@@ -26,6 +26,7 @@ using System.Linq;
 using MindTouch.LambdaSharp.Tool;
 
 namespace Humidifier {
+    using static ModelFunctions;
 
     public class CustomResource : Resource, IDictionary<string, object>, IDictionary {
 
@@ -44,7 +45,7 @@ namespace Humidifier {
                 && !_typeName.StartsWith("Custom::", StringComparison.Ordinal)
                 && !_properties.ContainsKey("ServiceToken")
             ) {
-                _properties["ServiceToken"] = AModelProcessor.FnImportValue(AModelProcessor.FnSub($"${{DeploymentPrefix}}CustomResource-{_typeName}"));
+                _properties["ServiceToken"] = FnImportValue(FnSub($"${{DeploymentPrefix}}CustomResource-{_typeName}"));
                 _typeName = "Custom::" + _typeName.Replace("::", "");
             }
 

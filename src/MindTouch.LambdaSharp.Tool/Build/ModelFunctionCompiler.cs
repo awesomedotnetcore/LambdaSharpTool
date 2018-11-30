@@ -29,6 +29,7 @@ using MindTouch.LambdaSharp.Tool.Model.AST;
 using Newtonsoft.Json;
 
 namespace MindTouch.LambdaSharp.Tool.Build {
+    using static ModelFunctions;
 
     public class ModelFunctionCompiler : AModelProcessor {
 

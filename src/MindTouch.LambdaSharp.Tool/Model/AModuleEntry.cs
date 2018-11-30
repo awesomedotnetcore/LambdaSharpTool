@@ -28,6 +28,7 @@ using MindTouch.LambdaSharp.Tool.Internal;
 using Newtonsoft.Json;
 
 namespace MindTouch.LambdaSharp.Tool.Model {
+    using static ModelFunctions;
 
     public abstract class AModuleEntry {
 
@@ -101,7 +102,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             Package = new Humidifier.CustomResource("LambdaSharp::S3::Package") {
                 ["DestinationBucketArn"] = destinationBucket,
                 ["DestinationKeyPrefix"] = destinationKeyPrefix,
-                ["SourceBucketName"] = AModelProcessor.FnRef("DeploymentBucketName"),
+                ["SourceBucketName"] = FnRef("DeploymentBucketName"),
                 ["SourcePackageKey"] = "<MISSING>"
             };
         }
@@ -116,7 +117,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         public void UpdatePackagePath(string package) {
             PackagePath = package ?? throw new ArgumentNullException(nameof(package));
-            Package["SourcePackageKey"] = AModelProcessor.FnSub($"Modules/${{Module::Name}}/Assets/{Path.GetFileName(package)}");
+            Package["SourcePackageKey"] = FnSub($"Modules/${{Module::Name}}/Assets/{Path.GetFileName(package)}");
         }
     }
 
@@ -149,10 +150,10 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         //--- Methods ---
         public override object GetExportReference()
             => (ResourceArnAttribute != null)
-                ? AModelProcessor.FnGetAtt(ResourceName, ResourceArnAttribute)
+                ? FnGetAtt(ResourceName, ResourceArnAttribute)
                 : ResourceMapping.HasAttribute(Resource.AWSTypeName, "Arn")
-                ? AModelProcessor.FnGetAtt(ResourceName, "Arn")
-                : AModelProcessor.FnRef(ResourceName);
+                ? FnGetAtt(ResourceName, "Arn")
+                : FnRef(ResourceName);
     }
 
     public class InputEntry : AModuleEntry {
@@ -217,14 +218,14 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public bool HasFunctionRegistration => !HasPragma("no-function-registration");
 
         //--- Methods ---
-        public override object GetExportReference() => AModelProcessor.FnGetAtt(ResourceName, "Arn");
+        public override object GetExportReference() => FnGetAtt(ResourceName, "Arn");
 
         public bool HasPragma(string pragma) => Pragmas?.Contains(pragma) == true;
 
         public void UpdatePackagePath(string package) {
             Function.Code = new Humidifier.Lambda.FunctionTypes.Code {
-                S3Bucket = AModelProcessor.FnRef("DeploymentBucketName"),
-                S3Key = AModelProcessor.FnSub($"Modules/${{Module::Name}}/Assets/{Path.GetFileName(package)}")
+                S3Bucket = FnRef("DeploymentBucketName"),
+                S3Key = FnSub($"Modules/${{Module::Name}}/Assets/{Path.GetFileName(package)}")
             };
         }
    }

@@ -29,6 +29,7 @@ using MindTouch.LambdaSharp.Tool.Model;
 using Newtonsoft.Json;
 
 namespace MindTouch.LambdaSharp.Tool.Build {
+    using static ModelFunctions;
 
     public class ModelLinker : AModelProcessor {
 
@@ -234,88 +235,57 @@ namespace MindTouch.LambdaSharp.Tool.Build {
 
         private object Substitute(object root, Action<string> missing = null) {
             return Visit(root, value => {
-                if((value is IDictionary<string, object> map) && (map.Count == 1)) {
 
-                    // handle !Ref expression
-                    if(map.TryGetValue("Ref", out object refObject) && (refObject is string refKey)) {
-                        if(TrySubstitute(refKey, null, out object found)) {
-                            return found ?? value;
-                        }
-                        DebugWriteLine(() => $"NOT FOUND => {refKey}");
-                        missing?.Invoke(refKey);
-                        return value;
+                // handle !Ref expression
+                if(TryGetFnRef(value, out string refKey)) {
+                    if(TrySubstitute(refKey, null, out object found)) {
+                        return found ?? value;
                     }
+                    DebugWriteLine(() => $"NOT FOUND => {refKey}");
+                    missing?.Invoke(refKey);
+                    return value;
+                }
 
-                    // handle !GetAtt expression
-                    if(
-                        map.TryGetValue("Fn::GetAtt", out object getAttObject)
-                        && (getAttObject is IList<object> getAttArgs)
-                        && (getAttArgs.Count == 2)
-                        && getAttArgs[0] is string getAttKey
-                        && getAttArgs[1] is string getAttAttribute
-                    ) {
-                        if(TrySubstitute(getAttKey, getAttAttribute, out object found)) {
-                            return found ?? map;
-                        }
-                        DebugWriteLine(() => $"NOT FOUND => {getAttKey}");
-                        missing?.Invoke(getAttKey);
-                        return value;
+                // handle !GetAtt expression
+                if(TryGetFnGetAtt(value, out string getAttKey, out string getAttAttribute)) {
+                    if(TrySubstitute(getAttKey, getAttAttribute, out object found)) {
+                        return found ?? value;
                     }
+                    DebugWriteLine(() => $"NOT FOUND => {getAttKey}");
+                    missing?.Invoke(getAttKey);
+                    return value;
+                }
 
-                    // handle !Sub expression
-                    if(map.TryGetValue("Fn::Sub", out object subObject)) {
-                        string subPattern;
-                        IDictionary<string, object> subArgs = null;
+                // handle !Sub expression
+                if(TryGetFnSub(value, out string subPattern, out IDictionary<string, object> subArgs)) {
 
-                        // determine which form of !Sub is being used
-                        if(subObject is string) {
-                            subPattern = (string)subObject;
-                            subArgs = new Dictionary<string, object>();
-                        } else if(
-                            (subObject is IList<object> subList)
-                            && (subList.Count == 2)
-                            && (subList[0] is string)
-                            && (subList[1] is IDictionary<string, object>)
-                        ) {
-                            subPattern = (string)subList[0];
-                            subArgs = (IDictionary<string, object>)subList[1];
-                        } else {
-                            DebugWriteLine(() => $"INVALID Fn::Sub => {map}");
-                            return value;
-                        }
-
-                        // replace as many ${VAR} occurrences as possible
-                        var substitions = false;
-                        subPattern = Regex.Replace(subPattern, SUBVARIABLE_PATTERN, match => {
-                            var matchText = match.ToString();
-                            var name = matchText.Substring(2, matchText.Length - 3).Trim().Split('.', 2);
-                            var suffix = (name.Length == 2) ? ("." + name[1]) : null;
-                            var subRefKey = name[0];
-                            if(!subArgs.ContainsKey(subRefKey)) {
-                                if(TrySubstitute(subRefKey, suffix?.Substring(1), out object found)) {
-                                    if(found == null) {
-                                        return matchText;
-                                    }
-                                    substitions = true;
-                                    if(found is string text) {
-                                        return text;
-                                    }
-
-                                    // substitute found value as new argument
-                                    var argName = $"P{subArgs.Count}";
-                                    subArgs.Add(argName, found);
-                                    return "${" + argName + "}";
+                    // replace as many ${VAR} occurrences as possible
+                    var substitions = false;
+                    subPattern = ReplaceSubPattern(subPattern, (subRefKey, suffix) => {
+                        if(!subArgs.ContainsKey(subRefKey)) {
+                            if(TrySubstitute(subRefKey, suffix?.Substring(1), out object found)) {
+                                if(found == null) {
+                                    return null;
                                 }
-                                DebugWriteLine(() => $"NOT FOUND => {subRefKey}");
-                                missing?.Invoke(subRefKey);
+                                substitions = true;
+                                if(found is string text) {
+                                    return text;
+                                }
+
+                                // substitute found value as new argument
+                                var argName = $"P{subArgs.Count}";
+                                subArgs.Add(argName, found);
+                                return "${" + argName + "}";
                             }
-                            return matchText;
-                        });
-                        if(!substitions) {
-                            return value;
+                            DebugWriteLine(() => $"NOT FOUND => {subRefKey}");
+                            missing?.Invoke(subRefKey);
                         }
-                        return FnSub(subPattern, subArgs);
+                        return null;
+                    });
+                    if(!substitions) {
+                        return value;
                     }
+                    return FnSub(subPattern, subArgs);
                 }
                 return value;
             });
@@ -362,60 +332,28 @@ namespace MindTouch.LambdaSharp.Tool.Build {
 
         private object Finalize(object root) {
             return Visit(root, value => {
-                if((value is IDictionary<string, object> map) && (map.Count == 1)) {
 
-                    // handle !Ref expression
-                    if(map.TryGetValue("Ref", out object refObject) && (refObject is string refKey) && refKey.StartsWith("@", StringComparison.Ordinal)) {
-                        return FnRef(refKey.Substring(1));
-                    }
+                // handle !Ref expression
+                if(TryGetFnRef(value, out string refKey) && refKey.StartsWith("@", StringComparison.Ordinal)) {
+                    return FnRef(refKey.Substring(1));
+                }
 
-                    // handle !GetAtt expression
-                    if(
-                        map.TryGetValue("Fn::GetAtt", out object getAttObject)
-                        && (getAttObject is IList<object> getAttArgs)
-                        && (getAttArgs.Count == 2)
-                        && getAttArgs[0] is string getAttKey
-                        && getAttArgs[1] is string getAttAttribute
-                        && getAttKey.StartsWith("@", StringComparison.Ordinal)
-                    ) {
-                        return FnGetAtt(getAttKey.Substring(1), getAttAttribute);
-                    }
+                // handle !GetAtt expression
+                if(TryGetFnGetAtt(value, out string getAttKey, out string getAttAttribute) && getAttKey.StartsWith("@", StringComparison.Ordinal)) {
+                    return FnGetAtt(getAttKey.Substring(1), getAttAttribute);
+                }
 
-                    // handle !Sub expression
-                    if(map.TryGetValue("Fn::Sub", out object subObject)) {
-                        string subPattern;
-                        IDictionary<string, object> subArgs = null;
+                // handle !Sub expression
+                if(TryGetFnSub(value, out string subPattern, out IDictionary<string, object> subArgs)) {
 
-                        // determine which form of !Sub is being used
-                        if(subObject is string) {
-                            subPattern = (string)subObject;
-                            subArgs = new Dictionary<string, object>();
-                        } else if(
-                            (subObject is IList<object> subList)
-                            && (subList.Count == 2)
-                            && (subList[0] is string)
-                            && (subList[1] is IDictionary<string, object>)
-                        ) {
-                            subPattern = (string)subList[0];
-                            subArgs = (IDictionary<string, object>)subList[1];
-                        } else {
-                            DebugWriteLine(() => $"INVALID Fn::Sub => {map}");
-                            return value;
+                    // replace as many ${VAR} occurrences as possible
+                    subPattern = ReplaceSubPattern(subPattern, (subRefKey, suffix) => {
+                        if(!subArgs.ContainsKey(subRefKey) && subRefKey.StartsWith("@", StringComparison.Ordinal)) {
+                            return "${" + subRefKey.Substring(1) + suffix + "}";
                         }
-
-                        // replace as many ${VAR} occurrences as possible
-                        subPattern = Regex.Replace(subPattern, SUBVARIABLE_PATTERN, match => {
-                            var matchText = match.ToString();
-                            var name = matchText.Substring(2, matchText.Length - 3).Trim().Split('.', 2);
-                            var suffix = (name.Length == 2) ? ("." + name[1]) : null;
-                            var subRefKey = name[0];
-                            if(!subArgs.ContainsKey(subRefKey) && subRefKey.StartsWith("@", StringComparison.Ordinal)) {
-                                return "${" + subRefKey.Substring(1) + suffix + "}";
-                            }
-                            return matchText;
-                        });
-                        return FnSub(subPattern, subArgs);
-                    }
+                        return null;
+                    });
+                    return FnSub(subPattern, subArgs);
                 }
                 return value;
             });

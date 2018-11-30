@@ -29,6 +29,7 @@ using MindTouch.LambdaSharp.Tool.Model;
 using MindTouch.LambdaSharp.Tool.Model.AST;
 
 namespace MindTouch.LambdaSharp.Tool.Build {
+    using static ModelFunctions;
 
     public class ModelAstToModuleConverter : AModelProcessor {
 
