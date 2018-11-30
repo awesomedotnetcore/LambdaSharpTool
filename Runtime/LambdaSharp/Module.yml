@@ -145,61 +145,40 @@ Variables:
 
   - Var: Registrar
     Description: LambdaSharp Modules and Functions Registrar
-    Resource:
-      Type: AWS::CloudFormation::Stack
-      Properties:
-        NotificationARNs: !Ref AWS::NotificationARNs
-        Parameters:
-          RollbarReadAccessToken: !Ref RollbarReadAccessToken
-          RollbarWriteAccessToken: !Ref RollbarWriteAccessToken
-          RollbarProjectPrefix: !Ref RollbarProjectPrefix
-          RegistrationTableReadCapacity: !Ref RegistrationTableReadCapacity
-          RegistrationTableWriteCapacity: !Ref RegistrationTableWriteCapacity
-          Secrets: !Ref Secrets
-          LambdaSharpDeadLetterQueueArn: !Ref DeadLetterQueueArn
-          LambdaSharpLoggingStreamArn: !Ref LoggingStreamArn
-          LambdaSharpDefaultSecretKeyArn: !Ref DefaultSecretKeyArn
-          DeploymentBucketName: !Ref DeploymentBucketName
-          DeploymentPrefix: !Ref DeploymentPrefix
-          DeploymentPrefixLowercase: !Ref DeploymentPrefixLowercase
-          DeploymentParent: !Ref AWS::StackName
-        TemplateURL: !Sub "https://${DeploymentBucketName}.s3.${AWS::Region}.amazonaws.com/Modules/LambdaSharpRegistrar/Versions/${Module::Version}/cloudformation.json"
-        TimeoutInMinutes: 5
+    Module: LambdaSharpRegistrar
+    Version: !Ref Module::Version
+    SourceBucketName: !Ref DeploymentBucketName
+    Parameters:
+      RollbarReadAccessToken: !Ref RollbarReadAccessToken
+      RollbarWriteAccessToken: !Ref RollbarWriteAccessToken
+      RollbarProjectPrefix: !Ref RollbarProjectPrefix
+      RegistrationTableReadCapacity: !Ref RegistrationTableReadCapacity
+      RegistrationTableWriteCapacity: !Ref RegistrationTableWriteCapacity
+      Secrets: !Ref Secrets
+      LambdaSharpDeadLetterQueueArn: !Ref DeadLetterQueueArn
+      LambdaSharpLoggingStreamArn: !Ref LoggingStreamArn
+      LambdaSharpDefaultSecretKeyArn: !Ref DefaultSecretKeyArn
 
   - Var: S3Subscriber
     Description: LambdaSharp S3 Lambda Function Subscriber
-    Resource:
-      Type: AWS::CloudFormation::Stack
-      DependsOn: Registrar
-      Properties:
-        NotificationARNs: !Ref AWS::NotificationARNs
-        Parameters:
-          Secrets: !Ref Secrets
-          LambdaSharpDeadLetterQueueArn: !Ref DeadLetterQueueArn
-          LambdaSharpLoggingStreamArn: !Ref LoggingStreamArn
-          LambdaSharpDefaultSecretKeyArn: !Ref DefaultSecretKeyArn
-          DeploymentBucketName: !Ref DeploymentBucketName
-          DeploymentPrefix: !Ref DeploymentPrefix
-          DeploymentPrefixLowercase: !Ref DeploymentPrefixLowercase
-          DeploymentParent: !Ref AWS::StackName
-        TemplateURL: !Sub "https://${DeploymentBucketName}.s3.${AWS::Region}.amazonaws.com/Modules/LambdaSharpS3Subscriber/Versions/${Module::Version}/cloudformation.json"
-        TimeoutInMinutes: 5
+    Module: LambdaSharpS3Subscriber
+    Version: !Ref Module::Version
+    SourceBucketName: !Ref DeploymentBucketName
+    DependsOn: Registrar
+    Parameters:
+      Secrets: !Ref Secrets
+      LambdaSharpDeadLetterQueueArn: !Ref DeadLetterQueueArn
+      LambdaSharpLoggingStreamArn: !Ref LoggingStreamArn
+      LambdaSharpDefaultSecretKeyArn: !Ref DefaultSecretKeyArn
 
   - Var: S3PackageLoader
     Description: LambdaSharp S3 Package Loader
-    Resource:
-      Type: AWS::CloudFormation::Stack
-      DependsOn: Registrar
-      Properties:
-        NotificationARNs: !Ref AWS::NotificationARNs
-        Parameters:
-          Secrets: !Ref Secrets
-          LambdaSharpDeadLetterQueueArn: !Ref DeadLetterQueueArn
-          LambdaSharpLoggingStreamArn: !Ref LoggingStreamArn
-          LambdaSharpDefaultSecretKeyArn: !Ref DefaultSecretKeyArn
-          DeploymentBucketName: !Ref DeploymentBucketName
-          DeploymentPrefix: !Ref DeploymentPrefix
-          DeploymentPrefixLowercase: !Ref DeploymentPrefixLowercase
-          DeploymentParent: !Ref AWS::StackName
-        TemplateURL: !Sub "https://${DeploymentBucketName}.s3.${AWS::Region}.amazonaws.com/Modules/LambdaSharpS3PackageLoader/Versions/${Module::Version}/cloudformation.json"
-        TimeoutInMinutes: 5
+    Module: LambdaSharpS3PackageLoader
+    Version: !Ref Module::Version
+    SourceBucketName: !Ref DeploymentBucketName
+    DependsOn: Registrar
+    Parameters:
+      Secrets: !Ref Secrets
+      LambdaSharpDeadLetterQueueArn: !Ref DeadLetterQueueArn
+      LambdaSharpLoggingStreamArn: !Ref LoggingStreamArn
+      LambdaSharpDefaultSecretKeyArn: !Ref DefaultSecretKeyArn
