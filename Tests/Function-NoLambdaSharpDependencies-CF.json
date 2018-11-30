@@ -218,7 +218,7 @@
       "Version": "2018-11-28",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
-      "Hash": "9E2395DF5C87EAD770E407784841138A",
+      "Hash": "3A2FEA6B753EDECAE8223680255BF9F2",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Pragmas": [
         "no-lambdasharp-dependencies"

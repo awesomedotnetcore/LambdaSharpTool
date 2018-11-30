@@ -29,19 +29,12 @@ using Humidifier.Logs;
 using MindTouch.LambdaSharp.Tool.Internal;
 using MindTouch.LambdaSharp.Tool.Model;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 
 namespace MindTouch.LambdaSharp.Tool.Build {
 
     public class ModelStackGenerator : AModelProcessor {
-
-        //--- Types ---
-        public class OrderedContractResolver : DefaultContractResolver {
-
-            //--- Methods ---
-            protected override System.Collections.Generic.IList<JsonProperty> CreateProperties(System.Type type, MemberSerialization memberSerialization)
-                => base.CreateProperties(type, memberSerialization).OrderBy(p => p.PropertyName).ToList();
-        }
 
         //--- Fields ---
         private Module _module;
@@ -181,13 +174,23 @@ namespace MindTouch.LambdaSharp.Tool.Build {
             var json = new JsonStackSerializer().Serialize(_stack);
 
             // parse json into a generic object
-            var value = JsonConvert.DeserializeObject(json);
+            var value = JObject.Parse(json);
 
             // convert value to json, but sort the properties to achieve a stable hash
-            json = JsonConvert.SerializeObject(_stack, Formatting.None, new JsonSerializerSettings() {
-                ContractResolver = new OrderedContractResolver()
-            });
+            json = JsonConvert.SerializeObject(OrderFields(value));
             return (json + ModuleManifest.CurrentVersion).ToMD5Hash();
         }
+
+        private JObject OrderFields(JObject value) {
+            var result = new JObject();
+            foreach(var property in value.Properties().ToList().OrderBy(property => property.Name)) {
+                result.Add(property.Name, (property.Value is JObject propertyValue)
+                    ? OrderFields(propertyValue)
+                    : property.Value
+                );
+            }
+            return result;
+        }
+
     }
 }
