@@ -31,7 +31,7 @@ using Newtonsoft.Json;
 namespace MindTouch.LambdaSharp.Tool.Build {
     using static ModelFunctions;
 
-    public class ModelFunctionCompiler : AModelProcessor {
+    public class ModelFunctionProcessor : AModelProcessor {
 
         //--- Types ---
         private class ApiRoute {
@@ -50,10 +50,10 @@ namespace MindTouch.LambdaSharp.Tool.Build {
         private List<ApiRoute> _apiGatewayRoutes = new List<ApiRoute>();
 
         //--- Constructors ---
-        public ModelFunctionCompiler(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
+        public ModelFunctionProcessor(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
 
         //--- Methods ---
-        public void Compile(ModuleBuilder builder) {
+        public void Process(ModuleBuilder builder) {
             _builder = builder;
 
             // create module IAM role used by all functions

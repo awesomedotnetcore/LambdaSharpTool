@@ -459,11 +459,6 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                     // check if required attributes are present
                     Validate(node.Files != null, "missing 'Files' attribute");
                     Validate(node.Bucket != null, "missing 'Bucket' attribute");
-                    if(node.Bucket is string bucketParameter) {
-
-                        // verify that target bucket is defined as parameter with correct type
-                        ValidateSourceParameter(bucketParameter, "AWS::S3::Bucket", "S3 bucket resource");
-                    }
 
                     // check if package is nested
                     if(parent != null) {
@@ -641,16 +636,10 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                     } else if(source.S3 != null) {
 
                         // TODO (2018-06-27, bjorg): add events, prefix, suffix validation
-
-                        // verify source exists
-                        ValidateSourceParameter(source.S3, "AWS::S3::Bucket", "S3 bucket");
                     } else if(source.SlackCommand != null) {
 
                         // TODO (2018-11-10, bjorg): validate API expression
                     } else if(source.Topic != null) {
-
-                        // verify source exists
-                        ValidateSourceParameter(source.Topic, "AWS::SNS::Topic", "SNS topic");
                     } else if(source.Sqs != null) {
 
                         // validate settings
@@ -659,9 +648,6 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                                 AddError($"invalid BatchSize value: {source.BatchSize}");
                             }
                         });
-
-                        // verify source exists
-                        ValidateSourceParameter(source.Sqs, "AWS::SQS::Queue", "SQS queue");
                     } else if(source.Alexa != null) {
 
                         // TODO (2018-11-10, bjorg): validate Alexa Skill ID
@@ -684,9 +670,6 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                                 break;
                             }
                         });
-
-                        // verify source exists
-                        ValidateSourceParameter(source.DynamoDB, "AWS::DynamoDB::Table", "DynamoDB table");
                     } else if(source.Kinesis != null) {
 
                         // validate settings
@@ -706,24 +689,11 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                                 break;
                             }
                         });
-
-                        // verify source exists
-                        ValidateSourceParameter(source.Kinesis, "AWS::Kinesis::Stream", "Kinesis stream");
                     } else {
                         AddError("unknown source type");
                     }
                 });
             }
-        }
-
-        private void ValidateSourceParameter(string fullName, string awsType, string typeDescription) {
-            if(!_builder.TryGetEntry(fullName, out AModuleEntry entry)) {
-                AddError($"could not find function source: '{fullName}'");
-                return;
-            }
-
-            // TODO (2018-11-29, bjorg): validate AWS type of referenced entry
-            // AddError($"function source must be an {typeDescription} resource: '{fullName}'");
         }
     }
 }

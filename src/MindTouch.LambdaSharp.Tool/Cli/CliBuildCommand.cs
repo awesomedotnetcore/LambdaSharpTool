@@ -486,13 +486,19 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 new ModelFilesPackager(settings, moduleSource).Package(module);
 
                 // augment module definitions
-                new ModelFunctionCompiler(settings, moduleSource).Compile(module);
+                new ModelFunctionProcessor(settings, moduleSource).Process(module);
                 if(HasErrors) {
                     return false;
                 }
 
                 // resolve all references
                 new ModelLinker(settings, moduleSource).Process(module);
+                if(HasErrors) {
+                    return false;
+                }
+
+                // validate references
+                new ModelPostLinkerValidation(settings, moduleSource).Validate(module);
                 if(HasErrors) {
                     return false;
                 }
