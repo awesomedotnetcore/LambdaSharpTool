@@ -37,6 +37,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         //--- Fields ---
         private static readonly IDictionary<string, IDictionary<string, IList<string>>> _iamMappings;
+        private static readonly HashSet<string> _supportedCloudFormationTypes;
 
         //--- Constructors ---
         static ResourceMapping() {
@@ -49,6 +50,36 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                     .WithNamingConvention(new NullNamingConvention())
                     .Build();
                 _iamMappings = deserializer.Deserialize<IDictionary<string, IDictionary<string, IList<string>>>>(reader);
+            }
+
+            // create list of natively supported CloudFormation types
+            _supportedCloudFormationTypes = new HashSet<string> {
+                "String",
+                "Number",
+                "List<Number>",
+                "CommaDelimitedList",
+                "AWS::SSM::Parameter::Name",
+                "AWS::SSM::Parameter::Value<String>",
+                "AWS::SSM::Parameter::Value<List<String>>",
+                "AWS::SSM::Parameter::Value<CommaDelimitedList>"
+            };
+            var awsTypes = new[] {
+                "AWS::EC2::AvailabilityZone::Name",
+                "AWS::EC2::Image::Id",
+                "AWS::EC2::Instance::Id",
+                "AWS::EC2::KeyPair::KeyName",
+                "AWS::EC2::SecurityGroup::GroupName",
+                "AWS::EC2::SecurityGroup::Id",
+                "AWS::EC2::Subnet::Id",
+                "AWS::EC2::Volume::Id",
+                "AWS::EC2::VPC::Id",
+                "AWS::Route53::HostedZone::Id"
+            };
+            foreach(var awsType in awsTypes) {
+                _supportedCloudFormationTypes.Add(awsType);
+                _supportedCloudFormationTypes.Add($"List<{awsType}>");
+                _supportedCloudFormationTypes.Add($"AWS::SSM::Parameter::Value<{awsType}>");
+                _supportedCloudFormationTypes.Add($"AWS::SSM::Parameter::Value<List<{awsType}>>");
             }
         }
 
@@ -108,5 +139,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             var typeName = "Humidifier." + awsType.Substring(AWS_PREFIX.Length).Replace("::", ".");
             return typeof(Humidifier.Resource).Assembly.GetType(typeName, throwOnError: false);
         }
+
+        public static string ToCloudFormationType(string type)
+            => _supportedCloudFormationTypes.Contains(type) ? type : "String";
     }
 }

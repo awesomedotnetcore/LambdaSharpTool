@@ -1,11 +1,9 @@
 Module: TestModule
 Description: LambdaSharp CloudFormation Test
+Entries:
 
-Variables:
-
-  - Var: MyResource
+  - Resource: MyResource
     Description: A CloudFormation dummy resource
-    Resource:
-      Type: CustomResource::Handler
-      Properties:
-        Result: !Cidr [ "192.168.0.0/24", 6, 5 ]
+    Type: CustomResource::Handler
+    Properties:
+      Result: !Cidr [ "192.168.0.0/24", 6, 5 ]

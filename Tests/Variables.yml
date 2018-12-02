@@ -1,26 +1,24 @@
 Module: TestModule
 Description: LambdaSharp CloudFormation Test
+Entries:
 
-Variables:
-
-  - Var: SourceValueParameter
+  - Variable: SourceValueParameter
     Description: Literal value
     Scope: "*"
     Value: This is a literal value
 
-  - Var: SourceExpressionParameter
+  - Variable: SourceExpressionParameter
     Description: CloudFormation !Ref expression
     Scope: "*"
     Value: !Ref SourceValueParameter
 
-  - Var: SourceResourceParameter
+  - Resource: SourceResourceParameter
     Description: CloudFormation Resource
     Scope: "*"
-    Resource:
-      Type: AWS::SNS::Topic
-      Allow: Publish
+    Type: AWS::SNS::Topic
+    Allow: Publish
 
-  - Var: SourceValueListParameter
+  - Variable: SourceValueListParameter
     Description: List of literal values
     Scope: "*"
     Value:
@@ -28,7 +26,7 @@ Variables:
       - second
       - third
 
-  - Var: SourceExpressionListParameter
+  - Variable: SourceExpressionListParameter
     Description: List of literal values
     Scope: "*"
     Value:
@@ -37,36 +35,35 @@ Variables:
       - !Ref SourceResourceParameter
       - literal value
 
-  - Var: SourceParameterCollection
+  - Variable: SourceParameterCollection
     Description: Description for collection parameter
     Scope: "*"
-    Variables:
+    Entries:
 
-      - Var: FirstSourceValueParameter
+      - Variable: FirstSourceValueParameter
         Description: Nested parameter with a literal value
         Scope: "*"
         Value: A nested literal source value
 
-      - Var: SecondSourceResourceParameter
+      - Resource: SecondSourceResourceParameter
         Description: CloudFormation Resource
         Scope: "*"
-        Resource:
-          Type: AWS::SNS::Topic
-          Allow: Publish
-          Properties:
-            DisplayName: !Ref SourceValueParameter
+        Type: AWS::SNS::Topic
+        Allow: Publish
+        Properties:
+          DisplayName: !Ref SourceValueParameter
 
-  - Var: SampleParameterCollection
+  - Variable: SampleParameterCollection
     Description: Description for collection parameter
     Scope: "*"
-    Variables:
+    Entries:
 
-      - Var: FirstNestedParameter
+      - Variable: FirstNestedParameter
         Description: First nested parameter
         Scope: "*"
         Value: A literal value
 
-      - Var: SecondNestedParameter
+      - Variable: SecondNestedParameter
         Description: Second nested parameter
         Scope: "*"
         Value:
@@ -74,70 +71,68 @@ Variables:
           - two
           - three
 
-      - Var: ThirdNestedParameter
+      - Resource: ThirdNestedParameter
         Description: Third nested parameter
         Scope: "*"
         Value: arn:aws:sns:us-east-1:123456789012:SampleTopic
-        Resource:
-          Type: AWS::SNS::Topic
-          Allow: Publish
+        Type: AWS::SNS::Topic
+        Allow: Publish
 
-      - Var: FourthNestedParameter
+      - Resource: FourthNestedParameter
         Description: Fourth nested parameter
         Scope: "*"
-        Resource:
-          Type: AWS::SNS::Topic
-          Allow: Subscribe
+        Type: AWS::SNS::Topic
+        Allow: Subscribe
 
-      - Var: FifthNestedParameter
+      - Variable: FifthNestedParameter
         Description: Fifth nested parameter
+        Type: Secret
         Scope: "*"
-        Secret: AQICAHjeGw7GlEczkZKnuQaQHVYq...+CXNRhA/rkOSNUThq4ikMnVU2g==
+        Value: AQICAHjeGw7GlEczkZKnuQaQHVYq...+CXNRhA/rkOSNUThq4ikMnVU2g==
 
-      - Var: SixthNestedParameter
+      - Variable: SixthNestedParameter
         Description: Sixth nested parameter
+        Type: Secret
         Scope: "*"
-        Secret: AQICAHjeGw7GlEczkZKnuQaQHVYq...+CXNRhA/rkOSNUThq4ikMnVU2g==
+        Value: AQICAHjeGw7GlEczkZKnuQaQHVYq...+CXNRhA/rkOSNUThq4ikMnVU2g==
         EncryptionContext:
           Purpose: Security
           "Spe|cial": "Char|acter"
 
-      - Var: SeventhParameter
+      - Variable: SeventhParameter
         Description: Seventh nested parameter
         Scope: "*"
         Value: !Ref SingleResourceParameter
 
-  - Var: OtherParameterCollection
+  - Variable: OtherParameterCollection
     Description: Description for collection parameter
     Scope: "*"
     Value: This collection has a value
-    Variables:
+    Entries:
 
-      - Var: FirstNestedParameter
+      - Variable: FirstNestedParameter
         Description: Same name as first nested parameter in sample parameter collection
         Scope: "*"
         Value: Another literal value
 
-  - Var: SingleResourceParameter
+  - Resource: SingleResourceParameter
     Description: Second nested parameter
     Value: "arn:aws:sns:*:*:*"
     Scope: "*"
-    Resource:
-      Type: AWS::SNS::Topic
-      Allow: Publish
+    Type: AWS::SNS::Topic
+    Allow: Publish
 
-  - Var: MultiResourceParameter
+  - Resource: MultiResourceParameter
     Description: Second nested parameter
     Scope: "*"
     Value:
       - "arn:aws:sns:*:*:*"
       - "arn:aws:sns:*:*:*:*"
-    Resource:
-      Type: AWS::SNS::Topic
-      Allow: Publish
+    Type: AWS::SNS::Topic
+    Allow: Publish
 
   # !Ref reference use-cases
-  - Var: SourceSubExpressions
+  - Variable: SourceSubExpressions
     Description: CloudFormation !Sub expressions
     Scope: "*"
     Value:
@@ -151,29 +146,26 @@ Variables:
       - !Sub "${SourceParameterCollection::SecondSourceResourceParameter.TopicName}"
 
   # !Ref module variables
-  - Var: MyModuleName
+  - Variable: MyModuleName
     Scope: "*"
     Value: !Ref Module::Name
 
-  - Var: MyModuleId
+  - Variable: MyModuleId
     Scope: "*"
     Value: !Ref Module::Id
 
-  - Var: MyModuleVersion
+  - Variable: MyModuleVersion
     Scope: "*"
     Value: !Ref Module::Version
 
   # Grant permissiont to resource-less AWS services
-  - Var: RekognitionService
+  - Resource: RekognitionService
     Description: Permissions required for using AWS Rekognition
     Value: "*"
-    Resource:
-      Allow:
-          - "rekognition:DetectFaces"
-          - "rekognition:IndexFaces"
-          - "rekognition:SearchFacesByImage"
-
-Functions:
+    Allow:
+        - "rekognition:DetectFaces"
+        - "rekognition:IndexFaces"
+        - "rekognition:SearchFacesByImage"
 
   - Function: Function
     Description: My function

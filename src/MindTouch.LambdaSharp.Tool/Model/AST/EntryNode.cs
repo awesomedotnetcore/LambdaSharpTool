@@ -28,71 +28,6 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
     public class EntryNode {
 
         //--- Class Fields ---
-        public readonly static Dictionary<string, Func<EntryNode, bool>> FieldCheckers = new Dictionary<string, Func<EntryNode, bool>> {
-            ["AllowedPattern"] = entry => entry.AllowedPattern != null,
-            ["AllowedValues"] = entry => entry.AllowedValues != null,
-            ["Bucket"] = entry => entry.Bucket != null,
-            ["ConstraintDescription"] = entry => entry.ConstraintDescription != null,
-            ["CustomResource"] = entry => entry.CustomResource != null,
-            ["Default"] = entry => entry.Default != null,
-            ["DependsOn"] = entry => entry.DependsOn != null,
-            ["Description"] = entry => entry.Description != null,
-            ["EncryptionContext"] = entry => entry.EncryptionContext != null,
-            ["Environment"] = entry => entry.Environment != null,
-            ["Entries"] = entry => entry.Entries != null,
-            ["Export"] = entry => entry.Export != null,
-            ["Files"] = entry => entry.Files != null,
-            ["Function"] = entry => entry.Function != null,
-            ["Handler"] = entry => entry.Handler != null,
-            ["Import"] = entry => entry.Import != null,
-            ["Label"] = entry => entry.Label != null,
-            ["Language"] = entry => entry.Language != null,
-            ["Macro"] = entry => entry.Macro != null,
-            ["MaxLength"] = entry => entry.MaxLength != null,
-            ["MaxValue"] = entry => entry.MaxValue != null,
-            ["Memory"] = entry => entry.Memory != null,
-            ["MinLength"] = entry => entry.MinLength != null,
-            ["MinValue"] = entry => entry.MinValue != null,
-            ["Module"] = entry => entry.Module != null,
-            ["NoEcho"] = entry => entry.NoEcho != null,
-            ["Package"] = entry => entry.Package != null,
-            ["Parameter"] = entry => entry.Parameter != null,
-            ["Parameters"] = entry => entry.Parameters != null,
-            ["Pragmas"] = entry => entry.Pragmas != null,
-            ["Prefix"] = entry => entry.Prefix != null,
-            ["Project"] = entry => entry.Project != null,
-            ["ReservedConcurrency"] = entry => entry.ReservedConcurrency != null,
-            ["Resource"] = entry => entry.Resource != null,
-            ["Runtime"] = entry => entry.Runtime != null,
-            ["Scope"] = entry => entry.Scope != null,
-            ["Secret"] = entry => entry.Secret != null,
-            ["Section"] = entry => entry.Section != null,
-            ["SourceBucketName"] = entry => entry.SourceBucketName != null,
-            ["Sources"] = entry => entry.Sources != null,
-            ["Timeout"] = entry => entry.Timeout != null,
-            ["Type"] = entry => entry.Type != null,
-            ["Value"] = entry => entry.Value != null,
-            ["Var"] = entry => entry.Var != null,
-            ["Variables"] = entry => entry.Variables != null,
-            ["Version"] = entry => entry.Version != null,
-            ["VPC"] = entry => entry.VPC != null,
-
-            // composite checkers
-            ["Var.Value"] = entry => (entry.Var != null) && (entry.Value != null) && (entry.Resource == null),
-            ["Var.Secret"] = entry => (entry.Var != null) && (entry.Secret != null),
-            ["Var.Reference"] = entry => (entry.Var != null) && (entry.Value != null) && (entry.Resource != null),
-            ["Var.Resource"] = entry => (entry.Var != null) && (entry.Value == null) && (entry.Resource != null),
-            ["Var.Module"] = entry => (entry.Var != null) && (entry.Module != null),
-            ["Var.Empty"] = entry =>
-                (entry.Var != null)
-                && (entry.Value == null)
-                && (entry.Secret == null)
-                && (entry.Resource == null)
-                && (entry.Module == null)
-                && (entry.Package == null),
-            ["Resource.Properties"] = entry => entry.Resource?.Properties?.Any() == true
-        };
-
         public static readonly Dictionary<string, IEnumerable<string>> FieldCombinations = new Dictionary<string, IEnumerable<string>> {
             ["Parameter"] = new[] {
                 "Section",
@@ -109,8 +44,10 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
                 "MaxValue",
                 "MinLength",
                 "MinValue",
-                "Resource",
-                "Resource.Properties"
+                "Allow",
+                "Properties",
+                "ArnAttribute",
+                "EncryptionContext"
             },
             ["Import"] = new[] {
                 "Section",
@@ -119,75 +56,47 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
                 "Type",
                 "Scope",
                 "NoEcho",
-                "Resource"
+                "Allow"
             },
-            ["Var.Value"] = new[] {
-                "Var",
+            ["Variable"] = new[] {
+                "Variable",
                 "Description",
+                "Type",
                 "Scope",
                 "Value",
-                "Variables",
-                "Entries"
-            },
-            ["Var.Secret"] = new[] {
-                "Var",
-                "Description",
-                "Scope",
-                "Secret",
                 "EncryptionContext",
-                "Variables",
                 "Entries"
             },
-            ["Var.Reference"] = new[] {
-                "Var",
+            ["Resource"] = new[] {
                 "Description",
+                "Type",
                 "Scope",
+                "Allow",
                 "Value",
-                "Resource",
-                "Variables",
-                "Entries"
+                "Properties",
+                "DependsOn",
+                "ArnAttribute",
+                "Entries",
             },
-            ["Var.Resource"] = new[] {
-                "Var",
+            ["Module"] = new[] {
                 "Description",
-                "Scope",
-                "Resource",
-                "Resource.Properties",
-                "Variables",
-                "Entries"
-            },
-            ["Var.Module"] = new[] {
-                "Var",
-                "Description",
-                "Module",
-                "Version",
-                "SourceBucketName",
-                "Scope",
+                "Location",
                 "DependsOn",
                 "Parameters"
-            },
-            ["Var.Empty"] = new[] {
-                "Var",
-                "Scope",
-                "Description",
-                "Variables",
-                "Entries"
             },
             ["Package"] = new[] {
                 "Description",
                 "Scope",
-                "Files",
-                "Bucket",
-                "Prefix"
+                "Files"
             },
             ["Function"] = new[] {
                 "Description",
                 "Memory",
                 "Timeout",
                 "Project",
-                "Handler",
                 "Runtime",
                 "Language",
+                "Handler",
                 "ReservedConcurrency",
                 "VPC",
                 "Environment",
@@ -195,22 +104,41 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
                 "Pragmas"
             },
             ["Export"] = new[] {
-                "Value",
-                "Description"
+                "Description",
+                "Value"
             },
             ["CustomResource"] = new[] {
-                "Handler",
-                "Description"
+                "Description",
+                "Handler"
             },
             ["Macro"] = new[] {
-                "Handler",
-                "Description"
+                "Description",
+                "Handler"
             }
         };
 
         //--- Properties ---
 
-        // parameter entry
+        /*
+         * Parameter: string
+         * Section: string
+         * Label: string
+         * Description: string
+         * Type: string
+         * Scope: string -or- list<string>
+         * NoEcho: bool
+         * Default: string
+         * ConstraintDescription: string
+         * AllowedPattern: string
+         * AllowedValues: list<string>
+         * MaxLength: int
+         * MaxValue: int
+         * MinLength: int
+         * MinValue: int
+         * Allow: string or list<string>
+         * Properties: map
+         * EncryptionContext: map
+         */
         public string Parameter { get; set; }
         public string Section { get; set; }
         public string Label { get; set; }
@@ -226,72 +154,91 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         public int? MaxValue { get; set; }
         public int? MinLength { get; set; }
         public int? MinValue { get; set; }
-        public ResourceNode Resource { get; set; }
-
-        // cross-module import entry
-        public string Import { get; set; }
-        // public string Section { get; set; }
-        // public string Label { get; set; }
-        // public string Description { get; set; }
-        // public string Type { get; set; } = "String";
-        // public object Scope { get; set; }
-        // public bool? NoEcho { get; set; }
-        // public ResourceNode Resource { get; set; }
-
-        // export value
-        public string Export { get; set; }
-        public object Value { get; set; }
-        // public string Description { get; set; }
-
-        // export custom resource
-        public string CustomResource { get; set; }
-        public string Handler { get; set; }
-        // public string Description { get; set; }
-
-        // export macro
-        public string Macro { get; set; }
-        // public string Description { get; set; }
-        // public string Handler { get; set; }
-
-        // variable entry
-        public string Var { get; set; }
-        // public string Description { get; set; }
-        // public object Scope { get; set; }
-        public IList<EntryNode> Variables { get; set; }
-        public IList<EntryNode> Entries { get; set; }
-        // public object Value { get; set; }
-        // public ResourceNode Resource { get; set; }
-
-        // secret entry
-        // public string Var { get; set; }
-        // public string Description { get; set; }
-        // public object Scope { get; set; }
-        // public IList<ParameterNode> Variables { get; set; }
-        public string Secret { get; set; }
+        public object Allow { get; set; }
+        public IDictionary<string, object> Properties { get; set; }
         public IDictionary<string, string> EncryptionContext { get; set; }
 
-        // module entry
-        // public string Var { get; set; }
-        // public string Description { get; set; }
-        // public object Scope { get; set; }
-        public object Module { get; set; }
-        public object Version { get; set; }
-        public object SourceBucketName { get; set; }
+        /*
+         * Import: string
+         * Section: string
+         * Label: string
+         * Description: string
+         * Type: string
+         * Scope: string -or- list<string>
+         * NoEcho: bool
+         * Allow: string or list<string>
+         */
+        public string Import { get; set; }
+
+        /*
+         * Variable: string
+         * Description: string
+         * Type: string
+         * Scope: string -or- list<string>
+         * Value: any
+         * EncryptionContext: map
+         * Entries: list<Entry>
+         */
+        public string Variable { get; set; }
+        public object Value { get; set; }
+        public IList<EntryNode> Entries { get; set; }
+
+        /*
+         * Resource: string
+         * Description: string
+         * Type: string
+         * Scope: string -or- list<string>
+         * Allow: string or list<string>
+         * Value: any
+         * DependsOn: string -or- list<string>
+         * Properties: map
+         * ArnAttribute: string
+         */
+        public string Resource { get; set; }
         public object DependsOn { get; set; }
-        public Dictionary<string, object> Parameters { get; set; }
+        public string ArnAttribute { get; set; }
 
-        // package entry
+        /*
+         * Module: string
+         * Description: string
+         * Location:
+         *   Name: string
+         *   Version: string
+         *   S3Bucket: string
+         * DependsOn: string -or- list<string>
+         * Parameters: map
+         */
+        public string Module { get; set; }
+        public ModuleLocation Location { get; set; }
+        public IDictionary<string, object> Parameters { get; set; }
+
+        /*
+         * Package: string
+         * Description: string
+         * Scope: string -or- list<string>
+         * Files: string
+         */
         public string Package { get; set; }
-        // public string Description { get; set; }
-        // public object Scope { get; set; }
-        // public IList<ParameterNode> Variables { get; set; }
         public string Files { get; set; }
-        public object Bucket { get; set; }
-        public object Prefix { get; set; }
 
-        // function entry
+        /*
+         * Function: string
+         * Description: string
+         * Memory: int
+         * Timeout: int
+         * Project: string
+         * Runtime: string
+         * Language: string
+         * Handler: string
+         * ReservedConcurrency: int
+         * VPC:
+         *  SubnetIds: string -or- list<string>
+         *  SecurityGroupIds: string -or- list<string>
+         * Environment: map
+         * Sources: list<function-source>
+         * Pragmas: list<any>
+         */
         public string Function { get; set; }
-        // public string Description { get; set; }
         public string Memory { get; set; }
         public string Timeout { get; set; }
         public string Project { get; set; }
@@ -299,9 +246,47 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         public string Runtime { get; set; }
         public string Language { get; set; }
         public string ReservedConcurrency { get; set; }
-        public Dictionary<string, object> VPC { get; set; }
+        public FunctionVpc VPC { get; set; }
         public Dictionary<string, object> Environment { get; set; }
         public IList<FunctionSourceNode> Sources { get; set; }
         public IList<object> Pragmas { get; set; }
+
+        /*
+         * Export: string
+         * Description: string
+         * Value: object
+         */
+        public string Export { get; set; }
+
+        /*
+         * CustomResource: string
+         * Description: string
+         * Handler: string
+         */
+        public string CustomResource { get; set; }
+        public string Handler { get; set; }
+        // public string Description { get; set; }
+
+        /*
+         * Macro: string
+         * Description: string
+         * Handler: object
+         */
+        public string Macro { get; set; }
+    }
+
+    public class FunctionVpc {
+
+        //--- Properties ---
+        public object SubnetIds { get; set; }
+        public object SecurityGroupIds { get; set; }
+    }
+
+    public class ModuleLocation {
+
+        //--- Properties ---
+        public string Name { get; set; }
+        public string Version { get; set; }
+        public string S3Bucket { get; set; }
     }
 }

@@ -33,26 +33,26 @@ namespace MindTouch.LambdaSharp.Tool {
         private const string SUBVARIABLE_PATTERN = @"\$\{(?!\!)[^\}]+\}";
 
         //--- Class Methods ---
-        public static object FnGetAtt(string logicalNameOfResource, string attributeName)
+        public static object FnGetAtt(string reference, string attributeName)
             => new Dictionary<string, object> {
                 ["Fn::GetAtt"] = new List<object> {
-                    logicalNameOfResource,
-                    attributeName
+                    reference ?? throw new ArgumentNullException(nameof(reference)),
+                    attributeName ?? throw new ArgumentNullException(nameof(attributeName))
                 }
             };
 
         public static object FnIf(string conditionName, object valueIfTrue, object valueIfFalse)
             => new Dictionary<string, object> {
                 ["Fn::If"] = new List<object> {
-                    conditionName,
-                    valueIfTrue,
-                    valueIfFalse
+                    conditionName ?? throw new ArgumentNullException(nameof(conditionName)),
+                    valueIfTrue ?? throw new ArgumentNullException(nameof(valueIfTrue)),
+                    valueIfFalse ?? throw new ArgumentNullException(nameof(valueIfFalse))
                 }
             };
 
         public static object FnImportValue(object sharedValueToImport)
             => new Dictionary<string, object> {
-                ["Fn::ImportValue"] = sharedValueToImport
+                ["Fn::ImportValue"] = sharedValueToImport ?? throw new ArgumentNullException(nameof(sharedValueToImport))
             };
 
         public static object FnJoin(string separator, IEnumerable<object> parameters) {
@@ -79,7 +79,7 @@ namespace MindTouch.LambdaSharp.Tool {
             }
             return new Dictionary<string, object> {
                 ["Fn::Join"] = new List<object> {
-                    separator,
+                    separator ?? throw new ArgumentNullException(nameof(separator)),
                     processed
                 }
             };
@@ -88,28 +88,28 @@ namespace MindTouch.LambdaSharp.Tool {
         public static object FnJoin(string separator, object parameters) {
             return new Dictionary<string, object> {
                 ["Fn::Join"] = new List<object> {
-                    separator,
-                    parameters
+                    separator ?? throw new ArgumentNullException(nameof(separator)),
+                    parameters ?? throw new ArgumentNullException(nameof(parameters))
                 }
             };
         }
 
         public static object FnRef(string reference)
             => new Dictionary<string, object> {
-                ["Ref"] = reference
+                ["Ref"] = reference ?? throw new ArgumentNullException(nameof(reference))
             };
 
         public static object FnSelect(string index, object listOfObjects)
             => new Dictionary<string, object> {
                 ["Fn::Select"] = new List<object> {
-                    index,
-                    listOfObjects
+                    index ?? throw new ArgumentNullException(nameof(index)),
+                    listOfObjects ?? throw new ArgumentNullException(nameof(listOfObjects))
                 }
             };
 
         public static object FnSub(string input)
             => new Dictionary<string, object> {
-                ["Fn::Sub"] = input
+                ["Fn::Sub"] = input ?? throw new ArgumentNullException(nameof(input))
             };
 
         public static object FnSub(string input, IDictionary<string, object> variables) {
@@ -164,16 +164,16 @@ namespace MindTouch.LambdaSharp.Tool {
         public static object FnSplit(string delimiter, object sourceString)
             => new Dictionary<string, object> {
                 ["Fn::Split"] = new List<object> {
-                    delimiter,
-                    sourceString
+                    delimiter ?? throw new ArgumentNullException(nameof(delimiter)),
+                    sourceString ?? throw new ArgumentNullException(nameof(sourceString))
                 }
             };
 
         public static object FnEquals(object left, object right)
             => new Dictionary<string, object> {
                 ["Fn::Equals"] = new List<object> {
-                    left,
-                    right
+                    left ?? throw new ArgumentNullException(nameof(left)),
+                    right ?? throw new ArgumentNullException(nameof(right))
                 }
             };
 
@@ -190,14 +190,14 @@ namespace MindTouch.LambdaSharp.Tool {
         public static object FnNot(object value)
             => new Dictionary<string, object> {
                 ["Fn::Not"] = new List<object> {
-                    value
+                    value ?? throw new ArgumentNullException(nameof(value))
                 }
             };
 
         public static object FnCondition(string condition)
             => new Dictionary<string, object> {
                 ["Condition"] = new List<object> {
-                    condition
+                    condition ?? throw new ArgumentNullException(nameof(condition))
                 }
             };
 

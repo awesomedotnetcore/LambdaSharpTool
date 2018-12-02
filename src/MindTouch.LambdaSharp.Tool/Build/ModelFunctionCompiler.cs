@@ -97,13 +97,14 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                     string methodsHash = methodSignature.ToMD5Hash();
 
                     // add RestApi url
-                    _builder.AddValue(
-                        restApiEntry,
+                    _builder.AddVariable(
+                        parent: restApiEntry,
                         name: "Url",
                         description: "Module REST API URL",
+                        type: "String",
                         scope: null,
-                        reference: FnSub("https://${Module::RestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/LATEST/"),
-                        isSecret: false
+                        value: FnSub("https://${Module::RestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/LATEST/"),
+                        encryptionContext: null
                     );
 
                     // create a RestApi role that can write logs

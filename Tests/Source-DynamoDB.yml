@@ -1,35 +1,28 @@
 Module: TestModule
 Description: LambdaSharp CloudFormation Test
-
-Inputs:
+Entries:
 
   - Parameter: InputTable
     Description: Description for DynamoDB input table
     Scope: "*"
-    Resource:
-      Type: AWS::DynamoDB::Table
-      Allow: Subscribe
+    Type: AWS::DynamoDB::Table
+    Allow: Subscribe
 
-Variables:
-
-  - Var: Table
+  - Resource: Table
     Description: Description for DynamoDB table
     Scope: "*"
-    Resource:
-      Type: AWS::DynamoDB::Table
-      Allow: Subscribe
-      Properties:
-        AttributeDefinitions:
-          - AttributeName: MessageId
-            AttributeType: S
-        KeySchema:
-          - AttributeName: MessageId
-            KeyType: HASH
-        ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
-
-Functions:
+    Type: AWS::DynamoDB::Table
+    Allow: Subscribe
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: MessageId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: MessageId
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
 
   - Function: Function
     Description: My function

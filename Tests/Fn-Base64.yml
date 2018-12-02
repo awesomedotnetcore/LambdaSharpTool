@@ -1,11 +1,10 @@
 Module: TestModule
 Description: LambdaSharp CloudFormation Test
 
-Variables:
+Entries:
 
-  - Var: MyResource
+  - Resource: MyResource
     Description: A CloudFormation dummy resource
-    Resource:
-      Type: CustomResource::Handler
-      Properties:
-        Result: !Base64 "hello world"
+    Type: CustomResource::Handler
+    Properties:
+      Result: !Base64 "hello world"

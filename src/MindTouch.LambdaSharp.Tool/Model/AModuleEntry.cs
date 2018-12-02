@@ -37,9 +37,9 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             AModuleEntry parent,
             string name,
             string description,
-            object reference,
+            string type,
             IList<string> scope,
-            bool isSecret
+            object reference
         ) {
             Name = name ?? throw new ArgumentNullException(nameof(name));;
             FullName = (parent == null)
@@ -52,8 +52,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 : parent.LogicalId + name;
             ResourceName = "@" + LogicalId;
             Reference = reference;
+            Type = type ?? throw new ArgumentNullException(nameof(type));
             Scope = scope ?? new string[0];
-            IsSecret = isSecret;
         }
 
         //--- Properties ---
@@ -62,25 +62,27 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public string ResourceName { get; }
         public string LogicalId { get; }
         public string Description { get; }
+        public string Type { get; }
         public IList<string> Scope { get; set; }
         public object Reference { get; set; }
-        public bool IsSecret { get; }
+        public bool HasSecretType => Type == "Secret";
+        public bool HasAwsType => Type.StartsWith("AWS::", StringComparison.Ordinal);
 
         //--- Abstract Methods ---
         public abstract object GetExportReference();
     }
 
-    public class ValueEntry : AModuleEntry {
+    public class VariableEntry : AModuleEntry {
 
         //--- Constructors ---
-        public ValueEntry(
+        public VariableEntry(
             AModuleEntry parent,
             string name,
             string description,
-            object reference,
+            string type,
             IList<string> scope,
-            bool isSecret
-        ) : base(parent, name, description, reference, scope, isSecret) { }
+            object reference
+        ) : base(parent, name, description, type, scope, reference) { }
 
         //--- Methods ---
         public override object GetExportReference() => Reference;
@@ -94,47 +96,39 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             string name,
             string description,
             IList<string> scope,
-            object destinationBucket,
-            object destinationKeyPrefix,
             string sourceFilepath
-        ) : base(parent, name, description, null, scope, false) {
+        ) : base(parent, name, description, "String", scope, false) {
             SourceFilepath = sourceFilepath ?? throw new ArgumentNullException(nameof(sourceFilepath));
-            Package = new Humidifier.CustomResource("LambdaSharp::S3::Package") {
-                ["DestinationBucketArn"] = destinationBucket,
-                ["DestinationKeyPrefix"] = destinationKeyPrefix,
-                ["SourceBucketName"] = FnRef("DeploymentBucketName"),
-                ["SourcePackageKey"] = "<MISSING>"
-            };
         }
 
         //--- Properties ---
         public string SourceFilepath { get; set; }
         public string PackagePath { get; private set; }
-        public Humidifier.CustomResource Package { get; set; }
 
         //--- Methods ---
         public override object GetExportReference() => Reference;
 
         public void UpdatePackagePath(string package) {
+
+            // TODO: we need something we can reference during construction and then resolve to a constant at the end (similar to a Lazy<T> value)
+
             PackagePath = package ?? throw new ArgumentNullException(nameof(package));
-            Package["SourcePackageKey"] = FnSub($"Modules/${{Module::Name}}/Assets/{Path.GetFileName(package)}");
         }
     }
 
-    public class HumidifierEntry : AModuleEntry {
+    public class ResourceEntry : AModuleEntry {
 
         //--- Constructors ---
-        public HumidifierEntry(
+        public ResourceEntry(
             AModuleEntry parent,
             string name,
             string description,
-            object reference,
             IList<string> scope,
             Humidifier.Resource resource,
             string resourceArnAttribute,
             IList<string> dependsOn,
             string condition
-        ) : base(parent, name, description, reference, scope, false) {
+        ) : base(parent, name, description, resource.AWSTypeName, scope, reference: null) {
             Resource = resource ?? throw new ArgumentNullException(nameof(resource));
             ResourceArnAttribute = resourceArnAttribute;
             DependsOn = dependsOn ?? new string[0];
@@ -162,14 +156,14 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public InputEntry(
             AModuleEntry parent,
             string name,
-            string description,
-            object reference,
-            IList<string> scope,
             string section,
             string label,
-            bool isSecret,
+            string description,
+            string type,
+            IList<string> scope,
+            object reference,
             Humidifier.Parameter parameter
-        ) : base(parent, name, description, reference, scope, isSecret) {
+        ) : base(parent, name, description, type, scope, reference) {
             Section = section ?? "Module Settings";
             Label = label ?? StringEx.PascalCaseToLabel(name);
             Parameter = parameter;
@@ -191,7 +185,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             AModuleEntry parent,
             string name,
             string description,
-            object reference,
             IList<string> scope,
             string project,
             string language,
@@ -199,7 +192,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             IList<AFunctionSource> sources,
             IList<object> pragmas,
             Humidifier.Lambda.Function function
-        ) : base(parent, name, description, reference, scope, false) {
+        ) : base(parent, name, description, function.AWSTypeName, scope, reference: null) {
             Project = project;
             Language = language;
             Environment = environment;

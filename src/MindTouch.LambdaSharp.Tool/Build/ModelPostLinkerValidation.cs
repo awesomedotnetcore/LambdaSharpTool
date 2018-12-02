@@ -43,9 +43,6 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                     case FunctionEntry functionEntry:
                         ValidateFunction(functionEntry);
                         break;
-                    case PackageEntry packageEntry:
-                        ValidatePackage(packageEntry);
-                        break;
                     }
                 });
             }
@@ -90,24 +87,15 @@ namespace MindTouch.LambdaSharp.Tool.Build {
             }
         }
 
-        private void ValidatePackage(PackageEntry package) {
-            if(
-                package.Package.TryGetValue("DestinationBucketArn", out object bucketParmater)
-                && TryGetFnRef(bucketParmater, out string refKey)
-            ) {
-                ValidateSourceParameter(refKey, "AWS::S3::Bucket");
-            }
-        }
-
         private void ValidateSourceParameter(string fullName, string awsType) {
             if(!_builder.TryGetEntry(fullName, out AModuleEntry entry)) {
                 AddError($"could not find function source {fullName}");
                 return;
             }
             switch(entry) {
-            case HumidifierEntry humidifierEntry:
-                if(awsType != humidifierEntry.Resource.AWSTypeName) {
-                    AddError($"function source {fullName} must be {awsType}, but was {humidifierEntry.Resource.AWSTypeName}");
+            case ResourceEntry resourceEntry:
+                if(awsType != resourceEntry.Resource.AWSTypeName) {
+                    AddError($"function source {fullName} must be {awsType}, but was {resourceEntry.Resource.AWSTypeName}");
                 }
                 break;
             case PackageEntry packageEntry:
@@ -119,7 +107,7 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                     AddError($"function source {fullName} must be {awsType}, but was {functionEntry.Function.AWSTypeName}");
                 }
                 break;
-            case ValueEntry valueEntry:
+            case VariableEntry valueEntry:
             case InputEntry inputEntry:
 
                 // TODO (2018-11-30): type erasure prevents us from validating against these entries

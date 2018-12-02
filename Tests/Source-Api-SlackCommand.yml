@@ -1,14 +1,11 @@
 Module: TestModule
 Description: LambdaSharp CloudFormation Test
-
-Inputs:
+Entries:
 
   - Parameter: SlackToken
     Description: Slack verification token
     Scope: Function
     Default: ""
-
-Functions:
 
   - Function: Function
     Description: My function

@@ -10,7 +10,8 @@
 * use change-sets for deploying stacks
 * new module specification for deploying: `ModuleName[:Version][@Bucket]`
 * generalized input/variable/function/output node types using `Entries:` section
-* added `Module` entry type
+* new module entries: `Module`, `Resource`, `Package`, `Variable`
+* allow any AWS type as parameter type and map to `String` when AWS type is not natively supported
 
 __Topics__
 1. [Break Changes](#breaking-changes)

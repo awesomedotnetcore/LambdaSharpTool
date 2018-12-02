@@ -30,24 +30,21 @@ Outputs:
     Description: My test macro
     Handler: Function
 
-Variables:
+Entries:
 
-  - Var: SimpleValue
+  - Variable: SimpleValue
     Description: SimpleValue description
     Value: this is a value
 
-  - Var: ManyValues
+  - Variable: ManyValues
     Description: ManyValues description
     Value:
       - first value
       - second value
 
-  - Var: ResourceValue
+  - Resource: ResourceValue
     Description: ResourceValue description
-    Resource:
-      Type: AWS::SNS::Topic
-
-Functions:
+    Type: AWS::SNS::Topic
 
   - Function: Function
     Description: My function

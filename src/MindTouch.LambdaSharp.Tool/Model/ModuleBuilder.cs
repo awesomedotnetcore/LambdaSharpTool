@@ -60,7 +60,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
             // extract existing resource statements when they exist
             if(TryGetEntry("Module::Role", out AModuleEntry moduleRoleEntry)) {
-                var role = (Humidifier.IAM.Role)((HumidifierEntry)moduleRoleEntry).Resource;
+                var role = (Humidifier.IAM.Role)((ResourceEntry)moduleRoleEntry).Resource;
                 _resourceStatements = new List<Humidifier.Statement>(role.Policies[0].PolicyDocument.Statement);
                 role.Policies[0].PolicyDocument.Statement = new List<Humidifier.Statement>();
             } else {
@@ -109,44 +109,40 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             }
         }
 
-        public AModuleEntry AddValue(AModuleEntry parent, string name, string description, object reference, object scope, bool isSecret) {
-            return AddEntry(new ValueEntry(parent, name, description, reference, ConvertScope(scope), isSecret));
-        }
-
-        public AModuleEntry AddInput(
+        public AModuleEntry AddParameter(
             string name,
-            string description = null,
-            string type = null,
-            string section = null,
-            string label = null,
-            object scope = null,
-            bool? noEcho = null,
-            string defaultValue = null,
-            string constraintDescription = null,
-            string allowedPattern = null,
-            IList<string> allowedValues = null,
-            int? maxLength = null,
-            int? maxValue = null,
-            int? minLength = null,
-            int? minValue = null,
-            string awsType = null,
-            object awsAllow = null,
-            IDictionary<string, object> awsProperties = null,
-            string arnAttribute = null
+            string section,
+            string label,
+            string description,
+            string type,
+            IList<string> scope,
+            bool? noEcho,
+            string defaultValue,
+            string constraintDescription,
+            string allowedPattern,
+            IList<string> allowedValues,
+            int? maxLength,
+            int? maxValue,
+            int? minLength,
+            int? minValue,
+            object allow,
+            IDictionary<string, object> properties,
+            string arnAttribute,
+            IDictionary<string, string> encryptionContext
         ) {
 
             // create input parameter entry
             var result = AddEntry(new InputEntry(
                 parent: null,
                 name: name,
-                description: description,
-                reference: null,
-                scope: ConvertScope(scope),
                 section: section,
                 label: label,
-                isSecret: (type == "Secret"),
+                description: description,
+                type: type,
+                scope: scope,
+                reference: null,
                 parameter: new Humidifier.Parameter {
-                    Type = ConvertInputType(type),
+                    Type = ResourceMapping.ToCloudFormationType(type),
                     Description = description,
                     Default = defaultValue,
                     ConstraintDescription = constraintDescription,
@@ -161,13 +157,13 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             ));
 
             // check if a conditional managed resource is associated with the input parameter
-            if((awsType == null) && (awsAllow == null)) {
+            if(!result.HasAwsType) {
 
                 // nothing to do
             } else if(defaultValue == null) {
 
                 // request input parameter resource grants
-                AddGrant(result.LogicalId, awsType, FnRef(result.ResourceName), awsAllow);
+                AddGrant(result.LogicalId, type, FnRef(result.ResourceName), allow);
             } else {
 
                 // create conditional managed resource
@@ -178,9 +174,11 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                     name: "Resource",
                     description: null,
                     scope: null,
-                    awsType: awsType,
-                    awsProperties: awsProperties,
-                    awsArnAttribute: arnAttribute,
+                    value: null,
+                    type: type,
+                    allow: null,
+                    properties: properties,
+                    arnAttribute: arnAttribute,
                     dependsOn: null,
                     condition: condition
                 );
@@ -193,21 +191,20 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 );
 
                 // request input parameter or conditional managed resource grants
-                AddGrant(instance.LogicalId, awsType, result.Reference, awsAllow);
+                AddGrant(instance.LogicalId, type, result.Reference, allow);
             }
             return result;
         }
 
         public AModuleEntry AddImport(
             string import,
-            string description = null,
-            string type = null,
-            string section = null,
-            string label = null,
-            object scope = null,
-            bool? noEcho = null,
-            string awsType = null,
-            object awsAllow = null
+            string section,
+            string label,
+            string description,
+            string type,
+            object scope,
+            bool? noEcho,
+            object allow
         ) {
             var parts = import.Split("::", 2);
             var exportModule = parts[0];
@@ -216,27 +213,28 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             // find or create root module import collection node
             var rootParameter = TryGetEntry(exportModule, out AModuleEntry existingEntry)
                 ? existingEntry
-                : AddValue(
+                : AddVariable(
                     parent: null,
                     name: exportModule,
                     description: $"{exportModule} cross-module references",
-                    reference: "",
+                    type: "String",
                     scope: null,
-                    isSecret: false
+                    value: "",
+                    encryptionContext: null
                 );
 
             // create import parameter entry
             var result = AddEntry(new InputEntry(
                 parent: rootParameter,
                 name: exportName,
-                description: description,
-                reference: null,
-                scope: ConvertScope(scope),
                 section: section,
                 label: label,
-                isSecret: (type == "Secret"),
+                description: description,
+                scope: ConvertScope(scope),
+                type: type,
+                reference: null,
                 parameter: new Humidifier.Parameter {
-                    Type = ConvertInputType(type),
+                    Type = ResourceMapping.ToCloudFormationType(type),
                     Description = description,
                     Default = "$" + import,
                     ConstraintDescription = "must either be a cross-module import reference or a non-blank value",
@@ -257,10 +255,13 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             );
 
             // check if resource grants is associated with the import parameter
-            if((awsType != null) || (awsAllow != null)) {
+            if(!result.HasAwsType) {
 
-                // request input parameter or conditional managed resource grants
-                AddGrant(result.LogicalId, awsType, result.Reference, awsAllow);
+                // nothing to do
+            } else {
+
+                // request import resource grants
+                AddGrant(result.LogicalId, type, result.GetExportReference(), allow);
             }
             return result;
         }
@@ -285,13 +286,14 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
             // check if a root macros collection needs to be created
             if(!TryGetEntry("Macros", out AModuleEntry macrosEntry)) {
-                macrosEntry = AddValue(
+                macrosEntry = AddVariable(
                     parent: null,
                     name: "Macros",
                     description: "Macro definitions",
-                    reference: "",
+                    type: "String",
                     scope: null,
-                    isSecret: false
+                    value: "",
+                    encryptionContext: null
                 );
             }
 
@@ -314,22 +316,54 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             );
         }
 
+        public AModuleEntry AddVariable(
+            AModuleEntry parent,
+            string name,
+            string description,
+            string type,
+            IList<string> scope,
+            object value,
+            IDictionary<string, string> encryptionContext
+        ) {
+            if(value == null) {
+                throw new ArgumentNullException(nameof(value));
+            }
+
+            // the format for secrets with encryption keys is: SECRET|KEY1=VALUE1|KEY2=VALUE2
+            object reference;
+            if(encryptionContext != null) {
+                reference = FnJoin(
+                    "|",
+                    new object[] {
+                        value
+                    }.Union(encryptionContext
+                        ?.Select(kv => $"{Uri.EscapeDataString(kv.Key)}={Uri.EscapeDataString(kv.Value)}")
+                        ?? new string[0]
+                    ).ToArray()
+                );
+            } else {
+                reference = (value is IList<object> values)
+                    ? FnJoin(",", values)
+                    : value;
+            }
+            return AddEntry(new VariableEntry(parent, name, description, type, scope, reference));
+        }
+
         public AModuleEntry AddResource(
             AModuleEntry parent,
             string name,
             string description,
-            object scope,
+            IList<string> scope,
             Humidifier.Resource resource,
             string resourceArnAttribute,
             IList<string> dependsOn,
             string condition
         ) {
-            var result = new HumidifierEntry(
+            var result = new ResourceEntry(
                 parent: parent,
                 name: name,
                 description: description,
-                reference: null,
-                scope: ConvertScope(scope),
+                scope: scope,
                 resource: resource,
                 resourceArnAttribute: resourceArnAttribute,
                 dependsOn: dependsOn,
@@ -342,38 +376,74 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             AModuleEntry parent,
             string name,
             string description,
-            object scope,
-            string awsType,
-            IDictionary<string, object> awsProperties,
-            string awsArnAttribute,
+            string type,
+            IList<string> scope,
+            object value,
+            object allow,
+            IDictionary<string, object> properties,
             IList<string> dependsOn,
+            string arnAttribute,
             string condition
         ) {
-            var type = ResourceMapping.GetHumidifierType(awsType ?? "AWS");
-            if((type != null) && (awsProperties != null)) {
-                try {
 
-                    // validate fields
-                    JObject.FromObject(awsProperties)
-                        .ToObject(type, new JsonSerializer {
-                            MissingMemberHandling = MissingMemberHandling.Error
-                        });
-                } catch(JsonSerializationException e) {
-                    AddError($"{e.Message} [Resource Type: {awsType}]");
+            // check if a referenced or managed resource should be created
+            AModuleEntry result;
+            if(value != null) {
+
+                // add variable to hold the referenced resource
+                result = AddVariable(
+                    parent: parent,
+                    name: name,
+                    description: description,
+                    type: type,
+                    scope: scope,
+                    value: value,
+                    encryptionContext: null
+                );
+
+                // add optional grants
+                if(allow != null) {
+                    AddGrant(result.LogicalId, type, value, allow);
+                }
+            } else {
+
+                // validate resource properties
+                if(type.StartsWith("AWS::", StringComparison.Ordinal)) {
+                    var awsType = ResourceMapping.GetHumidifierType(type);
+                    if((awsType != null) && (properties != null)) {
+                        try {
+
+                            // TODO (2018-12-01, bjorg): use CloudFormation JSON spec for this
+
+                            // validate fields
+                            JObject.FromObject(properties)
+                                .ToObject(awsType, new JsonSerializer {
+                                    MissingMemberHandling = MissingMemberHandling.Error
+                                });
+                        } catch(JsonSerializationException e) {
+                            AddError($"{e.Message} [Resource Type: {awsType}]");
+                        }
+                    }
+                }
+
+                // create resource entry
+                result = AddResource(
+                    parent: parent,
+                    name: name,
+                    description: description,
+                    scope: scope,
+                    resource: new Humidifier.CustomResource(type, properties),
+                    resourceArnAttribute: arnAttribute,
+                    dependsOn: dependsOn,
+                    condition: condition
+                );
+
+                // add optional grants
+                if(allow != null) {
+                    AddGrant(result.LogicalId, type, result.GetExportReference(), allow);
                 }
             }
-            var result = new HumidifierEntry(
-                parent: parent,
-                name: name,
-                description: description,
-                reference: null,
-                scope: ConvertScope(scope),
-                resource: new Humidifier.CustomResource(awsType, awsProperties),
-                resourceArnAttribute: awsArnAttribute,
-                dependsOn: dependsOn,
-                condition: condition
-            );
-            return AddEntry(result);
+            return result;
         }
 
         public AModuleEntry AddModule(
@@ -383,7 +453,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             object module,
             object version,
             object sourceBucketName,
-            object scope,
+            IList<string> scope,
             object dependsOn,
             IDictionary<string, object> parameters
         ) {
@@ -433,7 +503,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 if(!moduleParameters.ContainsKey(key)) {
                     moduleParameters.Add(key, value);
                 } else {
-                    AddError("");
+                    AddError($"'{key}' is a reserved attribute and cannot be specified");
                 }
             }
         }
@@ -443,20 +513,15 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             string name,
             string description,
             object scope,
-            object destinationBucket,
-            object destinationKeyPrefix,
-            string sourceFilepath
+            string files
         ) {
             var result = new PackageEntry(
                 parent: parent,
                 name: name,
                 description: description,
                 scope: ConvertScope(scope),
-                sourceFilepath: sourceFilepath,
-                destinationBucket: destinationBucket,
-                destinationKeyPrefix: destinationKeyPrefix
+                sourceFilepath: files
             );
-            result.Reference = FnGetAtt(result.ResourceName, "Url");
             return AddEntry(result);
         }
 
@@ -490,7 +555,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 parent: parent,
                 name: name,
                 description: description,
-                reference: null,
                 scope: new string[0],
                 project: project,
                 language: language,
@@ -575,16 +639,18 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                     AtLocation(entry.FullName, () => {
                         switch(entry) {
                         case InputEntry _:
-                        case ValueEntry _:
+                        case VariableEntry _:
 
                             // nothing to do
                             break;
                         case PackageEntry package:
                             AtLocation("Package", () => {
-                                package.Package = (Humidifier.CustomResource)visitor(package.Package);
+
+                                // TODO: fix this
+                                // package.Package = (Humidifier.CustomResource)visitor(package.Package);
                             });
                             break;
-                        case HumidifierEntry humidifier:
+                        case ResourceEntry humidifier:
                             AtLocation("Resource", () => {
                                 humidifier.Resource = (Humidifier.Resource)visitor(humidifier.Resource);
                             });
@@ -667,7 +733,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
             // update existing resource statements when they exist
             if(TryGetEntry("Module::Role", out AModuleEntry moduleRoleEntry)) {
-                var role = (Humidifier.IAM.Role)((HumidifierEntry)moduleRoleEntry).Resource;
+                var role = (Humidifier.IAM.Role)((ResourceEntry)moduleRoleEntry).Resource;
                 role.Policies[0].PolicyDocument.Statement = _resourceStatements.ToList();
             }
             return new Module {
@@ -710,10 +776,5 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             }
             return entry;
         }
-
-        private string ConvertInputType(string type)
-            => ((type == null) || (type == "Secret"))
-                ? "String"
-                : type;
     }
 }

@@ -28,37 +28,34 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
     public class FunctionSourceNode {
 
         //--- Class Fields ---
-        public readonly static Dictionary<string, Func<FunctionSourceNode, bool>> FieldCheckers = new Dictionary<string, Func<FunctionSourceNode, bool>> {
-            ["Api"] = source => source.Api != null,
-            ["Integration"] = source => source.Integration != null,
-            ["OperationName"] = source => source.OperationName != null,
-            ["ApiKeyRequired"] = source => source.ApiKeyRequired != null,
-            ["Schedule"] = source => source.Schedule != null,
-            ["Name"] = source => source.Name != null,
-            ["S3"] = source => source.S3 != null,
-            ["Events"] = source => source.Events != null,
-            ["Prefix"] = source => source.Prefix != null,
-            ["Suffix"] = source => source.Suffix != null,
-            ["SlackCommand"] = source => source.SlackCommand != null,
-            ["Topic"] = source => source.Topic != null,
-            ["Sqs"] = source => source.Sqs != null,
-            ["BatchSize"] = source => source.BatchSize != null,
-            ["Alexa"] = source => source.Alexa != null,
-            ["DynamoDB"] = source => source.DynamoDB != null,
-            ["StartingPosition"] = source => source.StartingPosition != null,
-            ["Kinesis"] = source => source.Kinesis != null
-        };
-
         public static readonly Dictionary<string, IEnumerable<string>> FieldCombinations = new Dictionary<string, IEnumerable<string>> {
-            ["Api"] = new[] { "Integration", "OperationName", "ApiKeyRequired" },
-            ["Schedule"] = new[] { "Name" },
-            ["S3"] = new[] { "Events", "Prefix", "Suffix" },
+            ["Api"] = new[] {
+                "Integration",
+                "OperationName",
+                "ApiKeyRequired"
+            },
+            ["Schedule"] = new[] {
+                "Name"
+            },
+            ["S3"] = new[] {
+                "Events",
+                "Prefix",
+                "Suffix"
+            },
             ["SlackCommand"] = new string[0],
             ["Topic"] = new string[0],
-            ["Sqs"] = new[] { "BatchSize" },
+            ["Sqs"] = new[] {
+                "BatchSize"
+            },
             ["Alexa"] = new string[0],
-            ["DynamoDB"] = new[] { "BatchSize", "StartingPosition" },
-            ["Kinesis"] = new[] { "BatchSize", "StartingPosition" }
+            ["DynamoDB"] = new[] {
+                "BatchSize",
+                "StartingPosition"
+            },
+            ["Kinesis"] = new[] {
+                "BatchSize",
+                "StartingPosition"
+            }
         };
 
         //--- Properties ---

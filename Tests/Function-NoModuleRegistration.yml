@@ -2,8 +2,7 @@ Module: TestModule
 Description: LambdaSharp CloudFormation Test
 Pragmas:
   - no-module-registration
-
-Functions:
+Entries:
 
   - Function: Function
     Description: My function

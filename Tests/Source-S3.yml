@@ -1,26 +1,18 @@
 Module: TestModule
-
 Description: LambdaSharp CloudFormation Test
-
-Inputs:
+Entries:
 
   - Parameter: InputBucket
     Description: Description for Bucket resource
     Scope: "*"
-    Resource:
-      Type: AWS::S3::Bucket
-      Allow: ReadWrite
+    Type: AWS::S3::Bucket
+    Allow: ReadWrite
 
-Variables:
-
-  - Var: Bucket
+  - Resource: Bucket
     Description: Description for Bucket resource
     Scope: "*"
-    Resource:
-      Type: AWS::S3::Bucket
-      Allow: ReadWrite
-
-Functions:
+    Type: AWS::S3::Bucket
+    Allow: ReadWrite
 
   - Function: Function
     Description: My function

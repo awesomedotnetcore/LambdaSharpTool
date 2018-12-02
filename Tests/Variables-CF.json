@@ -209,10 +209,7 @@
             "STR_OTHERPARAMETERCOLLECTION": "This collection has a value",
             "STR_OTHERPARAMETERCOLLECTION_FIRSTNESTEDPARAMETER": "Another literal value",
             "STR_SINGLERESOURCEPARAMETER": "arn:aws:sns:*:*:*",
-            "STR_MULTIRESOURCEPARAMETER": [
-              "arn:aws:sns:*:*:*",
-              "arn:aws:sns:*:*:*:*"
-            ],
+            "STR_MULTIRESOURCEPARAMETER": "arn:aws:sns:*:*:*,arn:aws:sns:*:*:*:*",
             "STR_SOURCESUBEXPRESSIONS": {
               "Fn::Join": [
                 ",",
@@ -814,7 +811,7 @@
       "Version": "2018-11-28",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
-      "Hash": "69266934C4F1B53F4BF4A7CEC3BE78BC",
+      "Hash": "BDD073919BA6CD9F0EA0C71FC6F76DFC",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Pragmas": [],
       "Assets": [],

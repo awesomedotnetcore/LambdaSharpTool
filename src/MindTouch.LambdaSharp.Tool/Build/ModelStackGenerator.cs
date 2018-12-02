@@ -142,14 +142,13 @@ namespace MindTouch.LambdaSharp.Tool.Build {
         private void AddResource(AModuleEntry entry) {
             var logicalId = entry.LogicalId;
             switch(entry) {
-            case ValueEntry value:
+            case VariableEntry value:
 
                 // nothing to do
                 break;
             case PackageEntry package:
-                _stack.Add(logicalId, package.Package);
-                break;
-            case HumidifierEntry humidifier:
+                throw new NotSupportedException("package entry is not supported");
+            case ResourceEntry humidifier:
                 _stack.Add(
                     logicalId,
                     humidifier.Resource,

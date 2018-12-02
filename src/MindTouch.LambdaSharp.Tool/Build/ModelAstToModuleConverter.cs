@@ -29,6 +29,7 @@ using MindTouch.LambdaSharp.Tool.Model;
 using MindTouch.LambdaSharp.Tool.Model.AST;
 
 namespace MindTouch.LambdaSharp.Tool.Build {
+    using Newtonsoft.Json.Linq;
     using static ModelFunctions;
 
     public class ModelAstToModuleConverter : AModelProcessor {
@@ -68,11 +69,8 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                 // convert collections
                 ForEach("Pragmas", module.Pragmas ?? new List<object>(), ConvertPragma);
                 ForEach("Secrets", module.Secrets ?? new List<string>(), ConvertSecret);
-                ForEach("Inputs", module.Inputs, ConvertInput);
                 ForEach("Outputs", module.Outputs, ConvertOutput);
-                ForEach("Variables", module.Variables, ConvertVariable);
                 ForEach("Entries", module.Entries, ConvertEntry);
-                ForEach("Functions",  module.Functions, ConvertFunction);
                 return _builder;
             } catch(Exception e) {
                 AddError(e);
@@ -101,27 +99,8 @@ namespace MindTouch.LambdaSharp.Tool.Build {
             });
         }
 
-        private void ConvertInput(int index, EntryNode node) => ConvertEntry(null, index, node, new[] { "Parameter", "Import" });
-
-        private void ConvertVariable(int index, EntryNode variable) => ConvertVariable(null, index, variable);
-
-        private void ConvertVariable(AModuleEntry parent, int index, EntryNode variable)
-            => ConvertEntry(parent, index, variable, new[] {
-                "Var.Resource",
-                "Var.Reference",
-                "Var.Value",
-                "Var.Secret",
-                "Var.Empty",
-                "Var.Module",
-                "Package"
-            });
-
-        private void ConvertFunction(int index, EntryNode function) {
-            ConvertEntry(null, index, function, new[] { "Function" });
-        }
-
         private AFunctionSource ConvertFunctionSource(EntryNode function, int index, FunctionSourceNode source) {
-            var type = DeterminNodeType("source", index, source, FunctionSourceNode.FieldCheckers, FunctionSourceNode.FieldCombinations, new[] {
+            var type = DeterminNodeType("source", index, source, FunctionSourceNode.FieldCombinations, new[] {
                 "Api",
                 "Schedule",
                 "S3",
@@ -219,12 +198,11 @@ namespace MindTouch.LambdaSharp.Tool.Build {
 
         private void ConvertEntry(int index, EntryNode node)
             => ConvertEntry(null, index, node, new[] {
-                "Var.Resource",
-                "Var.Reference",
-                "Var.Value",
-                "Var.Secret",
-                "Var.Empty",
-                "Var.Module",
+                "Parameter",
+                "Import",
+                "Variable",
+                "Resource",
+                "Module",
                 "Package",
                 "Function",
                 "Export",
@@ -233,216 +211,150 @@ namespace MindTouch.LambdaSharp.Tool.Build {
             });
 
         private void ConvertEntry(AModuleEntry parent, int index, EntryNode node, IEnumerable<string> expectedTypes) {
-            var type = DeterminNodeType("output", index, node, EntryNode.FieldCheckers, EntryNode.FieldCombinations, expectedTypes);
+            var type = DeterminNodeType("entry", index, node, EntryNode.FieldCombinations, expectedTypes);
             switch(type) {
             case "Parameter":
                 AtLocation(node.Parameter, () => {
-                    var inputType = node.Type ?? "String";
-                    if(node.Resource != null) {
-                        AtLocation("Resource", () => {
-                            Validate(ConvertToStringList(node.Resource.DependsOn).Any() != true, "'DependsOn' cannot be used on an input");
-                            if(node.Default == null) {
-                                Validate(node.Resource.Properties == null, "'Properties' section cannot be used with `Input` attribute unless the 'Default' is set to a blank string");
-                            }
-                        });
+
+                    // validation
+                    Validate((node.Default != null) || (node.Properties == null), "'Properties' section cannot be used unless the 'Default' attribute is set");
+                    if(node.Properties != null) {
+                        Validate(node.Type != null, "'Type' attribute is required");
+                        Validate(node.Allow != null, "'Allow' attribute is required");
                     }
-                    _builder.AddInput(
-                        node.Parameter,
-                        node.Description,
-                        inputType,
-                        node.Section,
-                        node.Label,
-                        node.Scope,
-                        node.NoEcho,
-                        node.Default,
-                        node.ConstraintDescription,
-                        node.AllowedPattern,
-                        node.AllowedValues,
-                        node.MaxLength,
-                        node.MaxValue,
-                        node.MinLength,
-                        node.MinValue,
-                        node.Resource?.Type,
-                        node.Resource?.Allow,
-                        node.Resource?.Properties,
-                        node.Resource?.ArnAttribute
+                    Validate((node.Allow == null) || ResourceMapping.IsResourceTypeSupported(node.Type), "'Allow' attribute can only be used with AWS resource types");
+
+                    // create input parameter entry
+                    _builder.AddParameter(
+                        name: node.Parameter,
+                        section: node.Section,
+                        label: node.Label,
+                        description: node.Description,
+                        type: node.Type ?? "String",
+                        scope: ConvertScope(node.Scope),
+                        noEcho: node.NoEcho,
+                        defaultValue: node.Default,
+                        constraintDescription: node.ConstraintDescription,
+                        allowedPattern: node.AllowedPattern,
+                        allowedValues: node.AllowedValues,
+                        maxLength: node.MaxLength,
+                        maxValue: node.MaxValue,
+                        minLength: node.MinLength,
+                        minValue: node.MinValue,
+                        allow: node.Allow,
+                        properties: node.Properties,
+                        arnAttribute: node.ArnAttribute,
+                        encryptionContext: node.EncryptionContext
                     );
                 });
                 break;
             case "Import":
                 AtLocation(node.Import, () => {
-                    var inputType = node.Type ?? "String";
+
+                    // validation
                     Validate(node.Import.Split("::").Length == 2, "incorrect format for `Import` attribute");
-                    if(node.Resource != null) {
-                        Validate(inputType == "String", "input 'Type' must be string");
-                        AtLocation("Resource", () => {
-                            Validate(node.Resource.Type != null, "'Type' attribute is required");
-                            Validate(node.Resource.Allow != null, "'Allow' attribute is required");
-                            Validate(ConvertToStringList(node.Resource.DependsOn).Any() != true, "'DependsOn' cannot be used on an input");
-                        });
+                    if(node.Properties != null) {
+                        Validate(node.Type != null, "'Type' attribute is required");
+                        Validate(node.Allow != null, "'Allow' attribute is required");
                     }
+                    Validate((node.Allow == null) || ResourceMapping.IsResourceTypeSupported(node.Type), "'Allow' attribute can only be used with AWS resource types");
+
+                    // create import/cross-module reference entry
                     _builder.AddImport(
-                        node.Import,
-                        node.Description,
-                        inputType,
-                        node.Section,
-                        node.Label,
-                        node.Scope,
-                        node.NoEcho,
-                        node.Resource?.Type,
-                        node.Resource?.Allow
+                        import: node.Import,
+                        section: node.Section,
+                        label: node.Label,
+                        description: node.Description,
+                        type: node.Type ?? "String",
+                        scope: node.Scope,
+                        noEcho: node.NoEcho,
+                        allow: node.Allow
                     );
                 });
                 break;
-            case "Var.Resource":
+            case "Variable":
+                AtLocation(node.Variable, () => {
 
-                // managed resource
-                AtLocation(node.Var, () => {
+                    // validation
+                    Validate((node.EncryptionContext == null) || (node.Type == "Secret"), "entry must have Type 'Secret' to use 'EncryptionContext' section");
+                    Validate((node.Type != "Secret") || !(node.Value is IList<object>), "entry with type 'Secret' cannot have a list of values");
 
-                    // create managed resource entry
+                    // create variable entry
+                    var result = _builder.AddVariable(
+                        parent: parent,
+                        name: node.Variable,
+                        description: node.Description,
+                        type: node.Type ?? "String",
+                        scope: ConvertScope(node.Scope),
+                        value: node.Value ?? "",
+                        encryptionContext: node.EncryptionContext
+                    );
+
+                    // recurse
+                    ConvertVariables(result);
+                });
+                break;
+            case "Resource":
+                AtLocation(node.Resource, () => {
+
+                    // validation
+                    Validate((node.Value == null) || (node.Properties == null), "cannot use 'Properties' section with a reference resource");
+                    var awsType = node.Type ?? "AWS";
+                    if(node.Value != null) {
+                        Validate(node.Properties == null, "cannot use 'Properties' section with a reference resource");
+                        if(node.Value is string text) {
+                            ValidateARN(text);
+                        } else if(node.Value is IList<object> values) {
+                            foreach(var arn in values) {
+                                ValidateARN(arn);
+                            }
+                        }
+                    } else if(awsType.StartsWith("AWS::", StringComparison.Ordinal) == true) {
+                        if(!ResourceMapping.IsResourceTypeSupported(awsType)) {
+                            AddError($"unsupported resource type: {type}");
+                        }
+                    } else if(awsType != "AWS") {
+                        Validate(node.Allow == null, "cannot use 'Allow' attribute with custom resources");
+                    }
+
+                    // create resource entry
                     var result = _builder.AddResource(
                         parent: parent,
-                        name: node.Var,
+                        name: node.Resource,
                         description: node.Description,
-                        scope: node.Scope,
-                        awsType: node.Resource.Type,
-                        awsProperties: node.Resource.Properties,
-                        awsArnAttribute: node.Resource.ArnAttribute,
-                        dependsOn: ConvertToStringList(node.Resource.DependsOn),
+                        type: awsType,
+                        scope: ConvertScope(node.Scope),
+                        value: node.Value,
+                        allow: node.Allow,
+                        properties: node.Properties,
+                        dependsOn: ConvertToStringList(node.DependsOn),
+                        arnAttribute: node.ArnAttribute,
                         condition: null
                     );
 
-                    // request managed resource grants
-                    AtLocation("Resource", () => {
-                        if(node.Resource.Type == null) {
-                            AddError("missing Type attribute");
-                        } else if(
-                            node.Resource.Type.StartsWith("AWS::", StringComparison.Ordinal)
-                            && !ResourceMapping.IsResourceTypeSupported(node.Resource.Type)
-                        ) {
-                            AddError($"unsupported resource type: {node.Resource.Type}");
-                        } else if(!node.Resource.Type.StartsWith("AWS::", StringComparison.Ordinal)) {
-                            Validate(node.Resource.Allow == null, "'Allow' attribute is not valid for custom resources");
-                        }
-                        _builder.AddGrant(result.LogicalId, node.Resource.Type, result.GetExportReference(), node.Resource.Allow);
+                    // recurse
+                    ConvertVariables(result);
+                });
+                break;
+            case "Module":
+                AtLocation(node.Module, () => {
+
+                    // validation
+                    AtLocation("Location", () => {
+                        Validate(node.Location?.Name != null, "missing 'Name' attribute");
+                        Validate(node.Location?.Version != null, "missing 'Version' attribute");
+                        Validate(node.Location?.S3Bucket != null, "missing 'S3Bucket' attribute");
                     });
-
-                    // recurse
-                    ConvertVariables(result);
-                });
-                break;
-            case "Var.Reference":
-
-                // existing resource
-                AtLocation(node.Var, () => {
-
-                    // create existing resource entry
-                    var result = _builder.AddValue(
-                        parent: parent,
-                        name: node.Var,
-                        description: node.Description,
-                        reference: node.Value,
-                        scope: node.Scope,
-                        isSecret: false
-                    );
-
-                    // validate literal references are ARNs
-                    if(node.Value is string text) {
-                        ValidateARN(text);
-                    } else if(node.Value is IList<object> values) {
-                        foreach(var value in values) {
-                            ValidateARN(value);
-                        }
-                    }
-
-                    // request existing resource grants
-                    AtLocation("Resource", () => {
-                        _builder.AddGrant(result.LogicalId, node.Resource.Type, node.Value, node.Resource.Allow);
-                    });
-
-                    // recurse
-                    ConvertVariables(result);
-                });
-                break;
-            case "Var.Value":
-
-                // literal value
-                AtLocation(node.Var, () => {
-
-                    // create literal value entry
-                    var result = _builder.AddValue(
-                        parent: parent,
-                        name: node.Var,
-                        description: node.Description,
-                        reference: (node.Value is IList<object> values)
-                            ? FnJoin(",", values)
-                            : node.Value,
-                        scope: node.Scope,
-                        isSecret: false
-                    );
-
-                    // recurse
-                    ConvertVariables(result);
-                });
-                break;
-            case "Var.Secret":
-
-                // encrypted value
-                AtLocation(node.Var, () => {
-
-                    // create encrypted value entry
-                    var result = _builder.AddValue(
-                        parent: parent,
-                        name: node.Var,
-                        description: node.Description,
-                        scope: node.Scope,
-                        reference: FnJoin(
-                            "|",
-                            new object[] {
-                                node.Secret
-                            }.Union(node.EncryptionContext
-                                ?.Select(kv => $"{Uri.EscapeDataString(kv.Key)}={Uri.EscapeDataString(kv.Value)}")
-                                ?? new string[0]
-                            ).ToArray()
-                        ),
-                        isSecret: true
-                    );
-
-                    // recurse
-                    ConvertVariables(result);
-                });
-                break;
-            case "Var.Empty":
-
-                // empty entry
-                AtLocation(node.Var, () => {
-
-                    // create empty entry
-                    var result = _builder.AddValue(
-                        parent: parent,
-                        name: node.Var,
-                        description: node.Description,
-                        reference: "",
-                        scope: node.Scope,
-                        isSecret: false
-                    );
-
-                    // recurse
-                    ConvertVariables(result);
-                });
-                break;
-            case "Var.Module":
-                AtLocation(node.Var, () => {
 
                     // create module entry
                     var result = _builder.AddModule(
                         parent: parent,
-                        name: node.Var,
+                        name: node.Module,
                         description: node.Description,
-                        module: node.Module,
-                        version: node.Version,
-                        sourceBucketName: node.SourceBucketName,
-                        scope: node.Scope,
+                        module: node.Location?.Name,
+                        version: node.Location?.Version,
+                        sourceBucketName: node.Location?.S3Bucket,
+                        scope: ConvertScope(node.Scope),
                         dependsOn: node.DependsOn,
                         parameters: node.Parameters
                     );
@@ -458,12 +370,6 @@ namespace MindTouch.LambdaSharp.Tool.Build {
 
                     // check if required attributes are present
                     Validate(node.Files != null, "missing 'Files' attribute");
-                    Validate(node.Bucket != null, "missing 'Bucket' attribute");
-
-                    // check if package is nested
-                    if(parent != null) {
-                        AddError("parameter package cannot be nested");
-                    }
 
                     // create package resource entry
                     var result = _builder.AddPackage(
@@ -471,11 +377,7 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                         name: node.Package,
                         description: node.Description,
                         scope: node.Scope,
-                        destinationBucket: (node.Bucket is string)
-                            ? _builder.GetEntry((string)node.Bucket).GetExportReference()
-                            : node.Bucket,
-                        destinationKeyPrefix: node.Prefix ?? "",
-                        sourceFilepath: node.Files
+                        files: node.Files
                     );
 
                     // recurse
@@ -484,6 +386,8 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                 break;
             case "Function":
                 AtLocation(node.Function, () => {
+
+                    // validation
                     Validate(node.Memory != null, "missing Memory attribute");
                     Validate(int.TryParse(node.Memory, out _), "invalid Memory value");
                     Validate(node.Timeout != null, "missing Name attribute");
@@ -491,16 +395,10 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                     ValidateFunctionSource(node.Sources ?? new FunctionSourceNode[0]);
 
                     // initialize VPC configuration if provided
-                    object subnets = null;
-                    object securityGroups = null;
-                    if(node.VPC?.Any() == true) {
+                    if(node.VPC != null) {
                         AtLocation("VPC", () => {
-                            if(
-                                !node.VPC.TryGetValue("SubnetIds", out subnets)
-                                || !node.VPC.TryGetValue("SecurityGroupIds", out securityGroups)
-                            ) {
-                                AddError("Lambda function contains a VPC definition that does not include 'SubnetIds' or 'SecurityGroupIds' attributes");
-                            }
+                            Validate(node.VPC.SubnetIds != null, "missing 'SubnetIds' attribute");
+                            Validate(node.VPC.SecurityGroupIds != null, "missing 'SecurityGroupIds' attribute");
                         });
                     }
 
@@ -526,8 +424,8 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                         reservedConcurrency: node.ReservedConcurrency,
                         memory: node.Memory,
                         handler: node.Handler,
-                        subnets: subnets,
-                        securityGroups: securityGroups
+                        subnets: node.VPC?.SubnetIds,
+                        securityGroups: node.VPC?.SecurityGroupIds
                     );
                 });
                 break;
@@ -556,7 +454,6 @@ namespace MindTouch.LambdaSharp.Tool.Build {
 
             // local functions
             void ConvertVariables(AModuleEntry result) {
-                ForEach("Variables", node.Variables, (i, p) => ConvertVariable(result, i, p));
                 ForEach("Entries", node.Entries, (i, p) => ConvertEntry(result, i, p, expectedTypes));
             }
 
@@ -565,61 +462,6 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                     AddError($"resource name must be a valid ARN or wildcard: {resourceArn}");
                 }
             }
-        }
-
-        private string DeterminNodeType<T>(
-            string label,
-            int index,
-            T instance,
-            Dictionary<string, Func<T, bool>> fieldChecker,
-            Dictionary<string, IEnumerable<string>> fieldCombinations,
-            IEnumerable<string> expectedTypes
-        ) {
-            return AtLocation($"[{index}]", () => {
-
-                // find all declaration fields with a non-null value; use alphabetical order for consistency
-                var matches = fieldCombinations
-                    .OrderBy(kv => kv.Key)
-                    .Where(kv => {
-                        if(!fieldChecker.TryGetValue(kv.Key, out Func<T, bool> checker)) {
-                            throw new InvalidOperationException($"missing field checker for '{kv.Key}'");
-                        }
-                        return checker(instance);
-                    })
-                    .Select(kv => new {
-                        EntryType = kv.Key,
-                        ValidFields = kv.Value
-                    })
-                    .ToArray();
-                switch(matches.Length) {
-                case 0:
-                    AddError($"unknown {label} type");
-                    return null;
-                case 1:
-
-                    // good to go
-                    break;
-                default:
-                    AddError($"ambiguous {label} type: {string.Join(", ", matches.Select(kv => kv.EntryType))}");
-                    return null;
-                }
-
-                // validate match
-                var match = matches.First();
-                foreach(var checker in fieldChecker.Where(kv =>
-                    (kv.Key != match.EntryType)             // don't recheck the key we already used
-                    && kv.Value(instance)                   // check if field is set
-                    && !match.ValidFields.Contains(kv.Key)  // check if field is not valid
-                )) {
-                    AddError($"'{checker.Key}' cannot be used with '{match.EntryType}'");
-                }
-                if(!expectedTypes.Contains(match.EntryType)) {
-                    AddError($"unexpected node type: {match.EntryType}");
-                    return null;
-
-                }
-                return match.EntryType;
-            });
         }
 
         private void ValidateFunctionSource(IEnumerable<FunctionSourceNode> sources) {
@@ -694,6 +536,82 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                     }
                 });
             }
+        }
+
+        private string DeterminNodeType(
+            string entryName,
+            int index,
+            object instance,
+            Dictionary<string, IEnumerable<string>> typeChecks,
+            IEnumerable<string> expectedTypes
+        ) {
+            var instanceLookup = JObject.FromObject(instance);
+
+            return AtLocation($"[{index}]", () => {
+
+                // find all declaration fields with a non-null value; use alphabetical order for consistency
+                var matches = typeChecks
+                    .OrderBy(kv => kv.Key)
+                    .Where(kv => IsFieldSet(kv.Key))
+                    .Select(kv => new {
+                        EntryType = kv.Key,
+                        ValidFields = kv.Value
+                    })
+                    .ToArray();
+                switch(matches.Length) {
+                case 0:
+                    AddError($"unknown {entryName} type");
+                    return null;
+                case 1:
+
+                    // good to go
+                    break;
+                default:
+                    AddError($"ambiguous {entryName} type: {string.Join(", ", matches.Select(kv => kv.EntryType))}");
+                    return null;
+                }
+
+                // validate match
+                var match = matches.First();
+                var invalidFields = typeChecks
+
+                    // collect all field names
+                    .SelectMany(kv => kv.Value)
+                    .Distinct()
+
+                    // only keep names that are not defined for the matched type
+                    .Where(field => !match.ValidFields.Contains(field))
+
+                    // check if the field is set on the instance
+                    .Where(field => IsFieldSet(field))
+                    .OrderBy(field => field)
+                    .ToArray();
+                if(invalidFields.Any()) {
+                    AddError($"'{string.Join(", ", invalidFields)}' cannot be used with '{match.EntryType}'");
+                }
+
+                // check if the matched entry was expected
+                if(!expectedTypes.Contains(match.EntryType)) {
+                    AddError($"unexpected node type: {match.EntryType}");
+                    return null;
+                }
+                return match.EntryType;
+            });
+
+            // local functions
+            bool IsFieldSet(string field)
+                => instanceLookup.TryGetValue(field, out JToken token) && (token.Type != JTokenType.Null);
+        }
+
+        private IList<string> ConvertScope(object scope) {
+            if(scope == null) {
+                return new string[0];
+            }
+            return AtLocation("Scope", () => {
+                return (scope == null)
+                    ? new List<string>()
+                    : ConvertToStringList(scope);
+            });
         }
     }
 }

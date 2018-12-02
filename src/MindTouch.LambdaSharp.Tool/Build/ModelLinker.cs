@@ -95,7 +95,7 @@ namespace MindTouch.LambdaSharp.Tool.Build {
 
                         // add all entries scoped to this function
                         foreach(var scopeEntry in builder.Entries.Where(e => e.Scope.Contains(function.FullName))) {
-                            var prefix = scopeEntry.IsSecret ? "SEC_" : "STR_";
+                            var prefix = scopeEntry.HasSecretType ? "SEC_" : "STR_";
                             var fullEnvName = prefix + scopeEntry.FullName.Replace("::", "_").ToUpperInvariant();
                             environment[fullEnvName] = (dynamic)scopeEntry.GetExportReference();
                         }
@@ -309,11 +309,11 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                         switch(freeEntry) {
                         case PackageEntry _:
                         case InputEntry _:
-                        case ValueEntry _:
+                        case VariableEntry _:
                             AddError($"reference '{key}' must be a reference, resource, or function when using Fn::GetAtt");
                             break;
                         case FunctionEntry _:
-                        case HumidifierEntry _:
+                        case ResourceEntry _:
 
                             // TODO (2018-11-28, bjorg): validate this attribute name is valid for this resource
 

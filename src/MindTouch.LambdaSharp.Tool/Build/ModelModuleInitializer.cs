@@ -44,47 +44,67 @@ namespace MindTouch.LambdaSharp.Tool.Build {
             _builder = builder;
 
             // add module variables
-            var moduleEntry = _builder.AddValue(
+            var moduleEntry = _builder.AddVariable(
                 parent: null,
                 name: "Module",
                 description: "Module Variables",
-                reference: "",
+                type: "String",
                 scope: null,
-                isSecret: false
+                value: "",
+                encryptionContext: null
             );
-            _builder.AddValue(
+            _builder.AddVariable(
                 parent: moduleEntry,
                 name: "Id",
                 description: "Module ID",
-                reference: FnRef("AWS::StackName"),
+                type: "String",
                 scope: null,
-                isSecret: false
+                value: FnRef("AWS::StackName"),
+                encryptionContext: null
             );
-            _builder.AddValue(
+            _builder.AddVariable(
                 parent: moduleEntry,
                 name: "Name",
                 description: "Module Name",
-                reference: _builder.Name,
+                type: "String",
                 scope: null,
-                isSecret: false
+                value: _builder.Name,
+                encryptionContext: null
             );
-            _builder.AddValue(
+            _builder.AddVariable(
                 parent: moduleEntry,
                 name: "Version",
                 description: "Module Version",
-                reference: _builder.Version.ToString(),
+                type: "String",
                 scope: null,
-                isSecret: false
+                value: _builder.Version.ToString(),
+                encryptionContext: null
             );
 
             // add LambdaSharp Module Options
             var section = "LambdaSharp Module Options";
-            _builder.AddInput(
+            _builder.AddParameter(
                 name: "Secrets",
                 section: section,
                 label: "Secret Keys (ARNs)",
                 description: "Comma-separated list of optional secret keys",
-                defaultValue: ""
+
+                // TODO: see if we can use CommaDelimitedList here instead?
+                type: "String",
+                scope: null,
+                noEcho: null,
+                defaultValue: "",
+                constraintDescription: null,
+                allowedPattern: null,
+                allowedValues: null,
+                maxLength: null,
+                maxValue: null,
+                minLength: null,
+                minValue: null,
+                allow: null,
+                properties: null,
+                arnAttribute: null,
+                encryptionContext: null
             );
             _builder.AddCondition("SecretsIsEmpty", FnEquals(FnRef("Secrets"), ""));
 
@@ -97,46 +117,71 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                     import: "LambdaSharp::DeadLetterQueueArn",
                     section: section,
                     label: "Dead Letter Queue (ARN)",
-                    description: "Dead letter queue for functions"
+                    description: "Dead letter queue for functions",
+
+                    // TODO (2018-12-01, bjorg): consider using 'AWS::SQS::Queue'
+                    type: "String",
+                    scope: null,
+                    noEcho: null,
+                    allow: null /* new[] {
+                        "sqs:SendMessage"
+                    }*/
                 );
                 _builder.AddImport(
                     import: "LambdaSharp::LoggingStreamArn",
                     section: section,
                     label: "Logging Stream (ARN)",
-                    description: "Logging kinesis stream for functions"
+                    description: "Logging kinesis stream for functions",
+
+                    // NOTE: we use type 'String' to be more flexible with the type of values we're willing to take
+                    type: "String",
+                    scope: null,
+                    noEcho: null,
+                    allow: null
                 );
                 _builder.AddImport(
                     import: "LambdaSharp::DefaultSecretKeyArn",
                     section: section,
                     label: "Secret Key (ARN)",
-                    description: "Default secret key for functions"
+                    description: "Default secret key for functions",
+
+                    // TODO (2018-12-01, bjorg): consider using 'AWS::KMS::Key'
+                    type: "String",
+                    scope: null,
+                    noEcho: null,
+
+                    // NOTE: we grant decryption access later as part of a bulk permissioning operation
+                    allow: null
                 );
                 _builder.AddSecret(FnRef("Module::DefaultSecretKeyArn"));
 
                 // add lambdasharp imports
-                _builder.AddValue(
+                _builder.AddVariable(
                     parent: moduleEntry,
                     name: "DeadLetterQueueArn",
                     description: "Module Dead Letter Queue (ARN)",
-                    reference: FnRef("LambdaSharp::DeadLetterQueueArn"),
+                    type: "String",
                     scope: null,
-                    isSecret: false
+                    value: FnRef("LambdaSharp::DeadLetterQueueArn"),
+                    encryptionContext: null
                 );
-                _builder.AddValue(
+                _builder.AddVariable(
                     parent: moduleEntry,
                     name: "LoggingStreamArn",
                     description: "Module Logging Stream (ARN)",
-                    reference: FnRef("LambdaSharp::LoggingStreamArn"),
+                    type: "String",
                     scope: null,
-                    isSecret: false
+                    value: FnRef("LambdaSharp::LoggingStreamArn"),
+                    encryptionContext: null
                 );
-                _builder.AddValue(
+                _builder.AddVariable(
                     parent: moduleEntry,
                     name: "DefaultSecretKeyArn",
                     description: "Module Default Secret Key (ARN)",
-                    reference: FnRef("LambdaSharp::DefaultSecretKeyArn"),
+                    type: "String",
                     scope: null,
-                    isSecret: false
+                    value: FnRef("LambdaSharp::DefaultSecretKeyArn"),
+                    encryptionContext: null
                 );
 
                 // permissions needed for dead-letter queue
@@ -184,30 +229,89 @@ namespace MindTouch.LambdaSharp.Tool.Build {
 
             // add LambdaSharp Deployment Settings
             section = "LambdaSharp Deployment Settings (DO NOT MODIFY)";
-            _builder.AddInput(
+            _builder.AddParameter(
                 name: "DeploymentBucketName",
                 section: section,
                 label: "Deployment S3 Bucket",
-                description: "Source deployment S3 bucket name"
+                description: "Source deployment S3 bucket name",
+                type: "String",
+                scope: null,
+                noEcho: null,
+                defaultValue: null,
+                constraintDescription: null,
+                allowedPattern: null,
+                allowedValues: null,
+                maxLength: null,
+                maxValue: null,
+                minLength: null,
+                minValue: null,
+                allow: null,
+                properties: null,
+                arnAttribute: null,
+                encryptionContext: null
             );
-            _builder.AddInput(
+            _builder.AddParameter(
                 name: "DeploymentPrefix",
                 section: section,
                 label: "Deployment Prefix",
-                description: "Module deployment prefix"
+                description: "Module deployment prefix",
+                type: "String",
+                scope: null,
+                noEcho: null,
+                defaultValue: null,
+                constraintDescription: null,
+                allowedPattern: null,
+                allowedValues: null,
+                maxLength: null,
+                maxValue: null,
+                minLength: null,
+                minValue: null,
+                allow: null,
+                properties: null,
+                arnAttribute: null,
+                encryptionContext: null
             );
-            _builder.AddInput(
+            _builder.AddParameter(
                 name: "DeploymentPrefixLowercase",
                 section: section,
                 label: "Deployment Prefix (lowercase)",
-                description: "Module deployment prefix (lowercase)"
+                description: "Module deployment prefix (lowercase)",
+                type: "String",
+                scope: null,
+                noEcho: null,
+                defaultValue: null,
+                constraintDescription: null,
+                allowedPattern: null,
+                allowedValues: null,
+                maxLength: null,
+                maxValue: null,
+                minLength: null,
+                minValue: null,
+                allow: null,
+                properties: null,
+                arnAttribute: null,
+                encryptionContext: null
             );
-            _builder.AddInput(
+            _builder.AddParameter(
                 name: "DeploymentParent",
                 section: section,
                 label: "Parent Stack Name",
                 description: "Parent stack name for nested deployments, blank otherwise",
-                defaultValue: ""
+                type: "String",
+                scope: null,
+                noEcho: null,
+                defaultValue: "",
+                constraintDescription: null,
+                allowedPattern: null,
+                allowedValues: null,
+                maxLength: null,
+                maxValue: null,
+                minLength: null,
+                minValue: null,
+                allow: null,
+                properties: null,
+                arnAttribute: null,
+                encryptionContext: null
             );
 
             // add module registration

@@ -1,23 +1,16 @@
 Module: TestModule
 Description: LambdaSharp CloudFormation Test
-
-Inputs:
+Entries:
 
   - Parameter: InputTopic
     Description: Description for Input Topic
-    Resource:
-      Type: AWS::SNS::Topic
-      Allow: Subscribe
+    Type: AWS::SNS::Topic
+    Allow: Subscribe
 
-Variables:
-
-  - Var: Topic
+  - Resource: Topic
     Description: Description for Topic resource
-    Resource:
-      Type: AWS::SNS::Topic
-      Allow: Subscribe
-
-Functions:
+    Type: AWS::SNS::Topic
+    Allow: Subscribe
 
   - Function: Function
     Description: My function
