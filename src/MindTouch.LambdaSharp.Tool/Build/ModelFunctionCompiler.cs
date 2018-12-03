@@ -367,24 +367,6 @@ namespace MindTouch.LambdaSharp.Tool.Build {
 
         private void AddFunction(FunctionEntry function) {
 
-            // create function log-group with retention window
-            var logGroup = _builder.AddResource(
-                parent: function,
-                name: "LogGroup",
-                description: null,
-                scope: null,
-                resource: new Humidifier.Logs.LogGroup {
-                    LogGroupName = FnSub($"/aws/lambda/${{{function.LogicalId}}}"),
-
-                    // TODO (2018-09-26, bjorg): make retention configurable
-                    //  see https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutRetentionPolicy.html
-                    RetentionInDays = 7
-                },
-                resourceArnAttribute: null,
-                dependsOn: null,
-                condition: null
-            );
-
             // add function sources
             for(var sourceIndex = 0; sourceIndex < function.Sources.Count; ++sourceIndex) {
                 var source = function.Sources[sourceIndex];
@@ -639,45 +621,6 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                 default:
                     throw new ApplicationException($"unrecognized function source type '{source?.GetType()}' for source #{sourceSuffix}");
                 }
-            }
-
-            // check if function should be registered
-            if(_builder.HasModuleRegistration && function.HasFunctionRegistration && _builder.HasLambdaSharpDependencies) {
-                _builder.AddResource(
-                    parent: function,
-                    name: "Registration",
-                    description: null,
-                    scope: null,
-                    resource: new Humidifier.CustomResource("LambdaSharp::Register::Function") {
-                        ["ModuleId"] = FnRef("AWS::StackName"),
-                        ["FunctionId"] = FnRef(function.ResourceName),
-                        ["FunctionName"] = function.Name,
-                        ["FunctionLogGroupName"] = FnSub($"/aws/lambda/${{{function.LogicalId}}}"),
-                        ["FunctionPlatform"] = "AWS Lambda",
-                        ["FunctionFramework"] = function.Function.Runtime,
-                        ["FunctionLanguage"] = function.Language,
-                        ["FunctionMaxMemory"] = function.Function.MemorySize,
-                        ["FunctionMaxDuration"] = function.Function.Timeout
-                    },
-                    resourceArnAttribute: null,
-                    dependsOn: new[] { "Module::Registration" },
-                    condition: null
-                );
-                var logSubscription = _builder.AddResource(
-                    parent: function,
-                    name: "LogGroupSubscription",
-                    description: null,
-                    scope: null,
-                    resource: new Humidifier.Logs.SubscriptionFilter {
-                        DestinationArn = FnRef("Module::LoggingStreamArn"),
-                        FilterPattern = "-\"*** \"",
-                        LogGroupName = FnRef(logGroup.ResourceName),
-                        RoleArn = FnGetAtt("Module::CloudWatchLogsRole", "Arn")
-                    },
-                    resourceArnAttribute: null,
-                    dependsOn: null,
-                    condition: null
-                );
             }
         }
 

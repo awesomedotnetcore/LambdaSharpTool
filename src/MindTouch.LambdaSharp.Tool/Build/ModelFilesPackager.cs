@@ -103,8 +103,7 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                         zipArchive.CreateEntryFromFile(file, filename);
                     }
                 }
-                parameter.UpdatePackagePath(package);
-                _builder.AddAsset(Path.GetRelativePath(Settings.OutputDirectory, package));
+                _builder.AddAsset($"{parameter.FullName}::PackageName", package);
             });
         }
     }

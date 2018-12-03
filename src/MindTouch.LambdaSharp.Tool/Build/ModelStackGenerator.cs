@@ -102,7 +102,14 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                 GitSha = gitSha ?? "",
                 Pragmas = module.Pragmas.ToList(),
                 Assets = module.Assets.ToList(),
-                ResourceFullNames = module.Entries.ToDictionary(entry => entry.LogicalId, entry => entry.FullName)
+                ResourceFullNames = module.Entries
+
+                    // we only ned to worry about resource names
+                    .Where(entry => (entry is AResourceEntry))
+
+                    // we only care about entries where the logical ID and full-name don't match
+                    .Where(entry => entry.LogicalId != entry.FullName)
+                    .ToDictionary(entry => entry.LogicalId, entry => entry.FullName)
             });
 
             // generate JSON template
@@ -142,25 +149,24 @@ namespace MindTouch.LambdaSharp.Tool.Build {
         private void AddResource(AModuleEntry entry) {
             var logicalId = entry.LogicalId;
             switch(entry) {
-            case VariableEntry value:
+            case VariableEntry _:
+            case PackageEntry _:
 
                 // nothing to do
                 break;
-            case PackageEntry package:
-                throw new NotSupportedException("package entry is not supported");
-            case ResourceEntry humidifier:
+            case ResourceEntry resourceEntry:
                 _stack.Add(
                     logicalId,
-                    humidifier.Resource,
-                    humidifier.Condition,
-                    dependsOn: humidifier.DependsOn.ToArray()
+                    resourceEntry.Resource,
+                    resourceEntry.Condition,
+                    dependsOn: resourceEntry.DependsOn.ToArray()
                 );
                 break;
-            case InputEntry input:
-                _stack.Add(logicalId, input.Parameter);
+            case InputEntry inputEntry:
+                _stack.Add(logicalId, inputEntry.Parameter);
                 break;
-            case FunctionEntry function:
-                _stack.Add(function.LogicalId, function.Function);
+            case FunctionEntry functionEntry:
+                _stack.Add(functionEntry.LogicalId, functionEntry.Function);
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(entry), entry, "unknown parameter type");

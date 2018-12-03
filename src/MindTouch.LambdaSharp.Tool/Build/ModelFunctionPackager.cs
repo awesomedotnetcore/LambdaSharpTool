@@ -72,44 +72,14 @@ namespace MindTouch.LambdaSharp.Tool.Build {
             string gitsha,
             string buildConfiguration
         ) {
-
-            // identify folder for function
-            var folderName = new[] {
-                function.Name,
-                $"{_builder.Name}.{function.Name}"
-            }.FirstOrDefault(name => Directory.Exists(Path.Combine(Settings.WorkingDirectory, name)));
-            if(folderName == null) {
-                AddError($"could not locate function directory");
-                return;
-            }
-
-            // delete old packages
-            if(Directory.Exists(Settings.OutputDirectory)) {
-                foreach(var file in Directory.GetFiles(Settings.OutputDirectory, $"function_{function.Name}*.zip")) {
-                    try {
-                        File.Delete(file);
-                    } catch { }
-                }
-            }
-
-            // determine the function project
-            var projectPath = function.Project ?? new [] {
-                Path.Combine(Settings.WorkingDirectory, folderName, $"{folderName}.csproj"),
-                Path.Combine(Settings.WorkingDirectory, folderName, "index.js")
-            }.FirstOrDefault(path => File.Exists(path));
-            if(projectPath == null) {
-                AddError("could not locate the function project");
-                return;
-            }
-            switch(Path.GetExtension(projectPath).ToLowerInvariant()) {
+            switch(Path.GetExtension(function.Project).ToLowerInvariant()) {
             case ".csproj":
                 ProcessDotNet(
                     function,
                     skipCompile,
                     skipAssemblyValidation,
                     gitsha,
-                    buildConfiguration,
-                    projectPath
+                    buildConfiguration
                 );
                 break;
             case ".js":
@@ -118,8 +88,7 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                     skipCompile,
                     skipAssemblyValidation,
                     gitsha,
-                    buildConfiguration,
-                    projectPath
+                    buildConfiguration
                 );
                 break;
             default:
@@ -133,66 +102,15 @@ namespace MindTouch.LambdaSharp.Tool.Build {
             bool skipCompile,
             bool skipAssemblyValidation,
             string gitsha,
-            string buildConfiguration,
-            string project
+            string buildConfiguration
         ) {
             function.Language = "csharp";
 
             // compile function project
-            var projectName = Path.GetFileNameWithoutExtension(project);
-            XDocument csproj = null;
-            XElement mainPropertyGroup = null;
-            if(!AtLocation("Project", () => {
-
-                // check if the handler/runtime were provided or if they need to be extracted from the project file
-                csproj = XDocument.Load(project);
-                mainPropertyGroup = csproj.Element("Project")?.Element("PropertyGroup");
-
-                // make sure the .csproj file contains the lambda tooling
-                var hasAwsLambdaTools = csproj.Element("Project")
-                    ?.Elements("ItemGroup")
-                    .Any(el => (string)el.Element("DotNetCliToolReference")?.Attribute("Include") == "Amazon.Lambda.Tools") ?? false;
-                if(!hasAwsLambdaTools) {
-                    AddError($"the project is missing the AWS lambda tool defintion; make sure that {project} includes <DotNetCliToolReference Include=\"Amazon.Lambda.Tools\"/>");
-                    return false;
-                }
-                return true;
-            })) {
-                return;
-            }
-
-            // check if we need to read the project file <RootNamespace> element to determine the handler name
-            if(function.Function.Handler == null) {
-                AtLocation("Handler", () => {
-                    var rootNamespace = mainPropertyGroup?.Element("RootNamespace")?.Value;
-                    if(rootNamespace != null) {
-                        function.Function.Handler = $"{projectName}::{rootNamespace}.Function::FunctionHandlerAsync";
-                    } else {
-                        AddError("could not auto-determine handler; either add Function field or <RootNamespace> to project file");
-                    }
-                });
-            }
-
-            // check if we need to parse the <TargetFramework> element to determine the lambda runtime
+            var projectName = Path.GetFileNameWithoutExtension(function.Project);
+            var csproj = XDocument.Load(function.Project);
+            var mainPropertyGroup = csproj.Element("Project")?.Element("PropertyGroup");
             var targetFramework = mainPropertyGroup?.Element("TargetFramework").Value;
-            if(function.Function.Runtime == null) {
-                AtLocation("Runtime", () => {
-                    switch(targetFramework) {
-                    case "netcoreapp1.0":
-                        function.Function.Runtime = "dotnetcore1.0";
-                        break;
-                    case "netcoreapp2.0":
-                        function.Function.Runtime = "dotnetcore2.0";
-                        break;
-                    case "netcoreapp2.1":
-                        function.Function.Runtime = "dotnetcore2.1";
-                        break;
-                    default:
-                        AddError("could not auto-determine handler; add Runtime field");
-                        break;
-                    }
-                });
-            }
 
             // validate the project is using the most recent lambdasharp assembly references
             if(!skipAssemblyValidation) {
@@ -219,7 +137,6 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                 }
             }
             if(skipCompile) {
-                function.UpdatePackagePath($"{function.Name}-NOCOMPILE.zip");
                 return;
             }
 
@@ -262,8 +179,7 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                     }
                 }
                 var package = CreatePackage(function.Name, gitsha, tempDirectory);
-                function.UpdatePackagePath(package);
-                _builder.AddAsset(Path.GetRelativePath(Settings.OutputDirectory, package));
+                _builder.AddAsset($"{function.FullName}::PackageName", package);
             } finally {
                 if(Directory.Exists(tempDirectory)) {
                     try {
@@ -336,28 +252,14 @@ namespace MindTouch.LambdaSharp.Tool.Build {
             bool skipCompile,
             bool skipAssemblyValidation,
             string gitsha,
-            string buildConfiguration,
-            string project
+            string buildConfiguration
         ) {
-            function.Language = "javascript";
-
-            // check if we need to set a default handler
-            if(function.Function.Handler == null) {
-                function.Function.Handler = "index.handler";
-            }
-
-            // check if we need to set a default runtime
-            if(function.Function.Runtime == null) {
-                function.Function.Runtime = "nodejs8.10";
-            }
             if(skipCompile) {
-                function.UpdatePackagePath($"{function.Name}-NOCOMPILE.zip");
                 return;
             }
             Console.WriteLine($"=> Building function {function.Name} [{function.Function.Runtime}]");
-            var package = CreatePackage(function.Name, gitsha, Path.GetDirectoryName(project));
-            function.UpdatePackagePath(package);
-            _builder.AddAsset(Path.GetRelativePath(Settings.OutputDirectory, package));
+            var package = CreatePackage(function.Name, gitsha, Path.GetDirectoryName(function.Project));
+            _builder.AddAsset($"{function.FullName}::PackageName", package);
         }
 
         private string CreatePackage(string functionName, string gitsha, string folder) {

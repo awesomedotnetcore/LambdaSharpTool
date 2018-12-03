@@ -28,6 +28,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace MindTouch.LambdaSharp.Tool.Model {
+    using System.IO;
     using static ModelFunctions;
 
     public class ModuleBuilder : AModelProcessor {
@@ -83,7 +84,13 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public void AddCondition(string name, object condition) => _conditions.Add(name, condition);
         public void AddPragma(object pragma) => _pragmas.Add(pragma);
         public bool TryGetEntry(string fullName, out AModuleEntry entry) => _entriesByFullName.TryGetValue(fullName, out entry);
-        public void AddAsset(string asset) => _assets.Add(asset);
+
+        public void AddAsset(string fullName, string asset) {
+            _assets.Add(Path.GetRelativePath(Settings.OutputDirectory, asset));
+
+            // update entry with the name of the asset
+            GetEntry(fullName).Reference = Path.GetFileName(asset);
+        }
 
         public bool AddSecret(object secret) {
             if(secret is string textSecret) {
@@ -512,17 +519,34 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             AModuleEntry parent,
             string name,
             string description,
-            object scope,
-            string files
+            IList<string> scope,
+            string sourceFilepath
         ) {
-            var result = new PackageEntry(
+
+            // create variable corresponding to the package definition
+            var package = new PackageEntry(
                 parent: parent,
                 name: name,
                 description: description,
-                scope: ConvertScope(scope),
-                sourceFilepath: files
+                scope: scope,
+                sourceFilepath: sourceFilepath
             );
-            return AddEntry(result);
+            AddEntry(package);
+
+            // create nested variable for tracking the package-name
+            var packageName = AddVariable(
+                parent: package,
+                name: "PackageName",
+                description: null,
+                type: "String",
+                scope: null,
+                value: "<PLACEHOLDER>",
+                encryptionContext: null
+            );
+
+            // update the package variable to use the package-name variable
+            package.Reference = FnSub($"Modules/${{Module::Name}}/Assets/${{{packageName.FullName}}}");
+            return package;
         }
 
         public AModuleEntry AddFunction(
@@ -543,15 +567,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             object securityGroups
         ) {
 
-            // initialize optional VPC configuration
-            Humidifier.Lambda.FunctionTypes.VpcConfig vpc = null;
-            if((subnets != null) && (securityGroups != null)) {
-                vpc = new Humidifier.Lambda.FunctionTypes.VpcConfig {
-                    SubnetIds = subnets,
-                    SecurityGroupIds = securityGroups
-                };
-            }
-            var result = new FunctionEntry(
+            // create function entry
+            var function = new FunctionEntry(
                 parent: parent,
                 name: name,
                 description: description,
@@ -562,6 +579,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 sources: sources ?? new AFunctionSource[0],
                 pragmas: pragmas ?? new object[0],
                 function: new Humidifier.Lambda.Function {
+
+                    // append version number to function description
                     Description = (description != null)
                         ? description.TrimEnd() + $" (v{_version})"
                         : null,
@@ -570,19 +589,107 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                     ReservedConcurrentExecutions = reservedConcurrency,
                     MemorySize = memory,
                     Handler = handler,
-                    VpcConfig = vpc,
+
+                    // create optional VPC configuration
+                    VpcConfig = ((subnets != null) && (securityGroups != null))
+                        ? new Humidifier.Lambda.FunctionTypes.VpcConfig {
+                            SubnetIds = subnets,
+                            SecurityGroupIds = securityGroups
+                        }
+                        : null,
                     Role = FnGetAtt("Module::Role", "Arn"),
                     Environment = new Humidifier.Lambda.FunctionTypes.Environment {
                         Variables = new Dictionary<string, dynamic>()
+                    },
+                    Code = new Humidifier.Lambda.FunctionTypes.Code {
+                        S3Bucket = FnRef("DeploymentBucketName")
                     }
                 }
             );
+            AddEntry(function);
+
+            // create nested variable for tracking the package-name
+            var packageName = AddVariable(
+                parent: function,
+                name: "PackageName",
+                description: null,
+                type: "String",
+                scope: null,
+                value: $"{function.LogicalId}-NOCOMPILE.zip",
+                encryptionContext: null
+            );
+            function.Function.Code.S3Key = FnSub($"Modules/${{Module::Name}}/Assets/${{{packageName.FullName}}}");
+
+            // create function log-group with retention window
+            var logGroup = AddResource(
+                parent: function,
+                name: "LogGroup",
+                description: null,
+                scope: null,
+                resource: new Humidifier.Logs.LogGroup {
+                    LogGroupName = FnSub($"/aws/lambda/${{{function.LogicalId}}}"),
+
+                    // TODO (2018-09-26, bjorg): make retention configurable
+                    //  see https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutRetentionPolicy.html
+                    RetentionInDays = 7
+                },
+                resourceArnAttribute: null,
+                dependsOn: null,
+                condition: null
+            );
+
+            // check if lambdasharp specific resources need to be initialized/created
             if(HasLambdaSharpDependencies) {
-                result.Function.DeadLetterConfig = new Humidifier.Lambda.FunctionTypes.DeadLetterConfig {
+
+                // initialize dead-letter queue
+                function.Function.DeadLetterConfig = new Humidifier.Lambda.FunctionTypes.DeadLetterConfig {
                     TargetArn = FnRef("Module::DeadLetterQueueArn")
                 };
+
+                // check if function should be registered
+                if(HasModuleRegistration && function.HasFunctionRegistration) {
+
+                    // create function registration
+                    AddResource(
+                        parent: function,
+                        name: "Registration",
+                        description: null,
+                        scope: null,
+                        resource: new Humidifier.CustomResource("LambdaSharp::Register::Function") {
+                            ["ModuleId"] = FnRef("AWS::StackName"),
+                            ["FunctionId"] = FnRef(function.ResourceName),
+                            ["FunctionName"] = function.Name,
+                            ["FunctionLogGroupName"] = FnSub($"/aws/lambda/${{{function.LogicalId}}}"),
+                            ["FunctionPlatform"] = "AWS Lambda",
+                            ["FunctionFramework"] = function.Function.Runtime,
+                            ["FunctionLanguage"] = function.Language,
+                            ["FunctionMaxMemory"] = function.Function.MemorySize,
+                            ["FunctionMaxDuration"] = function.Function.Timeout
+                        },
+                        resourceArnAttribute: null,
+                        dependsOn: new[] { "Module::Registration" },
+                        condition: null
+                    );
+
+                    // create function log-group subscription
+                    AddResource(
+                        parent: function,
+                        name: "LogGroupSubscription",
+                        description: null,
+                        scope: null,
+                        resource: new Humidifier.Logs.SubscriptionFilter {
+                            DestinationArn = FnRef("Module::LoggingStreamArn"),
+                            FilterPattern = "-\"*** \"",
+                            LogGroupName = FnRef(logGroup.ResourceName),
+                            RoleArn = FnGetAtt("Module::CloudWatchLogsRole", "Arn")
+                        },
+                        resourceArnAttribute: null,
+                        dependsOn: null,
+                        condition: null
+                    );
+                }
             }
-            return AddEntry(result);
+            return function;
         }
 
         public void AddGrant(string sid, string awsType, object reference, object allow) {
@@ -650,14 +757,14 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                                 // package.Package = (Humidifier.CustomResource)visitor(package.Package);
                             });
                             break;
-                        case ResourceEntry humidifier:
+                        case ResourceEntry resource:
                             AtLocation("Resource", () => {
-                                humidifier.Resource = (Humidifier.Resource)visitor(humidifier.Resource);
+                                resource.Resource = (Humidifier.Resource)visitor(resource.Resource);
                             });
                             AtLocation("DependsOn", () => {
 
                                 // TODO (2018-11-29, bjorg): we need to make sure that only other resources are referenced (no literal entries, or itself, no loops either)
-                                humidifier.DependsOn = humidifier.DependsOn.Select(dependency => {
+                                resource.DependsOn = resource.DependsOn.Select(dependency => {
                                     TryGetFnRef(visitor(FnRef(dependency)), out string result);
                                     return result ?? throw new InvalidOperationException("invalid expression returned");
                                 }).ToList();

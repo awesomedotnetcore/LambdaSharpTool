@@ -37,7 +37,7 @@ namespace Humidifier {
         //--- Constructors ---
         public CustomResource(string typeName, IDictionary<string, object> properties) {
             _typeName = typeName ?? throw new ArgumentNullException(nameof(typeName));
-            _properties = properties ?? new Dictionary<string, object>();
+            _properties = new Dictionary<string, object>();
 
             // resolve custom resource service token
             if(
@@ -48,7 +48,11 @@ namespace Humidifier {
                 _properties["ServiceToken"] = FnImportValue(FnSub($"${{DeploymentPrefix}}CustomResource-{_typeName}"));
                 _typeName = "Custom::" + _typeName.Replace("::", "");
             }
-
+            if(properties != null) {
+                foreach(var kv in properties) {
+                    _properties.Add(kv.Key, kv.Value);
+                }
+            }
         }
 
         public CustomResource(string typeName) : this(typeName, new Dictionary<string, object>()) { }

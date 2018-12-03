@@ -107,16 +107,50 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         //--- Methods ---
         public override object GetExportReference() => Reference;
-
-        public void UpdatePackagePath(string package) {
-
-            // TODO: we need something we can reference during construction and then resolve to a constant at the end (similar to a Lazy<T> value)
-
-            PackagePath = package ?? throw new ArgumentNullException(nameof(package));
-        }
     }
 
-    public class ResourceEntry : AModuleEntry {
+    public class InputEntry : AModuleEntry {
+
+        //--- Constructors ---
+        public InputEntry(
+            AModuleEntry parent,
+            string name,
+            string section,
+            string label,
+            string description,
+            string type,
+            IList<string> scope,
+            object reference,
+            Humidifier.Parameter parameter
+        ) : base(parent, name, description, type, scope, reference) {
+            Section = section ?? "Module Settings";
+            Label = label ?? StringEx.PascalCaseToLabel(name);
+            Parameter = parameter;
+        }
+
+        //--- Properties ---
+        public string Section { get; }
+        public string Label { get; }
+        public Humidifier.Parameter Parameter { get; }
+
+        //--- Methods ---
+        public override object GetExportReference() => Reference;
+    }
+
+    public abstract class AResourceEntry : AModuleEntry {
+
+        //--- Constructors ---
+        public AResourceEntry(
+            AModuleEntry parent,
+            string name,
+            string description,
+            string type,
+            IList<string> scope,
+            object reference
+        ) : base(parent, name, description, type, scope, reference) { }
+    }
+
+    public class ResourceEntry : AResourceEntry {
 
         //--- Constructors ---
         public ResourceEntry(
@@ -150,35 +184,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 : FnRef(ResourceName);
     }
 
-    public class InputEntry : AModuleEntry {
-
-        //--- Constructors ---
-        public InputEntry(
-            AModuleEntry parent,
-            string name,
-            string section,
-            string label,
-            string description,
-            string type,
-            IList<string> scope,
-            object reference,
-            Humidifier.Parameter parameter
-        ) : base(parent, name, description, type, scope, reference) {
-            Section = section ?? "Module Settings";
-            Label = label ?? StringEx.PascalCaseToLabel(name);
-            Parameter = parameter;
-        }
-
-        //--- Properties ---
-        public string Section { get; }
-        public string Label { get; }
-        public Humidifier.Parameter Parameter { get; }
-
-        //--- Methods ---
-        public override object GetExportReference() => Reference;
-    }
-
-    public class FunctionEntry : AModuleEntry {
+    public class FunctionEntry : AResourceEntry {
 
         //--- Constructors ---
         public FunctionEntry(
@@ -214,12 +220,5 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public override object GetExportReference() => FnGetAtt(ResourceName, "Arn");
 
         public bool HasPragma(string pragma) => Pragmas?.Contains(pragma) == true;
-
-        public void UpdatePackagePath(string package) {
-            Function.Code = new Humidifier.Lambda.FunctionTypes.Code {
-                S3Bucket = FnRef("DeploymentBucketName"),
-                S3Key = FnSub($"Modules/${{Module::Name}}/Assets/{Path.GetFileName(package)}")
-            };
-        }
    }
 }

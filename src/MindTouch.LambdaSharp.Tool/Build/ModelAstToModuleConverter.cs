@@ -29,6 +29,8 @@ using MindTouch.LambdaSharp.Tool.Model;
 using MindTouch.LambdaSharp.Tool.Model.AST;
 
 namespace MindTouch.LambdaSharp.Tool.Build {
+    using System.IO;
+    using System.Xml.Linq;
     using Newtonsoft.Json.Linq;
     using static ModelFunctions;
 
@@ -376,8 +378,8 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                         parent: parent,
                         name: node.Package,
                         description: node.Description,
-                        scope: node.Scope,
-                        files: node.Files
+                        scope: ConvertScope(node.Scope),
+                        sourceFilepath: node.Files
                     );
 
                     // recurse
@@ -402,28 +404,33 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                         });
                     }
 
+                    // determine function type
+                    var project = node.Project;
+                    var language = node.Language;
+                    var runtime = node.Runtime;
+                    var handler = node.Handler;
+                    DetermineFunctionType(node.Function, ref project, ref language, ref runtime, ref handler);
+
                     // create function entry
-                    var sources = AtLocation(
-                        "Sources",
-                        () => node.Sources
-                            ?.Select((source, eventIndex) => ConvertFunctionSource(node, eventIndex, source))
-                            .Where(evt => evt != null)
-                            .ToList()
+                    var sources = AtLocation("Sources", () => node.Sources
+                        ?.Select((source, eventIndex) => ConvertFunctionSource(node, eventIndex, source))
+                        .Where(evt => evt != null)
+                        .ToList()
                     );
                     var result = _builder.AddFunction(
                         parent: null,
                         name: node.Function,
                         description: node.Description,
-                        project: node.Project,
-                        language: node.Language,
+                        project: project,
+                        language: language,
                         environment: node.Environment,
                         sources: sources,
                         pragmas: node.Pragmas,
                         timeout: node.Timeout,
-                        runtime: node.Runtime,
+                        runtime: runtime,
                         reservedConcurrency: node.ReservedConcurrency,
                         memory: node.Memory,
-                        handler: node.Handler,
+                        handler: handler,
                         subnets: node.VPC?.SubnetIds,
                         securityGroups: node.VPC?.SecurityGroupIds
                     );
@@ -601,6 +608,112 @@ namespace MindTouch.LambdaSharp.Tool.Build {
             // local functions
             bool IsFieldSet(string field)
                 => instanceLookup.TryGetValue(field, out JToken token) && (token.Type != JTokenType.Null);
+        }
+
+        private void DetermineFunctionType(
+            string functionName,
+            ref string project,
+            ref string language,
+            ref string runtime,
+            ref string handler
+        ) {
+
+            // identify folder for function
+            var folderName = new[] {
+                functionName,
+                $"{_builder.Name}.{functionName}"
+            }.FirstOrDefault(name => Directory.Exists(Path.Combine(Settings.WorkingDirectory, name)));
+            if(folderName == null) {
+                AddError($"could not locate function directory");
+                return;
+            }
+
+            // determine the function project
+            project = project ?? new [] {
+                Path.Combine(Settings.WorkingDirectory, folderName, $"{folderName}.csproj"),
+                Path.Combine(Settings.WorkingDirectory, folderName, "index.js")
+            }.FirstOrDefault(path => File.Exists(path));
+            if(project == null) {
+                AddError("could not locate the function project");
+                return;
+            }
+            switch(Path.GetExtension((string)project).ToLowerInvariant()) {
+            case ".csproj":
+                DetermineDotNetFunctionProperties(functionName, project, ref language, ref runtime, ref handler);
+                break;
+            case ".js":
+                DetermineJavascriptFunctionProperties(functionName, project, ref language, ref runtime, ref handler);
+                break;
+            default:
+                AddError("could not determine the function language");
+                return;
+            }
+        }
+
+        private void DetermineDotNetFunctionProperties(
+            string functionName,
+            string project,
+            ref string language,
+            ref string runtime,
+            ref string handler
+        ) {
+            language = "csharp";
+
+            // compile function project
+            var projectName = Path.GetFileNameWithoutExtension(project);
+
+            // check if the handler/runtime were provided or if they need to be extracted from the project file
+            var csproj = XDocument.Load(project);
+            var mainPropertyGroup = csproj.Element("Project")?.Element("PropertyGroup");
+
+            // make sure the .csproj file contains the lambda tooling
+            var hasAwsLambdaTools = csproj.Element("Project")
+                ?.Elements("ItemGroup")
+                .Any(el => (string)el.Element("DotNetCliToolReference")?.Attribute("Include") == "Amazon.Lambda.Tools") ?? false;
+            if(!hasAwsLambdaTools) {
+                AddError($"the project is missing the AWS lambda tool defintion; make sure that {project} includes <DotNetCliToolReference Include=\"Amazon.Lambda.Tools\"/>");
+            }
+
+            // check if we need to parse the <TargetFramework> element to determine the lambda runtime
+            var targetFramework = mainPropertyGroup?.Element("TargetFramework").Value;
+            if(runtime == null) {
+                switch(targetFramework) {
+                case "netcoreapp1.0":
+                    runtime = "dotnetcore1.0";
+                    break;
+                case "netcoreapp2.0":
+                    runtime =  "dotnetcore2.0";
+                    break;
+                case "netcoreapp2.1":
+                    runtime = "dotnetcore2.1";
+                    break;
+                default:
+                    AddError($"could not determine runtime from target framework: {targetFramework}; specify 'Runtime' attribute explicitly");
+                    break;
+                }
+            }
+
+            // check if we need to read the project file <RootNamespace> element to determine the handler name
+            if(handler == null) {
+                var rootNamespace = mainPropertyGroup?.Element("RootNamespace")?.Value;
+                if(rootNamespace != null) {
+                    handler = $"{projectName}::{rootNamespace}.Function::FunctionHandlerAsync";
+                } else {
+                    AddError("could not auto-determine handler; either add 'Handler' attribute or <RootNamespace> to project file");
+                }
+            }
+        }
+
+        private void DetermineJavascriptFunctionProperties(
+            string functionName,
+            string project,
+            ref string language,
+            ref string runtime,
+            ref string handler
+        ) {
+            language = "javascript";
+            runtime = runtime ?? "nodejs8.10";
+            handler = handler ?? "index.handler";
         }
 
         private IList<string> ConvertScope(object scope) {
