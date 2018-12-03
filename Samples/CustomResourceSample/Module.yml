@@ -1,13 +1,12 @@
 Module: CustomResourceSample
 Description: A sample module for defining a custom resource
-
 Outputs:
 
   - CustomResource: MyNamespace::MyResource
     Description: Handler for MyNamespace::MyResource custom resource
     Handler: ResourceHandler
 
-Functions:
+Entries:
 
   - Function: ResourceHandler
     Description: This function is invoked by CloudFormation

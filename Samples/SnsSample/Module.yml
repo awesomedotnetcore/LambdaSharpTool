@@ -1,15 +1,11 @@
 Module: SnsSample
 Description: A sample module using an SNS topic
+Entries:
 
-Variables:
-
-  - Var: MyTopic
+  - Resource: MyTopic
     Description: An SNS topic used to invoke the function.
-    Resource:
-      Type: AWS::SNS::Topic
-      Allow: Subscribe
-
-Functions:
+    Type: AWS::SNS::Topic
+    Allow: Subscribe
 
   - Function: MyFunction
     Description: This function is invoked by an SNS topic

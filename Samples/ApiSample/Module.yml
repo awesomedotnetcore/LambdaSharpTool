@@ -1,7 +1,6 @@
 Module: ApiSample
 Description: A sample module integrating with API Gateway
-
-Functions:
+Entries:
 
   - Function: MyFunction
     Description: This function is invoked by API Gateway
