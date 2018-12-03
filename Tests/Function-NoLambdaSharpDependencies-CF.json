@@ -59,6 +59,15 @@
         "Timeout": "30"
       }
     },
+    "FunctionLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Sub": "/aws/lambda/${Function}"
+        },
+        "RetentionInDays": 7
+      }
+    },
     "ModuleRegistration": {
       "Type": "Custom::LambdaSharpRegisterModule",
       "Properties": {
@@ -135,15 +144,6 @@
             }
           }
         ]
-      }
-    },
-    "FunctionLogGroup": {
-      "Type": "AWS::Logs::LogGroup",
-      "Properties": {
-        "LogGroupName": {
-          "Fn::Sub": "/aws/lambda/${Function}"
-        },
-        "RetentionInDays": 7
       }
     }
   },
@@ -225,19 +225,9 @@
       ],
       "Assets": [],
       "ResourceFullNames": {
-        "Function": "Function",
-        "Module": "Module",
-        "ModuleId": "Module::Id",
-        "ModuleName": "Module::Name",
-        "ModuleVersion": "Module::Version",
-        "Secrets": "Secrets",
-        "DeploymentBucketName": "DeploymentBucketName",
-        "DeploymentPrefix": "DeploymentPrefix",
-        "DeploymentPrefixLowercase": "DeploymentPrefixLowercase",
-        "DeploymentParent": "DeploymentParent",
+        "FunctionLogGroup": "Function::LogGroup",
         "ModuleRegistration": "Module::Registration",
-        "ModuleRole": "Module::Role",
-        "FunctionLogGroup": "Function::LogGroup"
+        "ModuleRole": "Module::Role"
       }
     }
   }

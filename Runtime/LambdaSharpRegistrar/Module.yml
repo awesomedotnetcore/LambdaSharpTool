@@ -23,21 +23,39 @@ Description: LambdaSharp Modules and Functions Registrar
 Pragmas:
   - no-module-registration
 
-Inputs:
+Outputs:
+
+  - CustomResource: LambdaSharp::Register::Module
+    Description: Custom resources for registering LambdaSharp modules
+    Handler: RegistrationTopic
+
+  - CustomResource: LambdaSharp::Register::Function
+    Description: Custom resources for registering LambdaSharp functions
+    Handler: RegistrationTopic
+
+  - Export: ErrorReportTopic
+    Description: SNS topic for LambdaSharp module errors
+    Value: !Ref ErrorReportTopic
+
+  - Export: UsageReportTopic
+    Description: SNS topic for LambdaSharp function usage reports
+    Value: !Ref UsageReportTopic
+
+Entries:
 
   - Parameter: RollbarReadAccessToken
-    Type: Secret
     Section: Rollbar Settings
     Label: Read Access Token
     Description: Account-level token for read operations
+    Type: Secret
     Scope: Register
     Default: ""
 
   - Parameter: RollbarWriteAccessToken
-    Type: Secret
     Section: Rollbar Settings
     Label: Write Access Token
     Description: Account-level token for write operations
+    Type: Secret
     Scope: Register
     Default: ""
 
@@ -60,67 +78,44 @@ Inputs:
     Description: Provisioned write capacity for registrations table
     Default: 1
 
-Outputs:
-
-  - CustomResource: LambdaSharp::Register::Module
-    Description: Custom resources for registering LambdaSharp modules
-    Handler: RegistrationTopic
-
-  - CustomResource: LambdaSharp::Register::Function
-    Description: Custom resources for registering LambdaSharp functions
-    Handler: RegistrationTopic
-
-  - Export: ErrorReportTopic
-
-  - Export: UsageReportTopic
-
-Variables:
-
-  - Var: LoggingStreamReference
+  - Resource: LoggingStreamReference
     Description: Reference to the Kinesis stream used to ingest the function logs
     Value: !Ref Module::LoggingStreamArn
-    Resource:
-      Type: AWS::Kinesis::Stream
-      Allow: Subscribe
+    Type: AWS::Kinesis::Stream
+    Allow: Subscribe
 
-  - Var: RegistrationTopic
+  - Resource: RegistrationTopic
     Description: Custom resource topic for registering LambdaSharp modules
-    Resource:
-      Type: AWS::SNS::Topic
-      Allow: Subscribe
+    Type: AWS::SNS::Topic
+    Allow: Subscribe
 
-  - Var: ErrorReportTopic
+  - Resource: ErrorReportTopic
     Description: SNS topic for LambdaSharp module errors
     Scope: ProcessLogEvents
-    Resource:
-      Type: AWS::SNS::Topic
-      Allow: Publish
+    Type: AWS::SNS::Topic
+    Allow: Publish
 
-  - Var: UsageReportTopic
+  - Resource: UsageReportTopic
     Description: SNS topic for LambdaSharp function usage reports
     Scope: ProcessLogEvents
-    Resource:
-      Type: AWS::SNS::Topic
-      Allow: Publish
+    Type: AWS::SNS::Topic
+    Allow: Publish
 
-  - Var: RegistrationTable
+  - Resource: RegistrationTable
     Description: DynamoDb table for storing function registrations
     Scope: "*"
-    Resource:
-      Type: AWS::DynamoDB::Table
-      Allow: ReadWrite
-      Properties:
-        AttributeDefinitions:
-          - AttributeName: Id
-            AttributeType: S
-        KeySchema:
-          - AttributeName: Id
-            KeyType: HASH
-        ProvisionedThroughput:
-          ReadCapacityUnits: !Ref RegistrationTableReadCapacity
-          WriteCapacityUnits: !Ref RegistrationTableWriteCapacity
-
-Functions:
+    Type: AWS::DynamoDB::Table
+    Allow: ReadWrite
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: Id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: Id
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: !Ref RegistrationTableReadCapacity
+        WriteCapacityUnits: !Ref RegistrationTableWriteCapacity
 
   - Function: ProcessLogEvents
     Description: Process log events from all LambdaSharp module functions

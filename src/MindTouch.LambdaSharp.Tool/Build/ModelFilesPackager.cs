@@ -42,6 +42,13 @@ namespace MindTouch.LambdaSharp.Tool.Build {
         //--- Methods ---
         public void Package(ModuleBuilder builder) {
             _builder = builder;
+            if(Directory.Exists(Settings.OutputDirectory)) {
+                foreach(var file in Directory.GetFiles(Settings.OutputDirectory, $"package_*.zip")) {
+                    try {
+                        File.Delete(file);
+                    } catch { }
+                }
+            }
             foreach(var entry in builder.Entries.OfType<PackageEntry>()) {
                 AtLocation(entry.FullName, () => {
                     ProcessParameter(entry);
@@ -90,13 +97,6 @@ namespace MindTouch.LambdaSharp.Tool.Build {
 
                 // create zip package
                 Console.WriteLine($"=> Building {parameter.Name} package");
-                if(Directory.Exists(Settings.OutputDirectory)) {
-                    foreach(var file in Directory.GetFiles(Settings.OutputDirectory, $"package_{parameter.Name}*.zip")) {
-                        try {
-                            File.Delete(file);
-                        } catch { }
-                    }
-                }
                 using(var zipArchive = ZipFile.Open(package, ZipArchiveMode.Create)) {
                     foreach(var file in files) {
                         var filename = Path.GetRelativePath(folder, file);

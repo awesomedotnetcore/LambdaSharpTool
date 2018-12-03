@@ -25,28 +25,48 @@ Pragmas:
   - no-lambdasharp-dependencies
   - no-module-registration
 
-Inputs:
+Outputs:
+
+  # Exported Values
+  - Export: DeadLetterQueueArn
+    Description: LambdaSharp Dead Letter Queue
+    Value: !Ref DeadLetterQueueArn
+
+  - Export: LoggingStreamArn
+    Description: LambdaSharp Logging Stream
+    Value: !Ref LoggingStreamArn
+
+  - Export: DefaultSecretKeyArn
+    Description: LambdaSharp Default Secrets Key
+    Value: !Ref DefaultSecretKeyArn
+
+  - Export: ErrorReportTopic
+    Description: SNS topic for LambdaSharp module errors
+    Value: !GetAtt Registrar.Outputs.ErrorReportTopic
+
+  - Export: UsageReportTopic
+    Description: SNS topic for LambdaSharp function usage reports
+    Value: !GetAtt Registrar.Outputs.UsageReportTopic
+
+Entries:
 
   # LambdaSharp Tier Settings
   - Parameter: DeadLetterQueueArn
     Section: LambdaSharp Tier Settings
     Label: Dead Letter Queue (ARN)
     Description: Dead letter queue for functions (leave blank to create a new queue)
+    Type: AWS::SQS::Queue
     Default: ""
-    Resource:
-      Type: AWS::SQS::Queue
-      Allow: None
 
   - Parameter: LoggingStreamArn
     Section: LambdaSharp Tier Settings
     Label: Logging Stream (ARN)
     Description: Logging kinesis stream for functions (leave blank to create a new stream)
+    Type: AWS::Kinesis::Stream
     Default: ""
-    Resource:
-      Type: AWS::Kinesis::Stream
-      Properties:
-        RetentionPeriodHours: !Ref LoggingStreamRetentionPeriod
-        ShardCount: 1
+    Properties:
+      RetentionPeriodHours: !Ref LoggingStreamRetentionPeriod
+      ShardCount: 1
 
   - Parameter: LoggingStreamRetentionPeriod
     Section: LambdaSharp Tier Settings
@@ -58,22 +78,21 @@ Inputs:
     Section: LambdaSharp Tier Settings
     Label: Default Secret Key (ARN)
     Description: Default secret key for functions (leave blank to create a new key)
+    Type: AWS::KMS::Key
     Default: ""
-    Resource:
-      Type: AWS::KMS::Key
-      Properties:
-        Description: Default encryption/decryption key for LambdaSharp modules
-        EnableKeyRotation: !Ref DefaultSecretKeyRotationEnabled
-        KeyPolicy:
-          Version: "2012-10-17"
-          Id: !Sub "${AWS::StackName}ModuleDefaultSecretKeyPolicy"
-          Statement:
-            - Effect: Allow
-              Principal:
-                AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
-              Action:
-                - kms:*
-              Resource: "*"
+    Properties:
+      Description: Default encryption/decryption key for LambdaSharp modules
+      EnableKeyRotation: !Ref DefaultSecretKeyRotationEnabled
+      KeyPolicy:
+        Version: "2012-10-17"
+        Id: !Sub "${AWS::StackName}ModuleDefaultSecretKeyPolicy"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - kms:*
+            Resource: "*"
 
   - Parameter: DefaultSecretKeyRotationEnabled
     Section: LambdaSharp Tier Settings
@@ -115,39 +134,21 @@ Inputs:
     Description: Provisioned write capacity for registrations table
     Default: 1
 
-Outputs:
+  # Resource Definitions
+  - Resource: DefaultSecretKeyAlias
+    Description: Alias for default secrets key
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub "alias/${DeploymentPrefix}LambdaSharpDefaultSecretKey"
+      TargetKeyId: !Ref DefaultSecretKeyArn
 
-  - Export: DeadLetterQueueArn
-    Description: LambdaSharp Dead Letter Queue
-
-  - Export: LoggingStreamArn
-    Description: LambdaSharp Logging Stream
-
-  - Export: DefaultSecretKeyArn
-    Description: LambdaSharp Default Secrets Key
-
-  - Export: ErrorReportTopic
-    Description: SNS topic for LambdaSharp module errors
-    Value: !GetAtt Registrar.Outputs.ErrorReportTopic
-
-  - Export: UsageReportTopic
-    Description: SNS topic for LambdaSharp function usage reports
-    Value: !GetAtt Registrar.Outputs.UsageReportTopic
-
-Variables:
-
-  - Var: DefaultSecretKeyAlias
-    Resource:
-      Type: AWS::KMS::Alias
-      Properties:
-        AliasName: !Sub "alias/${DeploymentPrefix}LambdaSharpDefaultSecretKey"
-        TargetKeyId: !Ref DefaultSecretKeyArn
-
-  - Var: Registrar
+  # Nested Modules
+  - Module: Registrar
     Description: LambdaSharp Modules and Functions Registrar
-    Module: LambdaSharpRegistrar
-    Version: !Ref Module::Version
-    SourceBucketName: !Ref DeploymentBucketName
+    Location:
+      Name: LambdaSharpRegistrar
+      Version: !Ref Module::Version
+      S3Bucket: !Ref DeploymentBucketName
     Parameters:
       RollbarReadAccessToken: !Ref RollbarReadAccessToken
       RollbarWriteAccessToken: !Ref RollbarWriteAccessToken
@@ -159,11 +160,12 @@ Variables:
       LambdaSharpLoggingStreamArn: !Ref LoggingStreamArn
       LambdaSharpDefaultSecretKeyArn: !Ref DefaultSecretKeyArn
 
-  - Var: S3Subscriber
+  - Module: S3Subscriber
     Description: LambdaSharp S3 Lambda Function Subscriber
-    Module: LambdaSharpS3Subscriber
-    Version: !Ref Module::Version
-    SourceBucketName: !Ref DeploymentBucketName
+    Location:
+      Name: LambdaSharpS3Subscriber
+      Version: !Ref Module::Version
+      S3Bucket: !Ref DeploymentBucketName
     DependsOn: Registrar
     Parameters:
       Secrets: !Ref Secrets
@@ -171,11 +173,12 @@ Variables:
       LambdaSharpLoggingStreamArn: !Ref LoggingStreamArn
       LambdaSharpDefaultSecretKeyArn: !Ref DefaultSecretKeyArn
 
-  - Var: S3PackageLoader
+  - Module: S3PackageLoader
     Description: LambdaSharp S3 Package Loader
-    Module: LambdaSharpS3PackageLoader
-    Version: !Ref Module::Version
-    SourceBucketName: !Ref DeploymentBucketName
+    Location:
+      Name: LambdaSharpS3PackageLoader
+      Version: !Ref Module::Version
+      S3Bucket: !Ref DeploymentBucketName
     DependsOn: Registrar
     Parameters:
       Secrets: !Ref Secrets

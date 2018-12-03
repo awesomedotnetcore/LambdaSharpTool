@@ -196,24 +196,7 @@
         "no-module-registration"
       ],
       "Assets": [],
-      "ResourceFullNames": {
-        "Module": "Module",
-        "ModuleId": "Module::Id",
-        "ModuleName": "Module::Name",
-        "ModuleVersion": "Module::Version",
-        "Secrets": "Secrets",
-        "LambdaSharp": "LambdaSharp",
-        "LambdaSharpDeadLetterQueueArn": "LambdaSharp::DeadLetterQueueArn",
-        "LambdaSharpLoggingStreamArn": "LambdaSharp::LoggingStreamArn",
-        "LambdaSharpDefaultSecretKeyArn": "LambdaSharp::DefaultSecretKeyArn",
-        "ModuleDeadLetterQueueArn": "Module::DeadLetterQueueArn",
-        "ModuleLoggingStreamArn": "Module::LoggingStreamArn",
-        "ModuleDefaultSecretKeyArn": "Module::DefaultSecretKeyArn",
-        "DeploymentBucketName": "DeploymentBucketName",
-        "DeploymentPrefix": "DeploymentPrefix",
-        "DeploymentPrefixLowercase": "DeploymentPrefixLowercase",
-        "DeploymentParent": "DeploymentParent"
-      }
+      "ResourceFullNames": {}
     }
   }
 }

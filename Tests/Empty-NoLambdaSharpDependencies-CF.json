@@ -120,15 +120,6 @@
       ],
       "Assets": [],
       "ResourceFullNames": {
-        "Module": "Module",
-        "ModuleId": "Module::Id",
-        "ModuleName": "Module::Name",
-        "ModuleVersion": "Module::Version",
-        "Secrets": "Secrets",
-        "DeploymentBucketName": "DeploymentBucketName",
-        "DeploymentPrefix": "DeploymentPrefix",
-        "DeploymentPrefixLowercase": "DeploymentPrefixLowercase",
-        "DeploymentParent": "DeploymentParent",
         "ModuleRegistration": "Module::Registration"
       }
     }

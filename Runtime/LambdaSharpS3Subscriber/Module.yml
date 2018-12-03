@@ -20,31 +20,26 @@
 Module: LambdaSharpS3Subscriber
 Version: 0.5-WIP
 Description: LambdaSharp S3 Lambda Function Subscriber
-
 Outputs:
 
   - CustomResource: LambdaSharp::S3::Subscription
     Description: Custom resource for S3 bucket subscriptions
     Handler: CustomResourceTopic
 
-Variables:
+Entries:
 
-  - Var: S3BucketPermissions
+  - Resource: S3BucketPermissions
     Description: LambdaSharpS3Subscriber requires notification configuration access to all S3 buckets
     Value: !Sub "arn:aws:s3:::${DeploymentPrefixLowercase}*"
-    Resource:
-      Type: AWS::S3::Bucket
-      Allow:
-        - "s3:GetBucketNotification"
-        - "s3:PutBucketNotification"
+    Type: AWS::S3::Bucket
+    Allow:
+      - "s3:GetBucketNotification"
+      - "s3:PutBucketNotification"
 
-  - Var: CustomResourceTopic
+  - Resource: CustomResourceTopic
     Description: Custom resource topic for subscribing Lambda functions to S3 buckets
-    Resource:
-      Type: AWS::SNS::Topic
-      Allow: Subscribe
-
-Functions:
+    Type: AWS::SNS::Topic
+    Allow: Subscribe
 
   - Function: ResourceHandler
     Description: LambdaSharp S3 Subscription handler

@@ -52,6 +52,15 @@ namespace MindTouch.LambdaSharp.Tool.Build {
             string buildConfiguration
         ) {
             _builder = builder;
+
+            // delete old packages
+            if(Directory.Exists(Settings.OutputDirectory)) {
+                foreach(var file in Directory.GetFiles(Settings.OutputDirectory, $"function_*.zip")) {
+                    try {
+                        File.Delete(file);
+                    } catch { }
+                }
+            }
             foreach(var function in builder.Entries.OfType<FunctionEntry>()) {
                 AtLocation(function.FullName, () => {
                     Process(

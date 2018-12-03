@@ -222,7 +222,6 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                     Validate((node.Default != null) || (node.Properties == null), "'Properties' section cannot be used unless the 'Default' attribute is set");
                     if(node.Properties != null) {
                         Validate(node.Type != null, "'Type' attribute is required");
-                        Validate(node.Allow != null, "'Allow' attribute is required");
                     }
                     Validate((node.Allow == null) || ResourceMapping.IsResourceTypeSupported(node.Type), "'Allow' attribute can only be used with AWS resource types");
 
