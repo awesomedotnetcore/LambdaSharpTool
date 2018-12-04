@@ -51,13 +51,9 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
                 "Pragmas"
             },
             ["Import"] = new[] {
-                "Section",
-                "Label",
                 "Description",
-                "Type",
-                "Scope",
-                "NoEcho",
-                "Allow"
+                "Location",
+                "Entries"
             },
             ["Variable"] = new[] {
                 "Variable",
@@ -164,15 +160,16 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
 
         /*
          * Import: string
-         * Section: string
-         * Label: string
          * Description: string
-         * Type: string
-         * Scope: string -or- list<string>
-         * NoEcho: bool
-         * Allow: string or list<string>
+         * Location:
+         *   Name: string
+         *   Version: string
+         *   S3Bucket: string
+         * Entries: list<Entry>
          */
         public string Import { get; set; }
+        public ModuleLocation Location { get; set; }
+        public IList<EntryNode> Entries { get; set; }
 
         /*
          * Variable: string
@@ -185,7 +182,6 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
          */
         public string Variable { get; set; }
         public object Value { get; set; }
-        public IList<EntryNode> Entries { get; set; }
 
         /*
          * Resource: string
@@ -214,7 +210,6 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
          * Parameters: map
          */
         public string Module { get; set; }
-        public ModuleLocation Location { get; set; }
         public IDictionary<string, object> Parameters { get; set; }
 
         /*

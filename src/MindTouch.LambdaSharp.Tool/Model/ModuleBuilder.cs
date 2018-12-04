@@ -29,6 +29,7 @@ using Newtonsoft.Json.Linq;
 
 namespace MindTouch.LambdaSharp.Tool.Model {
     using System.IO;
+    using System.Text;
     using static ModelFunctions;
 
     public class ModuleBuilder : AModelProcessor {
@@ -45,6 +46,9 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         private IList<AOutput> _outputs;
         private IList<Humidifier.Statement> _resourceStatements = new List<Humidifier.Statement>();
         private IList<string> _assets;
+        private IList<string> _dependencies;
+        private IList<string> _customResourceTypes;
+        private IList<string> _macroNames;
 
         //--- Constructors ---
         public ModuleBuilder(Settings settings, string sourceFilename, Module module) : base(settings, sourceFilename) {
@@ -58,6 +62,9 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             _conditions = new Dictionary<string, object>(module.Conditions ?? new KeyValuePair<string, object>[0]);
             _outputs = new List<AOutput>(module.Outputs ?? new AOutput[0]);
             _assets = new List<string>(module.Assets ?? new string[0]);
+            _dependencies = new List<string>(module.Dependencies ?? new string[0]);
+            _customResourceTypes = new List<string>(module.CustomResourceTypes ?? new string[0]);
+            _macroNames = new List<string>(module.MacroNames ?? new string[0]);
 
             // extract existing resource statements when they exist
             if(TryGetEntry("Module::Role", out AModuleEntry moduleRoleEntry)) {
@@ -92,6 +99,15 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             GetEntry(fullName).Reference = Path.GetFileName(asset);
         }
 
+        public void AddDependency(string moduleReference) {
+            if(moduleReference == null) {
+                throw new ArgumentNullException(nameof(moduleReference));
+            }
+            if(!_dependencies.Contains(moduleReference)) {
+                _dependencies.Add(moduleReference);
+            }
+        }
+
         public bool AddSecret(object secret) {
             if(secret is string textSecret) {
                 if(textSecret.StartsWith("arn:")) {
@@ -117,6 +133,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         }
 
         public AModuleEntry AddParameter(
+            AModuleEntry parent,
             string name,
             string section,
             string label,
@@ -140,38 +157,68 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         ) {
 
             // create input parameter entry
+            var parameter = new Humidifier.Parameter {
+                Type = ResourceMapping.ToCloudFormationType(type),
+                Description = description,
+                Default = defaultValue,
+                ConstraintDescription = constraintDescription,
+                AllowedPattern = allowedPattern,
+                AllowedValues = allowedValues?.ToList(),
+                MaxLength = maxLength,
+                MaxValue = maxValue,
+                MinLength = minLength,
+                MinValue = minValue,
+                NoEcho = noEcho
+            };
             var result = AddEntry(new InputEntry(
-                parent: null,
+                parent: parent,
                 name: name,
-                section: section,
+                section: section ?? parent?.Description,
                 label: label,
                 description: description,
                 type: type,
                 scope: scope,
                 reference: null,
-                parameter: new Humidifier.Parameter {
-                    Type = ResourceMapping.ToCloudFormationType(type),
-                    Description = description,
-                    Default = defaultValue,
-                    ConstraintDescription = constraintDescription,
-                    AllowedPattern = allowedPattern,
-                    AllowedValues = allowedValues?.ToList(),
-                    MaxLength = maxLength,
-                    MaxValue = maxValue,
-                    MinLength = minLength,
-                    MinValue = minValue,
-                    NoEcho = noEcho
-                }
+                parameter: parameter
             ));
 
-            // check if a conditional managed resource is associated with the input parameter
+            // check if parameter is coming from an imported module
+            if(parent != null) {
+
+                // default value for an imported parameter is always the cross-module reference
+                parameter.Default = "$" + result.FullName;
+
+                // set default settings for import parameters
+                if(constraintDescription == null) {
+                    parameter.ConstraintDescription = "must either be a cross-module import reference or a non-empty value";
+                }
+                if(allowedPattern == null) {
+                    parameter.AllowedPattern =  @"^.+$";
+                }
+
+                // register import parameter reference
+                var condition = $"{result.LogicalId}Imported";
+                AddCondition(condition, FnAnd(
+                    FnNot(FnEquals(FnRef(result.ResourceName), "")),
+                    FnEquals(FnSelect("0", FnSplit("$", FnRef(result.ResourceName))), ""))
+                );
+                result.Reference = FnIf(
+                    condition,
+                    FnImportValue(FnSub("${DeploymentPrefix}${Import}", new Dictionary<string, object> {
+                        ["Import"] = FnSelect("1", FnSplit("$", FnRef(result.ResourceName)))
+                    })),
+                    FnRef(result.ResourceName)
+                );
+            }
+
+            // check if a resource-type is associated with the input parameter
             if(!result.HasAwsType) {
 
                 // nothing to do
             } else if(defaultValue == null) {
 
                 // request input parameter resource grants
-                AddGrant(result.LogicalId, type, FnRef(result.ResourceName), allow);
+                AddGrant(result.LogicalId, type, result.Reference, allow);
             } else {
 
                 // create conditional managed resource
@@ -196,7 +243,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 result.Reference = FnIf(
                     condition,
                     instance.GetExportReference(),
-                    FnRef(result.ResourceName)
+                    result.Reference
                 );
 
                 // request input parameter or conditional managed resource grants
@@ -207,70 +254,32 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         public AModuleEntry AddImport(
             string import,
-            string section,
-            string label,
             string description,
-            string type,
-            object scope,
-            bool? noEcho,
-            object allow
+            string module,
+            string version,
+            string sourceBucketName
         ) {
-            var parts = import.Split("::", 2);
-            var exportModule = parts[0];
-            var exportName = parts[1];
-
-            // find or create root module import collection node
-            var rootParameter = TryGetEntry(exportModule, out AModuleEntry existingEntry)
-                ? existingEntry
-                : AddVariable(
-                    parent: null,
-                    name: exportModule,
-                    description: $"{exportModule} cross-module references",
-                    type: "String",
-                    scope: null,
-                    value: "",
-                    encryptionContext: null
-                );
-
-            // create import parameter entry
-            var result = AddEntry(new InputEntry(
-                parent: rootParameter,
-                name: exportName,
-                section: section,
-                label: label,
-                description: description,
-                scope: ConvertScope(scope),
-                type: type,
-                reference: null,
-                parameter: new Humidifier.Parameter {
-                    Type = ResourceMapping.ToCloudFormationType(type),
-                    Description = description,
-                    Default = "$" + import,
-                    ConstraintDescription = "must either be a cross-module import reference or a non-blank value",
-                    AllowedPattern =  @"^.+$",
-                    NoEcho = noEcho
-                }
-            ));
-
-            // register import parameter reference
-            var condition = $"{result.LogicalId}IsImport";
-            AddCondition(condition, FnEquals(FnSelect("0", FnSplit("$", FnRef(result.ResourceName))), ""));
-            result.Reference = FnIf(
-                condition,
-                FnImportValue(FnSub("${DeploymentPrefix}${Import}", new Dictionary<string, object> {
-                    ["Import"] = FnSelect("1", FnSplit("$", FnRef(result.ResourceName)))
-                })),
-                FnRef(result.ResourceName)
+            var result = AddVariable(
+                parent: null,
+                name: import,
+                description: description ?? $"{import} cross-module references",
+                type: "String",
+                scope: null,
+                value: "",
+                encryptionContext: null
             );
 
-            // check if resource grants is associated with the import parameter
-            if(!result.HasAwsType) {
-
-                // nothing to do
-            } else {
-
-                // request import resource grants
-                AddGrant(result.LogicalId, type, result.GetExportReference(), allow);
+            // add module dependency
+            if(module != null) {
+                var moduleReference = new StringBuilder();
+                moduleReference.Append(module);
+                if(version != null) {
+                    moduleReference.Append(":").Append(version);
+                }
+                if(sourceBucketName != null) {
+                    moduleReference.Append("@").Append(sourceBucketName);
+                }
+                AddDependency(moduleReference.ToString());
             }
             return result;
         }
@@ -283,12 +292,13 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             });
         }
 
-        public void AddCustomResource(string customResourceName, string description, string handler) {
+        public void AddCustomResource(string customResourceType, string description, string handler) {
             _outputs.Add(new CustomResourceHandlerOutput {
-                CustomResourceName = customResourceName,
+                CustomResourceType = customResourceType,
                 Description = description,
                 Handler = FnRef(handler)
             });
+            _customResourceTypes.Add(customResourceType);
         }
 
         public void AddMacro(string macroName, string description, string handler) {
@@ -324,6 +334,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 condition: null,
                 pragmas: null
             );
+            _macroNames.Add(macroName);
         }
 
         public AModuleEntry AddVariable(
@@ -826,7 +837,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                         });
                         break;
                     case CustomResourceHandlerOutput customResourceHandlerOutput:
-                        AtLocation(customResourceHandlerOutput.CustomResourceName, () => {
+                        AtLocation(customResourceHandlerOutput.CustomResourceType, () => {
                             AtLocation("Handler", () => {
                                 customResourceHandlerOutput.Handler = visitor(customResourceHandlerOutput.Handler);
                             });
@@ -860,7 +871,10 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 Outputs = _outputs,
                 Conditions = _conditions,
                 Entries = _entries,
-                Assets = _assets
+                Assets = _assets.OrderBy(value => value).ToList(),
+                Dependencies = _dependencies.OrderBy(value => value).ToList(),
+                CustomResourceTypes = _customResourceTypes.OrderBy(value => value).ToList(),
+                MacroNames = _macroNames.OrderBy(value => value).ToList()
             };
         }
 

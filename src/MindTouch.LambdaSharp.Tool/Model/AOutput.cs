@@ -38,7 +38,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
     public class CustomResourceHandlerOutput : AOutput {
 
         //--- Properties ---
-        public string CustomResourceName { get; set; }
+        public string CustomResourceType { get; set; }
         public object Handler { get; set; }
     }
 }

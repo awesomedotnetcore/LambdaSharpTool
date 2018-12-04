@@ -69,8 +69,9 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                 });
 
                 // convert collections
-                ForEach("Pragmas", module.Pragmas ?? new List<object>(), ConvertPragma);
-                ForEach("Secrets", module.Secrets ?? new List<string>(), ConvertSecret);
+                ForEach("Pragmas", module.Pragmas, ConvertPragma);
+                ForEach("Secrets", module.Secrets, ConvertSecret);
+                ForEach("Dependencies", module.Dependencies, ConvertDependency);
                 ForEach("Outputs", module.Outputs, ConvertOutput);
                 ForEach("Entries", module.Entries, ConvertEntry);
                 return _builder;
@@ -98,6 +99,12 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                     AddError("secret key must be a valid alias");
                 }
                 _builder.AddSecret(secret);
+            });
+        }
+
+        private void ConvertDependency(int index, string dependency) {
+            AtLocation($"[{index}]", () => {
+                _builder.AddDependency(dependency);
             });
         }
 
@@ -227,6 +234,7 @@ namespace MindTouch.LambdaSharp.Tool.Build {
 
                     // create input parameter entry
                     _builder.AddParameter(
+                        parent: parent,
                         name: node.Parameter,
                         section: node.Section,
                         label: node.Label,
@@ -254,24 +262,29 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                 AtLocation(node.Import, () => {
 
                     // validation
-                    Validate(node.Import.Split("::").Length == 2, "incorrect format for `Import` attribute");
-                    if(node.Properties != null) {
-                        Validate(node.Type != null, "'Type' attribute is required");
-                        Validate(node.Allow != null, "'Allow' attribute is required");
+                    if(node.Location != null) {
+                        AtLocation("Location", () => {
+                            Validate(node.Location.Name != null, "missing 'Name' attribute");
+                            Validate(node.Location.Name is string, "'Name' attribute must be a string");
+                            Validate(node.Location.Version != null, "missing 'Version' attribute");
+                            Validate(node.Location.Version is string, "'Version' attribute must be a string");
+                            if(node.Location.S3Bucket != null) {
+                                Validate(node.Location.S3Bucket is string, "'S3Bucket' attribute must be a string");
+                            }
+                        });
                     }
-                    Validate((node.Allow == null) || ResourceMapping.IsResourceTypeSupported(node.Type), "'Allow' attribute can only be used with AWS resource types");
 
                     // create import/cross-module reference entry
-                    _builder.AddImport(
+                    var result = _builder.AddImport(
                         import: node.Import,
-                        section: node.Section,
-                        label: node.Label,
                         description: node.Description,
-                        type: node.Type ?? "String",
-                        scope: node.Scope,
-                        noEcho: node.NoEcho,
-                        allow: node.Allow
+                        module: (string)node.Location?.Name,
+                        version: (string)node.Location?.Version,
+                        sourceBucketName: (string)node.Location?.S3Bucket
                     );
+
+                    // recurse
+                    ConvertEntries(result, new[] { "Parameter" });
                 });
                 break;
             case "Variable":
@@ -293,7 +306,7 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                     );
 
                     // recurse
-                    ConvertVariables(result);
+                    ConvertEntries(result);
                 });
                 break;
             case "Resource":
@@ -336,7 +349,7 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                     );
 
                     // recurse
-                    ConvertVariables(result);
+                    ConvertEntries(result);
                 });
                 break;
             case "Module":
@@ -346,7 +359,6 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                     AtLocation("Location", () => {
                         Validate(node.Location?.Name != null, "missing 'Name' attribute");
                         Validate(node.Location?.Version != null, "missing 'Version' attribute");
-                        Validate(node.Location?.S3Bucket != null, "missing 'S3Bucket' attribute");
                     });
 
                     // create module entry
@@ -363,7 +375,7 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                     );
 
                     // recurse
-                    ConvertVariables(result);
+                    ConvertEntries(result);
                 });
                 break;
             case "Package":
@@ -384,7 +396,7 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                     );
 
                     // recurse
-                    ConvertVariables(result);
+                    ConvertEntries(result);
                 });
                 break;
             case "Function":
@@ -461,8 +473,8 @@ namespace MindTouch.LambdaSharp.Tool.Build {
             }
 
             // local functions
-            void ConvertVariables(AModuleEntry result) {
-                ForEach("Entries", node.Entries, (i, p) => ConvertEntry(result, i, p, expectedTypes));
+            void ConvertEntries(AModuleEntry result, IEnumerable<string> nestedExpectedTypes = null) {
+                ForEach("Entries", node.Entries, (i, p) => ConvertEntry(result, i, p, nestedExpectedTypes ?? expectedTypes));
             }
 
             void ValidateARN(object resourceArn) {

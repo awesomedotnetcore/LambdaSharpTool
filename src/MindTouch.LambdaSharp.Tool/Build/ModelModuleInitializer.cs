@@ -84,6 +84,7 @@ namespace MindTouch.LambdaSharp.Tool.Build {
             // add LambdaSharp Module Options
             var section = "LambdaSharp Module Options";
             _builder.AddParameter(
+                parent: null,
                 name: "Secrets",
                 section: section,
                 label: "Secret Keys (ARNs)",
@@ -110,13 +111,20 @@ namespace MindTouch.LambdaSharp.Tool.Build {
             _builder.AddCondition("SecretsIsEmpty", FnEquals(FnRef("Secrets"), ""));
 
             // add standard parameters (unless requested otherwise)
-            if(!_builder.HasPragma("no-lambdasharp-dependencies")) {
+            if(_builder.HasLambdaSharpDependencies) {
 
                 // add LambdaSharp Module Internal Dependencies
-                section = "LambdaSharp Dependencies";
-                _builder.AddImport(
-                    import: "LambdaSharp::DeadLetterQueueArn",
-                    section: section,
+                var lambdasharp = _builder.AddImport(
+                    import: "LambdaSharp",
+                    description: "LambdaSharp Dependencies",
+                    module: null,
+                    version: null,
+                    sourceBucketName: null
+                );
+                _builder.AddParameter(
+                    parent: lambdasharp,
+                    name: "DeadLetterQueueArn",
+                    section: null,
                     label: "Dead Letter Queue (ARN)",
                     description: "Dead letter queue for functions",
 
@@ -124,13 +132,26 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                     type: "String",
                     scope: null,
                     noEcho: null,
+                    defaultValue: null,
+                    constraintDescription: null,
+                    allowedPattern: null,
+                    allowedValues: null,
+                    maxLength: null,
+                    maxValue: null,
+                    minLength: null,
+                    minValue: null,
                     allow: null /* new[] {
                         "sqs:SendMessage"
-                    }*/
+                    }*/,
+                    properties: null,
+                    arnAttribute: null,
+                    encryptionContext: null,
+                    pragmas: null
                 );
-                _builder.AddImport(
-                    import: "LambdaSharp::LoggingStreamArn",
-                    section: section,
+                _builder.AddParameter(
+                    parent: lambdasharp,
+                    name: "LoggingStreamArn",
+                    section: null,
                     label: "Logging Stream (ARN)",
                     description: "Logging kinesis stream for functions",
 
@@ -138,11 +159,24 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                     type: "String",
                     scope: null,
                     noEcho: null,
-                    allow: null
+                    defaultValue: null,
+                    constraintDescription: null,
+                    allowedPattern: null,
+                    allowedValues: null,
+                    maxLength: null,
+                    maxValue: null,
+                    minLength: null,
+                    minValue: null,
+                    allow: null,
+                    properties: null,
+                    arnAttribute: null,
+                    encryptionContext: null,
+                    pragmas: null
                 );
-                _builder.AddImport(
-                    import: "LambdaSharp::DefaultSecretKeyArn",
-                    section: section,
+                _builder.AddParameter(
+                    parent: lambdasharp,
+                    name: "DefaultSecretKeyArn",
+                    section: null,
                     label: "Secret Key (ARN)",
                     description: "Default secret key for functions",
 
@@ -150,9 +184,21 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                     type: "String",
                     scope: null,
                     noEcho: null,
+                    defaultValue: null,
+                    constraintDescription: null,
+                    allowedPattern: null,
+                    allowedValues: null,
+                    maxLength: null,
+                    maxValue: null,
+                    minLength: null,
+                    minValue: null,
 
                     // NOTE: we grant decryption access later as part of a bulk permissioning operation
-                    allow: null
+                    allow: null,
+                    properties: null,
+                    arnAttribute: null,
+                    encryptionContext: null,
+                    pragmas: null
                 );
                 _builder.AddSecret(FnRef("Module::DefaultSecretKeyArn"));
 
@@ -231,6 +277,7 @@ namespace MindTouch.LambdaSharp.Tool.Build {
             // add LambdaSharp Deployment Settings
             section = "LambdaSharp Deployment Settings (DO NOT MODIFY)";
             _builder.AddParameter(
+                parent: null,
                 name: "DeploymentBucketName",
                 section: section,
                 label: "Deployment S3 Bucket",
@@ -253,6 +300,7 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                 pragmas: null
             );
             _builder.AddParameter(
+                parent: null,
                 name: "DeploymentPrefix",
                 section: section,
                 label: "Deployment Prefix",
@@ -275,6 +323,7 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                 pragmas: null
             );
             _builder.AddParameter(
+                parent: null,
                 name: "DeploymentPrefixLowercase",
                 section: section,
                 label: "Deployment Prefix (lowercase)",
@@ -297,6 +346,7 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                 pragmas: null
             );
             _builder.AddParameter(
+                parent: null,
                 name: "DeploymentParent",
                 section: section,
                 label: "Parent Stack Name",
@@ -320,7 +370,7 @@ namespace MindTouch.LambdaSharp.Tool.Build {
             );
 
             // add module registration
-            if(!_builder.HasPragma("no-module-registration")) {
+            if(_builder.HasModuleRegistration) {
                 _builder.AddResource(
                     parent: moduleEntry,
                     name: "Registration",

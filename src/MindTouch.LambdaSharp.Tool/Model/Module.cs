@@ -38,7 +38,13 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public IEnumerable<object> Secrets { get; set; }
         public IEnumerable<AOutput> Outputs { get; set; }
         public IEnumerable<KeyValuePair<string, object>> Conditions { get; set; }
-        public IEnumerable<string> Assets { get; set; }
         public IEnumerable<AModuleEntry> Entries { get; set; }
-    }
+        public IEnumerable<string> Assets { get; set; }
+        public IEnumerable<string> Dependencies { get; set; }
+        public IEnumerable<string> CustomResourceTypes { get; set; }
+        public IEnumerable<string> MacroNames { get; set; }
+
+        //--- Methods ---
+        public bool HasPragma(string pragma) => Pragmas?.Contains(pragma) == true;
+   }
 }

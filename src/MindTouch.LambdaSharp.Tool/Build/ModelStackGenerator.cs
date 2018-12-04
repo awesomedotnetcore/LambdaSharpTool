@@ -97,10 +97,14 @@ namespace MindTouch.LambdaSharp.Tool.Build {
             _stack.AddTemplateMetadata("LambdaSharp::Manifest", new ModuleManifest {
                 ModuleName = module.Name,
                 ModuleVersion = module.Version.ToString(),
+                RuntimeCheck = !module.HasPragma("no-runtime-version-check"),
                 Hash = GenerateStackHash(),
                 GitSha = gitSha ?? "",
                 Pragmas = module.Pragmas.ToList(),
                 Assets = module.Assets.ToList(),
+                Dependencies = module.Dependencies.ToList(),
+                CustomResourceTypes = module.CustomResourceTypes.ToList(),
+                MacroNames = module.MacroNames.ToList(),
                 ResourceFullNames = module.Entries
 
                     // we only ned to worry about resource names
@@ -127,11 +131,11 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                 });
                 break;
             case CustomResourceHandlerOutput customResourceHandlerOutput:
-                _stack.Add($"{customResourceHandlerOutput.CustomResourceName.ToIdentifier()}Handler", new Humidifier.Output {
+                _stack.Add($"{customResourceHandlerOutput.CustomResourceType.ToIdentifier()}Handler", new Humidifier.Output {
                     Description = customResourceHandlerOutput.Description,
                     Value = customResourceHandlerOutput.Handler,
                     Export = new Dictionary<string, dynamic> {
-                        ["Name"] = Fn.Sub($"${{DeploymentPrefix}}CustomResource-{customResourceHandlerOutput.CustomResourceName}")
+                        ["Name"] = Fn.Sub($"${{DeploymentPrefix}}CustomResource-{customResourceHandlerOutput.CustomResourceType}")
                     }
                 });
                 break;

@@ -13,6 +13,8 @@
 * new module entries: `Module`, `Resource`, `Package`, `Variable`
 * allow any AWS type as parameter type and map to `String` when AWS type is not natively supported
 * resource `skip-property-validation` pragma
+* new `Import` notation w/ dependency
+* module dependencies
 
 __Topics__
 1. [Break Changes](#breaking-changes)

@@ -29,16 +29,20 @@ namespace MindTouch.LambdaSharp.Tool.Model {
     public class ModuleManifest {
 
         //--- Constants ---
-        public const string CurrentVersion = "2018-11-28";
+        public const string CurrentVersion = "2018-12-04.2";
 
         //--- Properties ---
         public string Version { get; set; } = CurrentVersion;
         public string ModuleName { get; set; }
         public string ModuleVersion { get; set; }
+        public bool RuntimeCheck { get; set; }
         public string Hash { get; set; }
         public string GitSha { get; set; }
         public IList<object> Pragmas { get; set; }
         public IList<string> Assets { get; set; }
+        public IList<string> Dependencies { get; set; }
+        public IList<string> CustomResourceTypes { get; set; }
+        public IList<string> MacroNames { get; set; }
         public IDictionary<string, string> ResourceFullNames { get; set; }
 
         //--- Methods ---

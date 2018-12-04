@@ -45,6 +45,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             FullName = (parent == null)
                 ? name
                 : parent.FullName + "::" + name;
+            Description = description;
 
             // TODO (2018-11-29, bjorg): logical ID should be computed by module builder to disambiguate hierarchical names when name collisions occur
             LogicalId = (parent == null)
@@ -226,4 +227,22 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         public bool HasPragma(string pragma) => Pragmas.Contains(pragma);
    }
+
+    public class ModuleReferenceEntry : AModuleEntry {
+
+        //--- Constructors ---
+        public ModuleReferenceEntry(
+            AModuleEntry parent,
+            string name,
+            string description,
+            string type,
+            IList<string> scope,
+            object reference
+        ) : base(null, name, description, "String", new string[0], "") { }
+
+        //--- Methods ---
+        public override object GetExportReference() {
+            throw new NotImplementedException();
+        }
+    }
 }

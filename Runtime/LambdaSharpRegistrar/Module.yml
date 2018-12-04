@@ -94,16 +94,16 @@ Entries:
     Scope: "*"
     Type: AWS::DynamoDB::Table
     Allow: ReadWrite
+    Pragmas:
+      - skip-property-validation
     Properties:
+      BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: Id
           AttributeType: S
-      BillingMode: PAY_PER_REQUEST
       KeySchema:
         - AttributeName: Id
           KeyType: HASH
-    Pragmas:
-      - skip-property-validation
 
   - Function: ProcessLogEvents
     Description: Process log events from all LambdaSharp module functions

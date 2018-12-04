@@ -587,7 +587,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             if(settings.RuntimeVersion == null) {
 
                 // runtime module doesn't expect a deployment tier to exist
-                if(!forceDeploy && !manifest.HasPragma("no-runtime-version-check")) {
+                if(!forceDeploy && manifest.RuntimeCheck) {
                     AddError("could not determine the LambdaSharp runtime version; use --force-deploy to proceed anyway", new LambdaSharpDeploymentTierSetupException(settings.Tier));
                     return false;
                 }

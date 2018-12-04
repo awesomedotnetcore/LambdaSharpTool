@@ -18,15 +18,22 @@ Entries:
     Description: encrypted input parameter
 
   # Cross-module references
-  - Import: OtherModule::ExportValue
-    Section: Cross-Module References
-    Description: cross-module import reference
+  - Import: OtherModule
+    Description: Cross-Module References
+    Entries:
 
-  - Import: OtherModule::ExportSecret
-    Type: Secret
-    Section: Cross-Module References
-    Description: cross-module import reference
-    Scope: "*"
+      - Parameter: ExportValue
+        Description: cross-module import reference
+
+      - Parameter: ExportSecret
+        Description: cross-module import reference
+        Type: Secret
+        Scope: "*"
+
+      - Parameter: ExportResource
+        Scope: "*"
+        Type: AWS::DynamoDB::Table
+        Allow: ReadOnly
 
   # Resource Input Parameters
   - Parameter: ResourceInputParameter
@@ -41,12 +48,6 @@ Entries:
     Default: ""
     Type: AWS::SNS::Topic
     Allow: Publish
-
-  - Import: OtherModule::ExportResource
-    Section: Resource Input Parameters
-    Scope: "*"
-    Type: AWS::DynamoDB::Table
-    Allow: ReadOnly
 
   - Variable: Input
     Scope: "*"
