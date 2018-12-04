@@ -118,7 +118,7 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                                 Version = "2012-10-17",
                                 Statement = new[] {
                                     new Humidifier.Statement {
-                                        Sid = "Module::RestApi::Invocation",
+                                        Sid = "ModuleRestApiInvocation",
                                         Effect = "Allow",
                                         Principal = new Humidifier.Principal {
                                             Service = "apigateway.amazonaws.com"
@@ -134,7 +134,7 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                                         Version = "2012-10-17",
                                         Statement = new[] {
                                             new Humidifier.Statement {
-                                                Sid = "Module::RestApi::Logging",
+                                                Sid = "ModuleRestApiLogging",
                                                 Effect = "Allow",
                                                 Action = new[] {
                                                     "logs:CreateLogGroup",
@@ -183,7 +183,7 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                             Description = FnSub($"${{AWS::StackName}} API [{methodsHash}]")
                         },
                         resourceArnAttribute: null,
-                        dependsOn: null, // TODO: depends on all AWS::ApiGateway::Method
+                        dependsOn: apiMethods.Select(kv => kv.Key).ToArray(),
                         condition: null
                     );
 
@@ -596,7 +596,7 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                             dependsOn: null,
                             condition: null
                         );
-                    });
+                    }, entry => FnGetAtt(entry.ResourceName, "StreamArn"));
                     break;
                 case KinesisSource kinesisSource:
                     Enumerate(kinesisSource.Kinesis, (suffix, _, arn) => {
@@ -624,12 +624,14 @@ namespace MindTouch.LambdaSharp.Tool.Build {
             }
         }
 
-        private void Enumerate(string fullName, Action<string, AModuleEntry, object> action) {
+        private void Enumerate(string fullName, Action<string, AModuleEntry, object> action, Func<AResourceEntry, object> getReference = null) {
             if(!_builder.TryGetEntry(fullName, out AModuleEntry entry)) {
                 AddError($"could not find function source: '{fullName}'");
                 return;
             }
-            if(entry.Reference is IList list) {
+            if(entry is AResourceEntry resource) {
+                action("", entry, getReference?.Invoke(resource) ?? entry.GetExportReference());
+            } else if(entry.Reference is IList list) {
                 switch(list.Count) {
                 case 0:
                     break;
