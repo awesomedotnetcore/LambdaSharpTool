@@ -161,19 +161,22 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             Humidifier.Resource resource,
             string resourceArnAttribute,
             IList<string> dependsOn,
-            string condition
+            string condition,
+            IList<object> pragmas
         ) : base(parent, name, description, resource.AWSTypeName, scope, reference: null) {
             Resource = resource ?? throw new ArgumentNullException(nameof(resource));
             ResourceArnAttribute = resourceArnAttribute;
             DependsOn = dependsOn ?? new string[0];
             Condition = condition;
+            Pragmas = pragmas ?? new object[0];
         }
 
         //--- Properties ---
         public Humidifier.Resource Resource { get; set; }
-        public string ResourceArnAttribute { get; set; }
-        public IList<string> DependsOn { get; set; } = new string[0];
-        public string Condition { get; set; }
+        public string ResourceArnAttribute { get; }
+        public IList<string> DependsOn { get; }
+        public string Condition { get; }
+        public IList<object> Pragmas { get; }
 
         //--- Methods ---
         public override object GetExportReference()
@@ -182,6 +185,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 : ResourceMapping.HasAttribute(Resource.AWSTypeName, "Arn")
                 ? FnGetAtt(ResourceName, "Arn")
                 : FnRef(ResourceName);
+
+        public bool HasPragma(string pragma) => Pragmas.Contains(pragma);
     }
 
     public class FunctionEntry : AResourceEntry {
@@ -219,6 +224,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         //--- Methods ---
         public override object GetExportReference() => FnGetAtt(ResourceName, "Arn");
 
-        public bool HasPragma(string pragma) => Pragmas?.Contains(pragma) == true;
+        public bool HasPragma(string pragma) => Pragmas.Contains(pragma);
    }
 }

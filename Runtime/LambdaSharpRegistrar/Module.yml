@@ -66,18 +66,6 @@ Entries:
     Scope: Register
     Default: ""
 
-  - Parameter: RegistrationTableReadCapacity
-    Section: Registration Table Settings
-    Label: Read Capacity Units
-    Description: Provisioned read capacity for registrations table
-    Default: 1
-
-  - Parameter: RegistrationTableWriteCapacity
-    Section: Registration Table Settings
-    Label: Write Capacity Units
-    Description: Provisioned write capacity for registrations table
-    Default: 1
-
   - Resource: LoggingStreamReference
     Description: Reference to the Kinesis stream used to ingest the function logs
     Value: !Ref Module::LoggingStreamArn
@@ -110,12 +98,12 @@ Entries:
       AttributeDefinitions:
         - AttributeName: Id
           AttributeType: S
+      BillingMode: PAY_PER_REQUEST
       KeySchema:
         - AttributeName: Id
           KeyType: HASH
-      ProvisionedThroughput:
-        ReadCapacityUnits: !Ref RegistrationTableReadCapacity
-        WriteCapacityUnits: !Ref RegistrationTableWriteCapacity
+    Pragmas:
+      - skip-property-validation
 
   - Function: ProcessLogEvents
     Description: Process log events from all LambdaSharp module functions

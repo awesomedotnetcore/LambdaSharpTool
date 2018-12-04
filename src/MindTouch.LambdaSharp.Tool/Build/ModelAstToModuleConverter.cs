@@ -245,7 +245,8 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                         allow: node.Allow,
                         properties: node.Properties,
                         arnAttribute: node.ArnAttribute,
-                        encryptionContext: node.EncryptionContext
+                        encryptionContext: node.EncryptionContext,
+                        pragmas: node.Pragmas
                     );
                 });
                 break;
@@ -330,7 +331,8 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                         properties: node.Properties,
                         dependsOn: ConvertToStringList(node.DependsOn),
                         arnAttribute: node.ArnAttribute,
-                        condition: null
+                        condition: null,
+                        pragmas: node.Pragmas
                     );
 
                     // recurse

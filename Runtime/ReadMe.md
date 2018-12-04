@@ -128,15 +128,6 @@ settings for the registrar have to be updated with the following va
 |`RollbarWriteAccessToken`|Account-level token for write operations|""|
 |`RollbarProjectPrefix`|Optional prefix when creating Rollbar projects|""|
 
-### Registration Table Settings
-
-The registrar uses a DynamoDB table to store module and functions registrations. For larger λ# deployments it may be necessary to provision more read/write capacity.
-
-|Parameter|Description|Default|
-|---|---|---|
-|`RegistrationTableReadCapacity`|Provisioned read capacity for registrations table|1|
-|`RegistrationTableWriteCapacity`|Provisioned write capacity for registrations table|1|
-
 ## For λ# Contributors: Installing λ# from GitHub
 
 λ# is distributed as [GitHub repository](https://github.com/LambdaSharp/LambdaSharpTool). Switch to your preferred folder for Git projects and create a clone of the λ# repository.

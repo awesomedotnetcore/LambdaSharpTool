@@ -121,19 +121,6 @@ Entries:
     Description: Optional prefix when creating Rollbar projects
     Default: ""
 
-  # Module Registration Table Settings
-  - Parameter: RegistrationTableReadCapacity
-    Section: Module Registration Table Settings
-    Label: Read Capacity Units
-    Description: Provisioned read capacity for registrations table
-    Default: 1
-
-  - Parameter: RegistrationTableWriteCapacity
-    Section: Module Registration Table Settings
-    Label: Write Capacity Units
-    Description: Provisioned write capacity for registrations table
-    Default: 1
-
   # Resource Definitions
   - Resource: DefaultSecretKeyAlias
     Description: Alias for default secrets key
@@ -153,8 +140,6 @@ Entries:
       RollbarReadAccessToken: !Ref RollbarReadAccessToken
       RollbarWriteAccessToken: !Ref RollbarWriteAccessToken
       RollbarProjectPrefix: !Ref RollbarProjectPrefix
-      RegistrationTableReadCapacity: !Ref RegistrationTableReadCapacity
-      RegistrationTableWriteCapacity: !Ref RegistrationTableWriteCapacity
       Secrets: !Ref Secrets
       LambdaSharpDeadLetterQueueArn: !Ref DeadLetterQueueArn
       LambdaSharpLoggingStreamArn: !Ref LoggingStreamArn

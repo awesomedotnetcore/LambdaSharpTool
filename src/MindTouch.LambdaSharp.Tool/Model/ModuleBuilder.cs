@@ -135,7 +135,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             object allow,
             IDictionary<string, object> properties,
             string arnAttribute,
-            IDictionary<string, string> encryptionContext
+            IDictionary<string, string> encryptionContext,
+            IList<object> pragmas
         ) {
 
             // create input parameter entry
@@ -187,7 +188,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                     properties: properties,
                     arnAttribute: arnAttribute,
                     dependsOn: null,
-                    condition: condition
+                    condition: condition,
+                    pragmas: pragmas
                 );
 
                 // register input parameter reference
@@ -319,7 +321,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 },
                 resourceArnAttribute: null,
                 dependsOn: null,
-                condition: null
+                condition: null,
+                pragmas: null
             );
         }
 
@@ -364,7 +367,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             Humidifier.Resource resource,
             string resourceArnAttribute,
             IList<string> dependsOn,
-            string condition
+            string condition,
+            IList<object> pragmas
         ) {
             var result = new ResourceEntry(
                 parent: parent,
@@ -374,7 +378,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 resource: resource,
                 resourceArnAttribute: resourceArnAttribute,
                 dependsOn: dependsOn,
-                condition: condition
+                condition: condition,
+                pragmas: pragmas
             );
             return AddEntry(result);
         }
@@ -390,7 +395,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             IDictionary<string, object> properties,
             IList<string> dependsOn,
             string arnAttribute,
-            string condition
+            string condition,
+            IList<object> pragmas
         ) {
 
             // check if a referenced or managed resource should be created
@@ -417,7 +423,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 // validate resource properties
                 if(type.StartsWith("AWS::", StringComparison.Ordinal)) {
                     var awsType = ResourceMapping.GetHumidifierType(type);
-                    if((awsType != null) && (properties != null)) {
+                    if((awsType != null) && (properties != null) && (pragmas?.Contains("skip-property-validation") != true)) {
                         try {
 
                             // TODO (2018-12-01, bjorg): use CloudFormation JSON spec for this
@@ -442,7 +448,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                     resource: new Humidifier.CustomResource(type, properties),
                     resourceArnAttribute: arnAttribute,
                     dependsOn: dependsOn,
-                    condition: condition
+                    condition: condition,
+                    pragmas: pragmas
                 );
 
                 // add optional grants
@@ -496,7 +503,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 },
                 resourceArnAttribute: null,
                 dependsOn: ConvertToStringList(dependsOn),
-                condition: null
+                condition: null,
+                pragmas: null
             );
 
             // local function
@@ -635,7 +643,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 },
                 resourceArnAttribute: null,
                 dependsOn: null,
-                condition: null
+                condition: null,
+                pragmas: null
             );
 
             // check if lambdasharp specific resources need to be initialized/created
@@ -668,7 +677,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                         },
                         resourceArnAttribute: null,
                         dependsOn: new[] { "Module::Registration" },
-                        condition: null
+                        condition: null,
+                        pragmas: null
                     );
 
                     // create function log-group subscription
@@ -685,7 +695,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                         },
                         resourceArnAttribute: null,
                         dependsOn: null,
-                        condition: null
+                        condition: null,
+                        pragmas: null
                     );
                 }
             }
@@ -758,10 +769,11 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                             AtLocation("DependsOn", () => {
 
                                 // TODO (2018-11-29, bjorg): we need to make sure that only other resources are referenced (no literal entries, or itself, no loops either)
-                                resource.DependsOn = resource.DependsOn.Select(dependency => {
+                                for(var i = 0; i < resource.DependsOn.Count; ++i) {
+                                    var dependency = resource.DependsOn[i];
                                     TryGetFnRef(visitor(FnRef(dependency)), out string result);
-                                    return result ?? throw new InvalidOperationException("invalid expression returned");
-                                }).ToList();
+                                    resource.DependsOn[i] = result ?? throw new InvalidOperationException($"invalid expression returned (index: {i})");
+                                }
                             });
                             break;
                         case FunctionEntry function:

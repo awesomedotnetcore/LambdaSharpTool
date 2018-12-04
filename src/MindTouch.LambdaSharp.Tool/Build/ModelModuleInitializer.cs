@@ -104,7 +104,8 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                 allow: null,
                 properties: null,
                 arnAttribute: null,
-                encryptionContext: null
+                encryptionContext: null,
+                pragmas: null
             );
             _builder.AddCondition("SecretsIsEmpty", FnEquals(FnRef("Secrets"), ""));
 
@@ -248,7 +249,8 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                 allow: null,
                 properties: null,
                 arnAttribute: null,
-                encryptionContext: null
+                encryptionContext: null,
+                pragmas: null
             );
             _builder.AddParameter(
                 name: "DeploymentPrefix",
@@ -269,7 +271,8 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                 allow: null,
                 properties: null,
                 arnAttribute: null,
-                encryptionContext: null
+                encryptionContext: null,
+                pragmas: null
             );
             _builder.AddParameter(
                 name: "DeploymentPrefixLowercase",
@@ -290,7 +293,8 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                 allow: null,
                 properties: null,
                 arnAttribute: null,
-                encryptionContext: null
+                encryptionContext: null,
+                pragmas: null
             );
             _builder.AddParameter(
                 name: "DeploymentParent",
@@ -311,7 +315,8 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                 allow: null,
                 properties: null,
                 arnAttribute: null,
-                encryptionContext: null
+                encryptionContext: null,
+                pragmas: null
             );
 
             // add module registration
@@ -328,7 +333,8 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                     },
                     resourceArnAttribute: null,
                     dependsOn: null,
-                    condition: null
+                    condition: null,
+                    pragmas: null
                 );
             }
 
@@ -368,7 +374,8 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                     },
                     resourceArnAttribute: null,
                     dependsOn: null,
-                    condition: null
+                    condition: null,
+                    pragmas: null
                 );
 
                 // permission needed for writing to log streams (but not for creating log groups!)
@@ -438,7 +445,8 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                         },
                         resourceArnAttribute: null,
                         dependsOn: null,
-                        condition: null
+                        condition: null,
+                        pragmas: null
                     );
                 }
             }

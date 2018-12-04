@@ -82,7 +82,8 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                         },
                         resourceArnAttribute: null,
                         dependsOn: null,
-                        condition: null
+                        condition: null,
+                        pragmas: null
                     );
 
                     // recursively create resources as needed
@@ -154,7 +155,8 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                         },
                         resourceArnAttribute: null,
                         dependsOn: null,
-                        condition: null
+                        condition: null,
+                        pragmas: null
                     );
 
                     // create a RestApi account which uses the RestApi role
@@ -168,7 +170,8 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                         },
                         resourceArnAttribute: null,
                         dependsOn: null,
-                        condition: null
+                        condition: null,
+                        pragmas: null
                     );
 
                     // NOTE (2018-06-21, bjorg): the RestApi deployment resource depends on ALL methods resources having been created;
@@ -184,7 +187,8 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                         },
                         resourceArnAttribute: null,
                         dependsOn: apiMethods.Select(kv => kv.Key).ToArray(),
-                        condition: null
+                        condition: null,
+                        pragmas: null
                     );
 
                     // RestApi stage depends on API gateway deployment and API gateway account
@@ -210,7 +214,8 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                         },
                         resourceArnAttribute: null,
                         dependsOn: new[] { "Module::RestApi::Account" },
-                        condition: null
+                        condition: null,
+                        pragmas: null
                     );
                 }
             }
@@ -243,7 +248,8 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                     resource: apiMethod,
                     resourceArnAttribute: null,
                     dependsOn: null,
-                    condition: null
+                    condition: null,
+                    pragmas: null
                 );
 
                 // add permission to API method to invoke lambda
@@ -260,7 +266,8 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                     },
                     resourceArnAttribute: null,
                     dependsOn: null,
-                    condition: null
+                    condition: null,
+                    pragmas: null
                 );
                 apiMethods.Add(new KeyValuePair<string, object>(methodEntry.ResourceName, apiMethod));
             }
@@ -286,7 +293,8 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                     },
                     resourceArnAttribute: null,
                     dependsOn: null,
-                    condition: null
+                    condition: null,
+                    pragmas: null
                 );
                 AddApiResource(resource, restApiId, FnRef(resource.ResourceName), level + 1, subRoute, apiMethods);
             }
@@ -386,7 +394,8 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                             },
                             resourceArnAttribute: null,
                             dependsOn: null,
-                            condition: null
+                            condition: null,
+                            pragmas: null
                         );
                         _builder.AddResource(
                             parent: function,
@@ -401,7 +410,8 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                             },
                             resourceArnAttribute: null,
                             dependsOn: null,
-                            condition: null
+                            condition: null,
+                            pragmas: null
                         );
                     });
                     break;
@@ -442,7 +452,8 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                             },
                             resourceArnAttribute: null,
                             dependsOn: null,
-                            condition: null
+                            condition: null,
+                            pragmas: null
                         );
                         _builder.AddResource(
                             parent: function,
@@ -457,7 +468,8 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                             },
                             resourceArnAttribute: null,
                             dependsOn: null,
-                            condition: null
+                            condition: null,
+                            pragmas: null
                         );
                     }
                     break;
@@ -487,7 +499,8 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                             },
                             resourceArnAttribute: null,
                             dependsOn: null,
-                            condition: null
+                            condition: null,
+                            pragmas: null
                         );
                         _builder.AddResource(
                             parent: function,
@@ -505,7 +518,8 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                             },
                             resourceArnAttribute: null,
                             dependsOn: new[] { permission.FullName },
-                            condition: null
+                            condition: null,
+                            pragmas: null
                         );
 
                         // local function
@@ -538,7 +552,8 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                             },
                             resourceArnAttribute: null,
                             dependsOn: null,
-                            condition: null
+                            condition: null,
+                            pragmas: null
                         );
                     });
                     break;
@@ -574,7 +589,8 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                             },
                             resourceArnAttribute: null,
                             dependsOn: null,
-                            condition: null
+                            condition: null,
+                            pragmas: null
                         );
                     }
                     break;
@@ -594,7 +610,8 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                             },
                             resourceArnAttribute: null,
                             dependsOn: null,
-                            condition: null
+                            condition: null,
+                            pragmas: null
                         );
                     }, entry => FnGetAtt(entry.ResourceName, "StreamArn"));
                     break;
@@ -614,7 +631,8 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                             },
                             resourceArnAttribute: null,
                             dependsOn: null,
-                            condition: null
+                            condition: null,
+                            pragmas: null
                         );
                     });
                     break;

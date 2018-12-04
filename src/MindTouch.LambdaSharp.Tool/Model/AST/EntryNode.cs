@@ -47,7 +47,8 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
                 "Allow",
                 "Properties",
                 "ArnAttribute",
-                "EncryptionContext"
+                "EncryptionContext",
+                "Pragmas"
             },
             ["Import"] = new[] {
                 "Section",
@@ -77,6 +78,7 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
                 "DependsOn",
                 "ArnAttribute",
                 "Entries",
+                "Pragmas"
             },
             ["Module"] = new[] {
                 "Description",
@@ -138,6 +140,7 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
          * Allow: string or list<string>
          * Properties: map
          * EncryptionContext: map
+         * Pragmas: list<any>
          */
         public string Parameter { get; set; }
         public string Section { get; set; }
@@ -157,6 +160,7 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         public object Allow { get; set; }
         public IDictionary<string, object> Properties { get; set; }
         public IDictionary<string, string> EncryptionContext { get; set; }
+        public IList<object> Pragmas { get; set; }
 
         /*
          * Import: string
@@ -193,6 +197,7 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
          * DependsOn: string -or- list<string>
          * Properties: map
          * ArnAttribute: string
+         * Pragmas: list<any>
          */
         public string Resource { get; set; }
         public object DependsOn { get; set; }
@@ -249,7 +254,6 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         public FunctionVpc VPC { get; set; }
         public Dictionary<string, object> Environment { get; set; }
         public IList<FunctionSourceNode> Sources { get; set; }
-        public IList<object> Pragmas { get; set; }
 
         /*
          * Export: string

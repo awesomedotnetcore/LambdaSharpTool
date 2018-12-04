@@ -12,6 +12,7 @@
 * generalized input/variable/function/output node types using `Entries:` section
 * new module entries: `Module`, `Resource`, `Package`, `Variable`
 * allow any AWS type as parameter type and map to `String` when AWS type is not natively supported
+* resource `skip-property-validation` pragma
 
 __Topics__
 1. [Break Changes](#breaking-changes)
