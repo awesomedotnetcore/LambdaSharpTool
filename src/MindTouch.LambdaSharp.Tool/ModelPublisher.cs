@@ -67,18 +67,15 @@ namespace MindTouch.LambdaSharp.Tool {
             // upload CloudFormation template
             var template = await UploadTemplateFileAsync(manifest, "template");
 
-            // upload LambdaSharp manifest
-            if(_changesDetected) {
-
-                // store copy of cloudformation template under version number
-                await Settings.S3Client.CopyObjectAsync(new CopyObjectRequest {
-                    SourceBucket = Settings.DeploymentBucketName,
-                    SourceKey = template,
-                    DestinationBucket = Settings.DeploymentBucketName,
-                    DestinationKey = $"Modules/{manifest.ModuleName}/Versions/{manifest.ModuleVersion}/cloudformation.json",
-                    ContentType = "application/json"
-                });
-            } else {
+            // store copy of cloudformation template under version number
+            await Settings.S3Client.CopyObjectAsync(new CopyObjectRequest {
+                SourceBucket = Settings.DeploymentBucketName,
+                SourceKey = template,
+                DestinationBucket = Settings.DeploymentBucketName,
+                DestinationKey = $"Modules/{manifest.ModuleName}/Versions/{manifest.ModuleVersion}/cloudformation.json",
+                ContentType = "application/json"
+            });
+            if(!_changesDetected) {
                 Console.WriteLine($"=> No changes found to publish");
             }
             return $"s3://{Settings.DeploymentBucketName}/Modules/{manifest.ModuleName}/Versions/{manifest.ModuleVersion}/cloudformation.json";

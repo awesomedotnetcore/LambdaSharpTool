@@ -285,8 +285,8 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
     public class ModuleLocation {
 
         //--- Properties ---
-        public string Name { get; set; }
-        public string Version { get; set; }
-        public string S3Bucket { get; set; }
+        public object Name { get; set; }
+        public object Version { get; set; }
+        public object S3Bucket { get; set; }
     }
 }

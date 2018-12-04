@@ -128,7 +128,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     Key = kv.Key,
                     Value = value
                 };
-            }).Where(kv => kv.Value is string).ToDictionary(kv => kv.Key, kv => kv.Value);
+            }).Where(kv => kv.Value != null).ToDictionary(kv => kv.Key, kv => kv.Value);
             if(staticVariables.Any()) {
 
                 // substitute static variables

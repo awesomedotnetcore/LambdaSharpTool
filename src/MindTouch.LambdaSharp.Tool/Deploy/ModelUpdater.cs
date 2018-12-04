@@ -85,7 +85,7 @@ namespace MindTouch.LambdaSharp.Tool.Deploy {
                         var deployedName = deployedOutputs.FirstOrDefault(output => output.OutputKey == "ModuleName")?.OutputValue;
                         var deployedVersionText = deployedOutputs.FirstOrDefault(output => output.OutputKey == "ModuleVersion")?.OutputValue;
                         if(deployedName == null) {
-                            AddError("unable to determine the deployed module name; use --force-deploy to proceed anyway");
+                            AddError("unable to match the deployed module name; use --force-deploy to proceed anyway");
                             return false;
                         }
                         if(deployedName != manifest.ModuleName) {
@@ -347,11 +347,23 @@ namespace MindTouch.LambdaSharp.Tool.Deploy {
                 }
 
                 // optionally enable stack protection
-                if(success && protectStack) {
-                    await Settings.CfClient.UpdateTerminationProtectionAsync(new UpdateTerminationProtectionRequest {
-                        EnableTerminationProtection = protectStack,
-                        StackName = stackName
-                    });
+                if(success) {
+
+                    // on success, protect the stack if requested
+                    if(protectStack) {
+                        await Settings.CfClient.UpdateTerminationProtectionAsync(new UpdateTerminationProtectionRequest {
+                            EnableTerminationProtection = protectStack,
+                            StackName = stackName
+                        });
+                    }
+                } else if(mostRecentStackEventId == null) {
+
+                    // delete a new stack that failed to create
+                    try {
+                        await Settings.CfClient.DeleteStackAsync(new DeleteStackRequest {
+                            StackName = stackName
+                        });
+                     } catch { }
                 }
                 return success;
             } finally {
@@ -380,7 +392,7 @@ namespace MindTouch.LambdaSharp.Tool.Deploy {
                     var deployedName = deployedOutputs.FirstOrDefault(output => output.OutputKey == "ModuleName")?.OutputValue;
                     var deployedVersionText = deployedOutputs.FirstOrDefault(output => output.OutputKey == "ModuleVersion")?.OutputValue;
                     if(deployedName == null) {
-                        AddError("unable to determine the deployed module name; use --force-deploy to proceed anyway");
+                        AddError("unable to match the deployed module name; use --force-deploy to proceed anyway");
                         return false;
                     }
                     if(deployedName != manifest.ModuleName) {
