@@ -110,7 +110,7 @@ namespace MindTouch.LambdaSharp.Tool.Deploy {
             // create change-set
             var success = false;
             var changeSetName = $"{manifest.ModuleName}-{now:yyyy-MM-dd-hh-mm-ss}";
-            var templateUrl = $"https://{cloudformation.BucketName}.s3.amazonaws.com/{cloudformation.Path}";
+            var templateUrl = $"https://{cloudformation.BucketName}.s3.amazonaws.com/{cloudformation.TemplatePath}";
             var updateOrCreate = (mostRecentStackEventId != null) ? "update" : "create";
             Console.WriteLine($"=> Stack {updateOrCreate} initiated for {stackName}");
             var response = await Settings.CfClient.CreateChangeSetAsync(new CreateChangeSetRequest {

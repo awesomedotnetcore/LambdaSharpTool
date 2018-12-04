@@ -115,7 +115,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
         ) {
             var command = new CliBuildPublishDeployCommand();
             Console.WriteLine($"Creating new deployment tier '{settings.Tier}'");
-            var moduleKey = $"LambdaSharp:{version}";
+            var moduleReference = $"LambdaSharp:{version}";
             foreach(var module in new[] {
                 "LambdaSharpS3PackageLoader",
                 "LambdaSharpS3Subscriber",
@@ -144,8 +144,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     }
 
                     // publish module
-                    moduleKey = await command.PublishStepAsync(settings);
-                    if(moduleKey == null) {
+                    moduleReference = await command.PublishStepAsync(settings);
+                    if(moduleReference == null) {
                         break;
                     }
                 }
@@ -155,7 +155,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             await command.DeployStepAsync(
                 settings,
                 dryRun: null,
-                moduleKey: moduleKey,
+                moduleReference: moduleReference,
                 instanceName: null,
                 allowDataLoos: allowDataLoos,
                 protectStack: protectStack,

@@ -46,7 +46,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         private IList<AOutput> _outputs;
         private IList<Humidifier.Statement> _resourceStatements = new List<Humidifier.Statement>();
         private IList<string> _assets;
-        private IList<string> _dependencies;
+        private IDictionary<string, ModuleManifest> _dependencies;
         private IList<string> _customResourceTypes;
         private IList<string> _macroNames;
 
@@ -62,7 +62,9 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             _conditions = new Dictionary<string, object>(module.Conditions ?? new KeyValuePair<string, object>[0]);
             _outputs = new List<AOutput>(module.Outputs ?? new AOutput[0]);
             _assets = new List<string>(module.Assets ?? new string[0]);
-            _dependencies = new List<string>(module.Dependencies ?? new string[0]);
+            _dependencies = (module.Dependencies != null)
+                ? new Dictionary<string, ModuleManifest>(module.Dependencies)
+                : new Dictionary<string, ModuleManifest>();
             _customResourceTypes = new List<string>(module.CustomResourceTypes ?? new string[0]);
             _macroNames = new List<string>(module.MacroNames ?? new string[0]);
 
@@ -103,8 +105,11 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             if(moduleReference == null) {
                 throw new ArgumentNullException(nameof(moduleReference));
             }
-            if(!_dependencies.Contains(moduleReference)) {
-                _dependencies.Add(moduleReference);
+            if(!_dependencies.ContainsKey(moduleReference)) {
+                var manifest = new ModelManifestLoader(Settings, moduleReference).LoadFromModuleReferenceAsync(moduleReference).Result;
+                if(manifest != null) {
+                    _dependencies.Add(moduleReference, manifest);
+                }
             }
         }
 
@@ -432,21 +437,25 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             } else {
 
                 // validate resource properties
-                if(type.StartsWith("AWS::", StringComparison.Ordinal)) {
-                    var awsType = ResourceMapping.GetHumidifierType(type);
-                    if((awsType != null) && (properties != null) && (pragmas?.Contains("skip-property-validation") != true)) {
-                        try {
+                if(pragmas?.Contains("skip-type-validation") != true) {
+                    if(type.StartsWith("AWS::", StringComparison.Ordinal)) {
+                        var awsType = ResourceMapping.GetHumidifierType(type);
+                        if((awsType != null) && (properties != null) && (pragmas?.Contains("skip-property-validation") != true)) {
+                            try {
 
-                            // TODO (2018-12-01, bjorg): use CloudFormation JSON spec for this
+                                // TODO (2018-12-01, bjorg): use CloudFormation JSON spec for this
 
-                            // validate fields
-                            JObject.FromObject(properties)
-                                .ToObject(awsType, new JsonSerializer {
-                                    MissingMemberHandling = MissingMemberHandling.Error
-                                });
-                        } catch(JsonSerializationException e) {
-                            AddError($"{e.Message} [Resource Type: {awsType}]");
+                                // validate fields
+                                JObject.FromObject(properties)
+                                    .ToObject(awsType, new JsonSerializer {
+                                        MissingMemberHandling = MissingMemberHandling.Error
+                                    });
+                            } catch(JsonSerializationException e) {
+                                AddError($"{e.Message} [Resource Type: {type}]");
+                            }
                         }
+                    } else if(!type.StartsWith("Custom::", StringComparison.Ordinal) && !_dependencies.Values.Any(manifest => manifest.CustomResourceTypes.Contains(type))) {
+                        AddError($"missing dependency for resource type {type}");
                     }
                 }
 

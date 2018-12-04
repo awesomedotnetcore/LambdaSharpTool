@@ -154,7 +154,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
                 // misc options
                 var dryRunOption = AddDryRunOption(cmd);
-                var initSettingsCallback = CreateSettingsInitializer(cmd, requireAwsProfile: false, requireDeploymentTier: false);
+                var initSettingsCallback = CreateSettingsInitializer(cmd, requireDeploymentTier: false);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
 
@@ -368,7 +368,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         : new List<string> { Directory.GetCurrentDirectory() };
                     Console.WriteLine($"Readying module for deployment tier '{settings.Tier}'");
                     foreach(var argument in arguments) {
-                        string moduleKey = null;
+                        string moduleReference = null;
                         string moduleSource = null;
                         if(Directory.Exists(argument)) {
 
@@ -385,7 +385,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                             settings.WorkingDirectory = Path.GetDirectoryName(argument);
                             settings.OutputDirectory = settings.WorkingDirectory;
                         } else {
-                            moduleKey = argument;
+                            moduleReference = argument;
                         }
                         if(moduleSource != null) {
                             settings.WorkingDirectory = Path.GetDirectoryName(moduleSource);
@@ -406,16 +406,16 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                             }
                         }
                         if(dryRun == null) {
-                            if(moduleKey == null) {
-                                moduleKey = await PublishStepAsync(settings);
-                                if(moduleKey == null) {
+                            if(moduleReference == null) {
+                                moduleReference = await PublishStepAsync(settings);
+                                if(moduleReference == null) {
                                     break;
                                 }
                             }
                             if(!await DeployStepAsync(
                                 settings,
                                 dryRun,
-                                moduleKey,
+                                moduleReference,
                                 alternativeNameOption.Value(),
                                 allowDataLossOption.HasValue(),
                                 protectStackOption.HasValue(),
@@ -443,6 +443,10 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             try {
                 if(!File.Exists(moduleSource)) {
                     AddError($"could not find '{moduleSource}'");
+                    return false;
+                }
+                await PopulateToolSettingsAsync(settings);
+                if(HasErrors) {
                     return false;
                 }
 
@@ -555,7 +559,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
         public async Task<bool> DeployStepAsync(
             Settings settings,
             DryRunLevel? dryRun,
-            string moduleKey,
+            string moduleReference,
             string instanceName,
             bool allowDataLoos,
             bool protectStack,
@@ -572,13 +576,14 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             }
 
             // determin location of cloudformation template from module key
-            var location = await new ModelLocator(settings, moduleKey).LocateAsync(moduleKey);
+            var loader = new ModelManifestLoader(settings, moduleReference);
+            var location = await loader.LocateAsync(moduleReference);
             if(location == null) {
                 return false;
             }
 
             // download module manifest
-            var manifest = await new ModelManifestLoader(settings, moduleKey).LoadFromS3Async(location.BucketName, location.Path);
+            var manifest = await loader.LoadFromS3Async(location.BucketName, location.TemplatePath);
             if(manifest == null) {
                 return false;
             }

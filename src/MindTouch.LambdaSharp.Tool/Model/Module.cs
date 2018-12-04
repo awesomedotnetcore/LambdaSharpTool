@@ -40,7 +40,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public IEnumerable<KeyValuePair<string, object>> Conditions { get; set; }
         public IEnumerable<AModuleEntry> Entries { get; set; }
         public IEnumerable<string> Assets { get; set; }
-        public IEnumerable<string> Dependencies { get; set; }
+        public IEnumerable<KeyValuePair<string, ModuleManifest>> Dependencies { get; set; }
         public IEnumerable<string> CustomResourceTypes { get; set; }
         public IEnumerable<string> MacroNames { get; set; }
 

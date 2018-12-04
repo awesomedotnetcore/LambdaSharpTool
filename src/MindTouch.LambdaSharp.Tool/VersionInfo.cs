@@ -96,7 +96,7 @@ namespace MindTouch.LambdaSharp.Tool {
         public bool IsPreRelease => Suffix.Length > 0;
 
         //--- Methods ---
-        override public string ToString() => Version.ToString() + Suffix;
+        public override string ToString() => Version.ToString() + Suffix;
 
         public bool Equals(VersionInfo other) {
             if(ReferenceEquals(null, other)) {
