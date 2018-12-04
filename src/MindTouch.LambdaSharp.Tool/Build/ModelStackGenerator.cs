@@ -59,7 +59,6 @@ namespace MindTouch.LambdaSharp.Tool.Build {
             foreach(var condition in _module.Conditions) {
                 _stack.Add(condition.Key, new Condition(condition.Value));
             }
-            _stack.Add($"ModuleIsNotNested", new Condition(Fn.Equals(Fn.Ref("DeploymentParent"), "")));
 
             // add resources
             foreach(var entry in _module.Entries) {
@@ -121,15 +120,10 @@ namespace MindTouch.LambdaSharp.Tool.Build {
             case ExportOutput exportOutput:
                 _stack.Add(exportOutput.Name, new Humidifier.Output {
                     Description = exportOutput.Description,
-                    Value = exportOutput.Value
-                });
-                _stack.Add($"{exportOutput.Name}Export", new Humidifier.Output {
-                    Description = exportOutput.Description,
                     Value = exportOutput.Value,
                     Export = new Dictionary<string, dynamic> {
                         ["Name"] = Fn.Sub($"${{AWS::StackName}}::{exportOutput.Name}")
-                    },
-                    Condition = "ModuleIsNotNested"
+                    }
                 });
                 break;
             case CustomResourceHandlerOutput customResourceHandlerOutput:

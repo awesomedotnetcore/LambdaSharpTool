@@ -472,7 +472,9 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             IDictionary<string, object> parameters
         ) {
             var source = sourceBucketName ?? FnRef("DeploymentBucketName");
-            var moduleParameters = parameters.ToDictionary(kv => kv.Key, kv => kv.Value);
+            var moduleParameters = (parameters != null)
+                ? new Dictionary<string, object>(parameters)
+                : new Dictionary<string, object>();
             AtLocation("Parameters", () => {
                 OptionalAdd("LambdaSharpDeadLetterQueueArn", FnRef("Module::DeadLetterQueueArn"));
                 OptionalAdd("LambdaSharpLoggingStreamArn", FnRef("Module::LoggingStreamArn"));
