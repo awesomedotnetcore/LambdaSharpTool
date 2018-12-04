@@ -747,15 +747,9 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                         switch(entry) {
                         case InputEntry _:
                         case VariableEntry _:
+                        case PackageEntry _:
 
                             // nothing to do
-                            break;
-                        case PackageEntry package:
-                            AtLocation("Package", () => {
-
-                                // TODO: fix this
-                                // package.Package = (Humidifier.CustomResource)visitor(package.Package);
-                            });
                             break;
                         case ResourceEntry resource:
                             AtLocation("Resource", () => {

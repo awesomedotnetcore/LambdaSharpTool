@@ -98,19 +98,19 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                     AddError($"function source {fullName} must be {awsType}, but was {resourceEntry.Resource.AWSTypeName}");
                 }
                 break;
-            case PackageEntry packageEntry:
-
-                // TODO (2018-11-30, bjorg): what is the type of a package?
-                break;
             case FunctionEntry functionEntry:
                 if(awsType != functionEntry.Function.AWSTypeName) {
                     AddError($"function source {fullName} must be {awsType}, but was {functionEntry.Function.AWSTypeName}");
                 }
                 break;
-            case VariableEntry valueEntry:
-            case InputEntry inputEntry:
+            case VariableEntry _:
+            case InputEntry _:
+            case PackageEntry _:
 
                 // TODO (2018-11-30): type erasure prevents us from validating against these entries
+                // if(awsType != entry.Type) {
+                //     AddError($"function source {fullName} must be {awsType}, but was {entry.Type}");
+                // }
                 break;
             default:
                 throw new ApplicationException($"unexpected entry type: {entry.GetType()}");

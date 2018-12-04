@@ -88,7 +88,7 @@ namespace MindTouch.LambdaSharp.Tool.Deploy {
                         :  new[] {
                             Settings.DeploymentBucketName,
 
-                            // TODO: do we still need to default to the 'lambdasharp` bucket?
+                            // TODO (2018-12-03, bjorg): do we still need to default to the 'lambdasharp` bucket?
                             $"lambdasharp-{Settings.AwsRegion}"
                         };
 

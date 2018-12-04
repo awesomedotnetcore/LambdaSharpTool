@@ -509,11 +509,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     Directory.CreateDirectory(outputCloudFormationDirectory);
                 }
 
-// TODO: make this optional
-// var moduleJson = Path.ChangeExtension(outputCloudFormationFilePath, null) + "-module.json";
-// File.WriteAllText(moduleJson, JsonConvert.SerializeObject(module, Formatting.Indented));
-// Console.WriteLine($"{moduleJson} generated");
-
                 // generate & save cloudformation template
                 var template = new ModelStackGenerator(settings, moduleSource).Generate(module.ToModule(), gitsha);
                 if(HasErrors) {
