@@ -103,7 +103,7 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                 Pragmas = module.Pragmas.ToList(),
                 Assets = module.Assets.ToList(),
                 Dependencies = module.Dependencies.ToList(),
-                CustomResourceTypes = module.CustomResourceTypes.ToList(),
+                CustomResourceTypes = new Dictionary<string, ModuleCustomResourceProperties>(module.CustomResourceTypes),
                 MacroNames = module.MacroNames.ToList(),
                 ResourceFullNames = module.Entries
 

@@ -107,7 +107,8 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
             },
             ["CustomResource"] = new[] {
                 "Description",
-                "Handler"
+                "Handler",
+                "Properties"
             },
             ["Macro"] = new[] {
                 "Description",

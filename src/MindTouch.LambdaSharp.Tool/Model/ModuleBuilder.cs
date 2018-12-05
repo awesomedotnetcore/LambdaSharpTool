@@ -47,7 +47,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         private IList<Humidifier.Statement> _resourceStatements = new List<Humidifier.Statement>();
         private IList<string> _assets;
         private IDictionary<string, ModuleManifest> _dependencies;
-        private IList<string> _customResourceTypes;
+        private IDictionary<string, ModuleCustomResourceProperties> _customResourceTypes;
         private IList<string> _macroNames;
 
         //--- Constructors ---
@@ -65,7 +65,9 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             _dependencies = (module.Dependencies != null)
                 ? new Dictionary<string, ModuleManifest>(module.Dependencies)
                 : new Dictionary<string, ModuleManifest>();
-            _customResourceTypes = new List<string>(module.CustomResourceTypes ?? new string[0]);
+            _customResourceTypes = (module.CustomResourceTypes != null)
+                ? new Dictionary<string, ModuleCustomResourceProperties>(module.CustomResourceTypes)
+                : new Dictionary<string, ModuleCustomResourceProperties>();
             _macroNames = new List<string>(module.MacroNames ?? new string[0]);
 
             // extract existing resource statements when they exist
@@ -297,13 +299,18 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             });
         }
 
-        public void AddCustomResource(string customResourceType, string description, string handler) {
+        public void AddCustomResource(
+            string customResourceType,
+            string description,
+            string handler,
+            ModuleCustomResourceProperties properties
+        ) {
             _outputs.Add(new CustomResourceHandlerOutput {
                 CustomResourceType = customResourceType,
                 Description = description,
                 Handler = FnRef(handler)
             });
-            _customResourceTypes.Add(customResourceType);
+            _customResourceTypes.Add(customResourceType, properties ?? new ModuleCustomResourceProperties());
         }
 
         public void AddMacro(string macroName, string description, string handler) {
@@ -454,8 +461,18 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                                 AddError($"{e.Message} [Resource Type: {type}]");
                             }
                         }
-                    } else if(!type.StartsWith("Custom::", StringComparison.Ordinal) && !_dependencies.Values.Any(manifest => manifest.CustomResourceTypes.Contains(type))) {
-                        AddError($"missing dependency for resource type {type}");
+                    } else if(!type.StartsWith("Custom::", StringComparison.Ordinal)) {
+                        var moduleManifest = _dependencies.Values.FirstOrDefault(manifest => manifest.CustomResourceTypes.ContainsKey(type));
+                        if(moduleManifest == null) {
+                            AddError($"missing dependency for resource type {type}");
+                        } else if(properties != null) {
+                            var definition = moduleManifest.CustomResourceTypes[type];
+                            foreach(var key in properties.Keys) {
+                                if(!definition.Request.Any(field => field.Name == key)) {
+                                    AddError($"unrecognized attribute '{key}' on type {type}");
+                                }
+                            }
+                        }
                     }
                 }
 

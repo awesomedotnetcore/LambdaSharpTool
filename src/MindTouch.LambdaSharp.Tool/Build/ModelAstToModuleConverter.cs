@@ -22,16 +22,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using MindTouch.LambdaSharp.Tool.Internal;
 using MindTouch.LambdaSharp.Tool.Model;
 using MindTouch.LambdaSharp.Tool.Model.AST;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace MindTouch.LambdaSharp.Tool.Build {
-    using System.IO;
-    using System.Xml.Linq;
-    using Newtonsoft.Json.Linq;
     using static ModelFunctions;
 
     public class ModelAstToModuleConverter : AModelProcessor {
@@ -460,7 +461,21 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                 Validate(node.Handler != null, "missing Handler attribute");
 
                 // TODO (2018-09-20, bjorg): confirm that `Handler` is set to an SNS topic or lambda function
-                AtLocation(node.CustomResource, () => _builder.AddCustomResource(node.CustomResource, node.Description, node.Handler));
+                AtLocation(node.CustomResource, () => {
+                    ModuleCustomResourceProperties properties = null;
+                    if(node.Properties != null) {
+                        try {
+                            properties = JObject.FromObject(node.Properties).ToObject<ModuleCustomResourceProperties>();
+                        } catch(JsonSerializationException e) {
+                            AddError($"{e.Message} [Resource Type: {type}]");
+                        }
+                        Validate((properties.Request?.Count() ?? 0) > 0, "missing or empty 'Request' section");
+                        Validate((properties.Response?.Count() ?? 0) > 0, "missing or empty 'Request' section");
+                    } else {
+                        AddError("missing 'Properties' section");
+                    }
+                    _builder.AddCustomResource(node.CustomResource, node.Description, node.Handler, properties);
+                });
                 break;
             case "Macro":
 
