@@ -13,6 +13,8 @@ Entries:
 
   - Resource: MyPackage
     Type: LambdaSharp::S3::Package
+    Pragmas:
+      - skip-type-validation
     Properties:
       DestinationBucketArn: !GetAtt MyBucket.Arn
       DestinationKeyPrefix: Bucket/Folder/
