@@ -4,6 +4,6 @@ Entries:
 
   - Resource: MyResource
     Description: A CloudFormation dummy resource
-    Type: CustomResource::Handler
+    Type: Custom::Handler
     Properties:
       Result: !Cidr [ "192.168.0.0/24", 6, 5 ]

@@ -38,14 +38,10 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public bool RuntimeCheck { get; set; }
         public string Hash { get; set; }
         public string GitSha { get; set; }
-        public IList<object> Pragmas { get; set; }
         public IList<string> Assets { get; set; }
         public IList<KeyValuePair<string, ModuleManifest>> Dependencies { get; set; }
         public IDictionary<string, ModuleCustomResourceProperties> CustomResourceTypes { get; set; }
         public IList<string> MacroNames { get; set; }
         public IDictionary<string, string> ResourceFullNames { get; set; }
-
-        //--- Methods ---
-        public bool HasPragma(string pragma) => Pragmas?.Contains(pragma) == true;
     }
 }

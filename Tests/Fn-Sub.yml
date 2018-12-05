@@ -22,7 +22,7 @@ Entries:
 
   - Resource: MyResource
     Description: A CloudFormation dummy resource
-    Type: CustomResource::Handler
+    Type: Custom::Handler
     Properties:
       Result1: !Sub
         - www.${Domain}

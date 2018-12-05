@@ -7,6 +7,6 @@ Entries:
 
   - Resource: MyResource
     Description: A CloudFormation dummy resource
-    Type: CustomResource::Handler
+    Type: Custom::Handler
     Properties:
       Result: !FindInMap [ RegionMap, !Ref "AWS::Region", HVM64 ]

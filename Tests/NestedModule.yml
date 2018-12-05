@@ -1,0 +1,10 @@
+Module: TestModule2
+Description: LambdaSharp CloudFormation Test
+Entries:
+
+  # Module Outputs
+  - Module: Test
+    Location:
+      Name: TestModule
+      Version: 1.0
+      S3Bucket: !Ref DeploymentBucketName

@@ -20,10 +20,24 @@ Outputs:
   - CustomResource: TestModule::MyCustomSnsResource
     Description: A custom resource handler
     Handler: ResourceValue
+    Properties:
+      Request:
+        - Name: Foo
+          Type: String
+      Response:
+        - Name: Bar
+          Type: String
 
   - CustomResource: TestModule::MyCustomLambdaResource
     Description: Another custom resource handler
     Handler: Function
+    Properties:
+      Request:
+        - Name: Foo
+          Type: String
+      Response:
+        - Name: Bar
+          Type: String
 
   # Macros
   - Macro: MyMacro

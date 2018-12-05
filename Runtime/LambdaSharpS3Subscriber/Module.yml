@@ -25,6 +25,17 @@ Outputs:
   - CustomResource: LambdaSharp::S3::Subscription
     Description: Custom resource for S3 bucket subscriptions
     Handler: CustomResourceTopic
+    Properties:
+      Request:
+        - Name: BucketArn
+          Type: String
+        - Name: FunctionArn
+          Type: String
+        - Name: Filters
+          Type: List<String>
+      Response:
+        - Name: Result
+          Type: String
 
 Entries:
 

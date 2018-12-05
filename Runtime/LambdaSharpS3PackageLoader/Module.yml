@@ -25,6 +25,21 @@ Outputs:
   - CustomResource: LambdaSharp::S3::Package
     Description: Custom resource for deploying packages to S3 buckets
     Handler: CustomResourceTopic
+    Properties:
+      Request:
+        - Name: DestinationBucketName
+          Type: String
+        - Name: DestinationBucketArn
+          Type: AWS::S3::Bucket
+        - Name: DestinationKeyPrefix
+          Type: String
+        - Name: SourceBucketName
+          Type: String
+        - Name: SourcePackageKey
+          Type: String
+      Response:
+        - Name: Url
+          Type: String
 
 Entries:
 

@@ -11,21 +11,21 @@
       "Type": "String",
       "Description": "Dead letter queue for functions",
       "AllowedPattern": "^.+$",
-      "ConstraintDescription": "must either be a cross-module import reference or a non-blank value",
+      "ConstraintDescription": "must either be a cross-module import reference or a non-empty value",
       "Default": "$LambdaSharp::DeadLetterQueueArn"
     },
     "LambdaSharpLoggingStreamArn": {
       "Type": "String",
       "Description": "Logging kinesis stream for functions",
       "AllowedPattern": "^.+$",
-      "ConstraintDescription": "must either be a cross-module import reference or a non-blank value",
+      "ConstraintDescription": "must either be a cross-module import reference or a non-empty value",
       "Default": "$LambdaSharp::LoggingStreamArn"
     },
     "LambdaSharpDefaultSecretKeyArn": {
       "Type": "String",
       "Description": "Default secret key for functions",
       "AllowedPattern": "^.+$",
-      "ConstraintDescription": "must either be a cross-module import reference or a non-blank value",
+      "ConstraintDescription": "must either be a cross-module import reference or a non-empty value",
       "Default": "$LambdaSharp::DefaultSecretKeyArn"
     },
     "DeploymentBucketName": {
@@ -48,13 +48,8 @@
   },
   "Resources": {
     "MyResource": {
-      "Type": "Custom::CustomResourceHandler",
+      "Type": "Custom::Handler",
       "Properties": {
-        "ServiceToken": {
-          "Fn::ImportValue": {
-            "Fn::Sub": "${DeploymentPrefix}CustomResource-CustomResource::Handler"
-          }
-        },
         "Result": {
           "Fn::Cidr": [
             "192.168.0.0/24",
@@ -97,66 +92,106 @@
         ""
       ]
     },
-    "LambdaSharpDeadLetterQueueArnIsImport": {
-      "Fn::Equals": [
+    "LambdaSharpDeadLetterQueueArnImported": {
+      "Fn::And": [
         {
-          "Fn::Select": [
-            "0",
+          "Fn::Not": [
             {
-              "Fn::Split": [
-                "$",
+              "Fn::Equals": [
                 {
                   "Ref": "LambdaSharpDeadLetterQueueArn"
-                }
+                },
+                ""
               ]
             }
           ]
         },
-        ""
+        {
+          "Fn::Equals": [
+            {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "$",
+                    {
+                      "Ref": "LambdaSharpDeadLetterQueueArn"
+                    }
+                  ]
+                }
+              ]
+            },
+            ""
+          ]
+        }
       ]
     },
-    "LambdaSharpLoggingStreamArnIsImport": {
-      "Fn::Equals": [
+    "LambdaSharpLoggingStreamArnImported": {
+      "Fn::And": [
         {
-          "Fn::Select": [
-            "0",
+          "Fn::Not": [
             {
-              "Fn::Split": [
-                "$",
+              "Fn::Equals": [
                 {
                   "Ref": "LambdaSharpLoggingStreamArn"
-                }
+                },
+                ""
               ]
             }
           ]
         },
-        ""
+        {
+          "Fn::Equals": [
+            {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "$",
+                    {
+                      "Ref": "LambdaSharpLoggingStreamArn"
+                    }
+                  ]
+                }
+              ]
+            },
+            ""
+          ]
+        }
       ]
     },
-    "LambdaSharpDefaultSecretKeyArnIsImport": {
-      "Fn::Equals": [
+    "LambdaSharpDefaultSecretKeyArnImported": {
+      "Fn::And": [
         {
-          "Fn::Select": [
-            "0",
+          "Fn::Not": [
             {
-              "Fn::Split": [
-                "$",
+              "Fn::Equals": [
                 {
                   "Ref": "LambdaSharpDefaultSecretKeyArn"
-                }
+                },
+                ""
               ]
             }
           ]
         },
-        ""
-      ]
-    },
-    "ModuleIsNotNested": {
-      "Fn::Equals": [
         {
-          "Ref": "DeploymentParent"
-        },
-        ""
+          "Fn::Equals": [
+            {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "$",
+                    {
+                      "Ref": "LambdaSharpDefaultSecretKeyArn"
+                    }
+                  ]
+                }
+              ]
+            },
+            ""
+          ]
+        }
       ]
     }
   },
@@ -221,13 +256,16 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2018-11-28",
+      "Version": "2018-12-05",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
-      "Hash": "5FD7A5048D8C927345438F6C5E998B18",
+      "RuntimeCheck": true,
+      "Hash": "89612585AD3B37D1EEC81A83F6138E9C",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
-      "Pragmas": [],
       "Assets": [],
+      "Dependencies": [],
+      "CustomResourceTypes": {},
+      "MacroNames": [],
       "ResourceFullNames": {
         "ModuleRegistration": "Module::Registration"
       }

@@ -47,17 +47,121 @@
     }
   },
   "Resources": {
-    "MyResource": {
-      "Type": "Custom::Handler",
+    "Test": {
+      "Type": "AWS::CloudFormation::Stack",
       "Properties": {
-        "Result": {
-          "Ref": "OtherResource"
-        }
+        "NotificationARNs": {
+          "Ref": "AWS::NotificationARNs"
+        },
+        "Parameters": {
+          "LambdaSharpDeadLetterQueueArn": {
+            "Fn::If": [
+              "LambdaSharpDeadLetterQueueArnImported",
+              {
+                "Fn::ImportValue": {
+                  "Fn::Sub": [
+                    "${DeploymentPrefix}${Import}",
+                    {
+                      "Import": {
+                        "Fn::Select": [
+                          "1",
+                          {
+                            "Fn::Split": [
+                              "$",
+                              {
+                                "Ref": "LambdaSharpDeadLetterQueueArn"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "Ref": "LambdaSharpDeadLetterQueueArn"
+              }
+            ]
+          },
+          "LambdaSharpLoggingStreamArn": {
+            "Fn::If": [
+              "LambdaSharpLoggingStreamArnImported",
+              {
+                "Fn::ImportValue": {
+                  "Fn::Sub": [
+                    "${DeploymentPrefix}${Import}",
+                    {
+                      "Import": {
+                        "Fn::Select": [
+                          "1",
+                          {
+                            "Fn::Split": [
+                              "$",
+                              {
+                                "Ref": "LambdaSharpLoggingStreamArn"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "Ref": "LambdaSharpLoggingStreamArn"
+              }
+            ]
+          },
+          "LambdaSharpDefaultSecretKeyArn": {
+            "Fn::If": [
+              "LambdaSharpDefaultSecretKeyArnImported",
+              {
+                "Fn::ImportValue": {
+                  "Fn::Sub": [
+                    "${DeploymentPrefix}${Import}",
+                    {
+                      "Import": {
+                        "Fn::Select": [
+                          "1",
+                          {
+                            "Fn::Split": [
+                              "$",
+                              {
+                                "Ref": "LambdaSharpDefaultSecretKeyArn"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "Ref": "LambdaSharpDefaultSecretKeyArn"
+              }
+            ]
+          },
+          "DeploymentBucketName": {
+            "Ref": "DeploymentBucketName"
+          },
+          "DeploymentPrefix": {
+            "Ref": "DeploymentPrefix"
+          },
+          "DeploymentPrefixLowercase": {
+            "Ref": "DeploymentPrefixLowercase"
+          },
+          "DeploymentParent": {
+            "Ref": "AWS::StackName"
+          }
+        },
+        "TemplateURL": {
+          "Fn::Sub": "https://${DeploymentBucketName}.s3.${AWS::Region}.amazonaws.com/Modules/TestModule/Versions/1.0/cloudformation.json"
+        },
+        "TimeoutInMinutes": 5
       }
-    },
-    "OtherResource": {
-      "Type": "AWS::SNS::Topic",
-      "Properties": {}
     },
     "ModuleRegistration": {
       "Type": "Custom::LambdaSharpRegisterModule",
@@ -70,14 +174,14 @@
         "ModuleId": {
           "Ref": "AWS::StackName"
         },
-        "ModuleName": "TestModule",
+        "ModuleName": "TestModule2",
         "ModuleVersion": "1.0"
       }
     }
   },
   "Outputs": {
     "ModuleName": {
-      "Value": "TestModule"
+      "Value": "TestModule2"
     },
     "ModuleVersion": {
       "Value": "1.0"
@@ -257,10 +361,10 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2018-12-05",
-      "ModuleName": "TestModule",
+      "ModuleName": "TestModule2",
       "ModuleVersion": "1.0",
       "RuntimeCheck": true,
-      "Hash": "F889F9566896AB53649FBB991F7A81A0",
+      "Hash": "A31E033B70D114216D5201164DF5096D",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [],

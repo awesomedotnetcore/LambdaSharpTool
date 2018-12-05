@@ -47,18 +47,6 @@
     }
   },
   "Resources": {
-    "MyResource": {
-      "Type": "Custom::Handler",
-      "Properties": {
-        "Result": {
-          "Ref": "OtherResource"
-        }
-      }
-    },
-    "OtherResource": {
-      "Type": "AWS::SNS::Topic",
-      "Properties": {}
-    },
     "ModuleRegistration": {
       "Type": "Custom::LambdaSharpRegisterModule",
       "Properties": {
@@ -81,6 +69,15 @@
     },
     "ModuleVersion": {
       "Value": "1.0"
+    },
+    "LiteralValue": {
+      "Value": "123",
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}::LiteralValue"
+        }
+      },
+      "Description": "An exported literal value"
     }
   },
   "Conditions": {
@@ -260,7 +257,7 @@
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
       "RuntimeCheck": true,
-      "Hash": "F889F9566896AB53649FBB991F7A81A0",
+      "Hash": "67B57AB25200D0DF464C9CBEE2FC7899",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [],

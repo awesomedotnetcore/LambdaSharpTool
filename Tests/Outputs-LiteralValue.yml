@@ -1,0 +1,8 @@
+Module: TestModule
+Description: LambdaSharp CloudFormation Test
+Outputs:
+
+  # Module Outputs
+  - Export: LiteralValue
+    Description: An exported literal value
+    Value: 123

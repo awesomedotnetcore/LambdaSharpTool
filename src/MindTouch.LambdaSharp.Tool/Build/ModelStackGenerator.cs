@@ -100,7 +100,6 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                 RuntimeCheck = !module.HasPragma("no-runtime-version-check"),
                 Hash = GenerateStackHash(),
                 GitSha = gitSha ?? "",
-                Pragmas = module.Pragmas.ToList(),
                 Assets = module.Assets.ToList(),
                 Dependencies = module.Dependencies.ToList(),
                 CustomResourceTypes = new Dictionary<string, ModuleCustomResourceProperties>(module.CustomResourceTypes),

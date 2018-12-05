@@ -163,14 +163,6 @@
         },
         ""
       ]
-    },
-    "ModuleIsNotNested": {
-      "Fn::Equals": [
-        {
-          "Ref": "DeploymentParent"
-        },
-        ""
-      ]
     }
   },
   "Metadata": {
@@ -215,15 +207,16 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2018-11-28",
+      "Version": "2018-12-05",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
-      "Hash": "3A2FEA6B753EDECAE8223680255BF9F2",
+      "RuntimeCheck": true,
+      "Hash": "FA629C6B1F26F7ABEBC9A0A61E186051",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
-      "Pragmas": [
-        "no-lambdasharp-dependencies"
-      ],
       "Assets": [],
+      "Dependencies": [],
+      "CustomResourceTypes": {},
+      "MacroNames": [],
       "ResourceFullNames": {
         "FunctionLogGroup": "Function::LogGroup",
         "ModuleRegistration": "Module::Registration",

@@ -898,8 +898,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 Conditions = _conditions,
                 Entries = _entries,
                 Assets = _assets.OrderBy(value => value).ToList(),
-                Dependencies = _dependencies.OrderBy(value => value).ToList(),
-                CustomResourceTypes = _customResourceTypes.OrderBy(value => value).ToList(),
+                Dependencies = _dependencies.OrderBy(kv => kv.Key).ToList(),
+                CustomResourceTypes = _customResourceTypes.OrderBy(kv => kv.Key).ToList(),
                 MacroNames = _macroNames.OrderBy(value => value).ToList()
             };
         }

@@ -11,21 +11,21 @@
       "Type": "String",
       "Description": "Dead letter queue for functions",
       "AllowedPattern": "^.+$",
-      "ConstraintDescription": "must either be a cross-module import reference or a non-blank value",
+      "ConstraintDescription": "must either be a cross-module import reference or a non-empty value",
       "Default": "$LambdaSharp::DeadLetterQueueArn"
     },
     "LambdaSharpLoggingStreamArn": {
       "Type": "String",
       "Description": "Logging kinesis stream for functions",
       "AllowedPattern": "^.+$",
-      "ConstraintDescription": "must either be a cross-module import reference or a non-blank value",
+      "ConstraintDescription": "must either be a cross-module import reference or a non-empty value",
       "Default": "$LambdaSharp::LoggingStreamArn"
     },
     "LambdaSharpDefaultSecretKeyArn": {
       "Type": "String",
       "Description": "Default secret key for functions",
       "AllowedPattern": "^.+$",
-      "ConstraintDescription": "must either be a cross-module import reference or a non-blank value",
+      "ConstraintDescription": "must either be a cross-module import reference or a non-empty value",
       "Default": "$LambdaSharp::DefaultSecretKeyArn"
     },
     "DeploymentBucketName": {
@@ -75,7 +75,7 @@
         "DeadLetterConfig": {
           "TargetArn": {
             "Fn::If": [
-              "LambdaSharpDeadLetterQueueArnIsImport",
+              "LambdaSharpDeadLetterQueueArnImported",
               {
                 "Fn::ImportValue": {
                   "Fn::Sub": [
@@ -116,7 +116,7 @@
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
               "Fn::If": [
-                "LambdaSharpDeadLetterQueueArnIsImport",
+                "LambdaSharpDeadLetterQueueArnImported",
                 {
                   "Fn::ImportValue": {
                     "Fn::Sub": [
@@ -146,7 +146,7 @@
             },
             "DEFAULTSECRETKEY": {
               "Fn::If": [
-                "LambdaSharpDefaultSecretKeyArnIsImport",
+                "LambdaSharpDefaultSecretKeyArnImported",
                 {
                   "Fn::ImportValue": {
                     "Fn::Sub": [
@@ -230,7 +230,7 @@
       "Properties": {
         "DestinationArn": {
           "Fn::If": [
-            "LambdaSharpLoggingStreamArnIsImport",
+            "LambdaSharpLoggingStreamArnImported",
             {
               "Fn::ImportValue": {
                 "Fn::Sub": [
@@ -314,7 +314,7 @@
                   ],
                   "Resource": {
                     "Fn::If": [
-                      "LambdaSharpDeadLetterQueueArnIsImport",
+                      "LambdaSharpDeadLetterQueueArnImported",
                       {
                         "Fn::ImportValue": {
                           "Fn::Sub": [
@@ -360,7 +360,7 @@
                           "SecretsIsEmpty",
                           {
                             "Fn::If": [
-                              "LambdaSharpDefaultSecretKeyArnIsImport",
+                              "LambdaSharpDefaultSecretKeyArnImported",
                               {
                                 "Fn::ImportValue": {
                                   "Fn::Sub": [
@@ -394,7 +394,7 @@
                               [
                                 {
                                   "Fn::If": [
-                                    "LambdaSharpDefaultSecretKeyArnIsImport",
+                                    "LambdaSharpDefaultSecretKeyArnImported",
                                     {
                                       "Fn::ImportValue": {
                                         "Fn::Sub": [
@@ -480,7 +480,7 @@
                   "Action": "kinesis:PutRecord",
                   "Resource": {
                     "Fn::If": [
-                      "LambdaSharpLoggingStreamArnIsImport",
+                      "LambdaSharpLoggingStreamArnImported",
                       {
                         "Fn::ImportValue": {
                           "Fn::Sub": [
@@ -527,35 +527,24 @@
       "Value": "1.0"
     },
     "SimpleValue": {
-      "Value": "this is a value"
-    },
-    "SimpleValueExport": {
       "Value": "this is a value",
       "Export": {
         "Name": {
           "Fn::Sub": "${AWS::StackName}::SimpleValue"
         }
       },
-      "Condition": "ModuleIsNotNested"
+      "Description": "SimpleValue description"
     },
     "ManyValues": {
-      "Value": "first value,second value"
-    },
-    "ManyValuesExport": {
       "Value": "first value,second value",
       "Export": {
         "Name": {
           "Fn::Sub": "${AWS::StackName}::ManyValues"
         }
       },
-      "Condition": "ModuleIsNotNested"
+      "Description": "ManyValues description"
     },
     "ResourceValue": {
-      "Value": {
-        "Ref": "ResourceValue"
-      }
-    },
-    "ResourceValueExport": {
       "Value": {
         "Ref": "ResourceValue"
       },
@@ -564,26 +553,17 @@
           "Fn::Sub": "${AWS::StackName}::ResourceValue"
         }
       },
-      "Condition": "ModuleIsNotNested"
+      "Description": "ResourceValue description"
     },
     "OutputExpressionValue": {
-      "Value": "this is a value with extra stuff"
-    },
-    "OutputExpressionValueExport": {
       "Value": "this is a value with extra stuff",
       "Export": {
         "Name": {
           "Fn::Sub": "${AWS::StackName}::OutputExpressionValue"
         }
-      },
-      "Condition": "ModuleIsNotNested"
-    },
-    "MyFunction": {
-      "Value": {
-        "Ref": "Function"
       }
     },
-    "MyFunctionExport": {
+    "MyFunction": {
       "Value": {
         "Ref": "Function"
       },
@@ -591,8 +571,7 @@
         "Name": {
           "Fn::Sub": "${AWS::StackName}::MyFunction"
         }
-      },
-      "Condition": "ModuleIsNotNested"
+      }
     },
     "TestModuleMyCustomSnsResourceHandler": {
       "Value": {
@@ -626,66 +605,106 @@
         ""
       ]
     },
-    "LambdaSharpDeadLetterQueueArnIsImport": {
-      "Fn::Equals": [
+    "LambdaSharpDeadLetterQueueArnImported": {
+      "Fn::And": [
         {
-          "Fn::Select": [
-            "0",
+          "Fn::Not": [
             {
-              "Fn::Split": [
-                "$",
+              "Fn::Equals": [
                 {
                   "Ref": "LambdaSharpDeadLetterQueueArn"
-                }
+                },
+                ""
               ]
             }
           ]
         },
-        ""
+        {
+          "Fn::Equals": [
+            {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "$",
+                    {
+                      "Ref": "LambdaSharpDeadLetterQueueArn"
+                    }
+                  ]
+                }
+              ]
+            },
+            ""
+          ]
+        }
       ]
     },
-    "LambdaSharpLoggingStreamArnIsImport": {
-      "Fn::Equals": [
+    "LambdaSharpLoggingStreamArnImported": {
+      "Fn::And": [
         {
-          "Fn::Select": [
-            "0",
+          "Fn::Not": [
             {
-              "Fn::Split": [
-                "$",
+              "Fn::Equals": [
                 {
                   "Ref": "LambdaSharpLoggingStreamArn"
-                }
+                },
+                ""
               ]
             }
           ]
         },
-        ""
+        {
+          "Fn::Equals": [
+            {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "$",
+                    {
+                      "Ref": "LambdaSharpLoggingStreamArn"
+                    }
+                  ]
+                }
+              ]
+            },
+            ""
+          ]
+        }
       ]
     },
-    "LambdaSharpDefaultSecretKeyArnIsImport": {
-      "Fn::Equals": [
+    "LambdaSharpDefaultSecretKeyArnImported": {
+      "Fn::And": [
         {
-          "Fn::Select": [
-            "0",
+          "Fn::Not": [
             {
-              "Fn::Split": [
-                "$",
+              "Fn::Equals": [
                 {
                   "Ref": "LambdaSharpDefaultSecretKeyArn"
-                }
+                },
+                ""
               ]
             }
           ]
         },
-        ""
-      ]
-    },
-    "ModuleIsNotNested": {
-      "Fn::Equals": [
         {
-          "Ref": "DeploymentParent"
-        },
-        ""
+          "Fn::Equals": [
+            {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "$",
+                    {
+                      "Ref": "LambdaSharpDefaultSecretKeyArn"
+                    }
+                  ]
+                }
+              ]
+            },
+            ""
+          ]
+        }
       ]
     }
   },
@@ -750,13 +769,47 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2018-11-28",
+      "Version": "2018-12-05",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
-      "Hash": "397DA4AA440D9F33DAC52658A898EE73",
+      "RuntimeCheck": true,
+      "Hash": "2C8C4E43E98AEBC8D8A7D4421A0095C8",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
-      "Pragmas": [],
       "Assets": [],
+      "Dependencies": [],
+      "CustomResourceTypes": {
+        "TestModule::MyCustomLambdaResource": {
+          "Request": [
+            {
+              "Name": "Foo",
+              "Type": "String"
+            }
+          ],
+          "Response": [
+            {
+              "Name": "Bar",
+              "Type": "String"
+            }
+          ]
+        },
+        "TestModule::MyCustomSnsResource": {
+          "Request": [
+            {
+              "Name": "Foo",
+              "Type": "String"
+            }
+          ],
+          "Response": [
+            {
+              "Name": "Bar",
+              "Type": "String"
+            }
+          ]
+        }
+      },
+      "MacroNames": [
+        "MyMacro"
+      ],
       "ResourceFullNames": {
         "MacrosMyMacro": "Macros::MyMacro",
         "FunctionLogGroup": "Function::LogGroup",

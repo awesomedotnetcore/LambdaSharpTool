@@ -61,7 +61,9 @@ if [ -z "$1" ]; then
     lash Source-Kinesis
     lash Inputs
     lash Outputs
+    lash Outputs-LiteralValue
     lash Package
+    lash NestedModule
 else
 
     # run requested test

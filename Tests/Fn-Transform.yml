@@ -8,7 +8,7 @@ Entries:
 
   - Resource: MyResource
     Description: A CloudFormation dummy resource
-    Type: CustomResource::Handler
+    Type: Custom::Handler
     Properties:
       Result1: !Transform { Name: MacroName1, Parameters: { Param1: Value1 } }
       Result2: !Transform
