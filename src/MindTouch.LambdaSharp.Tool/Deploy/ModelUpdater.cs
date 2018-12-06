@@ -248,6 +248,7 @@ namespace MindTouch.LambdaSharp.Tool.Deploy {
             var changeSetRequest = new DescribeChangeSetRequest {
                 ChangeSetName = changeSetId
             };
+            var changes = new List<Change>();
             while(true) {
                 await Task.Delay(TimeSpan.FromSeconds(3));
                 var changeSetResponse = await Settings.CfClient.DescribeChangeSetAsync(changeSetRequest);
@@ -262,7 +263,12 @@ namespace MindTouch.LambdaSharp.Tool.Deploy {
                     continue;
                 }
                 if(changeSetResponse.Status == ChangeSetStatus.CREATE_COMPLETE) {
-                    return changeSetResponse.Changes;
+                    changes.AddRange(changeSetResponse.Changes);
+                    if(changeSetResponse.NextToken != null) {
+                        changeSetRequest.NextToken = changeSetResponse.NextToken;
+                        continue;
+                    }
+                    return changes;
                 }
                 if(changeSetResponse.Status == ChangeSetStatus.FAILED) {
                     if(changeSetResponse.StatusReason.StartsWith("The submitted information didn't contain changes.", StringComparison.Ordinal)) {
