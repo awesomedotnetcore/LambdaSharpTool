@@ -441,86 +441,18 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             string moduleSource
         ) {
             try {
-                if(!File.Exists(moduleSource)) {
-                    AddError($"could not find '{moduleSource}'");
-                    return false;
-                }
                 await PopulateToolSettingsAsync(settings);
                 if(HasErrors) {
                     return false;
                 }
-
-                // delete output files
-                File.Delete(Path.Combine(settings.OutputDirectory, "manifest.json"));
-                File.Delete(outputCloudFormationFilePath);
-
-                // read input file
-                Console.WriteLine();
-                Console.WriteLine($"Compiling module: {Path.GetRelativePath(Directory.GetCurrentDirectory(), moduleSource)}");
-                var source = await File.ReadAllTextAsync(moduleSource);
-
-                // parse yaml to module AST
-                var moduleAst = new ModelYamlToAstConverter(settings, moduleSource).Convert(source, selector);
-                if(HasErrors) {
-                    return false;
-                }
-
-                // convert module AST to model
-                var module = new ModelAstToModuleConverter(settings, moduleSource).Convert(moduleAst);
-                if(HasErrors) {
-                    return false;
-                }
-
-                // augment module definitions
-                new ModelModuleInitializer(settings, moduleSource).Initialize(module);
-                if(HasErrors) {
-                    return false;
-                }
-
-                // package all functions
-                new ModelFunctionPackager(settings, moduleSource).Package(
-                    module,
-                    skipCompile: skipFunctionBuild,
-                    skipAssemblyValidation: skipAssemblyValidation,
-                    gitsha: gitsha,
-                    buildConfiguration: buildConfiguration
+                return await new BuildStep(settings, moduleSource).DoAsync(
+                    outputCloudFormationFilePath,
+                    skipAssemblyValidation,
+                    skipFunctionBuild,
+                    gitsha,
+                    buildConfiguration,
+                    selector
                 );
-
-                // package all files
-                new ModelFilesPackager(settings, moduleSource).Package(module);
-
-                // augment module definitions
-                new ModelFunctionProcessor(settings, moduleSource).Process(module);
-                if(HasErrors) {
-                    return false;
-                }
-
-                // resolve all references
-                new ModelLinker(settings, moduleSource).Process(module);
-                if(HasErrors) {
-                    return false;
-                }
-
-                // validate references
-                new ModelPostLinkerValidation(settings, moduleSource).Validate(module);
-                if(HasErrors) {
-                    return false;
-                }
-
-                // create folder for cloudformation output
-                var outputCloudFormationDirectory = Path.GetDirectoryName(outputCloudFormationFilePath);
-                if(outputCloudFormationDirectory != "") {
-                    Directory.CreateDirectory(outputCloudFormationDirectory);
-                }
-
-                // generate & save cloudformation template
-                var template = new ModelStackGenerator(settings, moduleSource).Generate(module.ToModule(), gitsha);
-                if(HasErrors) {
-                    return false;
-                }
-                File.WriteAllText(outputCloudFormationFilePath, template);
-                Console.WriteLine("=> Module compilation done");
-                return true;
             } catch(Exception e) {
                 AddError(e);
                 return false;

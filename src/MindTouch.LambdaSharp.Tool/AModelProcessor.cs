@@ -53,6 +53,7 @@ namespace MindTouch.LambdaSharp.Tool {
         //--- Properties ---
         public Settings Settings => _settings;
         public string SourceFilename => _sourceFilename;
+        public bool HasErrors => Settings.HasErrors;
 
         //--- Methods ---
         protected void AtLocation(string location, Action action) {
