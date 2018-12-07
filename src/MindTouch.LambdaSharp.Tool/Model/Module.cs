@@ -59,6 +59,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
        //--- Properties ---
        public string Name { get; set; }
-       public string Type { get; set; } = "String"
+       public string Type { get; set; } = "String";
    }
 }
