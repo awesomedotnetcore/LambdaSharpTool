@@ -28,10 +28,42 @@ Outputs:
   - CustomResource: LambdaSharp::Register::Module
     Description: Custom resources for registering LambdaSharp modules
     Handler: RegistrationTopic
+    Properties:
+      Request:
+        - Name: ModuleId
+          Required: true
+        - Name: ModuleName
+          Required: true
+        - Name: ModuleVersion
+          Required: true
+      Response:
+        - Name: Registration
 
   - CustomResource: LambdaSharp::Register::Function
     Description: Custom resources for registering LambdaSharp functions
     Handler: RegistrationTopic
+    Properties:
+      Request:
+        - Name: ModuleId
+          Required: true
+        - Name: FunctionId
+          Required: true
+        - Name: FunctionName
+          Required: true
+        - Name: FunctionLogGroupName
+          Required: true
+        - Name: FunctionMaxMemory
+          Required: true
+        - Name: FunctionMaxDuration
+          Required: true
+        - Name: FunctionPlatform
+          Required: true
+        - Name: FunctionFramework
+          Required: true
+        - Name: FunctionLanguage
+          Required: true
+      Response:
+        - Name: Registration
 
   - Export: ErrorReportTopic
     Description: SNS topic for LambdaSharp module errors
@@ -94,8 +126,6 @@ Entries:
     Scope: "*"
     Type: AWS::DynamoDB::Table
     Allow: ReadWrite
-    Pragmas:
-      - skip-property-validation
     Properties:
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:

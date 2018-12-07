@@ -31,21 +31,63 @@ using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
 namespace MindTouch.LambdaSharp.Tool.Model {
+    using System.IO.Compression;
     using static ModelFunctions;
+
+    public class CloudFormationSpec {
+
+        // SEE: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-resource-specification-format.html
+
+        //--- Properties ---
+        public string ResourceSpecificationVersion { get; set; }
+        public IDictionary<string, ResourceType> ResourceTypes { get; set; }
+        public IDictionary<string, ResourceType> PropertyTypes { get; set; }
+    }
+
+    public class ResourceType {
+
+        //--- Properties ---
+        public IDictionary<string, AttributeType> Attributes { get; set; }
+        public IDictionary<string, PropertyType> Properties { get; set; }
+    }
+
+    public class AttributeType {
+
+        //--- Properties ---
+        public string ItemType { get; set; }
+        public string PrimitiveItemType { get; set; }
+        public string PrimitiveType { get; set; }
+        public string Type { get; set; }
+    }
+
+    public class PropertyType {
+
+        //--- Properties ---
+
+        public bool DuplicatesAllowed { get; set; }
+        public string ItemType { get; set; }
+        public string PrimitiveItemType { get; set; }
+        public string PrimitiveType { get; set; }
+        public bool Required { get; set; }
+        public string Type { get; set; }
+        public string UpdateType { get; set; }
+    }
 
     public static class ResourceMapping {
 
         //--- Fields ---
+        public static readonly CloudFormationSpec CloudformationSpec;
         private static readonly IDictionary<string, IDictionary<string, IList<string>>> _iamMappings;
-        private static readonly HashSet<string> _supportedCloudFormationTypes;
+        private static readonly HashSet<string> _cloudFormationParameterTypes;
+
 
         //--- Constructors ---
         static ResourceMapping() {
 
             // read short-hand for IAM mappings from embedded resource
             var assembly = typeof(ResourceMapping).Assembly;
-            using(var resource = assembly.GetManifestResourceStream("MindTouch.LambdaSharp.Tool.Resources.IAM-Mappings.yml"))
-            using(var reader = new StreamReader(resource, Encoding.UTF8)) {
+            using(var iamResource = assembly.GetManifestResourceStream("MindTouch.LambdaSharp.Tool.Resources.IAM-Mappings.yml"))
+            using(var reader = new StreamReader(iamResource, Encoding.UTF8)) {
                 var deserializer = new DeserializerBuilder()
                     .WithNamingConvention(new NullNamingConvention())
                     .Build();
@@ -53,7 +95,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             }
 
             // create list of natively supported CloudFormation types
-            _supportedCloudFormationTypes = new HashSet<string> {
+            _cloudFormationParameterTypes = new HashSet<string> {
                 "String",
                 "Number",
                 "List<Number>",
@@ -76,10 +118,17 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 "AWS::Route53::HostedZone::Id"
             };
             foreach(var awsType in awsTypes) {
-                _supportedCloudFormationTypes.Add(awsType);
-                _supportedCloudFormationTypes.Add($"List<{awsType}>");
-                _supportedCloudFormationTypes.Add($"AWS::SSM::Parameter::Value<{awsType}>");
-                _supportedCloudFormationTypes.Add($"AWS::SSM::Parameter::Value<List<{awsType}>>");
+                _cloudFormationParameterTypes.Add(awsType);
+                _cloudFormationParameterTypes.Add($"List<{awsType}>");
+                _cloudFormationParameterTypes.Add($"AWS::SSM::Parameter::Value<{awsType}>");
+                _cloudFormationParameterTypes.Add($"AWS::SSM::Parameter::Value<List<{awsType}>>");
+            }
+
+            // read CloudFormation specification
+            using(var specResource = assembly.GetManifestResourceStream("MindTouch.LambdaSharp.Tool.Resources.CloudFormationResourceSpecification.json.gz"))
+            using(var specGzipStream = new GZipStream(specResource, CompressionMode.Decompress))
+            using(var specReader = new StreamReader(specGzipStream)) {
+                CloudformationSpec = JsonConvert.DeserializeObject<CloudFormationSpec>(specReader.ReadToEnd());
             }
         }
 
@@ -123,24 +172,12 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         }
 
         public static bool HasAttribute(string awsType, string attribute)
-            => GetHumidifierType(awsType)
-                ?.GetNestedType("Attributes")
-                ?.GetFields(BindingFlags.Static | BindingFlags.Public)
-                ?.Any(field => (field.FieldType == typeof(string)) && ((string)field.GetValue(null) == attribute))
-                ?? false;
+            => CloudformationSpec.ResourceTypes.TryGetValue(awsType, out ResourceType resource)
+                && resource.Attributes.ContainsKey(attribute);
 
-        public static bool IsResourceTypeSupported(string awsType) => GetHumidifierType(awsType) != null;
+        public static bool IsResourceTypeSupported(string awsType) => CloudformationSpec.ResourceTypes.ContainsKey(awsType);
 
-        public static Type GetHumidifierType(string awsType) {
-            const string AWS_PREFIX = "AWS::";
-            if(!awsType.StartsWith(AWS_PREFIX)) {
-                return null;
-            }
-            var typeName = "Humidifier." + awsType.Substring(AWS_PREFIX.Length).Replace("::", ".");
-            return typeof(Humidifier.Resource).Assembly.GetType(typeName, throwOnError: false);
-        }
-
-        public static string ToCloudFormationType(string type)
-            => _supportedCloudFormationTypes.Contains(type) ? type : "String";
+        public static string ToCloudFormationParameterType(string type)
+            => _cloudFormationParameterTypes.Contains(type) ? type : "String";
     }
 }

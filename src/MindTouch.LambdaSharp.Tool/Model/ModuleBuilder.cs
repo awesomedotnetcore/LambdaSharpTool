@@ -20,16 +20,17 @@
  */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using MindTouch.LambdaSharp.Tool.Internal;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace MindTouch.LambdaSharp.Tool.Model {
-    using System.IO;
-    using System.Text;
     using static ModelFunctions;
 
     public class ModuleBuilder : AModelProcessor {
@@ -165,7 +166,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
             // create input parameter entry
             var parameter = new Humidifier.Parameter {
-                Type = ResourceMapping.ToCloudFormationType(type),
+                Type = ResourceMapping.ToCloudFormationParameterType(type),
                 Description = description,
                 Default = defaultValue,
                 ConstraintDescription = constraintDescription,
@@ -445,35 +446,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
                 // validate resource properties
                 if(pragmas?.Contains("skip-type-validation") != true) {
-                    if(type.StartsWith("AWS::", StringComparison.Ordinal)) {
-                        var awsType = ResourceMapping.GetHumidifierType(type);
-                        if((awsType != null) && (properties != null) && (pragmas?.Contains("skip-property-validation") != true)) {
-                            try {
-
-                                // TODO (2018-12-01, bjorg): use CloudFormation JSON spec for this
-
-                                // validate fields
-                                JObject.FromObject(properties)
-                                    .ToObject(awsType, new JsonSerializer {
-                                        MissingMemberHandling = MissingMemberHandling.Error
-                                    });
-                            } catch(JsonSerializationException e) {
-                                AddError($"{e.Message} [Resource Type: {type}]");
-                            }
-                        }
-                    } else if(!type.StartsWith("Custom::", StringComparison.Ordinal)) {
-                        var moduleManifest = _dependencies.Values.FirstOrDefault(manifest => manifest.CustomResourceTypes.ContainsKey(type));
-                        if(moduleManifest == null) {
-                            AddError($"missing dependency for resource type {type}");
-                        } else if(properties != null) {
-                            var definition = moduleManifest.CustomResourceTypes[type];
-                            foreach(var key in properties.Keys) {
-                                if(!definition.Request.Any(field => field.Name == key)) {
-                                    AddError($"unrecognized attribute '{key}' on type {type}");
-                                }
-                            }
-                        }
-                    }
+                    ValidateProperties(type, properties?.ToDictionary(kv => (object)kv.Key, kv => kv.Value) ?? new Dictionary<object, object>());
                 }
 
                 // create resource entry
@@ -930,6 +903,113 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 AddError($"duplicate name '{entry.FullName}'");
             }
             return entry;
+        }
+
+        public void ValidateProperties(
+            string awsType,
+            IDictionary properties
+        ) {
+            if(awsType.StartsWith("AWS::", StringComparison.Ordinal)) {
+                if(!ResourceMapping.CloudformationSpec.ResourceTypes.TryGetValue(awsType, out ResourceType resource)) {
+                    AddError($"unrecognized AWS type {awsType}");
+                } else {
+                    ValidateProperties("", resource, properties);
+                }
+            } else if(!awsType.StartsWith("Custom::", StringComparison.Ordinal)) {
+                var moduleManifest = _dependencies.Values.FirstOrDefault(manifest => manifest.CustomResourceTypes.ContainsKey(awsType));
+                if(moduleManifest == null) {
+                    AddError($"missing dependency for resource type {awsType}");
+                } else if(properties != null) {
+                    var definition = moduleManifest.CustomResourceTypes[awsType];
+                    foreach(var key in properties.Keys) {
+                        if(!definition.Request.Any(field => field.Name == key)) {
+                            AddError($"unrecognized attribute '{key}' on type {awsType}");
+                        }
+                    }
+                }
+            }
+
+            // local functions
+            void ValidateProperties(string prefix, ResourceType currentResource, IDictionary currentProperties) {
+
+                // check that all required properties are defined
+                foreach(var property in currentResource.Properties.Where(kv => kv.Value.Required)) {
+                    if(currentProperties[property.Key] == null) {
+                        AddError($"missing property '{prefix + property.Key}");
+                    }
+                }
+
+                // check that all defined properties exist
+                foreach(DictionaryEntry property in currentProperties) {
+                    if(!currentResource.Properties.TryGetValue((string)property.Key, out PropertyType propertyType)) {
+                        AddError($"unrecognized property '{prefix + property.Key}'");
+                    } else {
+                        switch(propertyType.Type) {
+                        case "List":
+                            if(!(property.Value is IList nestedList)) {
+                                AddError($"property type mismatch for '{prefix + property.Key}', expected a list [{property.Value?.GetType().Name ?? "<null>"}]");
+                            } else if(propertyType.ItemType != null) {
+                                var nestedResource = ResourceMapping.CloudformationSpec.PropertyTypes[awsType + "." + propertyType.ItemType];
+                                ValidateList(prefix + property.Key, nestedResource, ListToEnumerable(nestedList));
+                            } else {
+
+                                // TODO (2018-12-06, bjorg): validate list items using the primitive type
+                            }
+                            break;
+                        case "Map":
+                            if(!(property.Value is IDictionary nestedProperties1)) {
+                                AddError($"property type mismatch for '{prefix + property.Key}', expected a map [{property.Value?.GetType().FullName ?? "<null>"}]");
+                            } else if(propertyType.ItemType != null) {
+                                var nestedResource = ResourceMapping.CloudformationSpec.PropertyTypes[awsType + "." + propertyType.ItemType];
+                                ValidateList(prefix + property.Key, nestedResource, DictionaryToEnumerable(nestedProperties1));
+                            } else {
+
+                                // TODO (2018-12-06, bjorg): validate map entries using the primitive type
+                            }
+                            break;
+                        case null:
+
+                            // TODO (2018-12-06, bjorg): validate property value with the primitive type
+                            break;
+                        default:
+                            if(!(property.Value is IDictionary nestedProperties2)) {
+                                AddError($"property type mismatch for '{prefix + property.Key}', expected a map [{property.Value?.GetType().FullName ?? "<null>"}]");
+                            } else {
+                                var nestedResource = ResourceMapping.CloudformationSpec.PropertyTypes[awsType + "." + propertyType.Type];
+                                ValidateProperties(prefix + property.Key + ".", nestedResource, nestedProperties2);
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+
+            void ValidateList(string prefix, ResourceType currentResource, IEnumerable<KeyValuePair<string, object>> items) {
+                foreach(var item in items) {
+                    if(!(item.Value is IDictionary nestedProperties)) {
+                        AddError($"property type mismatch for '{prefix + item.Key}', expected a map [{item.Value?.GetType().FullName ?? "<null>"}]");
+                    } else {
+                        ValidateProperties(prefix + item.Key, currentResource, nestedProperties);
+                    }
+                }
+            }
+
+            IEnumerable<KeyValuePair<string, object>> DictionaryToEnumerable(IDictionary dictionary) {
+                var result = new List<KeyValuePair<string, object>>();
+                foreach(DictionaryEntry entry in dictionary) {
+                    result.Add(new KeyValuePair<string, object>("." + entry.Key, entry.Value));
+                }
+                return result;
+            }
+
+            IEnumerable<KeyValuePair<string, object>> ListToEnumerable(IList list) {
+                var result = new List<KeyValuePair<string, object>>();
+                var index = 0;
+                foreach(var item in list) {
+                    result.Add(new KeyValuePair<string, object>($"[{++index}]".ToString(), item));
+                }
+                return result;
+            }
         }
     }
 }

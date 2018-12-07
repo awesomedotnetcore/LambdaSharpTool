@@ -231,7 +231,7 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                     if(node.Properties != null) {
                         Validate(node.Type != null, "'Type' attribute is required");
                     }
-                    Validate((node.Allow == null) || ResourceMapping.IsResourceTypeSupported(node.Type), "'Allow' attribute can only be used with AWS resource types");
+                    Validate((node.Allow == null) || (node.Type == "AWS") || ResourceMapping.IsResourceTypeSupported(node.Type), "'Allow' attribute can only be used with AWS resource types");
 
                     // create input parameter entry
                     _builder.AddParameter(
@@ -325,12 +325,8 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                                 ValidateARN(arn);
                             }
                         }
-                    } else if(awsType.StartsWith("AWS::", StringComparison.Ordinal) == true) {
-                        if(!ResourceMapping.IsResourceTypeSupported(awsType)) {
-                            AddError($"unsupported resource type: {type}");
-                        }
-                    } else if(awsType != "AWS") {
-                        Validate(node.Allow == null, "cannot use 'Allow' attribute with custom resources");
+                    } else if((awsType != "AWS") && !awsType.StartsWith("AWS::", StringComparison.Ordinal)) {
+                        Validate((node.Allow == null) || (awsType == "AWS") || ResourceMapping.IsResourceTypeSupported(awsType), "'Allow' attribute can only be used with AWS resource types");
                     }
 
                     // create resource entry
@@ -470,7 +466,7 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                             AddError($"{e.Message} [Resource Type: {type}]");
                         }
                         Validate((properties.Request?.Count() ?? 0) > 0, "missing or empty 'Request' section");
-                        Validate((properties.Response?.Count() ?? 0) > 0, "missing or empty 'Request' section");
+                        Validate((properties.Response?.Count() ?? 0) > 0, "missing or empty 'Response' section");
                     } else {
                         AddError("missing 'Properties' section");
                     }
