@@ -5,6 +5,11 @@ Outputs:
   - CustomResource: MyNamespace::MyResource
     Description: Handler for MyNamespace::MyResource custom resource
     Handler: ResourceHandler
+    Properties:
+      Request:
+        - Name: SampleInput
+      Response:
+        - Name: SampleOutput
 
 Entries:
 

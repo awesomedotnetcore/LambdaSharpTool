@@ -71,6 +71,9 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         //--- Abstract Methods ---
         public abstract object GetExportReference();
+
+        //--- Methods ---
+        public virtual bool HasPragma(string pragma) => false;
     }
 
     public class VariableEntry : AModuleEntry {
@@ -187,7 +190,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 ? FnGetAtt(ResourceName, "Arn")
                 : FnRef(ResourceName);
 
-        public bool HasPragma(string pragma) => Pragmas.Contains(pragma);
+        public override bool HasPragma(string pragma) => Pragmas.Contains(pragma);
     }
 
     public class FunctionEntry : AResourceEntry {
@@ -225,7 +228,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         //--- Methods ---
         public override object GetExportReference() => FnGetAtt(ResourceName, "Arn");
 
-        public bool HasPragma(string pragma) => Pragmas.Contains(pragma);
+        public override bool HasPragma(string pragma) => Pragmas.Contains(pragma);
    }
 
     public class ModuleReferenceEntry : AModuleEntry {

@@ -314,8 +314,9 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                             break;
                         case FunctionEntry _:
                         case ResourceEntry _:
-
-                            // TODO (2018-11-28, bjorg): validate this attribute name is valid for this resource
+                            if(!freeEntry.HasPragma("skip-type-validation") && !ResourceMapping.HasAttribute(freeEntry.Type, attribute)) {
+                                AddError($"resource type {freeEntry.Type} does not have attribute '{attribute}'");
+                            }
 
                             // attributes can be used with managed resources/functions
                             found = FnGetAtt(freeEntry.ResourceName, attribute);

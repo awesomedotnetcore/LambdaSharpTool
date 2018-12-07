@@ -53,7 +53,7 @@
         "Result": {
           "Fn::GetAtt": [
             "OtherResource",
-            "Arn"
+            "TopicName"
           ]
         }
       }
@@ -263,7 +263,7 @@
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
       "RuntimeCheck": true,
-      "Hash": "C1658C77113A5A774B607E0E7B880F74",
+      "Hash": "BA16328310B60F336BF1D108AC7227F7",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [],
