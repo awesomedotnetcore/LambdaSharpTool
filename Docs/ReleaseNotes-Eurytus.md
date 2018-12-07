@@ -17,6 +17,7 @@
 * new `Import` notation w/ dependency
 * validate custom resource types using module dependencies
 * validate resources using the cloudformation json spec
+* validation of attribute name in `!GetAtt` expressions
 
 __Topics__
 1. [Break Changes](#breaking-changes)
