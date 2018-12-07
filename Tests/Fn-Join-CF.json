@@ -60,7 +60,7 @@
               {
                 "Fn::GetAtt": [
                   "OtherResource",
-                  "Arn"
+                  "TopicName"
                 ]
               }
             ]
@@ -269,11 +269,11 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2018-12-05",
+      "Version": "2018-12-07",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
       "RuntimeCheck": true,
-      "Hash": "A9424BDE9A924275B15DDA83162B39AD",
+      "Hash": "DFCA55A2D3E2F1CF7E1385E8B5DF4A7A",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [],

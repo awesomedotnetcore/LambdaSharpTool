@@ -113,18 +113,9 @@ namespace MindTouch.LambdaSharp.Tool {
             return manifest;
         }
 
-        public async Task<ModuleManifest> LoadFromModuleReferenceAsync(string moduleReference) {
-            var location = await LocateAsync(moduleReference);
-            if(location == null) {
-                return null;
-            }
-            Console.WriteLine($"Loading manifest for {location}");
-            return await LoadFromS3Async(location.BucketName, location.TemplatePath);
-        }
-
         public async Task<ModelLocation> LocateAsync(string moduleReference) {
 
-            // module key formats
+            // module reference formats:
             // * ModuleName
             // * ModuleName:*
             // * ModuleName:Version
@@ -133,10 +124,8 @@ namespace MindTouch.LambdaSharp.Tool {
             // * ModuleName:Version@Bucket
             // * s3://bucket-name/Modules/{ModuleName}/{Version}/
 
-            string bucketName = null;
             if(moduleReference.StartsWith("s3://", StringComparison.Ordinal)) {
                 var uri = new Uri(moduleReference);
-                bucketName = uri.Host;
 
                 // absolute path always starts with '/', which needs to be removed
                 var path = uri.AbsolutePath.Substring(1);
@@ -144,7 +133,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     path = path.TrimEnd('/') + "/cloudformation.json";
                 }
                 return new ModelLocation {
-                    BucketName = bucketName,
+                    BucketName = uri.Host,
                     TemplatePath = path
                 };
             } else {
@@ -159,49 +148,66 @@ namespace MindTouch.LambdaSharp.Tool {
                         ? VersionInfo.Parse(requestedVersionText)
                         : null;
 
-                    // by default, attempt to find the module in the deployment bucket and then the regional lambdasharp bucket
-                    var searchBuckets = (requestedBucketName != null)
-                        ? new[] {
-                            requestedBucketName,
-                            $"{requestedBucketName}-{Settings.AwsRegion}"
-                        }
-                        :  new[] {
-                            Settings.DeploymentBucketName,
-
-                            // TODO (2018-12-03, bjorg): do we still need to default to the 'lambdasharp` bucket?
-                            $"lambdasharp-{Settings.AwsRegion}"
-                        };
-
-                    // attempt to find a matching version
-                    string foundVersion = null;
-                    foreach(var bucket in searchBuckets) {
-                        foundVersion = await FindNewestVersion(Settings, bucket, requestedModuleName, requestedVersion);
-                        if(foundVersion != null) {
-                            bucketName = bucket;
-                            break;
-                        }
-                    }
-                    if(foundVersion == null) {
-                        AddError($"could not find module: {requestedModuleName} ({((requestedVersion != null) ? $"v{requestedVersion}" : "any version")})");
-                        return null;
-                    }
-                    return new ModelLocation {
-                        ModuleName = requestedModuleName,
-                        ModuleVersion = foundVersion,
-                        BucketName = bucketName,
-                        TemplatePath = $"Modules/{requestedModuleName}/Versions/{foundVersion}/cloudformation.json"
-                    };
+                    // find compatible module version
+                    return await LocateAsync(requestedModuleName, requestedVersion, requestedVersion, requestedBucketName);
 
                     // local function
                     string GetMatchValue(string groupName) {
                         var group = match.Groups[groupName];
                         return group.Success ? group.Value : null;
                     }
-                } else {
-                    AddError("invalid module reference");
-                    return null;
                 }
             }
+            return null;
+        }
+
+        public async Task<ModelLocation> LocateAsync(string moduleName, VersionInfo minVersion, VersionInfo maxVersion, string bucketName) {
+
+            // by default, attempt to find the module in the deployment bucket and then the regional lambdasharp bucket
+            var searchBuckets = (bucketName != null)
+                ? new[] {
+                    bucketName,
+                    $"{bucketName}-{Settings.AwsRegion}"
+                }
+                :  new[] {
+                    Settings.DeploymentBucketName,
+
+                    // TODO (2018-12-03, bjorg): do we still need to default to the 'lambdasharp` bucket?
+                    $"lambdasharp-{Settings.AwsRegion}"
+                };
+
+            // attempt to find a matching version
+            string foundVersion = null;
+            string foundBucketName = null;
+            foreach(var bucket in searchBuckets) {
+                foundVersion = await FindNewestVersion(Settings, bucket, moduleName, minVersion, maxVersion);
+                if(foundVersion != null) {
+                    foundBucketName = bucket;
+                    break;
+                }
+            }
+            if(foundVersion == null) {
+                var versionConstraint = "any version";
+                if((minVersion != null) && (maxVersion != null)) {
+                    if(minVersion == maxVersion) {
+                        versionConstraint = $"v{minVersion}";
+                    } else {
+                        versionConstraint = $"v{minVersion}..v{maxVersion}";
+                    }
+                } else if(minVersion != null) {
+                    versionConstraint = $"v{minVersion} or later";
+                } else if(maxVersion != null) {
+                    versionConstraint = $"v{maxVersion} or earlier";
+                }
+                AddError($"could not find module: {moduleName} ({versionConstraint})");
+                return null;
+            }
+            return new ModelLocation {
+                ModuleName = moduleName,
+                ModuleVersion = foundVersion,
+                BucketName = foundBucketName,
+                TemplatePath = $"Modules/{moduleName}/Versions/{foundVersion}/cloudformation.json"
+            };
         }
 
         private async Task<string> GetS3ObjectContents(string bucketName, string key) {
@@ -230,7 +236,7 @@ namespace MindTouch.LambdaSharp.Tool {
             return null;
         }
 
-        private async Task<string> FindNewestVersion(Settings settings, string bucketName, string moduleName, VersionInfo requestedVersion) {
+        private async Task<string> FindNewestVersion(Settings settings, string bucketName, string moduleName, VersionInfo minVersion, VersionInfo maxVersion) {
 
             // enumerate versions in bucket
             var versions = new List<VersionInfo>();
@@ -245,7 +251,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 versions.AddRange(response.CommonPrefixes
                     .Select(prefix => prefix.Substring(request.Prefix.Length).TrimEnd('/'))
                     .Select(found => VersionInfo.Parse(found))
-                    .Where(version => (requestedVersion == null) ? !version.IsPreRelease : version.IsCompatibleWith(requestedVersion))
+                    .Where(IsVersionMatch)
                 );
                 request.ContinuationToken = response.NextContinuationToken;
             } while(request.ContinuationToken != null);
@@ -255,6 +261,23 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // attempt to identify the newest version
             return versions.Max().ToString();
+
+            // local function
+            bool IsVersionMatch(VersionInfo version) {
+                if((minVersion == null) && (maxVersion == null)) {
+                    return !version.IsPreRelease;
+                }
+                if(maxVersion == minVersion) {
+                    return version.IsCompatibleWith(minVersion);
+                }
+                if((minVersion != null) && (version < minVersion)) {
+                    return false;
+                }
+                if((maxVersion != null) && (version > maxVersion)) {
+                    return false;
+                }
+                return true;
+            }
         }
     }
 }

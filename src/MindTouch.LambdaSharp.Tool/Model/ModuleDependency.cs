@@ -19,21 +19,16 @@
  * limitations under the License.
  */
 
-using System.Collections.Generic;
-using YamlDotNet.Serialization;
 
-namespace MindTouch.LambdaSharp.Tool.Model.AST {
+namespace MindTouch.LambdaSharp.Tool.Model {
 
-    public class ModuleNode {
+    public class ModuleDependency {
 
         //--- Properties ---
-        public string Module { get; set; }
-        public string Version { get; set; } = "1.0";
-        public string Description { get; set; }
-        public IList<object> Pragmas { get; set; } = new List<object>();
-        public IList<string> Secrets { get; set; } = new List<string>();
-        public IList<ModuleDependencyNode> DependsOn { get; set; } = new List<ModuleDependencyNode>();
-        public IList<EntryNode> Outputs { get; set; } = new List<EntryNode>();
-        public IList<EntryNode> Entries { get; set; } = new List<EntryNode>();
+        public string ModuleName { get; set; }
+        public VersionInfo MinVersion { get; set; }
+        public VersionInfo MaxVersion { get; set; }
+        public string BucketName { get; set; }
+        public ModuleManifest Manifest { get; set; }
     }
 }

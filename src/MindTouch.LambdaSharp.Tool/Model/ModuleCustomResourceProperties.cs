@@ -20,20 +20,20 @@
  */
 
 using System.Collections.Generic;
-using YamlDotNet.Serialization;
 
-namespace MindTouch.LambdaSharp.Tool.Model.AST {
+namespace MindTouch.LambdaSharp.Tool.Model {
 
-    public class ModuleNode {
+    public class ModuleCustomResourceProperties {
 
-        //--- Properties ---
-        public string Module { get; set; }
-        public string Version { get; set; } = "1.0";
-        public string Description { get; set; }
-        public IList<object> Pragmas { get; set; } = new List<object>();
-        public IList<string> Secrets { get; set; } = new List<string>();
-        public IList<ModuleDependencyNode> DependsOn { get; set; } = new List<ModuleDependencyNode>();
-        public IList<EntryNode> Outputs { get; set; } = new List<EntryNode>();
-        public IList<EntryNode> Entries { get; set; } = new List<EntryNode>();
+       //--- Properties ---
+       public IEnumerable<ModuleProperty> Request { get; set; }
+       public IEnumerable<ModuleProperty> Response { get; set; }
+    }
+
+    public class ModuleProperty {
+
+       //--- Properties ---
+       public string Name { get; set; }
+       public string Type { get; set; } = "String";
     }
 }

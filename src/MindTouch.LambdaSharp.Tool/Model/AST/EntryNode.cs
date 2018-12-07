@@ -52,7 +52,6 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
             },
             ["Import"] = new[] {
                 "Description",
-                "Location",
                 "Entries"
             },
             ["Variable"] = new[] {
@@ -162,14 +161,9 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         /*
          * Import: string
          * Description: string
-         * Location:
-         *   Name: string
-         *   Version: string
-         *   S3Bucket: string
          * Entries: list<Entry>
          */
         public string Import { get; set; }
-        public ModuleLocation Location { get; set; }
         public IList<EntryNode> Entries { get; set; }
 
         /*
@@ -211,6 +205,7 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
          * Parameters: map
          */
         public string Module { get; set; }
+        public ModuleLocation Location { get; set; }
         public IDictionary<string, object> Parameters { get; set; }
 
         /*

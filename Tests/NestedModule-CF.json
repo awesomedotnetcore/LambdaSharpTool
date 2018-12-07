@@ -360,11 +360,11 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2018-12-05",
+      "Version": "2018-12-07",
       "ModuleName": "TestModule2",
       "ModuleVersion": "1.0",
       "RuntimeCheck": true,
-      "Hash": "A31E033B70D114216D5201164DF5096D",
+      "Hash": "D1A8DBE3E271F1316E1A73D91D4F0BA1",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [],

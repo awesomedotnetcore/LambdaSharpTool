@@ -6,7 +6,7 @@
 
 > TODO
 * comprehensive variable resolution
-* embedded template manifest
+* λ# manifest embedded in cloudformation template
 * use change-sets for deploying stacks
 * new module specification for deploying: `ModuleName[:Version][@Bucket]`
 * generalized input/variable/function/output node types using `Entries:` section
@@ -14,8 +14,9 @@
 * allow any AWS type as parameter type and map to `String` when AWS type is not natively supported
 * resource `skip-property-validation` pragma
 * resource `skip-type-validation` pragma
-* new `Import` notation w/ dependency
-* validate custom resource types using module dependencies
+* new `Import` notation
+* module `DependsOn` section
+    * validate custom resource types using module dependencies
 * validate resources using the cloudformation json spec
 * validation of attribute name in `!GetAtt` expressions
 

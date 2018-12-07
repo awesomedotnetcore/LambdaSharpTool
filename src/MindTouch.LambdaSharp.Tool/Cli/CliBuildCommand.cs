@@ -507,7 +507,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 return false;
             }
 
-            // determin location of cloudformation template from module key
+            // determine location of cloudformation template from module key
             var loader = new ModelManifestLoader(settings, moduleReference);
             var location = await loader.LocateAsync(moduleReference);
             if(location == null) {

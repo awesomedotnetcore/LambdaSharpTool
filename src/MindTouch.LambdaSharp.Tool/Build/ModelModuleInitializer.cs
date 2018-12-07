@@ -116,10 +116,7 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                 // add LambdaSharp Module Internal Dependencies
                 var lambdasharp = _builder.AddImport(
                     import: "LambdaSharp",
-                    description: "LambdaSharp Dependencies",
-                    module: null,
-                    version: null,
-                    sourceBucketName: null
+                    description: "LambdaSharp Dependencies"
                 );
                 _builder.AddParameter(
                     parent: lambdasharp,

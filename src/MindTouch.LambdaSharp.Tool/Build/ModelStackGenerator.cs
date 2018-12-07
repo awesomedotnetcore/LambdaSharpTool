@@ -101,7 +101,12 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                 Hash = GenerateStackHash(),
                 GitSha = gitSha ?? "",
                 Assets = module.Assets.ToList(),
-                Dependencies = module.Dependencies.ToList(),
+                Dependencies = module.Dependencies.Select(dependency => new ModuleManifestDependency {
+                    ModuleName = dependency.Value.ModuleName,
+                    MinVersion = dependency.Value.MinVersion,
+                    MaxVersion = dependency.Value.MaxVersion,
+                    BucketName = dependency.Value.BucketName
+                }).OrderBy(dependency => dependency.ModuleName).ToList(),
                 CustomResourceTypes = new Dictionary<string, ModuleCustomResourceProperties>(module.CustomResourceTypes),
                 MacroNames = module.MacroNames.ToList(),
                 ResourceFullNames = module.Entries

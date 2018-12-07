@@ -72,7 +72,7 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                 // convert collections
                 ForEach("Pragmas", module.Pragmas, ConvertPragma);
                 ForEach("Secrets", module.Secrets, ConvertSecret);
-                ForEach("Dependencies", module.Dependencies, ConvertDependency);
+                ForEach("DependsOn", module.DependsOn, ConvertDependency);
                 ForEach("Outputs", module.Outputs, ConvertOutput);
                 ForEach("Entries", module.Entries, ConvertEntry);
                 return _builder;
@@ -103,9 +103,44 @@ namespace MindTouch.LambdaSharp.Tool.Build {
             });
         }
 
-        private void ConvertDependency(int index, string dependency) {
+        private void ConvertDependency(int index, ModuleDependencyNode dependency) {
             AtLocation($"[{index}]", () => {
-                _builder.AddDependency(dependency);
+                VersionInfo minVersion = null;
+                VersionInfo maxVersion = null;
+                if(dependency.Version != null) {
+                    Validate(dependency.MinVersion == null, "'Version' and 'MinVersion' attributes cannot be used at the same time");
+                    Validate(dependency.MaxVersion == null, "'Version' and 'MaxVersion' attributes cannot be used at the same time");
+                    AtLocation("Version", () => {
+                        if(!VersionInfo.TryParse(dependency.Version, out VersionInfo version)) {
+                            AddError("invalid value");
+                        } else {
+
+                            // TODO (2018-12-07, bjorg): add support for min-max version
+                            minVersion = version;
+                            maxVersion = version;
+                        }
+                    });
+                }
+                if(dependency.MinVersion != null) {
+                    AtLocation("MinVersion", () => {
+                        if(!VersionInfo.TryParse(dependency.MinVersion, out minVersion)) {
+                            AddError("invalid value");
+                        }
+                    });
+                }
+                if(dependency.MaxVersion != null) {
+                    AtLocation("MaxVersion", () => {
+                        if(!VersionInfo.TryParse(dependency.MaxVersion, out maxVersion)) {
+                            AddError("invalid value");
+                        }
+                    });
+                }
+                _builder.AddDependency(
+                    moduleName: dependency.Module,
+                    minVersion: minVersion,
+                    maxVersion: maxVersion,
+                    bucketName: dependency.BucketName
+                );
             });
         }
 
@@ -262,26 +297,10 @@ namespace MindTouch.LambdaSharp.Tool.Build {
             case "Import":
                 AtLocation(node.Import, () => {
 
-                    // validation
-                    if(node.Location != null) {
-                        AtLocation("Location", () => {
-                            Validate(node.Location.Name != null, "missing 'Name' attribute");
-                            Validate(node.Location.Name is string, "'Name' attribute must be a string");
-                            Validate(node.Location.Version != null, "missing 'Version' attribute");
-                            Validate(node.Location.Version is string, "'Version' attribute must be a string");
-                            if(node.Location.S3Bucket != null) {
-                                Validate(node.Location.S3Bucket is string, "'S3Bucket' attribute must be a string");
-                            }
-                        });
-                    }
-
                     // create import/cross-module reference entry
                     var result = _builder.AddImport(
                         import: node.Import,
-                        description: node.Description,
-                        module: (string)node.Location?.Name,
-                        version: (string)node.Location?.Version,
-                        sourceBucketName: (string)node.Location?.S3Bucket
+                        description: node.Description
                     );
 
                     // recurse

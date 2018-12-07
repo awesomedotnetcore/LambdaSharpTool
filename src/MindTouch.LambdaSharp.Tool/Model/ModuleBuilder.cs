@@ -47,7 +47,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         private IList<AOutput> _outputs;
         private IList<Humidifier.Statement> _resourceStatements = new List<Humidifier.Statement>();
         private IList<string> _assets;
-        private IDictionary<string, ModuleManifest> _dependencies;
+        private IDictionary<string, ModuleDependency> _dependencies;
         private IDictionary<string, ModuleCustomResourceProperties> _customResourceTypes;
         private IList<string> _macroNames;
 
@@ -64,8 +64,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             _outputs = new List<AOutput>(module.Outputs ?? new AOutput[0]);
             _assets = new List<string>(module.Assets ?? new string[0]);
             _dependencies = (module.Dependencies != null)
-                ? new Dictionary<string, ModuleManifest>(module.Dependencies)
-                : new Dictionary<string, ModuleManifest>();
+                ? new Dictionary<string, ModuleDependency>(module.Dependencies)
+                : new Dictionary<string, ModuleDependency>();
             _customResourceTypes = (module.CustomResourceTypes != null)
                 ? new Dictionary<string, ModuleCustomResourceProperties>(module.CustomResourceTypes)
                 : new Dictionary<string, ModuleCustomResourceProperties>();
@@ -104,16 +104,37 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             GetEntry(fullName).Reference = Path.GetFileName(asset);
         }
 
-        public void AddDependency(string moduleReference) {
-            if(moduleReference == null) {
-                throw new ArgumentNullException(nameof(moduleReference));
+        public void AddDependency(string moduleName, VersionInfo minVersion, VersionInfo maxVersion, string bucketName) {
+            if(minVersion == null) {
+                throw new ArgumentNullException(nameof(minVersion));
             }
-            if(!_dependencies.ContainsKey(moduleReference)) {
-                var manifest = new ModelManifestLoader(Settings, moduleReference).LoadFromModuleReferenceAsync(moduleReference).Result;
-                if(manifest != null) {
-                    _dependencies.Add(moduleReference, manifest);
-                }
+            if(maxVersion == null) {
+                throw new ArgumentNullException(nameof(maxVersion));
             }
+            if(_dependencies.ContainsKey(moduleName)) {
+                AddError($"module {moduleName} has already been added as a dependency");
+                return;
+            }
+            if(minVersion > maxVersion) {
+                AddError($"module {moduleName} version range is empty");
+                return;
+            }
+            var loader = new ModelManifestLoader(Settings, moduleName);
+            var location = loader.LocateAsync(moduleName, minVersion, maxVersion, bucketName).Result;
+            if(location == null) {
+                return;
+            }
+            var manifest = new ModelManifestLoader(Settings, moduleName).LoadFromS3Async(location.BucketName, location.TemplatePath).Result;
+            if(manifest == null) {
+                return;
+            }
+            _dependencies.Add(moduleName, new ModuleDependency {
+                ModuleName = moduleName,
+                MinVersion = minVersion,
+                MaxVersion = maxVersion,
+                BucketName = bucketName,
+                Manifest = manifest
+            });
         }
 
         public bool AddSecret(object secret) {
@@ -262,10 +283,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         public AModuleEntry AddImport(
             string import,
-            string description,
-            string module,
-            string version,
-            string sourceBucketName
+            string description
         ) {
             var result = AddVariable(
                 parent: null,
@@ -276,19 +294,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 value: "",
                 encryptionContext: null
             );
-
-            // add module dependency
-            if(module != null) {
-                var moduleReference = new StringBuilder();
-                moduleReference.Append(module);
-                if(version != null) {
-                    moduleReference.Append(":").Append(version);
-                }
-                if(sourceBucketName != null) {
-                    moduleReference.Append("@").Append(sourceBucketName);
-                }
-                AddDependency(moduleReference.ToString());
-            }
             return result;
         }
 
@@ -916,13 +921,13 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                     ValidateProperties("", resource, properties);
                 }
             } else if(!awsType.StartsWith("Custom::", StringComparison.Ordinal)) {
-                var moduleManifest = _dependencies.Values.FirstOrDefault(manifest => manifest.CustomResourceTypes.ContainsKey(awsType));
-                if(moduleManifest == null) {
+                var dependency = _dependencies.Values.FirstOrDefault(d => d.Manifest.CustomResourceTypes.ContainsKey(awsType));
+                if(dependency == null) {
                     AddError($"missing dependency for resource type {awsType}");
                 } else if(properties != null) {
-                    var definition = moduleManifest.CustomResourceTypes[awsType];
+                    var definition = dependency.Manifest.CustomResourceTypes[awsType];
                     foreach(var key in properties.Keys) {
-                        if(!definition.Request.Any(field => field.Name == key)) {
+                        if(!definition.Request.Any(field => field.Name == (string)key)) {
                             AddError($"unrecognized attribute '{key}' on type {awsType}");
                         }
                     }

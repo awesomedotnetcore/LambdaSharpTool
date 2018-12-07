@@ -6,7 +6,7 @@ Entries:
     Description: A CloudFormation dummy resource
     Type: Custom::Handler
     Properties:
-      Result: !Join [ ":", [ !Ref OtherResource, !GetAtt OtherResource.Arn ]]
+      Result: !Join [ ":", [ !Ref OtherResource, !GetAtt OtherResource.TopicName ]]
 
   - Resource: OtherResource
     Description: A CloudFormation dummy resource to reference
