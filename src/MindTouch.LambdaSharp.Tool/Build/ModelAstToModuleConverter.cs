@@ -72,7 +72,7 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                 // convert collections
                 ForEach("Pragmas", module.Pragmas, ConvertPragma);
                 ForEach("Secrets", module.Secrets, ConvertSecret);
-                ForEach("DependsOn", module.DependsOn, ConvertDependency);
+                ForEach("Dependencies", module.Dependencies, ConvertDependency);
                 ForEach("Outputs", module.Outputs, ConvertOutput);
                 ForEach("Entries", module.Entries, ConvertEntry);
                 return _builder;
@@ -371,27 +371,35 @@ namespace MindTouch.LambdaSharp.Tool.Build {
             case "Module":
                 AtLocation(node.Module, () => {
 
-                    // validation
-                    AtLocation("Location", () => {
-                        Validate(node.Location?.Name != null, "missing 'Name' attribute");
-                        Validate(node.Location?.Version != null, "missing 'Version' attribute");
-                    });
+                    // read optional properties
+                    string moduleName = null;
+                    object moduleVersion = null;
+                    object moduleSourceBucket = null;
+                    if(node.Properties != null) {
+                        AtLocation("Properties", () => {
+                            node.Properties.TryGetValue("ModuleName", out object moduleNameObject);
+                            if(!(moduleNameObject is string moduleNameText)) {
+                                AddError("'ModuleName' attribute must be a string value");
+                            } else {
+                                moduleName = moduleNameText;
+                            }
+                            node.Properties.TryGetValue("Version", out moduleVersion);
+                            node.Properties.TryGetValue("SourceBucket", out moduleSourceBucket);
+                        });
+                    }
 
                     // create module entry
                     var result = _builder.AddModule(
                         parent: parent,
                         name: node.Module,
                         description: node.Description,
-                        module: node.Location?.Name,
-                        version: node.Location?.Version,
-                        sourceBucketName: node.Location?.S3Bucket,
+                        module: moduleName,
+                        version: moduleVersion,
+                        sourceBucketName: moduleSourceBucket,
                         scope: ConvertScope(node.Scope),
                         dependsOn: node.DependsOn,
                         parameters: node.Parameters
                     );
-
-                    // recurse
-                    ConvertEntries(result);
                 });
                 break;
             case "Package":

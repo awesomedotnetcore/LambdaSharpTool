@@ -77,8 +77,8 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
             },
             ["Module"] = new[] {
                 "Description",
-                "Location",
                 "DependsOn",
+                "Properties",
                 "Parameters"
             },
             ["Package"] = new[] {
@@ -197,15 +197,14 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         /*
          * Module: string
          * Description: string
-         * Location:
-         *   Name: string
-         *   Version: string
-         *   S3Bucket: string
          * DependsOn: string -or- list<string>
+         * Properties: map
+         *  ModuleName: string
+         *  Version: string
+         *  BucketName: string
          * Parameters: map
          */
         public string Module { get; set; }
-        public ModuleLocation Location { get; set; }
         public IDictionary<string, object> Parameters { get; set; }
 
         /*
@@ -242,7 +241,7 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         public string Runtime { get; set; }
         public string Language { get; set; }
         public string ReservedConcurrency { get; set; }
-        public FunctionVpc VPC { get; set; }
+        public FunctionVpcNode VPC { get; set; }
         public Dictionary<string, object> Environment { get; set; }
         public IList<FunctionSourceNode> Sources { get; set; }
 
@@ -270,18 +269,10 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         public string Macro { get; set; }
     }
 
-    public class FunctionVpc {
+    public class FunctionVpcNode {
 
         //--- Properties ---
         public object SubnetIds { get; set; }
         public object SecurityGroupIds { get; set; }
-    }
-
-    public class ModuleLocation {
-
-        //--- Properties ---
-        public object Name { get; set; }
-        public object Version { get; set; }
-        public object S3Bucket { get; set; }
     }
 }

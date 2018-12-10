@@ -511,7 +511,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                     Parameters = moduleParameters,
                     TemplateURL = FnSub("https://${ModuleSourceBucketName}.s3.${AWS::Region}.amazonaws.com/Modules/${ModuleName}/Versions/${ModuleVersion}/cloudformation.json", new Dictionary<string, object> {
                         ["ModuleSourceBucketName"] = source,
-                        ["ModuleName"] = module,
+                        ["ModuleName"] = module ?? name,
                         ["ModuleVersion"] = version
                     }),
 

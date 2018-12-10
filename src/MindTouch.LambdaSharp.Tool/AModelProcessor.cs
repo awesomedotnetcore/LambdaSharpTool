@@ -104,7 +104,7 @@ namespace MindTouch.LambdaSharp.Tool {
             Settings.AddError(text.ToString(), exception);
         }
 
-        protected void AddError(Exception exception = null)
+        protected void AddError(Exception exception)
             => Settings.AddError(exception);
 
         protected List<string> ConvertToStringList(object value) {
