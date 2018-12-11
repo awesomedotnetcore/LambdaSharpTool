@@ -60,24 +60,18 @@ namespace MindTouch.LambdaSharp.Tool.Deploy {
         //--- Methods ---
         public async Task<bool> DeployChangeSetAsync(
             ModuleManifest manifest,
-            ModelLocation cloudformation,
-            string altModuleName,
+            ModuleLocation cloudformation,
+            string stackName,
             bool allowDataLoss,
             bool protectStack,
             Dictionary<string, string> inputs,
             bool forceDeploy
         ) {
-            var stackName = $"{Settings.Tier}-{altModuleName ?? manifest.ModuleName}";
             var now = DateTime.UtcNow;
 
             // check if cloudformation stack already exists and is in a final state
             var mostRecentStackEventId = await Settings.CfClient.GetMostRecentStackEventIdAsync(stackName);
-
-            // check version of previously deployed module
-            if(!forceDeploy && !await IsValidModuleUpdate(stackName, manifest)) {
-                return false;
-            }
-            Console.WriteLine($"Deploying stack: {stackName} [{manifest.ModuleName}]");
+            Console.WriteLine($"Deploying stack: {stackName} [{cloudformation.ModuleName}]");
 
             // set optional notification topics for cloudformation operations
             var notificationArns =  new List<string>();
@@ -109,7 +103,7 @@ namespace MindTouch.LambdaSharp.Tool.Deploy {
 
             // create change-set
             var success = false;
-            var changeSetName = $"{manifest.ModuleName}-{now:yyyy-MM-dd-hh-mm-ss}";
+            var changeSetName = $"{cloudformation.ModuleName}-{now:yyyy-MM-dd-hh-mm-ss}";
             var templateUrl = $"https://{cloudformation.BucketName}.s3.amazonaws.com/{cloudformation.TemplatePath}";
             var updateOrCreate = (mostRecentStackEventId != null) ? "update" : "create";
             Console.WriteLine($"=> Stack {updateOrCreate} initiated for {stackName}");
@@ -119,14 +113,14 @@ namespace MindTouch.LambdaSharp.Tool.Deploy {
                 },
                 ChangeSetName = changeSetName,
                 ChangeSetType = (mostRecentStackEventId != null) ? ChangeSetType.UPDATE : ChangeSetType.CREATE,
-                Description = $"Stack {updateOrCreate} {manifest.ModuleName} (v{manifest.ModuleVersion})",
+                Description = $"Stack {updateOrCreate} {cloudformation.ModuleName} (v{cloudformation.ModuleVersion})",
                 NotificationARNs = notificationArns,
                 Parameters = parameters,
                 StackName = stackName,
                 TemplateURL = templateUrl
             });
             try {
-                var changes = await WaitForChangeSet(response.Id);
+                var changes = await WaitForChangeSetAsync(response.Id);
                 if(changes == null) {
                     return false;
                 }
@@ -198,42 +192,6 @@ namespace MindTouch.LambdaSharp.Tool.Deploy {
             }
         }
 
-        private async Task<bool> IsValidModuleUpdate(string stackName, ModuleManifest manifest) {
-            try {
-                var describe = await Settings.CfClient.DescribeStacksAsync(new DescribeStacksRequest {
-                    StackName = stackName
-                });
-                var deployedOutputs = describe.Stacks.FirstOrDefault()?.Outputs;
-                if(deployedOutputs != null) {
-                    var deployedName = deployedOutputs.FirstOrDefault(output => output.OutputKey == "ModuleName")?.OutputValue;
-                    var deployedVersionText = deployedOutputs.FirstOrDefault(output => output.OutputKey == "ModuleVersion")?.OutputValue;
-                    if(deployedName == null) {
-                        AddError("unable to match the deployed module name; use --force-deploy to proceed anyway");
-                        return false;
-                    }
-                    if(deployedName != manifest.ModuleName) {
-                        AddError($"deployed module name ({deployedName}) does not match {manifest.ModuleName}; use --force-deploy to proceed anyway");
-                        return false;
-                    }
-                    if(
-                        (deployedVersionText == null)
-                        || !VersionInfo.TryParse(deployedVersionText, out VersionInfo deployedVersion)
-                    ) {
-                        AddError("unable to determine the deployed module version; use --force-deploy to proceed anyway");
-                        return false;
-                    }
-                    if(deployedVersion > VersionInfo.Parse(manifest.ModuleVersion)) {
-                        AddError($"deployed module version (v{deployedVersionText}) is newer than v{manifest.ModuleVersion}; use --force-deploy to proceed anyway");
-                        return false;
-                    }
-                }
-            } catch(AmazonCloudFormationException) {
-
-                // stack doesn't exist
-            }
-            return true;
-        }
-
         private void ShowStackResult(CloudFormationStack stack) {
             var outputs = stack.Outputs;
             if(outputs.Any()) {
@@ -244,7 +202,7 @@ namespace MindTouch.LambdaSharp.Tool.Deploy {
             }
         }
 
-        private async Task<List<Change>> WaitForChangeSet(string changeSetId) {
+        private async Task<List<Change>> WaitForChangeSetAsync(string changeSetId) {
 
             // wait until change-set if available
             var changeSetRequest = new DescribeChangeSetRequest {

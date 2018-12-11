@@ -33,31 +33,6 @@ using Newtonsoft.Json.Linq;
 
 namespace MindTouch.LambdaSharp.Tool {
 
-    public class ModelLocation {
-
-        //--- Properties ---
-        public string ModuleName { get; set; }
-        public string ModuleVersion { get; set; }
-        public string BucketName { get; set; }
-        public string TemplatePath { get; set; }
-
-        //--- Methods ---
-        public override string ToString() {
-            var result = new StringBuilder();
-            if(ModuleName != null) {
-                result.Append(ModuleName);
-                if(ModuleVersion != null) {
-                    result.Append($" (v{ModuleVersion})");
-                }
-                result.Append(" from ");
-                result.Append(BucketName);
-            } else {
-                result.Append($"s3://{BucketName}/{TemplatePath}");
-            }
-            return result.ToString();
-        }
-    }
-
     public class ModelManifestLoader : AModelProcessor {
 
         //--- Class Fields ---
@@ -113,7 +88,7 @@ namespace MindTouch.LambdaSharp.Tool {
             return manifest;
         }
 
-        public async Task<ModelLocation> LocateAsync(string moduleReference) {
+        public async Task<ModuleLocation> LocateAsync(string moduleReference) {
 
             // module reference formats:
             // * ModuleName
@@ -123,18 +98,24 @@ namespace MindTouch.LambdaSharp.Tool {
             // * ModuleName:*@Bucket
             // * ModuleName:Version@Bucket
             // * s3://bucket-name/Modules/{ModuleName}/{Version}/
+            // * s3://bucket-name/Modules/{ModuleName}/{Version}/cloudformation.json
 
             if(moduleReference.StartsWith("s3://", StringComparison.Ordinal)) {
                 var uri = new Uri(moduleReference);
 
                 // absolute path always starts with '/', which needs to be removed
-                var path = uri.AbsolutePath.Substring(1);
-                if(!path.EndsWith("/cloudformation.json", StringComparison.Ordinal)) {
-                    path = path.TrimEnd('/') + "/cloudformation.json";
+                var pathSegments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries).ToList();
+                if((pathSegments.Count < 3) || (pathSegments[0] != "Modules")) {
+                    return null;
                 }
-                return new ModelLocation {
+                if(pathSegments.Last() != "cloudformation.json") {
+                    pathSegments.Add("cloudformation.json");
+                }
+                return new ModuleLocation {
+                    ModuleName = pathSegments[1],
+                    ModuleVersion = pathSegments[2],
                     BucketName = uri.Host,
-                    TemplatePath = path
+                    TemplatePath = string.Join("/", pathSegments)
                 };
             } else {
                 var match = ModuleKeyPattern.Match(moduleReference);
@@ -161,7 +142,7 @@ namespace MindTouch.LambdaSharp.Tool {
             return null;
         }
 
-        public async Task<ModelLocation> LocateAsync(string moduleName, VersionInfo minVersion, VersionInfo maxVersion, string bucketName) {
+        public async Task<ModuleLocation> LocateAsync(string moduleName, VersionInfo minVersion, VersionInfo maxVersion, string bucketName) {
 
             // by default, attempt to find the module in the deployment bucket and then the regional lambdasharp bucket
             var searchBuckets = (bucketName != null)
@@ -202,7 +183,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 AddError($"could not find module: {moduleName} ({versionConstraint})");
                 return null;
             }
-            return new ModelLocation {
+            return new ModuleLocation {
                 ModuleName = moduleName,
                 ModuleVersion = foundVersion,
                 BucketName = foundBucketName,
