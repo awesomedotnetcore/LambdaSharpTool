@@ -41,7 +41,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public IEnumerable<AModuleEntry> Entries { get; set; }
         public IEnumerable<string> Assets { get; set; }
         public IEnumerable<KeyValuePair<string, ModuleDependency>> Dependencies { get; set; }
-        public IEnumerable<KeyValuePair<string, ModuleCustomResourceProperties>> CustomResourceTypes { get; set; }
+        public IEnumerable<KeyValuePair<string, ModuleManifestCustomResource>> CustomResourceTypes { get; set; }
         public IEnumerable<string> MacroNames { get; set; }
 
         //--- Methods ---

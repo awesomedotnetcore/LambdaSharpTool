@@ -48,7 +48,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         private IList<Humidifier.Statement> _resourceStatements = new List<Humidifier.Statement>();
         private IList<string> _assets;
         private IDictionary<string, ModuleDependency> _dependencies;
-        private IDictionary<string, ModuleCustomResourceProperties> _customResourceTypes;
+        private IDictionary<string, ModuleManifestCustomResource> _customResourceTypes;
         private IList<string> _macroNames;
 
         //--- Constructors ---
@@ -67,8 +67,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 ? new Dictionary<string, ModuleDependency>(module.Dependencies)
                 : new Dictionary<string, ModuleDependency>();
             _customResourceTypes = (module.CustomResourceTypes != null)
-                ? new Dictionary<string, ModuleCustomResourceProperties>(module.CustomResourceTypes)
-                : new Dictionary<string, ModuleCustomResourceProperties>();
+                ? new Dictionary<string, ModuleManifestCustomResource>(module.CustomResourceTypes)
+                : new Dictionary<string, ModuleManifestCustomResource>();
             _macroNames = new List<string>(module.MacroNames ?? new string[0]);
 
             // extract existing resource statements when they exist
@@ -309,14 +309,14 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             string customResourceType,
             string description,
             string handler,
-            ModuleCustomResourceProperties properties
+            ModuleManifestCustomResource properties
         ) {
             _outputs.Add(new CustomResourceHandlerOutput {
                 CustomResourceType = customResourceType,
                 Description = description,
                 Handler = FnRef(handler)
             });
-            _customResourceTypes.Add(customResourceType, properties ?? new ModuleCustomResourceProperties());
+            _customResourceTypes.Add(customResourceType, properties ?? new ModuleManifestCustomResource());
         }
 
         public void AddMacro(string macroName, string description, string handler) {

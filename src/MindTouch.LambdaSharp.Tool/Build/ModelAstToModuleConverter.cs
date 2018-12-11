@@ -479,19 +479,21 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                 AtLocation(node.Export, () => _builder.AddExport(node.Export, node.Description, node.Value));
                 break;
             case "CustomResource":
-
-                // TODO (2018-09-20, bjorg): add custom resource name validation
                 Validate(node.Handler != null, "missing Handler attribute");
 
+                // TODO (2018-09-20, bjorg): add custom resource name validation
                 // TODO (2018-09-20, bjorg): confirm that `Handler` is set to an SNS topic or lambda function
+
                 AtLocation(node.CustomResource, () => {
-                    ModuleCustomResourceProperties properties = null;
+                    ModuleManifestCustomResource properties = null;
                     if(node.Properties != null) {
-                        try {
-                            properties = JObject.FromObject(node.Properties).ToObject<ModuleCustomResourceProperties>();
-                        } catch(JsonSerializationException e) {
-                            AddError($"{e.Message} [Resource Type: {type}]");
-                        }
+                        AtLocation("Properties", () => {
+                            try {
+                                properties = JObject.FromObject(node.Properties).ToObject<ModuleManifestCustomResource>();
+                            } catch(JsonSerializationException e) {
+                                AddError(e.Message);
+                            }
+                        });
                         Validate((properties.Request?.Count() ?? 0) > 0, "missing or empty 'Request' section");
                         Validate((properties.Response?.Count() ?? 0) > 0, "missing or empty 'Response' section");
                     } else {

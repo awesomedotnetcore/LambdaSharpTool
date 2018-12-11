@@ -256,10 +256,10 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
          * CustomResource: string
          * Description: string
          * Handler: string
+         * Properties: map
          */
         public string CustomResource { get; set; }
         public string Handler { get; set; }
-        // public string Description { get; set; }
 
         /*
          * Macro: string

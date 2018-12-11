@@ -498,61 +498,28 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             Dictionary<string, string> inputs,
             bool forceDeploy
         ) {
-            await PopulateToolSettingsAsync(settings);
-            if(HasErrors) {
-                return false;
-            }
-            await PopulateRuntimeSettingsAsync(settings);
-            if(HasErrors) {
-                return false;
-            }
-
-            // determine location of cloudformation template from module key
-            var loader = new ModelManifestLoader(settings, moduleReference);
-            var location = await loader.LocateAsync(moduleReference);
-            if(location == null) {
-                return false;
-            }
-
-            // download module manifest
-            var manifest = await loader.LoadFromS3Async(location.BucketName, location.TemplatePath);
-            if(manifest == null) {
-                return false;
-            }
-
-            // check that the LambdaSharp runtime & CLI versions match
-            if(settings.RuntimeVersion == null) {
-
-                // runtime module doesn't expect a deployment tier to exist
-                if(!forceDeploy && manifest.RuntimeCheck) {
-                    AddError("could not determine the LambdaSharp runtime version; use --force-deploy to proceed anyway", new LambdaSharpDeploymentTierSetupException(settings.Tier));
+            try {
+                await PopulateToolSettingsAsync(settings);
+                if(HasErrors) {
                     return false;
                 }
-            } else if(!settings.ToolVersion.IsCompatibleWith(settings.RuntimeVersion)) {
-                if(!forceDeploy) {
-                    AddError($"LambdaSharp CLI (v{settings.ToolVersion}) and runtime (v{settings.RuntimeVersion}) versions do not match; use --force-deploy to proceed anyway");
+                await PopulateRuntimeSettingsAsync(settings);
+                if(HasErrors) {
                     return false;
                 }
+                return await new DeployStep(settings, moduleReference).DoAsync(
+                    dryRun,
+                    moduleReference,
+                    instanceName,
+                    allowDataLoos,
+                    protectStack,
+                    inputs,
+                    forceDeploy
+                );
+            } catch(Exception e) {
+                AddError(e);
+                return false;
             }
-
-            // deploy module
-            if(dryRun == null) {
-                try {
-                    return await new ModelUpdater(settings, sourceFilename: null).DeployChangeSetAsync(
-                        manifest,
-                        location,
-                        instanceName,
-                        allowDataLoos,
-                        protectStack,
-                        inputs,
-                        forceDeploy
-                    );
-                } catch(Exception e) {
-                    AddError(e);
-                    return false;
-                }
-            }
-            return true;
         }
     }
 }

@@ -107,7 +107,7 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                     MaxVersion = dependency.Value.MaxVersion,
                     BucketName = dependency.Value.BucketName
                 }).OrderBy(dependency => dependency.ModuleName).ToList(),
-                CustomResourceTypes = new Dictionary<string, ModuleCustomResourceProperties>(module.CustomResourceTypes),
+                CustomResourceTypes = new Dictionary<string, ModuleManifestCustomResource>(module.CustomResourceTypes),
                 MacroNames = module.MacroNames.ToList(),
                 ResourceFullNames = module.Entries
 

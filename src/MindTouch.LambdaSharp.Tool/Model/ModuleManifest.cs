@@ -40,8 +40,31 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public string GitSha { get; set; }
         public IList<string> Assets { get; set; }
         public IList<ModuleManifestDependency> Dependencies { get; set; }
-        public IDictionary<string, ModuleCustomResourceProperties> CustomResourceTypes { get; set; }
+        public IDictionary<string, ModuleManifestCustomResource> CustomResourceTypes { get; set; }
         public IList<string> MacroNames { get; set; }
         public IDictionary<string, string> ResourceFullNames { get; set; }
+    }
+
+    public class ModuleManifestCustomResource {
+
+       //--- Properties ---
+       public IEnumerable<ModuleManifestResourceProperty> Request { get; set; }
+       public IEnumerable<ModuleManifestResourceProperty> Response { get; set; }
+    }
+
+    public class ModuleManifestResourceProperty {
+
+       //--- Properties ---
+       public string Name { get; set; }
+       public string Type { get; set; } = "String";
+    }
+
+    public class ModuleManifestDependency {
+
+        //--- Properties ---
+        public string ModuleName { get; set; }
+        public VersionInfo MinVersion { get; set; }
+        public VersionInfo MaxVersion { get; set; }
+        public string BucketName { get; set; }
     }
 }
