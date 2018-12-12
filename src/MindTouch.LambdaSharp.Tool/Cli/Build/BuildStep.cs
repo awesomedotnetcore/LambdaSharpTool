@@ -23,7 +23,7 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace MindTouch.LambdaSharp.Tool.Build {
+namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
     public class BuildStep : AModelProcessor {
 

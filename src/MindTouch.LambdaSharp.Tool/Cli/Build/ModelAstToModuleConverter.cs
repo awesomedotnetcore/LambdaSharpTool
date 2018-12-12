@@ -32,7 +32,7 @@ using MindTouch.LambdaSharp.Tool.Model.AST;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace MindTouch.LambdaSharp.Tool.Build {
+namespace MindTouch.LambdaSharp.Tool.Cli.Build {
     using static ModelFunctions;
 
     public class ModelAstToModuleConverter : AModelProcessor {

@@ -29,7 +29,7 @@ using System.Text;
 using MindTouch.LambdaSharp.Tool.Internal;
 using MindTouch.LambdaSharp.Tool.Model;
 
-namespace MindTouch.LambdaSharp.Tool.Build {
+namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
     public class ModelFilesPackager : AModelProcessor {
 

@@ -31,7 +31,7 @@ using System.Xml.Linq;
 using MindTouch.LambdaSharp.Tool.Internal;
 using MindTouch.LambdaSharp.Tool.Model;
 
-namespace MindTouch.LambdaSharp.Tool.Build {
+namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
     public class ModelFunctionPackager : AModelProcessor {
 

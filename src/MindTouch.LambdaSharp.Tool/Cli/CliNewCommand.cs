@@ -26,7 +26,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using McMaster.Extensions.CommandLineUtils;
-using MindTouch.LambdaSharp.Tool.Build;
+using MindTouch.LambdaSharp.Tool.Cli.Build;
 
 namespace MindTouch.LambdaSharp.Tool.Cli {
 

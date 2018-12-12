@@ -32,7 +32,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 
-namespace MindTouch.LambdaSharp.Tool.Build {
+namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
     public class ModelStackGenerator : AModelProcessor {
 

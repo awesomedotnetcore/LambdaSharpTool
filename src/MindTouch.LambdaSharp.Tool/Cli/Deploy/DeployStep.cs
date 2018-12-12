@@ -28,7 +28,7 @@ using Amazon.CloudFormation;
 using Amazon.CloudFormation.Model;
 using MindTouch.LambdaSharp.Tool.Model;
 
-namespace MindTouch.LambdaSharp.Tool.Deploy {
+namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
 
     public class DeployStep : AModelProcessor {
 

@@ -28,7 +28,7 @@ using Amazon.CloudFormation;
 using Amazon.CloudFormation.Model;
 using MindTouch.LambdaSharp.Tool.Model;
 
-namespace MindTouch.LambdaSharp.Tool.Publish {
+namespace MindTouch.LambdaSharp.Tool.Cli.Publish {
 
     public class PublishStep : AModelProcessor {
 

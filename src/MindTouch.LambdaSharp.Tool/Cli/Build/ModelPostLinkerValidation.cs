@@ -23,7 +23,7 @@ using System;
 using System.Linq;
 using MindTouch.LambdaSharp.Tool.Model;
 
-namespace MindTouch.LambdaSharp.Tool.Build {
+namespace MindTouch.LambdaSharp.Tool.Cli.Build {
     using static ModelFunctions;
 
     public class ModelPostLinkerValidation : AModelProcessor {

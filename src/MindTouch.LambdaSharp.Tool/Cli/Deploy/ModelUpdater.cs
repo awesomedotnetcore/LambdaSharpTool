@@ -31,7 +31,7 @@ using MindTouch.LambdaSharp.Tool.Model;
 using MindTouch.LambdaSharp.Tool.Internal;
 using Newtonsoft.Json;
 
-namespace MindTouch.LambdaSharp.Tool.Deploy {
+namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
     using CloudFormationStack = Amazon.CloudFormation.Model.Stack;
     using CloudFormationParameter = Amazon.CloudFormation.Model.Parameter;
 

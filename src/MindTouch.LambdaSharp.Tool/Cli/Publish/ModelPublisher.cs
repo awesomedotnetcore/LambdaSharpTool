@@ -30,7 +30,7 @@ using Newtonsoft.Json;
 using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 
-namespace MindTouch.LambdaSharp.Tool.Publish {
+namespace MindTouch.LambdaSharp.Tool.Cli.Publish {
 
     public class ModelPublisher : AModelProcessor {
 

@@ -28,7 +28,7 @@ using Humidifier;
 using MindTouch.LambdaSharp.Tool.Model;
 using Newtonsoft.Json;
 
-namespace MindTouch.LambdaSharp.Tool.Build {
+namespace MindTouch.LambdaSharp.Tool.Cli.Build {
     using static ModelFunctions;
 
     public class ModelLinker : AModelProcessor {
