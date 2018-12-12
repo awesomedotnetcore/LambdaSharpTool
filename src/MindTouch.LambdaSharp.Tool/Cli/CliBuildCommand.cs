@@ -34,6 +34,7 @@ using MindTouch.LambdaSharp.Tool.Build;
 using MindTouch.LambdaSharp.Tool.Deploy;
 using MindTouch.LambdaSharp.Tool.Internal;
 using MindTouch.LambdaSharp.Tool.Model;
+using MindTouch.LambdaSharp.Tool.Publish;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using YamlDotNet.Serialization;
