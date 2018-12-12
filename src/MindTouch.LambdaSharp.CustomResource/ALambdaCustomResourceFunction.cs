@@ -20,6 +20,7 @@
  */
 
 using System;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -92,6 +93,32 @@ namespace MindTouch.LambdaSharp.CustomResource {
                     PhysicalResourceId = rawRequest.PhysicalResourceId ?? "no-physical-id"
                 };
             }
+            await WriteResponse(rawRequest, rawResponse);
+        }
+
+        public override async Task InitializeFailedAsync(Stream stream, ILambdaContext context) {
+
+            // NOTE (2018-12-12, bjorg): attempt to respond with a failure message when the function
+            //  initialization has failed; otherwise, the requesting cloudformation stack will be stuck
+            //  until it times out (which can take up to 30 minutes).
+            try {
+                var rawRequest = DeserializeJson<CloudFormationResourceRequest<TRequestProperties>>(stream);
+                var rawResponse = new CloudFormationResourceResponse<TResponseProperties> {
+                    Status = CloudFormationResourceResponseStatus.FAILED,
+                    Reason = "custom resource initialization failed",
+                    StackId = rawRequest.StackId,
+                    RequestId = rawRequest.RequestId,
+                    LogicalResourceId = rawRequest.LogicalResourceId,
+                    PhysicalResourceId = rawRequest.PhysicalResourceId ?? "no-physical-id"
+                };
+                await WriteResponse(rawRequest, rawResponse);
+            } catch { }
+        }
+
+        private async Task WriteResponse(
+            CloudFormationResourceRequest<TRequestProperties> rawRequest,
+            CloudFormationResourceResponse<TResponseProperties> rawResponse
+        ) {
 
             // write response to pre-signed S3 URL
             try {
@@ -116,6 +143,7 @@ namespace MindTouch.LambdaSharp.CustomResource {
                 // resource creation since the request was SNS based
                 throw;
             }
+
         }
     }
 }
