@@ -152,7 +152,7 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                     label: "Logging Stream (ARN)",
                     description: "Logging kinesis stream for functions",
 
-                    // NOTE: we use type 'String' to be more flexible with the type of values we're willing to take
+                    // NOTE (2018-12-11, bjorg): we use type 'String' to be more flexible with the type of values we're willing to take
                     type: "String",
                     scope: null,
                     noEcho: null,
@@ -190,7 +190,7 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                     minLength: null,
                     minValue: null,
 
-                    // NOTE: we grant decryption access later as part of a bulk permissioning operation
+                    // NOTE (2018-12-11, bjorg): we grant decryption access later as part of a bulk permissioning operation
                     allow: null,
                     properties: null,
                     arnAttribute: null,

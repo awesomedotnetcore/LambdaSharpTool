@@ -117,9 +117,9 @@ namespace MindTouch.LambdaSharp.Tool.Build {
                     AtLocation(output.Name, () => {
                         if(output.Value == null) {
 
-                            // NOTE: if no value is provided, we expect the export name to correspond to an
-                            //  entry name; if it does, we export the ARN value of that parameter; in
-                            //  addition, we copy its description if none is provided.
+                            // NOTE (2018-12-11, bjorg): if no value is provided, we expect the export name to correspond to an
+                            //  entry name; if it does, we export the ARN value of that parameter; in addition, we copy its
+                            // description if none is provided.
 
                             if(!builder.TryGetEntry(output.Name, out AModuleEntry entry)) {
                                 AddError("could not find matching entry");

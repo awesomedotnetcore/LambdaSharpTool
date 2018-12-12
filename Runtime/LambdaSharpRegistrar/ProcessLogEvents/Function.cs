@@ -90,7 +90,7 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
 
         public override async Task<string> ProcessMessageAsync(KinesisEvent kinesis, ILambdaContext context) {
 
-            // NOTE: this function is responsible for error logs parsing; therefore, it CANNOT error out itself;
+            // NOTE (2018-12-11, bjorg): this function is responsible for error logs parsing; therefore, it CANNOT error out itself;
             //  instead, it must rely on aggressive exception handling and redirect those message where appropriate.
 
             try {

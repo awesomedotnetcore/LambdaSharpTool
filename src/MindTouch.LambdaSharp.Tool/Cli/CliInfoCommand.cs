@@ -50,7 +50,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         return;
                     }
 
-                    // NOTE: `--tier` is optional for the `info` command; so we replicate it here without the error reporting
+                    // NOTE (2018-12-11, bjorg): `--tier` is optional for the `info` command; so we replicate it here without the error reporting
                     settings.Tier = tierOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP_TIER");
                     await Info(
                         settings,

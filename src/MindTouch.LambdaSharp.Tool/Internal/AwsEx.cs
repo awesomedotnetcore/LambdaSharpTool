@@ -77,7 +77,7 @@ namespace MindTouch.LambdaSharp.Tool.Internal {
                 return mostRecentStackEvent.EventId;
             } catch(AmazonCloudFormationException) {
 
-                // NOTE: exception is thrown when stack doesn't exist; ignore it
+                // NOTE (2018-12-11, bjorg): exception is thrown when stack doesn't exist; ignore it
             }
             return null;
         }
