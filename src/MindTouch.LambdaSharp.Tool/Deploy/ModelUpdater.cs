@@ -60,7 +60,7 @@ namespace MindTouch.LambdaSharp.Tool.Deploy {
         //--- Methods ---
         public async Task<bool> DeployChangeSetAsync(
             ModuleManifest manifest,
-            ModuleLocation cloudformation,
+            ModuleLocation location,
             string stackName,
             bool allowDataLoss,
             bool protectStack,
@@ -70,8 +70,8 @@ namespace MindTouch.LambdaSharp.Tool.Deploy {
             var now = DateTime.UtcNow;
 
             // check if cloudformation stack already exists and is in a final state
+            Console.WriteLine($"Deploying stack: {stackName} [{location.ModuleName}]");
             var mostRecentStackEventId = await Settings.CfClient.GetMostRecentStackEventIdAsync(stackName);
-            Console.WriteLine($"Deploying stack: {stackName} [{cloudformation.ModuleName}]");
 
             // set optional notification topics for cloudformation operations
             var notificationArns =  new List<string>();
@@ -91,7 +91,7 @@ namespace MindTouch.LambdaSharp.Tool.Deploy {
                 },
                 new CloudFormationParameter {
                     ParameterKey = "DeploymentBucketName",
-                    ParameterValue = cloudformation.BucketName ?? ""
+                    ParameterValue = location.BucketName ?? ""
                 }
             };
             foreach(var input in inputs) {
@@ -103,8 +103,8 @@ namespace MindTouch.LambdaSharp.Tool.Deploy {
 
             // create change-set
             var success = false;
-            var changeSetName = $"{cloudformation.ModuleName}-{now:yyyy-MM-dd-hh-mm-ss}";
-            var templateUrl = $"https://{cloudformation.BucketName}.s3.amazonaws.com/{cloudformation.TemplatePath}";
+            var changeSetName = $"{location.ModuleName}-{now:yyyy-MM-dd-hh-mm-ss}";
+            var templateUrl = $"https://{location.BucketName}.s3.amazonaws.com/{location.TemplatePath}";
             var updateOrCreate = (mostRecentStackEventId != null) ? "update" : "create";
             Console.WriteLine($"=> Stack {updateOrCreate} initiated for {stackName}");
             var response = await Settings.CfClient.CreateChangeSetAsync(new CreateChangeSetRequest {
@@ -113,7 +113,7 @@ namespace MindTouch.LambdaSharp.Tool.Deploy {
                 },
                 ChangeSetName = changeSetName,
                 ChangeSetType = (mostRecentStackEventId != null) ? ChangeSetType.UPDATE : ChangeSetType.CREATE,
-                Description = $"Stack {updateOrCreate} {cloudformation.ModuleName} (v{cloudformation.ModuleVersion})",
+                Description = $"Stack {updateOrCreate} {location.ModuleName} (v{location.ModuleVersion})",
                 NotificationARNs = notificationArns,
                 Parameters = parameters,
                 StackName = stackName,

@@ -132,40 +132,13 @@ Entries:
   # Nested Modules
   - Module: Registrar
     Description: LambdaSharp Modules and Functions Registrar
-    Location:
-      Name: LambdaSharpRegistrar
+    Properties:
+      ModuleName: LambdaSharpRegistrar
       Version: !Ref Module::Version
-      S3Bucket: !Ref DeploymentBucketName
     Parameters:
       RollbarReadAccessToken: !Ref RollbarReadAccessToken
       RollbarWriteAccessToken: !Ref RollbarWriteAccessToken
       RollbarProjectPrefix: !Ref RollbarProjectPrefix
-      Secrets: !Ref Secrets
-      LambdaSharpDeadLetterQueueArn: !Ref DeadLetterQueueArn
-      LambdaSharpLoggingStreamArn: !Ref LoggingStreamArn
-      LambdaSharpDefaultSecretKeyArn: !Ref DefaultSecretKeyArn
-
-  - Module: S3Subscriber
-    Description: LambdaSharp S3 Lambda Function Subscriber
-    Location:
-      Name: LambdaSharpS3Subscriber
-      Version: !Ref Module::Version
-      S3Bucket: !Ref DeploymentBucketName
-    DependsOn: Registrar
-    Parameters:
-      Secrets: !Ref Secrets
-      LambdaSharpDeadLetterQueueArn: !Ref DeadLetterQueueArn
-      LambdaSharpLoggingStreamArn: !Ref LoggingStreamArn
-      LambdaSharpDefaultSecretKeyArn: !Ref DefaultSecretKeyArn
-
-  - Module: S3PackageLoader
-    Description: LambdaSharp S3 Package Loader
-    Location:
-      Name: LambdaSharpS3PackageLoader
-      Version: !Ref Module::Version
-      S3Bucket: !Ref DeploymentBucketName
-    DependsOn: Registrar
-    Parameters:
       Secrets: !Ref Secrets
       LambdaSharpDeadLetterQueueArn: !Ref DeadLetterQueueArn
       LambdaSharpLoggingStreamArn: !Ref LoggingStreamArn

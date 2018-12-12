@@ -36,7 +36,9 @@ namespace MindTouch.LambdaSharp.Tool.Deploy {
         private ModelManifestLoader _loader;
 
         //--- Constructors ---
-        public DeployStep(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
+        public DeployStep(Settings settings, string sourceFilename) : base(settings, sourceFilename) {
+            _loader = new ModelManifestLoader(Settings, sourceFilename);
+        }
 
         //--- Methods ---
         public async Task<bool> DoAsync(
@@ -48,7 +50,7 @@ namespace MindTouch.LambdaSharp.Tool.Deploy {
             Dictionary<string, string> inputs,
             bool forceDeploy
         ) {
-            _loader = new ModelManifestLoader(Settings, moduleReference);
+            Console.WriteLine($"Resolving module reference: {moduleReference}");
 
             // determine location of cloudformation template from module key
             var location = await _loader.LocateAsync(moduleReference);
@@ -82,28 +84,34 @@ namespace MindTouch.LambdaSharp.Tool.Deploy {
                 var stackName = ToStackName(manifest.ModuleName, instanceName);
 
                 // check version of previously deployed module
-                if(!forceDeploy && !await IsValidModuleUpdateAsync(stackName, manifest)) {
-                    return false;
+                if(!forceDeploy) {
+                    Console.WriteLine($"=> Validating module for deployment tier");
+                    if(!await IsValidModuleUpdateAsync(stackName, manifest)) {
+                        return false;
+                    }
                 }
 
                 // discover dependencies for deployment
-                var dependencies = await DiscoverDependenciesAsync(manifest);
-                if(HasErrors) {
-                    return false;
-                }
-                foreach(var dependency in dependencies) {
-                    if(!await new ModelUpdater(Settings, dependency.Item2.ToModuleReference()).DeployChangeSetAsync(
-                        dependency.Item1,
-                        dependency.Item2,
-                        ToStackName(dependency.Item1.ModuleName),
-                        allowDataLoos,
-                        protectStack,
+                IEnumerable<Tuple<ModuleManifest, ModuleLocation>> dependencies = Enumerable.Empty<Tuple<ModuleManifest, ModuleLocation>>();
+                if(manifest.Dependencies.Any()) {
+                    dependencies = await DiscoverDependenciesAsync(manifest);
+                    if(HasErrors) {
+                        return false;
+                    }
+                    foreach(var dependency in dependencies) {
+                        if(!await new ModelUpdater(Settings, dependency.Item2.ToModuleReference()).DeployChangeSetAsync(
+                            dependency.Item1,
+                            dependency.Item2,
+                            ToStackName(dependency.Item1.ModuleName),
+                            allowDataLoos,
+                            protectStack,
 
-                        // TODO (2018-12-11, bjorg): allow interactive mode to deploy dependencies with parameters
-                        new Dictionary<string, string>(),
-                        forceDeploy
-                    )) {
-                        break;
+                            // TODO (2018-12-11, bjorg): allow interactive mode to deploy dependencies with parameters
+                            new Dictionary<string, string>(),
+                            forceDeploy
+                        )) {
+                            break;
+                        }
                     }
                 }
                 return await new ModelUpdater(Settings, moduleReference).DeployChangeSetAsync(
@@ -172,17 +180,19 @@ namespace MindTouch.LambdaSharp.Tool.Deploy {
                 // check if this dependency needs to be deployed
                 var deployed = await FindExistingDependencyAsync(dependency);
                 if(deployed != null) {
+                    Console.WriteLine($"=> Resolved dependency '{dependency.ModuleName}' to deployed module: {deployed.ToModuleReference()}");
                     existing.Add(Tuple.Create<string, ModuleManifest, ModuleLocation>(null, null, deployed));
                 } else {
-                    Console.WriteLine($"=> Resolving dependencies for {dependency.ModuleName}");
 
                     // resolve dependencies for dependency module
                     var dependencyLocation = await _loader.LocateAsync(dependency.ModuleName, dependency.MinVersion, dependency.MaxVersion, dependency.BucketName);
                     if(dependencyLocation == null) {
+                        Console.WriteLine($"=> Unable to resolve dependency '{dependency.ModuleName}'");
 
                         // error has already been reported
                         continue;
                     }
+                    Console.WriteLine($"=> Resolved dependency '{dependency.ModuleName}' to module reference: {dependencyLocation.ToModuleReference()}");
 
                     // load manifest of dependency and add its dependencies
                     var dependencyManifest = await _loader.LoadFromS3Async(dependencyLocation.BucketName, dependencyLocation.TemplatePath);
@@ -202,7 +212,7 @@ namespace MindTouch.LambdaSharp.Tool.Deploy {
 
         private bool IsDependencyInList(string owner, ModuleManifestDependency dependency, IEnumerable<Tuple<string, ModuleManifest, ModuleLocation>> modules) {
             var deployed = modules.FirstOrDefault(module => module.Item3.ModuleName == dependency.ModuleName);
-            if(deployed.Item3 == null) {
+            if(deployed == null) {
                 return false;
             }
             var deployedOwner = (deployed.Item1 == null)

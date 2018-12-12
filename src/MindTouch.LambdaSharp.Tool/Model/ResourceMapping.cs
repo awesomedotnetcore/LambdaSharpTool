@@ -141,7 +141,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         public static object ExpandResourceReference(string awsType, object arnReference) {
 
-            // NOTE: some AWS resources require additional sub-resource reference
+            // NOTE (2018-12-11, bjorg): some AWS resources require additional sub-resource reference
             //  to properly apply permissions across the board.
 
             switch(awsType) {
@@ -171,9 +171,15 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                     : new object[] { arnReference };
         }
 
-        public static bool HasAttribute(string awsType, string attribute)
-            => CloudformationSpec.ResourceTypes.TryGetValue(awsType, out ResourceType resource)
+        public static bool HasAttribute(string awsType, string attribute) {
+
+            // special case for 'AWS::CloudFormation::Stack' which has arbitrary attributes starting with "Outputs."
+            if((awsType == "AWS::CloudFormation::Stack") && attribute.StartsWith("Outputs.", StringComparison.Ordinal)) {
+                return true;
+            }
+            return CloudformationSpec.ResourceTypes.TryGetValue(awsType, out ResourceType resource)
                 && (resource.Attributes?.ContainsKey(attribute) == true);
+        }
 
         public static bool IsResourceTypeSupported(string awsType) => CloudformationSpec.ResourceTypes.ContainsKey(awsType);
 

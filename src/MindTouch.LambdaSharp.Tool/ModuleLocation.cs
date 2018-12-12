@@ -48,6 +48,9 @@ namespace MindTouch.LambdaSharp.Tool {
             return result.ToString();
         }
 
-        public string ToModuleReference() => $"{ModuleName}:{ModuleVersion}@{BucketName}";
+        public string ToModuleReference()
+            => (BucketName != null)
+                ? $"{ModuleName}:{ModuleVersion}@{BucketName}"
+                : $"{ModuleName}:{ModuleVersion}";
     }
 }
