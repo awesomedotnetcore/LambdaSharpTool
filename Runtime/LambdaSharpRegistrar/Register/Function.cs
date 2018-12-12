@@ -72,7 +72,7 @@ namespace MindTouch.LambdaSharpRegistrar.Register {
 
         //--- Methods ---
         public async override Task InitializeAsync(LambdaConfig config) {
-            var tableName = AwsConverters.ConvertDynamoDBArnToName(config.ReadText("RegistrationTable"));
+            var tableName = config.ReadDynamoDBTableName("RegistrationTable");
             _registrations = new RegistrationTable(new AmazonDynamoDBClient(), tableName);
             _rollbarClient = new RollbarClient(
                 config.ReadText("RollbarReadAccessToken", defaultValue: null),

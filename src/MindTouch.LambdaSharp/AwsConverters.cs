@@ -77,5 +77,33 @@ namespace MindTouch.LambdaSharp {
             }
             return table.Substring(TABLE_PREFIX.Length);
         }
+
+        public static string SqsReadQueueUrl(this LambdaConfig config, string key) {
+            var value = config.ReadText(key);
+            return (value.StartsWith("arn:", StringComparison.Ordinal))
+                ? ConvertQueueArnToUrl(value)
+                : value;
+        }
+
+        public static string ReadS3BucketName(this LambdaConfig config, string key) {
+            var value = config.ReadText(key);
+            return (value.StartsWith("arn:", StringComparison.Ordinal))
+                ? ConvertBucketArnToName(value)
+                : value;
+        }
+
+        public static string ReadLambdaFunctionName(this LambdaConfig config, string key) {
+            var value = config.ReadText(key);
+            return (value.StartsWith("arn:", StringComparison.Ordinal))
+                ? ConvertFunctionArnToName(value)
+                : value;
+        }
+
+        public static string ReadDynamoDBTableName(this LambdaConfig config, string key) {
+            var value = config.ReadText(key);
+            return (value.StartsWith("arn:", StringComparison.Ordinal))
+                ? ConvertDynamoDBArnToName(value)
+                : value;
+        }
     }
 }

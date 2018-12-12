@@ -72,7 +72,7 @@ namespace MindTouch.LambdaSharpS3PackageLoader.ResourceHandler {
 
         //--- Methods ---
         public override Task InitializeAsync(LambdaConfig config) {
-            _manifestBucket = AwsConverters.ConvertBucketArnToName(config.ReadText("ManifestBucket"));
+            _manifestBucket = config.ReadS3BucketName("ManifestBucket");
             _s3Client = new AmazonS3Client();
             _transferUtility = new TransferUtility(_s3Client);
             return Task.CompletedTask;
