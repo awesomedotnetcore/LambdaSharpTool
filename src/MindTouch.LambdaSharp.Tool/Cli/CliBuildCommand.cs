@@ -465,28 +465,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             if(HasErrors) {
                 return null;
             }
-
-            // make sure there is a deployment bucket
-            if(settings.DeploymentBucketName == null) {
-                AddError("missing deployment bucket", new LambdaSharpToolConfigException(settings.ToolProfile));
-                return null;
-            }
-
-            // load cloudformation template
             var cloudformationFile = Path.Combine(settings.OutputDirectory, "cloudformation.json");
-            if(!File.Exists(cloudformationFile)) {
-                AddError("folder does not contain a CloudFormation file for publishing");
-                return null;
-            }
-
-            // load cloudformation file
-            var manifest = await new ModelManifestLoader(settings, "cloudformation.json").LoadFromFileAsync(cloudformationFile);
-            if(manifest == null) {
-                return null;
-            }
-
-            // publish module
-            return await new ModelPublisher(settings, cloudformationFile).PublishAsync(manifest);
+            return await new PublishStep(settings, cloudformationFile).DoAsync(cloudformationFile);
         }
 
         public async Task<bool> DeployStepAsync(
