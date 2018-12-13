@@ -19,3 +19,15 @@ Entries:
     Sources:
       - Topic: Topic
       - Topic: InputTopic
+      - Topic: !Ref Topic
+        Filters:
+          store:
+            - "example_corp"
+          event:
+            - anything-but: order_cancelled
+          customer_interests:
+            - rugby
+            - football
+            - baseball
+          price_usd:
+            - numeric: [ ">=" , 100 ]

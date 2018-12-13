@@ -65,11 +65,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         // no references to validate
                         break;
                     case S3Source s3Source:
-                        if(s3Source.Bucket is string bucketParameter) {
-                            ValidateSourceParameter(bucketParameter, "AWS::S3::Bucket");
-                        } else if(TryGetFnRef(s3Source.Bucket, out string bucketKey)) {
-                            ValidateSourceParameter(bucketKey, "AWS::S3::Bucket");
-                        }
+                        ValidateSourceParameter(s3Source.Bucket, "AWS::S3::Bucket");
                         break;
                     case SqsSource sqsSource:
                         ValidateSourceParameter(sqsSource.Queue, "AWS::SQS::Queue");
@@ -84,6 +80,14 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         break;
                     }
                 });
+            }
+        }
+
+        private void ValidateSourceParameter(object value, string awsType) {
+            if(value is string literalValue) {
+                ValidateSourceParameter(literalValue, awsType);
+            } else if(TryGetFnRef(value, out string refKey)) {
+                ValidateSourceParameter(refKey, awsType);
             }
         }
 

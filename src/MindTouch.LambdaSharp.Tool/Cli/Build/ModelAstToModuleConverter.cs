@@ -212,7 +212,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 });
             case "Topic":
                 return AtLocation("Topic", () => new TopicSource {
-                    TopicName = source.Topic
+                    TopicName = source.Topic,
+                    Filters = source.Filters
                 });
             case "Sqs":
                 return AtLocation("Sqs", () => new SqsSource {
@@ -542,6 +543,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
                         // TODO (2018-11-10, bjorg): validate API expression
                     } else if(source.Topic != null) {
+
+                        // nothing to validate
                     } else if(source.Sqs != null) {
 
                         // validate settings

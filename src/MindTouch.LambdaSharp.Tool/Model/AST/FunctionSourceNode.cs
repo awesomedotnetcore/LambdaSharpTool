@@ -43,7 +43,9 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
                 "Suffix"
             },
             ["SlackCommand"] = new string[0],
-            ["Topic"] = new string[0],
+            ["Topic"] = new[] {
+                "Filters"
+            },
             ["Sqs"] = new[] {
                 "BatchSize"
             },
@@ -71,7 +73,7 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         public string Name { get; set; }
 
         // S3 Bucket Source
-        public string S3 { get; set; }
+        public object S3 { get; set; }
         public IList<string> Events { get; set; }
         public string Prefix { get; set; }
         public string Suffix { get; set; }
@@ -80,22 +82,23 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         public string SlackCommand { get; set; }
 
         // SNS Topic Source
-        public string Topic { get; set; }
+        public object Topic { get; set; }
+        public IDictionary<string, object> Filters { get; set; }
 
         // SQS Source
-        public string Sqs { get; set; }
+        public object Sqs { get; set; }
         public int? BatchSize { get; set; }
 
         // Alexa Source
         public object Alexa { get; set; }
 
         // DynamoDB Source
-        public string DynamoDB { get; set; }
+        public object DynamoDB { get; set; }
         // int? BatchSize { get; set; }
         public string StartingPosition { get; set; }
 
         // Kinesis Source
-        public string Kinesis { get; set; }
+        public object Kinesis { get; set; }
         // int? BatchSize { get; set; }
         // string StartingPosition { get; set; }
    }

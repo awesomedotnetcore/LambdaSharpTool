@@ -369,7 +369,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 parent: null,
                 name: "DeploymentChecksum",
                 section: section,
-                label: "Checksum",
+                label: "Deployment Checksum",
                 description: "CloudFormation template MD5 checksum",
                 type: "String",
                 scope: null,

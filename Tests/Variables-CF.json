@@ -44,6 +44,11 @@
       "Type": "String",
       "Description": "Parent stack name for nested deployments, blank otherwise",
       "Default": ""
+    },
+    "DeploymentChecksum": {
+      "Type": "String",
+      "Description": "CloudFormation template MD5 checksum",
+      "Default": "43084261CE4AE5809D7EBB53BE01B1AA"
     }
   },
   "Resources": {
@@ -813,6 +818,9 @@
         },
         "DeploymentParent": {
           "default": "Parent Stack Name"
+        },
+        "DeploymentChecksum": {
+          "default": "Deployment Checksum"
         }
       },
       "ParameterGroups": [
@@ -842,7 +850,8 @@
             "DeploymentBucketName",
             "DeploymentPrefix",
             "DeploymentPrefixLowercase",
-            "DeploymentParent"
+            "DeploymentParent",
+            "DeploymentChecksum"
           ]
         }
       ]
@@ -852,7 +861,7 @@
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
       "RuntimeCheck": true,
-      "Hash": "282EA9366A987B738F86BCC0080E8F21",
+      "Hash": "43084261CE4AE5809D7EBB53BE01B1AA",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [],

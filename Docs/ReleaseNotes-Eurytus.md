@@ -25,6 +25,8 @@
     * `ALambdaCustomResourceFunction` can be invoked via SNS or directly from a custom resource
 * added module `Finalizer`
 * validate that function entry point exists after compiling assembly
+* `Topic` source now supports `Filters` to filter on SNS notifications
+* `Bucket`, `Queue`, `S3`, `DynamoDB`, `Kinesis` sources can now also be expressions
 
 __Topics__
 1. [Break Changes](#breaking-changes)

@@ -48,6 +48,11 @@
       "Type": "String",
       "Description": "Parent stack name for nested deployments, blank otherwise",
       "Default": ""
+    },
+    "DeploymentChecksum": {
+      "Type": "String",
+      "Description": "CloudFormation template MD5 checksum",
+      "Default": "78C777258CF341D65E9BC8F92881F4F2"
     }
   },
   "Resources": {
@@ -591,6 +596,38 @@
           "Ref": "InputTopic"
         }
       }
+    },
+    "FunctionSource3Subscription": {
+      "Type": "AWS::SNS::Subscription",
+      "Properties": {
+        "Endpoint": {
+          "Fn::GetAtt": [
+            "Function",
+            "Arn"
+          ]
+        },
+        "FilterPolicy": "{\"store\":[\"example_corp\"],\"event\":[{\"anything-but\":\"order_cancelled\"}],\"customer_interests\":[\"rugby\",\"football\",\"baseball\"],\"price_usd\":[{\"numeric\":[\">=\",\"100\"]}]}",
+        "Protocol": "lambda",
+        "TopicArn": {
+          "Ref": "Topic"
+        }
+      }
+    },
+    "FunctionSource3Permission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "Function",
+            "Arn"
+          ]
+        },
+        "Principal": "sns.amazonaws.com",
+        "SourceArn": {
+          "Ref": "Topic"
+        }
+      }
     }
   },
   "Outputs": {
@@ -742,6 +779,9 @@
         },
         "DeploymentParent": {
           "default": "Parent Stack Name"
+        },
+        "DeploymentChecksum": {
+          "default": "Deployment Checksum"
         }
       },
       "ParameterGroups": [
@@ -779,7 +819,8 @@
             "DeploymentBucketName",
             "DeploymentPrefix",
             "DeploymentPrefixLowercase",
-            "DeploymentParent"
+            "DeploymentParent",
+            "DeploymentChecksum"
           ]
         }
       ]
@@ -789,7 +830,7 @@
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
       "RuntimeCheck": true,
-      "Hash": "F521547D8FCEA1C66F730ACCE97ABC7D",
+      "Hash": "78C777258CF341D65E9BC8F92881F4F2",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [],
@@ -805,7 +846,9 @@
         "FunctionSource1Subscription": "Function::Source1Subscription",
         "FunctionSource1Permission": "Function::Source1Permission",
         "FunctionSource2Subscription": "Function::Source2Subscription",
-        "FunctionSource2Permission": "Function::Source2Permission"
+        "FunctionSource2Permission": "Function::Source2Permission",
+        "FunctionSource3Subscription": "Function::Source3Subscription",
+        "FunctionSource3Permission": "Function::Source3Permission"
       }
     }
   }

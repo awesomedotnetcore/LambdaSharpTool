@@ -4,7 +4,7 @@ Entries:
 
   # Module Outputs
   - Module: Test
-    Location:
-      Name: TestModule
+    Properties:
+      ModuleName: TestModule
       Version: 1.0
-      S3Bucket: !Ref DeploymentBucketName
+      SourceBucket: !Ref DeploymentBucketName

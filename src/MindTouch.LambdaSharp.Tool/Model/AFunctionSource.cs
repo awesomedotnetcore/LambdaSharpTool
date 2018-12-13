@@ -29,7 +29,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
     public class TopicSource : AFunctionSource {
 
        //--- Properties ---
-        public string TopicName { get; set; }
+        public object TopicName { get; set; }
+        public IDictionary<string, object> Filters { get; set; }
     }
 
     public class ScheduleSource : AFunctionSource {
@@ -58,7 +59,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
     public class S3Source : AFunctionSource {
 
        //--- Properties ---
-        public string Bucket { get; set; }
+        public object Bucket { get; set; }
         public IList<string> Events { get; set; }
         public string Prefix { get; set; }
         public string Suffix { get; set; }
@@ -67,7 +68,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
     public class SqsSource : AFunctionSource {
 
        //--- Properties ---
-        public string Queue { get; set; }
+        public object Queue { get; set; }
         public int BatchSize { get; set; }
     }
 
@@ -80,7 +81,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
     public class DynamoDBSource : AFunctionSource {
 
        //--- Properties ---
-        public string DynamoDB { get; set; }
+        public object DynamoDB { get; set; }
         public int BatchSize { get; set; }
         public string StartingPosition { get; set; }
     }
@@ -88,7 +89,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
     public class KinesisSource : AFunctionSource {
 
        //--- Properties ---
-        public string Kinesis { get; set; }
+        public object Kinesis { get; set; }
         public int BatchSize { get; set; }
         public string StartingPosition { get; set; }
     }

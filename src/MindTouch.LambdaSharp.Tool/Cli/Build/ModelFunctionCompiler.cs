@@ -381,7 +381,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 var sourceSuffix = (sourceIndex + 1).ToString();
                 switch(source) {
                 case TopicSource topicSource:
-                    Enumerate(topicSource.TopicName, (suffix, _, arn) => {
+                    Enumerate(topicSource.TopicName, (suffix, arn) => {
                         _builder.AddResource(
                             parent: function,
                             name: $"Source{sourceSuffix}Subscription{suffix}",
@@ -390,7 +390,10 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                             resource: new Humidifier.SNS.Subscription {
                                 Endpoint = FnGetAtt(function.ResourceName, "Arn"),
                                 Protocol = "lambda",
-                                TopicArn = arn
+                                TopicArn = arn,
+                                FilterPolicy = (topicSource.Filters != null)
+                                    ? JsonConvert.SerializeObject(topicSource.Filters)
+                                    : null
                             },
                             resourceArnAttribute: null,
                             dependsOn: null,
@@ -484,7 +487,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     });
                     break;
                 case S3Source s3Source:
-                    Enumerate(s3Source.Bucket, (suffix, _, arn) => {
+                    Enumerate(s3Source.Bucket, (suffix, arn) => {
                         var permission = _builder.AddResource(
                             parent: function,
                             name: $"Source{sourceSuffix}Permission",
@@ -538,7 +541,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     });
                     break;
                 case SqsSource sqsSource:
-                    Enumerate(sqsSource.Queue, (suffix, _, arn) => {
+                    Enumerate(sqsSource.Queue, (suffix, arn) => {
                         _builder.AddResource(
                             parent: function,
                             name: $"Source{sourceSuffix}EventMapping{suffix}",
@@ -595,7 +598,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     }
                     break;
                 case DynamoDBSource dynamoDbSource:
-                    Enumerate(dynamoDbSource.DynamoDB, (suffix, _, arn) => {
+                    Enumerate(dynamoDbSource.DynamoDB, (suffix, arn) => {
                         _builder.AddResource(
                             parent: function,
                             name: $"Source{sourceSuffix}EventMapping{suffix}",
@@ -616,7 +619,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     }, entry => FnGetAtt(entry.ResourceName, "StreamArn"));
                     break;
                 case KinesisSource kinesisSource:
-                    Enumerate(kinesisSource.Kinesis, (suffix, _, arn) => {
+                    Enumerate(kinesisSource.Kinesis, (suffix, arn) => {
                         _builder.AddResource(
                             parent: function,
                             name: $"Source{sourceSuffix}EventMapping{suffix}",
@@ -642,29 +645,33 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             }
         }
 
-        private void Enumerate(string fullName, Action<string, AModuleEntry, object> action, Func<AResourceEntry, object> getReference = null) {
-            if(!_builder.TryGetEntry(fullName, out AModuleEntry entry)) {
-                AddError($"could not find function source: '{fullName}'");
-                return;
-            }
-            if(entry is AResourceEntry resource) {
-                action("", entry, getReference?.Invoke(resource) ?? entry.GetExportReference());
-            } else if(entry.Reference is IList list) {
-                switch(list.Count) {
-                case 0:
-                    break;
-                case 1:
-                    action("", entry, list[0]);
-                    break;
-                default:
-                    for(var i = 0; i < list.Count; ++i) {
-                        action((i + 1).ToString(), entry, list[i]);
+        private void Enumerate(object value, Action<string, object> action, Func<AResourceEntry, object> getReference = null) {
+            if(value is string fullName) {
+                if(!_builder.TryGetEntry(fullName, out AModuleEntry entry)) {
+                    AddError($"could not find function source: '{fullName}'");
+                    return;
+                }
+                if(entry is AResourceEntry resource) {
+                    action("", getReference?.Invoke(resource) ?? entry.GetExportReference());
+                } else if(entry.Reference is IList list) {
+                    switch(list.Count) {
+                    case 0:
+                        break;
+                    case 1:
+                        action("", list[0]);
+                        break;
+                    default:
+                        for(var i = 0; i < list.Count; ++i) {
+                            action((i + 1).ToString(), list[i]);
+                        }
+                        break;
                     }
-                    break;
+                } else {
+                    action("", entry.GetExportReference());
                 }
             } else {
-                action("", entry, entry.GetExportReference());
-            }
+                action("", value);
+           }
         }
    }
 }
