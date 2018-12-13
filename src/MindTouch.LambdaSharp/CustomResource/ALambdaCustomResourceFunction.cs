@@ -161,7 +161,7 @@ namespace MindTouch.LambdaSharp.CustomResource {
                 LogError(e, $"{rawRequest.ResourceType}: {rawRequest.RequestType.ToString().ToUpperInvariant()} operation FAILED [{{0}}]", e.Message);
                 rawResponse = new CloudFormationResourceResponse<TResponseProperties> {
                     Status = CloudFormationResourceResponseStatus.FAILED,
-                    Reason = e.Message,
+                    Reason = "internal error",
                     StackId = rawRequest.StackId,
                     RequestId = rawRequest.RequestId,
                     LogicalResourceId = rawRequest.LogicalResourceId,
