@@ -60,9 +60,19 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 _stack.Add(condition.Key, new Condition(condition.Value));
             }
 
-            // add resources
+            // add entries
             foreach(var entry in _module.Entries) {
-                AddResource(entry);
+                AddEntry(entry);
+            }
+
+            // check if a module `Finalizer` function is defined
+            if(_stack.Resources.TryGetValue("Finalizer", out Humidifier.Resource finalizer) && (finalizer.AWSTypeName == "AWS::Lambda::Function")) {
+
+                // create a custom resource that invokes the finalizer
+                _stack.Add("FinalizerInvocation", new Humidifier.CustomResource("Custom::Finalizer") {
+                    ["ServiceToken"] = Humidifier.Fn.GetAtt("Finalizer", "Arn"),
+                    ["DeploymentChecksum"] = Humidifier.Fn.Ref("DeploymentChecksum")
+                }, dependsOn: _stack.Resources.Select(kv => kv.Key).ToArray());
             }
 
             // add outputs
@@ -94,11 +104,12 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             });
 
             // add module manifest
+            var templateHash = GenerateCloudFormationTemplateHash();
             _stack.AddTemplateMetadata("LambdaSharp::Manifest", new ModuleManifest {
                 ModuleName = module.Name,
                 ModuleVersion = module.Version.ToString(),
                 RuntimeCheck = !module.HasPragma("no-runtime-version-check"),
-                Hash = GenerateStackHash(),
+                Hash = templateHash,
                 GitSha = gitSha ?? "",
                 Assets = module.Assets.ToList(),
                 Dependencies = module.Dependencies.Select(dependency => new ModuleManifestDependency {
@@ -118,6 +129,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     .Where(entry => entry.LogicalId != entry.FullName)
                     .ToDictionary(entry => entry.LogicalId, entry => entry.FullName)
             });
+
+            // update DeploymentChecksum with template hash
+            _stack.Parameters["DeploymentChecksum"].Default = templateHash;
 
             // generate JSON template
             return new JsonStackSerializer().Serialize(_stack);
@@ -148,7 +162,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             }
         }
 
-        private void AddResource(AModuleEntry entry) {
+        private void AddEntry(AModuleEntry entry) {
             var logicalId = entry.LogicalId;
             switch(entry) {
             case VariableEntry _:
@@ -175,7 +189,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             }
         }
 
-        private string GenerateStackHash() {
+        private string GenerateCloudFormationTemplateHash() {
 
             // convert stack to string using the Humidifier serializer
             var json = new JsonStackSerializer().Serialize(_stack);

@@ -21,17 +21,20 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
+using Amazon.Lambda.SNSEvents;
 using MindTouch.LambdaSharp.CustomResource.Internal;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace MindTouch.LambdaSharp.CustomResource {
 
-    public abstract class ALambdaCustomResourceFunction<TRequestProperties, TResponseProperties> : ALambdaEventFunction<CloudFormationResourceRequest<TRequestProperties>> {
+    public abstract class ALambdaCustomResourceFunction<TRequestProperties, TResponseProperties> : ALambdaFunction {
 
         //--- Class Fields ---
         public static HttpClient HttpClient = new HttpClient();
@@ -42,11 +45,83 @@ namespace MindTouch.LambdaSharp.CustomResource {
         protected abstract Task<Response<TResponseProperties>> HandleDeleteResourceAsync(Request<TRequestProperties> request);
 
         //--- Methods ---
-        public override async Task ProcessMessageAsync(CloudFormationResourceRequest<TRequestProperties> rawRequest, ILambdaContext context) {
-            LogInfo(JsonConvert.SerializeObject(rawRequest, Formatting.Indented));
-            CloudFormationResourceResponse<TResponseProperties> rawResponse;
-            LogInfo($"{rawRequest.ResourceType}: {rawRequest.RequestType.ToString().ToUpperInvariant()} operation received");
+        public override async Task<object> ProcessMessageStreamAsync(Stream stream, ILambdaContext context) {
+
+            // read stream into memory
+            LogInfo("reading message stream");
+            string body;
             try {
+                using(var reader = new StreamReader(stream)) {
+                    body = reader.ReadToEnd();
+                }
+            } catch(Exception e) {
+                LogError(e);
+                throw;
+            }
+
+            // deserialize stream into a generic JSON object
+            LogInfo("deserializing request");
+            JObject json;
+            try {
+                json = JsonConvert.DeserializeObject<JObject>(body);
+            } catch(Exception e) {
+                LogError(e);
+                await RecordFailedMessageAsync(LambdaLogLevel.ERROR, body, e);
+                return $"ERROR: {e.Message}";
+            }
+
+            // determine if the custom resource request is wrapped in an SNS message
+            CloudFormationResourceRequest<TRequestProperties> rawRequest;
+            if(json.TryGetValue("Records", out JToken _)) {
+
+                // deserialize SNS event
+                LogInfo("deserializing SNS event");
+                SNSEvent snsEvent;
+                try {
+                    snsEvent = json.ToObject<SNSEvent>();
+                } catch(Exception e) {
+                    LogError(e);
+                    await RecordFailedMessageAsync(LambdaLogLevel.ERROR, body, e);
+                    return $"ERROR: {e.Message}";
+                }
+
+                // extract message from SNS event
+                LogInfo("deserializing message");
+                string messageBody;
+                try {
+                    messageBody = snsEvent.Records.First().Sns.Message;
+                } catch(Exception e) {
+                    LogError(e);
+                    await RecordFailedMessageAsync(LambdaLogLevel.ERROR, body, e);
+                    return $"ERROR: {e.Message}";
+                }
+
+                // deserialize message into a cloudformation request
+                try {
+                    rawRequest = DeserializeJson<CloudFormationResourceRequest<TRequestProperties>>(messageBody);
+                } catch(Exception e) {
+                    LogError(e);
+                    await RecordFailedMessageAsync(LambdaLogLevel.ERROR, body, e);
+                    return $"ERROR: {e.Message}";
+                }
+            } else {
+
+                // deserialize generic JSON into a cloudformation request
+                try {
+                    rawRequest = json.ToObject<CloudFormationResourceRequest<TRequestProperties>>();
+                } catch(Exception e) {
+                    LogError(e);
+                    await RecordFailedMessageAsync(LambdaLogLevel.ERROR, body, e);
+                    return $"ERROR: {e.Message}";
+                }
+            }
+
+            // process message
+            LogInfo("processing request");
+            CloudFormationResourceResponse<TResponseProperties> rawResponse;
+            try {
+                LogInfo(JsonConvert.SerializeObject(rawRequest, Formatting.Indented));
+                LogInfo($"{rawRequest.ResourceType}: {rawRequest.RequestType.ToString().ToUpperInvariant()} operation received");
                 var request = new Request<TRequestProperties> {
                     RequestType = rawRequest.RequestType,
                     ResourceType = rawRequest.ResourceType,
@@ -94,6 +169,7 @@ namespace MindTouch.LambdaSharp.CustomResource {
                 };
             }
             await WriteResponse(rawRequest, rawResponse);
+            return rawResponse.Status;
         }
 
         public override async Task InitializeFailedAsync(Stream stream, ILambdaContext context) {

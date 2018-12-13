@@ -19,6 +19,11 @@
     * validate custom resource types using module dependencies
 * validate resources using the cloudformation json spec
 * validation of attribute name in `!GetAtt` expressions
+* `MindTouch.LambdaSharp` assembly
+    * added `ALambdaFinalizerFunction` base class
+    * BREAKING CHANGE: moved `ALambdaCustomResourceFunction` into this assembly
+    * `ALambdaCustomResourceFunction` can be invoked via SNS or directly from a custom resource
+* added module `Finalizer`
 
 __Topics__
 1. [Break Changes](#breaking-changes)

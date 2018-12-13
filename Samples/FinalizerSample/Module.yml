@@ -1,0 +1,14 @@
+Module: FinalizerSample
+Description: A sample module with a finalizer function
+Entries:
+
+  - Resource: MyBucket
+    Description: A sample resource being created before the finalizer is invoked
+    Scope: Finalizer
+    Type: AWS::S3::Bucket
+    Allow: ReadWrite
+
+  - Function: Finalizer
+    Description: This function is invoked once all other resources have been created/updated
+    Memory: 128
+    Timeout: 30

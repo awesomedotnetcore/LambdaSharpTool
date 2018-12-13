@@ -365,6 +365,29 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 encryptionContext: null,
                 pragmas: null
             );
+            _builder.AddParameter(
+                parent: null,
+                name: "DeploymentChecksum",
+                section: section,
+                label: "Checksum",
+                description: "CloudFormation template MD5 checksum",
+                type: "String",
+                scope: null,
+                noEcho: null,
+                defaultValue: "",
+                constraintDescription: null,
+                allowedPattern: null,
+                allowedValues: null,
+                maxLength: null,
+                maxValue: null,
+                minLength: null,
+                minValue: null,
+                allow: null,
+                properties: null,
+                arnAttribute: null,
+                encryptionContext: null,
+                pragmas: null
+            );
 
             // add module registration
             if(_builder.HasModuleRegistration) {

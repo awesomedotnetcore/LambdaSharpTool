@@ -22,6 +22,7 @@
 using MindTouch.LambdaSharp.Reports;
 
 namespace MindTouch.LambdaSharp.CustomResource {
+
     public class CustomResourceException : ALambdaException {
 
         //--- Constructors ---

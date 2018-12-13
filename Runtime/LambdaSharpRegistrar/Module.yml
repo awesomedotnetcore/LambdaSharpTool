@@ -75,6 +75,7 @@ Outputs:
 
 Entries:
 
+  # Rollbar Settings
   - Parameter: RollbarReadAccessToken
     Section: Rollbar Settings
     Label: Read Access Token
@@ -98,6 +99,7 @@ Entries:
     Scope: Register
     Default: ""
 
+  # Resources
   - Resource: LoggingStreamReference
     Description: Reference to the Kinesis stream used to ingest the function logs
     Value: !Ref Module::LoggingStreamArn
@@ -135,6 +137,7 @@ Entries:
         - AttributeName: Id
           KeyType: HASH
 
+  # Functions
   - Function: ProcessLogEvents
     Description: Process log events from all LambdaSharp module functions
     Memory: 128

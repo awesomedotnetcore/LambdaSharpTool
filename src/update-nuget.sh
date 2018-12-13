@@ -26,11 +26,6 @@ cd MindTouch.LambdaSharp
 update
 cd ..
 
-# Update MindTouch.LambdaSharp.CustomResource
-cd MindTouch.LambdaSharp.CustomResource
-update
-cd ..
-
 # Update MindTouch.LambdaSharp.Slack
 cd MindTouch.LambdaSharp.Slack
 update

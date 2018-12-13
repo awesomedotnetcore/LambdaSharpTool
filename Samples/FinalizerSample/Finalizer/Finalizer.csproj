@@ -3,8 +3,9 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <Deterministic>true</Deterministic>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
-    <RootNamespace>MindTouch.LambdaSharpS3Subscriber.ResourceHandler</RootNamespace>
+    <RootNamespace>FinalizerSample.Finalizer</RootNamespace>
     <AWSProjectType>Lambda</AWSProjectType>
+    <NoWarn>CS1998</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Amazon.Lambda.Core" Version="1.0.0"/>

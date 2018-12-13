@@ -45,8 +45,12 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             }
 
             // delete output files
-            File.Delete(Path.Combine(Settings.OutputDirectory, "manifest.json"));
-            File.Delete(outputCloudFormationFilePath);
+            try {
+                File.Delete(Path.Combine(Settings.OutputDirectory, "manifest.json"));
+            } catch { }
+            try {
+                File.Delete(outputCloudFormationFilePath);
+            } catch { }
 
             // read input file
             Console.WriteLine();
