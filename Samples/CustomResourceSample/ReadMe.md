@@ -12,14 +12,18 @@ A [CloudFormation Custom Resource](https://docs.aws.amazon.com/AWSCloudFormation
 ```yaml
 Module: CustomResourceSample
 Description: A sample module for defining a custom resource
-
 Outputs:
 
   - CustomResource: MyNamespace::MyResource
     Description: Handler for MyNamespace::MyResource custom resource
     Handler: ResourceHandler
+    Properties:
+      Request:
+        - Name: SampleInput
+      Response:
+        - Name: SampleOutput
 
-Functions:
+Entries:
 
   - Function: ResourceHandler
     Description: This function is invoked by CloudFormation
@@ -31,15 +35,12 @@ The custom resource can then be used by other modules by using its resource type
 ```yaml
 Module: MyModule
 Description: A sample module that uses a custom resource
+Entries:
 
-Variables:
-
-  - Var: MyCustomResource
-    Resource:
-      Types: MyNamespace::MyResource
-      Properties:
-        # add custom resource properties if needed
-
+  - Resource: MyCustomResource
+    Types: MyNamespace::MyResource
+    Properties:
+      # add custom resource properties if needed
 ```
 
 ## Function Code

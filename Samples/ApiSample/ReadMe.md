@@ -11,8 +11,8 @@ An API Gateway instance is automatically created for the module when a function 
 ```yaml
 Module: ApiSample
 Description: A sample module integrating with API Gateway
+Entries:
 
-Functions:
   - Function: MyFunction
     Description: This function is invoked by API Gateway
     Memory: 128

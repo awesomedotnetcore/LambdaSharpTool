@@ -15,25 +15,20 @@ Beware the Lambda function timeout must be less than the SQS message visibility 
 ```yaml
 Module: SqsSample
 Description: A sample module using SQS queues
+Entries:
 
-Variables:
-
-  - Var: MyFirstQueue
+  - Resource: MyFirstQueue
     Description: A sample SQS queue
-    Resource:
-      Type: AWS::SQS::Queue
-      Allow: Receive
+    Type: AWS::SQS::Queue
+    Allow: Receive
 
-  - Var: MySecondQueue
+  - Resource: MySecondQueue
     Description: A sample SQS queue
-    Resource:
-      Type: AWS::SQS::Queue
-      Allow: Receive
-
-Functions:
+    Type: AWS::SQS::Queue
+    Allow: Receive
 
   - Function: MyFunction
-    Description: This function is invoked by a SQS queue
+    Description: This function is invoked by an SQS queue
     Memory: 128
     Timeout: 15
     Sources:

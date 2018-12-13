@@ -13,8 +13,12 @@ A [Slack](https://slack.com) command integration is created by adding the `Slack
 ```yaml
 Module: SlackCommandSample
 Description: A sample module integrating with Slack
+Entries:
 
-Functions:
+  - Parameter: SlackToken
+    Description: Slack verification token
+    Scope: MyFunction
+    Default: ""
 
   - Function: MyFunction
     Description: This function is invoked by a Slack command

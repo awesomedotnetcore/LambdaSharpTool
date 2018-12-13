@@ -13,22 +13,17 @@ Optionally, the `S3` attribute can specify specific [S3 events](https://docs.aws
 ```yaml
 Module: S3Sample
 Description: A sample module integrating with S3 Bucket events
+Entries:
 
-Variables:
-
-  - Var: MyFirstBucket
+  - Resource: MyFirstBucket
     Description: The S3 Bucket the function is listening to
-    Resource:
-      Type: AWS::S3::Bucket
-      Allow: ReadWrite
+    Type: AWS::S3::Bucket
+    Allow: ReadWrite
 
-  - Var: MySecondBucket
+  - Resource: MySecondBucket
     Description: The S3 Bucket the function is listening to
-    Resource:
-      Type: AWS::S3::Bucket
-      Allow: ReadWrite
-
-Functions:
+    Type: AWS::S3::Bucket
+    Allow: ReadWrite
 
   - Function: MyFunction
     Description: This function is invoked by an S3 Bucket event

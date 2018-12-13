@@ -12,19 +12,15 @@ Optionally, the `Kinesis` attribute can specify the maximum number of messages t
 
 ```yaml
 Module: KinesisSample
-
 Description: A sample module using Kinesis streams
+Entries:
 
-Variables:
-
-  - Var: Stream
+  - Resource: Stream
     Description: Description for Kinesis stream
-    Resource:
-      Type: AWS::Kinesis::Stream
-      Properties:
-        ShardCount: 1
-
-Functions:
+    Type: AWS::Kinesis::Stream
+    Allow: Subscribe
+    Properties:
+      ShardCount: 1
 
   - Function: MyFunction
     Description: This function is invoked by a Kinesis stream

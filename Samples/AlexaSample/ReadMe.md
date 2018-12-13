@@ -13,14 +13,11 @@ Optionally, the `Alexa` attribute can specify an Alexa Skill ID to restrict invo
 ```yaml
 Module: AlexaSample
 Description: A sample module using an Alexa skill
-
-Inputs:
+Entries:
 
   - Parameter: AlexaSkillID
     Description: Alexa Skill ID
     Default: "*"
-
-Functions:
 
   - Function: MyFunction
     Description: This function is invoked by an Alexa Skill

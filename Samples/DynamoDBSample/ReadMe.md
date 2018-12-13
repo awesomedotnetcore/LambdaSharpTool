@@ -13,26 +13,25 @@ Optionally, the `DynamoDB` attribute can specify the maximum number of messages 
 ```yaml
 Module: DynamoDBSample
 Description: A sample module using Kinesis streams
+Entries:
 
-Variables:
-
-  - Var: Table
+  - Resource: Table
+    Scope: "*"
     Description: Description for DynamoDB table
-    Resource:
-      Type: AWS::DynamoDB::Table
-      Allow: Subscribe
-      Properties:
-        AttributeDefinitions:
-          - AttributeName: MessageId
-            AttributeType: S
-        KeySchema:
-          - AttributeName: MessageId
-            KeyType: HASH
-        ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
-
-Functions:
+    Type: AWS::DynamoDB::Table
+    Allow: Subscribe
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: MessageId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: MessageId
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+      StreamSpecification:
+        StreamViewType: KEYS_ONLY
 
   - Function: MyFunction
     Description: This function is invoked by a DynamoDB stream

@@ -13,15 +13,6 @@ Entries:
     Timeout: 30
     Sources:
       - Topic: MyTopic
-      - Topic: MyTopic
         Filters:
-          store:
-            - "example_corp"
-          event:
-            - anything-but: order_cancelled
-          customer_interests:
-            - rugby
-            - football
-            - baseball
-          price_usd:
-            - numeric: [ ">=" , 100 ]
+          source:
+            - shopping-cart

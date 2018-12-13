@@ -11,8 +11,7 @@ An invocations schedule is created by adding a `Schedule` source to each functio
 ```yaml
 Module: ScheduleSample
 Description: A sample module using schedule events
-
-Functions:
+Entries:
 
   - Function: MyFunction
     Description: This function is invoked by a scheduled event
@@ -21,7 +20,7 @@ Functions:
     Sources:
 
       # a simple rate expression
-      - Schedule: rate(1 min)
+      - Schedule: rate(1 minute)
 
       # a complex cron expression
       - Schedule: cron(0/15 11-17 ? * * *)

@@ -13,16 +13,12 @@ Lambda functions require the `sns:Subscribe` permission on the SNS topic. Either
 ```yaml
 Module: SnsSample
 Description: A sample module using an SNS topic
+Entries:
 
-Variables:
-
-  - Var: MyTopic
+  - Resource: MyTopic
     Description: An SNS topic used to invoke the function.
-    Resource:
-      Type: AWS::SNS::Topic
-      Allow: Subscribe
-
-Functions:
+    Type: AWS::SNS::Topic
+    Allow: Subscribe
 
   - Function: MyFunction
     Description: This function is invoked by an SNS topic
@@ -30,6 +26,9 @@ Functions:
     Timeout: 30
     Sources:
       - Topic: MyTopic
+        Filters:
+          source:
+            - shopping-cart
 ```
 
 ## Function Code
