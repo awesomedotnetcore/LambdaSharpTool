@@ -24,6 +24,7 @@
     * BREAKING CHANGE: moved `ALambdaCustomResourceFunction` into this assembly
     * `ALambdaCustomResourceFunction` can be invoked via SNS or directly from a custom resource
 * added module `Finalizer`
+* validate that function entry point exists after compiling assembly
 
 __Topics__
 1. [Break Changes](#breaking-changes)

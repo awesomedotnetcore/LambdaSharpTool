@@ -30,6 +30,7 @@ using System.Text;
 using System.Xml.Linq;
 using MindTouch.LambdaSharp.Tool.Internal;
 using MindTouch.LambdaSharp.Tool.Model;
+using Mono.Cecil;
 
 namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
@@ -187,6 +188,12 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         return;
                     }
                 }
+
+                // verify the function handler can be found in the compiled assembly
+                if(function.Function.Handler is string handler) {
+                    ValidateEntryPoint(tempDirectory, handler);
+                }
+
                 var package = CreatePackage(function.Name, gitsha, tempDirectory);
                 _builder.AddAsset($"{function.FullName}::PackageName", package);
             } finally {
@@ -334,6 +341,78 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             }
             File.Move(zipTempPackage, package);
             return package;
+        }
+
+        private class CustomResolver : BaseAssemblyResolver {
+
+            private string _directory;
+            private List<AssemblyDefinition> _loadedAssemblies = new List<AssemblyDefinition>();
+            public CustomResolver(string directory) {
+                _directory = directory;
+            }
+
+            public override AssemblyDefinition Resolve(AssemblyNameReference name) {
+Console.WriteLine($"Loading assembly: {name.Name}.dll");
+                var assembly = AssemblyDefinition.ReadAssembly(Path.Combine(_directory, $"{name.Name}.dll"), new ReaderParameters {
+                    AssemblyResolver = this
+                });
+                if(assembly != null) {
+                    _loadedAssemblies.Add(assembly);
+                }
+                return assembly;
+            }
+
+            protected override void Dispose(bool disposing) {
+                base.Dispose(disposing);
+                if(disposing) {
+                    foreach(var assembly in _loadedAssemblies) {
+                        assembly.Dispose();
+                    }
+                }
+            }
+        }
+
+        private void ValidateEntryPoint(string directory, string handler) {
+            var parts = handler.Split("::");
+            if(parts.Length != 3) {
+                AddError("'Handler' attribute has invalid value");
+                return;
+            }
+            try {
+                var functionAssemblyName = parts[0];
+                var functionClassName = parts[1];
+                var functionMethodName = parts[2];
+                using(var resolver = new CustomResolver(directory))
+                using(var functionAssembly = AssemblyDefinition.ReadAssembly(Path.Combine(directory, $"{functionAssemblyName}.dll"), new ReaderParameters {
+                    AssemblyResolver = resolver
+                })) {
+                    if(functionAssembly == null) {
+                        AddError("could not load assembly");
+                        return;
+                    }
+                    var functionClassType = functionAssembly.MainModule.GetType(functionClassName);
+                    if(functionClassType == null) {
+                        AddError($"could not find type '{functionClassName}' in assembly");
+                        return;
+                    }
+                again:
+                    var functionMethod = functionClassType.Methods.FirstOrDefault(method => method.Name == functionMethodName);
+                    if(functionMethod == null) {
+                        if(functionClassType.BaseType == null) {
+                            AddError($"could not find method '{functionMethodName}' in type '{functionClassName}'");
+                            return;
+                        }
+                        functionClassType = functionClassType.BaseType.Resolve();
+                        goto again;
+                    }
+                }
+            } catch(Exception e) {
+                if(Settings.VerboseLevel >= VerboseLevel.Exceptions) {
+                    AddError(e);
+                } else {
+                    Console.WriteLine("WARNING: unable to validate function entry-point due to an internal error");
+                }
+            }
         }
     }
 }
