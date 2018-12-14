@@ -66,7 +66,7 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         public static bool operator != (VersionInfo left, VersionInfo right) {
-            if(!ReferenceEquals(left, right)) {
+            if(ReferenceEquals(left, right)) {
                 return false;
             }
             if(ReferenceEquals(left, null)) {
