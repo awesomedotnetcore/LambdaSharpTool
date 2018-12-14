@@ -72,7 +72,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 // convert collections
                 ForEach("Pragmas", module.Pragmas, ConvertPragma);
                 ForEach("Secrets", module.Secrets, ConvertSecret);
-                ForEach("Dependencies", module.Dependencies, ConvertDependency);
+                ForEach("Requires", module.Requires, ConvertDependency);
                 ForEach("Outputs", module.Outputs, ConvertOutput);
                 ForEach("Entries", module.Entries, ConvertEntry);
                 return _builder;

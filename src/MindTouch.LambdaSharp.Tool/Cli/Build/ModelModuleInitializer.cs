@@ -113,7 +113,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             // add standard parameters (unless requested otherwise)
             if(_builder.HasLambdaSharpDependencies) {
 
-                // add LambdaSharp Module Internal Dependencies
+                // add LambdaSharp Module Internal resource imports
                 var lambdasharp = _builder.AddImport(
                     import: "LambdaSharp",
                     description: "LambdaSharp Dependencies"
