@@ -487,6 +487,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     });
                     break;
                 case S3Source s3Source:
+                    _builder.AddDependency("LambdaSharpS3Subscriber", Settings.ToolVersion, maxVersion: null, bucketName: null);
                     Enumerate(s3Source.Bucket, (suffix, arn) => {
                         var permission = _builder.AddResource(
                             parent: function,
@@ -509,8 +510,11 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                             parent: function,
                             name: $"Source{sourceSuffix}Subscription",
                             description: null,
+                            type: "LambdaSharp::S3::Subscription",
                             scope: null,
-                            resource: new Humidifier.CustomResource("LambdaSharp::S3::Subscription") {
+                            value: null,
+                            allow: null,
+                            properties: new Dictionary<string, object> {
                                 ["BucketArn"] = arn,
                                 ["FunctionArn"] = FnGetAtt(function.ResourceName, "Arn"),
                                 ["Filters"] = new List<object> {
@@ -519,8 +523,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                                     ConvertS3Source()
                                 }
                             },
-                            resourceArnAttribute: null,
                             dependsOn: new[] { permission.FullName },
+                            arnAttribute: null,
                             condition: null,
                             pragmas: null
                         );

@@ -40,14 +40,6 @@ Outputs:
     Description: LambdaSharp Default Secrets Key
     Value: !Ref DefaultSecretKeyArn
 
-  - Export: ErrorReportTopic
-    Description: SNS topic for LambdaSharp module errors
-    Value: !GetAtt Registrar.Outputs.ErrorReportTopic
-
-  - Export: UsageReportTopic
-    Description: SNS topic for LambdaSharp function usage reports
-    Value: !GetAtt Registrar.Outputs.UsageReportTopic
-
 Entries:
 
   # LambdaSharp Tier Settings
@@ -100,27 +92,6 @@ Entries:
     Description: Rotate KMS key automatically every 365 days
     Default: false
 
-  # Rollbar Settings
-  - Parameter: RollbarReadAccessToken
-    Type: Secret
-    Section: Rollbar Settings
-    Label: Read Access Token
-    Description: Account-level token for read operations
-    Default: ""
-
-  - Parameter: RollbarWriteAccessToken
-    Type: Secret
-    Section: Rollbar Settings
-    Label: Write Access Token
-    Description: Account-level token for write operations
-    Default: ""
-
-  - Parameter: RollbarProjectPrefix
-    Section: Rollbar Settings
-    Label: Project Prefix
-    Description: Optional prefix when creating Rollbar projects
-    Default: ""
-
   # Resource Definitions
   - Resource: DefaultSecretKeyAlias
     Description: Alias for default secrets key
@@ -128,18 +99,3 @@ Entries:
     Properties:
       AliasName: !Sub "alias/${DeploymentPrefix}LambdaSharpDefaultSecretKey"
       TargetKeyId: !Ref DefaultSecretKeyArn
-
-  # Nested Modules
-  - Module: Registrar
-    Description: LambdaSharp Modules and Functions Registrar
-    Properties:
-      ModuleName: LambdaSharpRegistrar
-      Version: !Ref Module::Version
-    Parameters:
-      RollbarReadAccessToken: !Ref RollbarReadAccessToken
-      RollbarWriteAccessToken: !Ref RollbarWriteAccessToken
-      RollbarProjectPrefix: !Ref RollbarProjectPrefix
-      Secrets: !Ref Secrets
-      LambdaSharpDeadLetterQueueArn: !Ref DeadLetterQueueArn
-      LambdaSharpLoggingStreamArn: !Ref LoggingStreamArn
-      LambdaSharpDefaultSecretKeyArn: !Ref DefaultSecretKeyArn

@@ -105,36 +105,65 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         }
 
         public void AddDependency(string moduleName, VersionInfo minVersion, VersionInfo maxVersion, string bucketName) {
-            if(minVersion == null) {
-                throw new ArgumentNullException(nameof(minVersion));
+
+            // check if a dependency was already registered
+            ModuleDependency dependency;
+            if(_dependencies.TryGetValue(moduleName, out dependency)) {
+
+                // keep the strongest version constraints
+                if(minVersion != null) {
+                    if((dependency.MinVersion == null) || (dependency.MinVersion < minVersion)) {
+                        dependency.MinVersion = minVersion;
+                    }
+                }
+                if(maxVersion != null) {
+                    if((dependency.MaxVersion == null) || (dependency.MaxVersion > maxVersion)) {
+                        dependency.MaxVersion = maxVersion;
+                    }
+                }
+
+                // check there is no conflict in origin bucket names
+                if(bucketName != null) {
+                    if(dependency.BucketName == null) {
+                        dependency.BucketName = bucketName;
+                    }
+                    if(dependency.BucketName != bucketName) {
+                        AddError($"module {moduleName} source bucket conflict is empty ({dependency.BucketName} vs. {bucketName})");
+                    }
+                }
+            } else {
+                dependency = new ModuleDependency {
+                    ModuleName = moduleName,
+                    MinVersion = minVersion,
+                    MaxVersion = maxVersion,
+                    BucketName = bucketName
+                };
             }
-            if(maxVersion == null) {
-                throw new ArgumentNullException(nameof(maxVersion));
-            }
-            if(_dependencies.ContainsKey(moduleName)) {
-                AddError($"module {moduleName} has already been added as a dependency");
+
+            // validate dependency
+            if((dependency.MinVersion != null) && (dependency.MaxVersion != null) && (dependency.MinVersion > dependency.MaxVersion)) {
+                AddError($"module {moduleName} version range is empty (v{dependency.MinVersion}..v{dependency.MaxVersion})");
                 return;
             }
-            if(minVersion > maxVersion) {
-                AddError($"module {moduleName} version range is empty");
-                return;
+            if(!Settings.SkipDependencyValidation) {
+                var loader = new ModelManifestLoader(Settings, moduleName);
+                var location = loader.LocateAsync(moduleName, minVersion, maxVersion, bucketName).Result;
+                if(location == null) {
+                    return;
+                }
+                var manifest = new ModelManifestLoader(Settings, moduleName).LoadFromS3Async(location.BucketName, location.TemplatePath).Result;
+                if(manifest == null) {
+
+                    // nothing to do; loader already emitted an error
+                    return;
+                }
+
+                // update manifest in dependency
+                dependency.Manifest = manifest;
             }
-            var loader = new ModelManifestLoader(Settings, moduleName);
-            var location = loader.LocateAsync(moduleName, minVersion, maxVersion, bucketName).Result;
-            if(location == null) {
-                return;
+            if(!_dependencies.ContainsKey(moduleName)) {
+                _dependencies.Add(moduleName, dependency);
             }
-            var manifest = new ModelManifestLoader(Settings, moduleName).LoadFromS3Async(location.BucketName, location.TemplatePath).Result;
-            if(manifest == null) {
-                return;
-            }
-            _dependencies.Add(moduleName, new ModuleDependency {
-                ModuleName = moduleName,
-                MinVersion = minVersion,
-                MaxVersion = maxVersion,
-                BucketName = bucketName,
-                Manifest = manifest
-            });
         }
 
         public bool AddSecret(object secret) {
@@ -340,12 +369,12 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 name: macroName,
                 description: description,
                 scope: null,
-                resource: new Humidifier.CustomResource("AWS::CloudFormation::Macro") {
+                resource: new Humidifier.CloudFormation.Macro {
 
                     // TODO (2018-10-30, bjorg): we may want to set 'LogGroupName' and 'LogRoleARN' as well
-                    ["Name"] = FnSub("${DeploymentPrefix}" + macroName),
-                    ["Description"] = description ?? "",
-                    ["FunctionName"] = FnRef(handler)
+                    Name = FnSub("${DeploymentPrefix}" + macroName),
+                    Description = description ?? "",
+                    FunctionName = FnRef(handler)
                 },
                 resourceArnAttribute: null,
                 dependsOn: null,
@@ -663,60 +692,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 condition: null,
                 pragmas: null
             );
-
-            // check if lambdasharp specific resources need to be initialized/created
-            if(HasLambdaSharpDependencies) {
-
-                // initialize dead-letter queue
-                function.Function.DeadLetterConfig = new Humidifier.Lambda.FunctionTypes.DeadLetterConfig {
-                    TargetArn = FnRef("Module::DeadLetterQueueArn")
-                };
-
-                // check if function should be registered
-                if(HasModuleRegistration && function.HasFunctionRegistration) {
-
-                    // create function registration
-                    AddResource(
-                        parent: function,
-                        name: "Registration",
-                        description: null,
-                        scope: null,
-                        resource: new Humidifier.CustomResource("LambdaSharp::Register::Function") {
-                            ["ModuleId"] = FnRef("AWS::StackName"),
-                            ["FunctionId"] = FnRef(function.ResourceName),
-                            ["FunctionName"] = function.Name,
-                            ["FunctionLogGroupName"] = FnSub($"/aws/lambda/${{{function.LogicalId}}}"),
-                            ["FunctionPlatform"] = "AWS Lambda",
-                            ["FunctionFramework"] = function.Function.Runtime,
-                            ["FunctionLanguage"] = function.Language,
-                            ["FunctionMaxMemory"] = function.Function.MemorySize,
-                            ["FunctionMaxDuration"] = function.Function.Timeout
-                        },
-                        resourceArnAttribute: null,
-                        dependsOn: new[] { "Module::Registration" },
-                        condition: null,
-                        pragmas: null
-                    );
-
-                    // create function log-group subscription
-                    AddResource(
-                        parent: function,
-                        name: "LogGroupSubscription",
-                        description: null,
-                        scope: null,
-                        resource: new Humidifier.Logs.SubscriptionFilter {
-                            DestinationArn = FnRef("Module::LoggingStreamArn"),
-                            FilterPattern = "-\"*** \"",
-                            LogGroupName = FnRef(logGroup.ResourceName),
-                            RoleArn = FnGetAtt("Module::CloudWatchLogsRole", "Arn")
-                        },
-                        resourceArnAttribute: null,
-                        dependsOn: null,
-                        condition: null,
-                        pragmas: null
-                    );
-                }
-            }
             return function;
         }
 
@@ -921,14 +896,22 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                     ValidateProperties("", resource, properties);
                 }
             } else if(!awsType.StartsWith("Custom::", StringComparison.Ordinal)) {
-                var dependency = _dependencies.Values.FirstOrDefault(d => d.Manifest.CustomResourceTypes.ContainsKey(awsType));
+                var dependency = _dependencies.Values.FirstOrDefault(d => d.Manifest?.CustomResourceTypes.ContainsKey(awsType) ?? false);
                 if(dependency == null) {
-                    AddError($"missing dependency for resource type {awsType}");
+                    if(_dependencies.Values.Any(d => d.Manifest == null)) {
+
+                        // NOTE (2018-12-13, bjorg): one or more manifests were not loaded; give the benefit of the doubt
+                        Console.WriteLine($"WARNING: unable to validate properties for {awsType}");
+                    } else {
+                        AddError($"missing dependency for resource type {awsType}");
+                    }
                 } else if(properties != null) {
                     var definition = dependency.Manifest.CustomResourceTypes[awsType];
-                    foreach(var key in properties.Keys) {
-                        if(!definition.Request.Any(field => field.Name == (string)key)) {
-                            AddError($"unrecognized attribute '{key}' on type {awsType}");
+                    if(definition != null) {
+                        foreach(var key in properties.Keys) {
+                            if(!definition.Request.Any(field => field.Name == (string)key)) {
+                                AddError($"unrecognized attribute '{key}' on type {awsType}");
+                            }
                         }
                     }
                 }

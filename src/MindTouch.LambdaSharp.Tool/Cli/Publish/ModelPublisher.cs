@@ -85,7 +85,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Publish {
 
             // update cloudformation template with manifest and minify it
             var cloudformation = JsonConvert.DeserializeObject<JObject>(File.ReadAllText(SourceFilename));
-            ((JObject)cloudformation["Metadata"])["LambdaSharp::Manifest"] = JObject.FromObject(manifest);
+            ((JObject)cloudformation["Metadata"])["LambdaSharp::Manifest"] = JObject.FromObject(manifest, new JsonSerializer {
+                NullValueHandling = NullValueHandling.Ignore
+            });
             var minified = JsonConvert.SerializeObject(cloudformation, new JsonSerializerSettings {
                 Formatting = Formatting.None,
                 NullValueHandling = NullValueHandling.Ignore

@@ -68,7 +68,7 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         public static bool operator != (VersionInfo left, VersionInfo right) {
-            if(!ReferenceEquals(left, right)) {
+            if(ReferenceEquals(left, right)) {
                 return false;
             }
             if(ReferenceEquals(left, null)) {
@@ -166,7 +166,9 @@ namespace MindTouch.LambdaSharp.Tool {
             => objectType == typeof(VersionInfo);
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
-            => VersionInfo.Parse((string)reader.Value);
+            => (reader.Value != null)
+                ? VersionInfo.Parse((string)reader.Value)
+                : null;
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
             => writer.WriteValue(value.ToString());

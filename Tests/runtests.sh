@@ -12,6 +12,7 @@ lash() {
         --cli-version 0.5-WIP \
         --deployment-bucket-name lambdasharp-bucket-name \
         --deployment-notifications-topic-arn  arn:aws:sns:us-east-1:123456789012:LambdaSharp-DeploymentNotificationTopic \
+        --skip-dependency-validation \
         $1.yml
 }
 
@@ -26,7 +27,8 @@ if [ -z "$1" ]; then
         --runtime-version 0.5-WIP \
         --cli-version 0.5-WIP \
         --deployment-bucket-name lambdasharp-bucket-name \
-        --deployment-notifications-topic-arn  arn:aws:sns:us-east-1:123456789012:LambdaSharp-DeploymentNotificationTopic
+        --deployment-notifications-topic-arn  arn:aws:sns:us-east-1:123456789012:LambdaSharp-DeploymentNotificationTopic \
+        --skip-dependency-validation
 
     if [ $? -ne 0 ]; then
         exit $?
@@ -80,5 +82,6 @@ else
         --cli-version 0.5-WIP \
         --deployment-bucket-name lambdasharp-bucket-name \
         --deployment-notifications-topic-arn  arn:aws:sns:us-east-1:123456789012:LambdaSharp-DeploymentNotificationTopic \
+        --skip-dependency-validation \
         $1.yml
 fi

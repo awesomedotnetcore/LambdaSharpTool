@@ -97,15 +97,15 @@ namespace MindTouch.LambdaSharp.Tool {
             // * ModuleName@Bucket
             // * ModuleName:*@Bucket
             // * ModuleName:Version@Bucket
-            // * s3://bucket-name/Modules/{ModuleName}/{Version}/
-            // * s3://bucket-name/Modules/{ModuleName}/{Version}/cloudformation.json
+            // * s3://bucket-name/Modules/{ModuleName}/Versions/{Version}/
+            // * s3://bucket-name/Modules/{ModuleName}/Versions/{Version}/cloudformation.json
 
             if(moduleReference.StartsWith("s3://", StringComparison.Ordinal)) {
                 var uri = new Uri(moduleReference);
 
                 // absolute path always starts with '/', which needs to be removed
                 var pathSegments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries).ToList();
-                if((pathSegments.Count < 3) || (pathSegments[0] != "Modules")) {
+                if((pathSegments.Count < 4) || (pathSegments[0] != "Modules") || (pathSegments[2] != "Versions")) {
                     return null;
                 }
                 if(pathSegments.Last() != "cloudformation.json") {
@@ -113,7 +113,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
                 return new ModuleLocation {
                     ModuleName = pathSegments[1],
-                    ModuleVersion = pathSegments[2],
+                    ModuleVersion = VersionInfo.Parse(pathSegments[3]),
                     BucketName = uri.Host,
                     TemplatePath = string.Join("/", pathSegments)
                 };
@@ -158,7 +158,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 };
 
             // attempt to find a matching version
-            string foundVersion = null;
+            VersionInfo foundVersion = null;
             string foundBucketName = null;
             foreach(var bucket in searchBuckets) {
                 foundVersion = await FindNewestVersion(Settings, bucket, moduleName, minVersion, maxVersion);
@@ -217,7 +217,7 @@ namespace MindTouch.LambdaSharp.Tool {
             return null;
         }
 
-        private async Task<string> FindNewestVersion(Settings settings, string bucketName, string moduleName, VersionInfo minVersion, VersionInfo maxVersion) {
+        private async Task<VersionInfo> FindNewestVersion(Settings settings, string bucketName, string moduleName, VersionInfo minVersion, VersionInfo maxVersion) {
 
             // enumerate versions in bucket
             var versions = new List<VersionInfo>();
@@ -241,7 +241,7 @@ namespace MindTouch.LambdaSharp.Tool {
             }
 
             // attempt to identify the newest version
-            return versions.Max().ToString();
+            return versions.Max();
 
             // local function
             bool IsVersionMatch(VersionInfo version) {

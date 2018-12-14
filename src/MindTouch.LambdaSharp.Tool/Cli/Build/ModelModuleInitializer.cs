@@ -389,28 +389,20 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 pragmas: null
             );
 
-            // add module registration
-            if(_builder.HasModuleRegistration) {
-                _builder.AddResource(
-                    parent: moduleEntry,
-                    name: "Registration",
-                    description: null,
-                    scope: null,
-                    resource: new Humidifier.CustomResource("LambdaSharp::Register::Module") {
-                        ["ModuleId"] = FnRef("AWS::StackName"),
-                        ["ModuleName"] = _builder.Name,
-                        ["ModuleVersion"] = _builder.Version.ToString()
-                    },
-                    resourceArnAttribute: null,
-                    dependsOn: null,
-                    condition: null,
-                    pragmas: null
-                );
-            }
-
             // create module IAM role used by all functions
             var functions = _builder.Entries.OfType<FunctionEntry>().ToList();
             if(functions.Any()) {
+
+                // check if lambdasharp specific resources need to be initialized
+                if(_builder.HasLambdaSharpDependencies) {
+                    foreach(var function in functions) {
+
+                        // initialize dead-letter queue
+                        function.Function.DeadLetterConfig = new Humidifier.Lambda.FunctionTypes.DeadLetterConfig {
+                            TargetArn = FnRef("Module::DeadLetterQueueArn")
+                        };
+                    }
+                }
 
                 // create module role
                 _builder.AddResource(
@@ -458,66 +450,147 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         "logs:PutLogEvents"
                     }
                 );
+            }
 
-                // permissions needed for lambda functions to exist in a VPC
-                if(functions.Any(function => function.Function.VpcConfig != null)) {
-                    _builder.AddGrant(
-                        sid: "ModuleVpcNetworkInterfaces",
-                        awsType: null,
-                        reference: "*",
-                        allow: new[] {
-                            "ec2:DescribeNetworkInterfaces",
-                            "ec2:CreateNetworkInterface",
-                            "ec2:DeleteNetworkInterface"
-                        }
-                    );
-                }
+            // permissions needed for lambda functions to exist in a VPC
+            if(functions.Any(function => function.Function.VpcConfig != null)) {
+                _builder.AddGrant(
+                    sid: "ModuleVpcNetworkInterfaces",
+                    awsType: null,
+                    reference: "*",
+                    allow: new[] {
+                        "ec2:DescribeNetworkInterfaces",
+                        "ec2:CreateNetworkInterface",
+                        "ec2:DeleteNetworkInterface"
+                    }
+                );
+            }
 
-                // create function registration
-                if(_builder.HasModuleRegistration && _builder.HasLambdaSharpDependencies) {
+            // add module registration
+            if(_builder.HasModuleRegistration) {
+                _builder.AddDependency("LambdaSharpRegistrar", Settings.ToolVersion, maxVersion: null, bucketName: null);
+
+                // create module registration
+                _builder.AddResource(
+                    parent: moduleEntry,
+                    name: "Registration",
+                    description: null,
+                    type: "LambdaSharp::Register::Module",
+                    scope: null,
+                    value: null,
+                    allow: null,
+                    properties: new Dictionary<string, object> {
+                        ["ModuleId"] = FnRef("AWS::StackName"),
+                        ["ModuleName"] = _builder.Name,
+                        ["ModuleVersion"] = _builder.Version.ToString()
+                    },
+                    dependsOn: null,
+                    arnAttribute: null,
+                    condition: null,
+                    pragmas: null
+                );
+
+                // handle function registrations
+                var registeredFunctions = _builder.Entries
+                    .OfType<FunctionEntry>()
+                    .Where(function => function.HasFunctionRegistration)
+                    .ToList();
+                if(registeredFunctions.Any()) {
 
                     // create CloudWatch Logs IAM role to invoke kinesis stream
-                     _builder.AddResource(
-                        parent: moduleEntry,
-                        name: "CloudWatchLogsRole",
-                        description: null,
-                        scope: null,
-                        resource:  new Humidifier.IAM.Role {
-                            AssumeRolePolicyDocument = new Humidifier.PolicyDocument {
-                                Version = "2012-10-17",
-                                Statement = new[] {
-                                    new Humidifier.Statement {
-                                        Sid = "CloudWatchLogsKinesisInvocation",
-                                        Effect = "Allow",
-                                        Principal = new Humidifier.Principal {
-                                            Service = FnSub("logs.${AWS::Region}.amazonaws.com")
-                                        },
-                                        Action = "sts:AssumeRole"
+                    if(_builder.HasLambdaSharpDependencies) {
+                        _builder.AddResource(
+                            parent: moduleEntry,
+                            name: "CloudWatchLogsRole",
+                            description: null,
+                            scope: null,
+                            resource:  new Humidifier.IAM.Role {
+                                AssumeRolePolicyDocument = new Humidifier.PolicyDocument {
+                                    Version = "2012-10-17",
+                                    Statement = new[] {
+                                        new Humidifier.Statement {
+                                            Sid = "CloudWatchLogsKinesisInvocation",
+                                            Effect = "Allow",
+                                            Principal = new Humidifier.Principal {
+                                                Service = FnSub("logs.${AWS::Region}.amazonaws.com")
+                                            },
+                                            Action = "sts:AssumeRole"
+                                        }
+                                    }.ToList()
+                                },
+                                Policies = new[] {
+                                    new Humidifier.IAM.Policy {
+                                        PolicyName = FnSub("${AWS::StackName}ModuleCloudWatchLogsPolicy"),
+                                        PolicyDocument = new Humidifier.PolicyDocument {
+                                            Version = "2012-10-17",
+                                            Statement = new[] {
+                                                new Humidifier.Statement {
+                                                    Sid = "CloudWatchLogsKinesisPermissions",
+                                                    Effect = "Allow",
+                                                    Action = "kinesis:PutRecord",
+                                                    Resource = FnRef("Module::LoggingStreamArn")
+                                                }
+                                            }.ToList()
+                                        }
                                     }
                                 }.ToList()
                             },
-                            Policies = new[] {
-                                new Humidifier.IAM.Policy {
-                                    PolicyName = FnSub("${AWS::StackName}ModuleCloudWatchLogsPolicy"),
-                                    PolicyDocument = new Humidifier.PolicyDocument {
-                                        Version = "2012-10-17",
-                                        Statement = new[] {
-                                            new Humidifier.Statement {
-                                                Sid = "CloudWatchLogsKinesisPermissions",
-                                                Effect = "Allow",
-                                                Action = "kinesis:PutRecord",
-                                                Resource = FnRef("Module::LoggingStreamArn")
-                                            }
-                                        }.ToList()
-                                    }
-                                }
-                            }.ToList()
-                        },
-                        resourceArnAttribute: null,
-                        dependsOn: null,
-                        condition: null,
-                        pragmas: null
-                    );
+                            resourceArnAttribute: null,
+                            dependsOn: null,
+                            condition: null,
+                            pragmas: null
+                        );
+                    }
+
+                    // create registration-related resources for functions
+                    foreach(var function in registeredFunctions) {
+
+                        // create function registration
+                        _builder.AddResource(
+                            parent: function,
+                            name: "Registration",
+                            description: null,
+                            type: "LambdaSharp::Register::Function",
+                            scope: null,
+                            value: null,
+                            allow: null,
+                            properties: new Dictionary<string, object> {
+                                ["ModuleId"] = FnRef("AWS::StackName"),
+                                ["FunctionId"] = FnRef(function.ResourceName),
+                                ["FunctionName"] = function.Name,
+                                ["FunctionLogGroupName"] = FnSub($"/aws/lambda/${{{function.LogicalId}}}"),
+                                ["FunctionPlatform"] = "AWS Lambda",
+                                ["FunctionFramework"] = function.Function.Runtime,
+                                ["FunctionLanguage"] = function.Language,
+                                ["FunctionMaxMemory"] = function.Function.MemorySize,
+                                ["FunctionMaxDuration"] = function.Function.Timeout
+                            },
+                            dependsOn: new[] { "Module::Registration" },
+                            arnAttribute: null,
+                            condition: null,
+                            pragmas: null
+                        );
+
+                        // create function log-group subscription
+                        if(_builder.HasLambdaSharpDependencies) {
+                            _builder.AddResource(
+                                parent: function,
+                                name: "LogGroupSubscription",
+                                description: null,
+                                scope: null,
+                                resource: new Humidifier.Logs.SubscriptionFilter {
+                                    DestinationArn = FnRef("Module::LoggingStreamArn"),
+                                    FilterPattern = "-\"*** \"",
+                                    LogGroupName = FnRef($"{function.FullName}::LogGroup"),
+                                    RoleArn = FnGetAtt("Module::CloudWatchLogsRole", "Arn")
+                                },
+                                resourceArnAttribute: null,
+                                dependsOn: null,
+                                condition: null,
+                                pragmas: null
+                            );
+                        }
+                    }
                 }
             }
         }

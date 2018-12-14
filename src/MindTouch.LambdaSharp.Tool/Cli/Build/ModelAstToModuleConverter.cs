@@ -385,6 +385,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                                 moduleName = moduleNameText;
                             }
                             node.Properties.TryGetValue("Version", out moduleVersion);
+
+                            // TODO (2018-12-13, bjorg): should this be `SourceBucketName` or simply `BucketName`?
                             node.Properties.TryGetValue("SourceBucket", out moduleSourceBucket);
                         });
                     }
@@ -490,7 +492,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     if(node.Properties != null) {
                         AtLocation("Properties", () => {
                             try {
-                                properties = JObject.FromObject(node.Properties).ToObject<ModuleManifestCustomResource>();
+                                properties = JObject.FromObject(node.Properties, new JsonSerializer {
+                                    NullValueHandling = NullValueHandling.Ignore
+                                }).ToObject<ModuleManifestCustomResource>();
                             } catch(JsonSerializationException e) {
                                 AddError(e.Message);
                             }

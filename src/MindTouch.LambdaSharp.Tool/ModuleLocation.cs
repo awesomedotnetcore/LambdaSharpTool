@@ -28,7 +28,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
         //--- Properties ---
         public string ModuleName { get; set; }
-        public string ModuleVersion { get; set; }
+        public VersionInfo ModuleVersion { get; set; }
         public string BucketName { get; set; }
         public string TemplatePath { get; set; }
 

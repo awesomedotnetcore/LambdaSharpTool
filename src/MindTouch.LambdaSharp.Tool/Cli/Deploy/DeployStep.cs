@@ -220,7 +220,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
                 : $"module '{deployed.Item1}'";
 
             // confirm that the dependency version is in a valid range
-            var deployedVersion = VersionInfo.Parse(deployed.Item3.ModuleVersion);
+            var deployedVersion = deployed.Item3.ModuleVersion;
             if((dependency.MaxVersion != null) && (deployedVersion > dependency.MaxVersion)) {
                 AddError($"version conflict for module '{dependency.ModuleName}': module '{owner}' requires max version v{dependency.MaxVersion}, but {deployedOwner} uses v{deployedVersion})");
             }
@@ -240,7 +240,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
                 var deployedVersionText = deployedOutputs?.FirstOrDefault(output => output.OutputKey == "ModuleVersion")?.OutputValue;
                 var deployed = new ModuleLocation {
                     ModuleName = deployedName ?? dependency.ModuleName,
-                    ModuleVersion = deployedVersionText ?? "0.0",
+                    ModuleVersion = VersionInfo.Parse(deployedVersionText ?? "0.0"),
                     BucketName = null,
                     TemplatePath = null
                 };
@@ -260,7 +260,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
                 }
 
                 // confirm that the module version is in a valid range
-                var deployedVersion = VersionInfo.Parse(deployed.ModuleVersion);
+                var deployedVersion = deployed.ModuleVersion;
                 if((dependency.MaxVersion != null) && (deployedVersion > dependency.MaxVersion)) {
                     AddError($"deployed dependent module version (v{deployedVersion}) is newer than max version constraint v{dependency.MaxVersion}");
                     return deployed;
