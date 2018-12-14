@@ -39,6 +39,39 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
         //--- Constants ---
         private const string GITSHAFILE = "gitsha.txt";
 
+        //--- Types ---
+        private class CustomAssemblyResolver : BaseAssemblyResolver {
+
+            //--- Fields ---
+            private string _directory;
+            private List<AssemblyDefinition> _loadedAssemblies = new List<AssemblyDefinition>();
+
+            //--- Constructors ---
+            public CustomAssemblyResolver(string directory) {
+                _directory = directory;
+            }
+
+            //--- Methods ---
+            public override AssemblyDefinition Resolve(AssemblyNameReference name) {
+                var assembly = AssemblyDefinition.ReadAssembly(Path.Combine(_directory, $"{name.Name}.dll"), new ReaderParameters {
+                    AssemblyResolver = this
+                });
+                if(assembly != null) {
+                    _loadedAssemblies.Add(assembly);
+                }
+                return assembly;
+            }
+
+            protected override void Dispose(bool disposing) {
+                base.Dispose(disposing);
+                if(disposing) {
+                    foreach(var assembly in _loadedAssemblies) {
+                        assembly.Dispose();
+                    }
+                }
+            }
+        }
+
         //--- Fields ---
         private ModuleBuilder _builder;
 
@@ -343,35 +376,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             return package;
         }
 
-        private class CustomResolver : BaseAssemblyResolver {
-
-            private string _directory;
-            private List<AssemblyDefinition> _loadedAssemblies = new List<AssemblyDefinition>();
-            public CustomResolver(string directory) {
-                _directory = directory;
-            }
-
-            public override AssemblyDefinition Resolve(AssemblyNameReference name) {
-Console.WriteLine($"Loading assembly: {name.Name}.dll");
-                var assembly = AssemblyDefinition.ReadAssembly(Path.Combine(_directory, $"{name.Name}.dll"), new ReaderParameters {
-                    AssemblyResolver = this
-                });
-                if(assembly != null) {
-                    _loadedAssemblies.Add(assembly);
-                }
-                return assembly;
-            }
-
-            protected override void Dispose(bool disposing) {
-                base.Dispose(disposing);
-                if(disposing) {
-                    foreach(var assembly in _loadedAssemblies) {
-                        assembly.Dispose();
-                    }
-                }
-            }
-        }
-
         private void ValidateEntryPoint(string directory, string handler) {
             var parts = handler.Split("::");
             if(parts.Length != 3) {
@@ -382,7 +386,7 @@ Console.WriteLine($"Loading assembly: {name.Name}.dll");
                 var functionAssemblyName = parts[0];
                 var functionClassName = parts[1];
                 var functionMethodName = parts[2];
-                using(var resolver = new CustomResolver(directory))
+                using(var resolver = new CustomAssemblyResolver(directory))
                 using(var functionAssembly = AssemblyDefinition.ReadAssembly(Path.Combine(directory, $"{functionAssemblyName}.dll"), new ReaderParameters {
                     AssemblyResolver = resolver
                 })) {
