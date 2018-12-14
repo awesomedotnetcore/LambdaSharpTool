@@ -52,7 +52,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "5FB9502FC282CAD5E99FA68A400CA15F"
+      "Default": "D32F3B29DB092A30EF5E0F27BC2A2FA6"
     }
   },
   "Resources": {
@@ -318,14 +318,19 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2018-12-07",
+      "Version": "2018-12-14",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
       "RuntimeCheck": true,
-      "Hash": "5FB9502FC282CAD5E99FA68A400CA15F",
+      "Hash": "D32F3B29DB092A30EF5E0F27BC2A2FA6",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
-      "Dependencies": [],
+      "Dependencies": [
+        {
+          "ModuleName": "LambdaSharpRegistrar",
+          "MinVersion": "0.5-WIP"
+        }
+      ],
       "CustomResourceTypes": {},
       "MacroNames": [],
       "ResourceFullNames": {

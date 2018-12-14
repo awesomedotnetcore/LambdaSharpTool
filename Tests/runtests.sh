@@ -27,8 +27,7 @@ if [ -z "$1" ]; then
         --runtime-version 0.5-WIP \
         --cli-version 0.5-WIP \
         --deployment-bucket-name lambdasharp-bucket-name \
-        --deployment-notifications-topic-arn  arn:aws:sns:us-east-1:123456789012:LambdaSharp-DeploymentNotificationTopic \
-        --skip-dependency-validation
+        --deployment-notifications-topic-arn  arn:aws:sns:us-east-1:123456789012:LambdaSharp-DeploymentNotificationTopic
 
     if [ $? -ne 0 ]; then
         exit $?

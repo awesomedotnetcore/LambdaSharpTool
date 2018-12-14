@@ -48,7 +48,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "1859C750A27A3760B290064E4F397149"
+      "Default": "3C69FFCCB571EE16E3BA581DE7B4944B"
     }
   },
   "Resources": {
@@ -184,21 +184,6 @@
           "Fn::Sub": "/aws/lambda/${Function}"
         },
         "RetentionInDays": 7
-      }
-    },
-    "ModuleRegistration": {
-      "Type": "Custom::LambdaSharpRegisterModule",
-      "Properties": {
-        "ServiceToken": {
-          "Fn::ImportValue": {
-            "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::Register::Module"
-          }
-        },
-        "ModuleId": {
-          "Ref": "AWS::StackName"
-        },
-        "ModuleName": "TestModule",
-        "ModuleVersion": "1.0"
       }
     },
     "ModuleRole": {
@@ -367,71 +352,19 @@
         ]
       }
     },
-    "ModuleCloudWatchLogsRole": {
-      "Type": "AWS::IAM::Role",
+    "ModuleRegistration": {
+      "Type": "Custom::LambdaSharpRegisterModule",
       "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Version": "2012-10-17",
-          "Statement": [
-            {
-              "Sid": "CloudWatchLogsKinesisInvocation",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": {
-                  "Fn::Sub": "logs.${AWS::Region}.amazonaws.com"
-                }
-              },
-              "Action": "sts:AssumeRole"
-            }
-          ]
-        },
-        "Policies": [
-          {
-            "PolicyDocument": {
-              "Version": "2012-10-17",
-              "Statement": [
-                {
-                  "Sid": "CloudWatchLogsKinesisPermissions",
-                  "Effect": "Allow",
-                  "Action": "kinesis:PutRecord",
-                  "Resource": {
-                    "Fn::If": [
-                      "LambdaSharpLoggingStreamArnImported",
-                      {
-                        "Fn::ImportValue": {
-                          "Fn::Sub": [
-                            "${DeploymentPrefix}${Import}",
-                            {
-                              "Import": {
-                                "Fn::Select": [
-                                  "1",
-                                  {
-                                    "Fn::Split": [
-                                      "$",
-                                      {
-                                        "Ref": "LambdaSharpLoggingStreamArn"
-                                      }
-                                    ]
-                                  }
-                                ]
-                              }
-                            }
-                          ]
-                        }
-                      },
-                      {
-                        "Ref": "LambdaSharpLoggingStreamArn"
-                      }
-                    ]
-                  }
-                }
-              ]
-            },
-            "PolicyName": {
-              "Fn::Sub": "${AWS::StackName}ModuleCloudWatchLogsPolicy"
-            }
+        "ServiceToken": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::Register::Module"
           }
-        ]
+        },
+        "ModuleId": {
+          "Ref": "AWS::StackName"
+        },
+        "ModuleName": "TestModule",
+        "ModuleVersion": "1.0"
       }
     }
   },
@@ -620,21 +553,25 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2018-12-07",
+      "Version": "2018-12-14",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
       "RuntimeCheck": true,
-      "Hash": "1859C750A27A3760B290064E4F397149",
+      "Hash": "3C69FFCCB571EE16E3BA581DE7B4944B",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
-      "Dependencies": [],
+      "Dependencies": [
+        {
+          "ModuleName": "LambdaSharpRegistrar",
+          "MinVersion": "0.5-WIP"
+        }
+      ],
       "CustomResourceTypes": {},
       "MacroNames": [],
       "ResourceFullNames": {
         "FunctionLogGroup": "Function::LogGroup",
-        "ModuleRegistration": "Module::Registration",
         "ModuleRole": "Module::Role",
-        "ModuleCloudWatchLogsRole": "Module::CloudWatchLogsRole"
+        "ModuleRegistration": "Module::Registration"
       }
     }
   }

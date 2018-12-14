@@ -27,7 +27,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "C463198ADDE57EBF89887D49C0960A3D"
+      "Default": "5ED46212B3E07A049BBC4CA66226E687"
     }
   },
   "Resources": {
@@ -71,21 +71,6 @@
           "Fn::Sub": "/aws/lambda/${Function}"
         },
         "RetentionInDays": 7
-      }
-    },
-    "ModuleRegistration": {
-      "Type": "Custom::LambdaSharpRegisterModule",
-      "Properties": {
-        "ServiceToken": {
-          "Fn::ImportValue": {
-            "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::Register::Module"
-          }
-        },
-        "ModuleId": {
-          "Ref": "AWS::StackName"
-        },
-        "ModuleName": "TestModule",
-        "ModuleVersion": "1.0"
       }
     },
     "ModuleRole": {
@@ -150,6 +135,49 @@
           }
         ]
       }
+    },
+    "ModuleRegistration": {
+      "Type": "Custom::LambdaSharpRegisterModule",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::Register::Module"
+          }
+        },
+        "ModuleId": {
+          "Ref": "AWS::StackName"
+        },
+        "ModuleName": "TestModule",
+        "ModuleVersion": "1.0"
+      }
+    },
+    "FunctionRegistration": {
+      "Type": "Custom::LambdaSharpRegisterFunction",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::Register::Function"
+          }
+        },
+        "ModuleId": {
+          "Ref": "AWS::StackName"
+        },
+        "FunctionId": {
+          "Ref": "Function"
+        },
+        "FunctionName": "Function",
+        "FunctionLogGroupName": {
+          "Fn::Sub": "/aws/lambda/${Function}"
+        },
+        "FunctionPlatform": "AWS Lambda",
+        "FunctionFramework": "dotnetcore2.1",
+        "FunctionLanguage": "csharp",
+        "FunctionMaxMemory": "128",
+        "FunctionMaxDuration": "30"
+      },
+      "DependsOn": [
+        "ModuleRegistration"
+      ]
     }
   },
   "Outputs": {
@@ -216,20 +244,26 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2018-12-07",
+      "Version": "2018-12-14",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
       "RuntimeCheck": true,
-      "Hash": "C463198ADDE57EBF89887D49C0960A3D",
+      "Hash": "5ED46212B3E07A049BBC4CA66226E687",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
-      "Dependencies": [],
+      "Dependencies": [
+        {
+          "ModuleName": "LambdaSharpRegistrar",
+          "MinVersion": "0.5-WIP"
+        }
+      ],
       "CustomResourceTypes": {},
       "MacroNames": [],
       "ResourceFullNames": {
         "FunctionLogGroup": "Function::LogGroup",
+        "ModuleRole": "Module::Role",
         "ModuleRegistration": "Module::Registration",
-        "ModuleRole": "Module::Role"
+        "FunctionRegistration": "Function::Registration"
       }
     }
   }
