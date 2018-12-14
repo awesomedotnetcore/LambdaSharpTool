@@ -32,6 +32,16 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
 
     public class DeployStep : AModelProcessor {
 
+        //--- Types ---
+        private class DependencyRecord {
+
+            //--- Properties ---
+            public string Owner { get; set; }
+            public ModuleManifest Manifest { get; set; }
+            public ModuleLocation Location { get; set; }
+        }
+
+
         //--- Fields ---
         private ModelManifestLoader _loader;
 
@@ -110,7 +120,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
                             new Dictionary<string, string>(),
                             forceDeploy
                         )) {
-                            break;
+                            return false;
                         }
                     }
                 }
@@ -162,65 +172,81 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
         }
 
         private async Task<IEnumerable<Tuple<ModuleManifest, ModuleLocation>>> DiscoverDependenciesAsync(ModuleManifest manifest) {
+            var deployments = new List<DependencyRecord>();
+            var existing = new List<DependencyRecord>();
+            var inProgress = new List<DependencyRecord>();
 
-            // NOTE (2018-12-11, bjorg): the 'Key' is the name of the module that introduced the dependency, or 'null' if already deployed
-            var dependencies = new List<KeyValuePair<string, ModuleManifestDependency>>(manifest.Dependencies.Select(d => new KeyValuePair<string, ModuleManifestDependency>(manifest.ModuleName, d)));
-            var deployments = new List<Tuple<string, ModuleManifest, ModuleLocation>>();
-            var existing = new List<Tuple<string, ModuleManifest, ModuleLocation>>();
-            while(dependencies.Any()) {
-                var ownedDependency = dependencies[0];
-                var dependency = ownedDependency.Value;
-                dependencies.RemoveAt(0);
+            // create a topological sort of dependencies
+            await Recurse(manifest);
+            return deployments.Select(tuple => Tuple.Create(tuple.Manifest, tuple.Location)).ToList();
 
-                // check if we have already discovered this dependency
-                if(IsDependencyInList(ownedDependency.Key, dependency, existing) || IsDependencyInList(ownedDependency.Key, dependency, deployments))  {
-                    continue;
-                }
+            // local functions
+            async Task Recurse(ModuleManifest current) {
+                foreach(var dependency in current.Dependencies) {
 
-                // check if this dependency needs to be deployed
-                var deployed = await FindExistingDependencyAsync(dependency);
-                if(deployed != null) {
-                    Console.WriteLine($"=> Resolved dependency '{dependency.ModuleName}' to deployed module: {deployed.ToModuleReference()}");
-                    existing.Add(Tuple.Create<string, ModuleManifest, ModuleLocation>(null, null, deployed));
-                } else {
-
-                    // resolve dependencies for dependency module
-                    var dependencyLocation = await _loader.LocateAsync(dependency.ModuleName, dependency.MinVersion, dependency.MaxVersion, dependency.BucketName);
-                    if(dependencyLocation == null) {
-                        Console.WriteLine($"=> Unable to resolve dependency '{dependency.ModuleName}'");
-
-                        // error has already been reported
+                    // check if we have already discovered this dependency
+                    if(IsDependencyInList(current.ModuleName, dependency, existing) || IsDependencyInList(current.ModuleName, dependency, deployments))  {
                         continue;
                     }
-                    Console.WriteLine($"=> Resolved dependency '{dependency.ModuleName}' to module reference: {dependencyLocation.ToModuleReference()}");
 
-                    // load manifest of dependency and add its dependencies
-                    var dependencyManifest = await _loader.LoadFromS3Async(dependencyLocation.BucketName, dependencyLocation.TemplatePath);
-                    if(dependencyManifest == null) {
+                    // check if this dependency needs to be deployed
+                    var deployed = await FindExistingDependencyAsync(dependency);
+                    if(deployed != null) {
+                        existing.Add(new DependencyRecord {
+                            Location = deployed
+                        });
+                    } else if(inProgress.Any(d => d.Manifest.ModuleName == dependency.ModuleName)) {
 
-                        // error has already been reported
-                        continue;
+                        // circular dependency detected
+                        AddError($"circular dependency detected: {string.Join(" -> ", inProgress.Select(d => d.Manifest.ModuleName))}");
+                        return;
+                    } else {
+
+                        // resolve dependencies for dependency module
+                        var dependencyLocation = await _loader.LocateAsync(dependency.ModuleName, dependency.MinVersion, dependency.MaxVersion, dependency.BucketName);
+                        if(dependencyLocation == null) {
+
+                            // error has already been reported
+                            continue;
+                        }
+
+                        // load manifest of dependency and add its dependencies
+                        var dependencyManifest = await _loader.LoadFromS3Async(dependencyLocation.BucketName, dependencyLocation.TemplatePath);
+                        if(dependencyManifest == null) {
+
+                            // error has already been reported
+                            continue;
+                        }
+                        var nestedDependency = new DependencyRecord {
+                            Owner = current.ModuleName,
+                            Manifest = dependencyManifest,
+                            Location = dependencyLocation
+                        };
+
+                        // keep marker for in-progress resolutions so that circular errors can be detected
+                        inProgress.Add(nestedDependency);
+                        await Recurse(dependencyManifest);
+                        inProgress.Remove(nestedDependency);
+
+                        // append dependency now that all nested dependencies have been resolved
+                        Console.WriteLine($"=> Resolved dependency '{dependency.ModuleName}' to module reference: {dependencyLocation}");
+                        deployments.Add(nestedDependency);
                     }
-                    deployments.Add(Tuple.Create(ownedDependency.Key, dependencyManifest, dependencyLocation));
-                    dependencies.AddRange(dependencyManifest.Dependencies.Select(d => new KeyValuePair<string, ModuleManifestDependency>(ownedDependency.Key, d)));
                 }
             }
-
-            // the last discovered deployment is the first one that needs to be deployed
-            return deployments.Select(tuple => Tuple.Create(tuple.Item2, tuple.Item3)).Reverse().ToList();
         }
 
-        private bool IsDependencyInList(string owner, ModuleManifestDependency dependency, IEnumerable<Tuple<string, ModuleManifest, ModuleLocation>> modules) {
-            var deployed = modules.FirstOrDefault(module => module.Item3.ModuleName == dependency.ModuleName);
+        private bool IsDependencyInList(string owner, ModuleManifestDependency dependency, IEnumerable<DependencyRecord> modules) {
+            var deployed = modules.FirstOrDefault(module => module.Location.ModuleName == dependency.ModuleName);
             if(deployed == null) {
                 return false;
             }
-            var deployedOwner = (deployed.Item1 == null)
+            var deployedOwner = (deployed.Owner == null)
                 ? "existing module"
-                : $"module '{deployed.Item1}'";
+                : $"module '{deployed.Owner}'";
 
             // confirm that the dependency version is in a valid range
-            var deployedVersion = deployed.Item3.ModuleVersion;
+            var deployedVersion = deployed.Location.ModuleVersion;
             if((dependency.MaxVersion != null) && (deployedVersion > dependency.MaxVersion)) {
                 AddError($"version conflict for module '{dependency.ModuleName}': module '{owner}' requires max version v{dependency.MaxVersion}, but {deployedOwner} uses v{deployedVersion})");
             }
