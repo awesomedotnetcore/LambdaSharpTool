@@ -173,12 +173,20 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         public static bool HasAttribute(string awsType, string attribute) {
 
-            // special case for 'AWS::CloudFormation::Stack' which has arbitrary attributes starting with "Outputs."
+            // for 'AWS::CloudFormation::Stack', allow attributes starting with "Outputs."
             if((awsType == "AWS::CloudFormation::Stack") && attribute.StartsWith("Outputs.", StringComparison.Ordinal)) {
                 return true;
             }
-            return CloudformationSpec.ResourceTypes.TryGetValue(awsType, out ResourceType resource)
-                && (resource.Attributes?.ContainsKey(attribute) == true);
+
+            // for `Custom::`, allow any attribute
+            if(awsType.StartsWith("Custom::", StringComparison.Ordinal)) {
+                return true;
+            }
+            if(!CloudformationSpec.ResourceTypes.TryGetValue(awsType, out ResourceType resource)) {
+                Console.WriteLine($"WARNING: unable to validate attribute '{attribute}' for resource {awsType}");
+                return true;
+            }
+            return resource.Attributes?.ContainsKey(attribute) == true;
         }
 
         public static bool IsResourceTypeSupported(string awsType) => CloudformationSpec.ResourceTypes.ContainsKey(awsType);

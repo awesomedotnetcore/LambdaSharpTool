@@ -116,6 +116,10 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             string buildConfiguration
         ) {
             switch(Path.GetExtension(function.Project).ToLowerInvariant()) {
+            case "":
+
+                // inline project; nothing to do
+                break;
             case ".csproj":
                 ProcessDotNet(
                     function,

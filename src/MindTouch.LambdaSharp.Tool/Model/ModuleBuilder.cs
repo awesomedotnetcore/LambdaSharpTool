@@ -41,8 +41,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         private readonly string _description;
         private IList<object> _pragmas;
         private IList<object> _secrets;
-        private IDictionary<string, AModuleEntry> _entriesByFullName;
-        private IList<AModuleEntry> _entries;
+        private Dictionary<string, AModuleEntry> _entriesByFullName;
+        private List<AModuleEntry> _entries;
         private IDictionary<string, object> _conditions;
         private IList<AOutput> _outputs;
         private IList<Humidifier.Statement> _resourceStatements = new List<Humidifier.Statement>();
@@ -93,9 +93,28 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         //--- Methods ---
         public AModuleEntry GetEntry(string fullName) => _entriesByFullName[fullName];
+        public AModuleEntry GetEntryByResourceName(string resourceName) => _entries.FirstOrDefault(e => e.ResourceName == resourceName) ?? throw new KeyNotFoundException(resourceName);
         public void AddCondition(string name, object condition) => _conditions.Add(name, condition);
         public void AddPragma(object pragma) => _pragmas.Add(pragma);
         public bool TryGetEntry(string fullName, out AModuleEntry entry) => _entriesByFullName.TryGetValue(fullName, out entry);
+
+        public IEnumerable<AModuleEntry> RemoveEntry(string fullName) {
+            if(TryGetEntry(fullName, out AModuleEntry entry)) {
+
+                // find all nested entries and remove them as well
+                var subEntriesPrefix = entry.FullName + "::";
+                var entriesToRemove = _entries
+                    .Where(e => e.FullName.StartsWith(subEntriesPrefix, StringComparison.Ordinal))
+                    .Append(entry)
+                    .ToList();
+                foreach(var entryToRemove in entriesToRemove) {
+                    _entries.Remove(entryToRemove);
+                    _entriesByFullName.Remove(entryToRemove.FullName);
+                }
+                return entriesToRemove;
+            }
+            return Enumerable.Empty<AModuleEntry>();
+        }
 
         public void AddAsset(string fullName, string asset) {
             _assets.Add(Path.GetRelativePath(Settings.OutputDirectory, asset));
@@ -270,7 +289,24 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             }
 
             // check if a resource-type is associated with the input parameter
-            if(!result.HasAwsType) {
+            if(result.HasSecretType) {
+                var decoder = AddResource(
+                    parent: result,
+                    name: "Plaintext",
+                    description: null,
+                    scope: null,
+                    resource: new Humidifier.CustomResource("Custom::DecryptSecret") {
+                        ["ServiceToken"] = FnGetAtt("Module::DecryptSecretFunction", "Arn"),
+                        ["Ciphertext"] = FnRef(result.FullName)
+                    },
+                    resourceArnAttribute: null,
+                    dependsOn: null,
+                    condition: null,
+                    pragmas: null
+                );
+                decoder.Reference = FnGetAtt(decoder.ResourceName, "Plaintext");
+                decoder.DiscardIfNotReachable = true;
+            } else if(!result.HasAwsType) {
 
                 // nothing to do
             } else if(defaultValue == null) {
@@ -396,25 +432,44 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             if(value == null) {
                 throw new ArgumentNullException(nameof(value));
             }
+            var result = AddEntry(new VariableEntry(parent, name, description, type, scope, reference: null));
 
             // the format for secrets with encryption keys is: SECRET|KEY1=VALUE1|KEY2=VALUE2
-            object reference;
             if(encryptionContext != null) {
-                reference = FnJoin(
+                result.Reference = FnJoin(
                     "|",
                     new object[] {
                         value
-                    }.Union(encryptionContext
-                        ?.Select(kv => $"{Uri.EscapeDataString(kv.Key)}={Uri.EscapeDataString(kv.Value)}")
-                        ?? new string[0]
+                    }.Union(
+                        encryptionContext
+                            ?.Select(kv => $"{kv.Key}={kv.Value}")
+                            ?? new string[0]
                     ).ToArray()
                 );
             } else {
-                reference = (value is IList<object> values)
+                result.Reference = (value is IList<object> values)
                     ? FnJoin(",", values)
                     : value;
             }
-            return AddEntry(new VariableEntry(parent, name, description, type, scope, reference));
+            if(result.HasSecretType) {
+                var decoder = AddResource(
+                    parent: result,
+                    name: "Plaintext",
+                    description: null,
+                    scope: null,
+                    resource: new Humidifier.CustomResource("Custom::DecryptSecret") {
+                        ["ServiceToken"] = FnGetAtt("Module::DecryptSecretFunction", "Arn"),
+                        ["Ciphertext"] = FnRef(result.FullName)
+                    },
+                    resourceArnAttribute: null,
+                    dependsOn: null,
+                    condition: null,
+                    pragmas: null
+                );
+                decoder.Reference = FnGetAtt(decoder.ResourceName, "Plaintext");
+                decoder.DiscardIfNotReachable = true;
+            }
+            return result;
         }
 
         public AModuleEntry AddResource(
@@ -681,7 +736,84 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 description: null,
                 scope: null,
                 resource: new Humidifier.Logs.LogGroup {
-                    LogGroupName = FnSub($"/aws/lambda/${{{function.LogicalId}}}"),
+                    LogGroupName = FnSub($"/aws/lambda/${{{function.ResourceName}}}"),
+
+                    // TODO (2018-09-26, bjorg): make retention configurable
+                    //  see https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutRetentionPolicy.html
+                    RetentionInDays = 7
+                },
+                resourceArnAttribute: null,
+                dependsOn: null,
+                condition: null,
+                pragmas: null
+            );
+            return function;
+        }
+
+        public AModuleEntry AddInlineFunction(
+            AModuleEntry parent,
+            string name,
+            string description,
+            IDictionary<string, object> environment,
+            IList<AFunctionSource> sources,
+            IList<object> pragmas,
+            string timeout,
+            string reservedConcurrency,
+            string memory,
+            object subnets,
+            object securityGroups,
+            string code
+        ) {
+
+            // create inline function entry
+            var function = new FunctionEntry(
+                parent: parent,
+                name: name,
+                description: description,
+                scope: new string[0],
+                project: "",
+                language: "javascript",
+                environment: environment ?? new Dictionary<string, object>(),
+                sources: sources ?? new AFunctionSource[0],
+                pragmas: pragmas ?? new object[0],
+                function: new Humidifier.Lambda.Function {
+
+                    // append version number to function description
+                    Description = (description != null)
+                        ? description.TrimEnd() + $" (v{_version})"
+                        : null,
+                    Timeout = timeout,
+                    Runtime = "nodejs8.10",
+                    ReservedConcurrentExecutions = reservedConcurrency,
+                    MemorySize = memory,
+                    Handler = "index.handler",
+
+                    // create optional VPC configuration
+                    VpcConfig = ((subnets != null) && (securityGroups != null))
+                        ? new Humidifier.Lambda.FunctionTypes.VpcConfig {
+                            SubnetIds = subnets,
+                            SecurityGroupIds = securityGroups
+                        }
+                        : null,
+                    Role = FnGetAtt("Module::Role", "Arn"),
+                    Environment = new Humidifier.Lambda.FunctionTypes.Environment {
+                        Variables = new Dictionary<string, dynamic>()
+                    },
+                    Code = new Humidifier.Lambda.FunctionTypes.Code {
+                        ZipFile = code
+                    }
+                }
+            );
+            AddEntry(function);
+
+            // create function log-group with retention window
+            var logGroup = AddResource(
+                parent: function,
+                name: "LogGroup",
+                description: null,
+                scope: null,
+                resource: new Humidifier.Logs.LogGroup {
+                    LogGroupName = FnSub($"/aws/lambda/${{{function.ResourceName}}}"),
 
                     // TODO (2018-09-26, bjorg): make retention configurable
                     //  see https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutRetentionPolicy.html
@@ -733,14 +865,14 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             _resourceStatements.Add(statement);
         }
 
-        public void VisitAll(Func<object, object> visitor) {
+        public void VisitAll(Func<AModuleEntry, object, object> visitor) {
             if(visitor == null) {
                 throw new ArgumentNullException(nameof(visitor));
             }
 
             // resolve references in secrets
             AtLocation("Secrets", () => {
-                _secrets = (IList<object>)visitor(_secrets);
+                _secrets = (IList<object>)visitor(null, _secrets);
             });
 
             // resolve references in entries
@@ -756,24 +888,24 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                             break;
                         case ResourceEntry resource:
                             AtLocation("Resource", () => {
-                                resource.Resource = (Humidifier.Resource)visitor(resource.Resource);
+                                resource.Resource = (Humidifier.Resource)visitor(entry, resource.Resource);
                             });
                             AtLocation("DependsOn", () => {
 
                                 // TODO (2018-11-29, bjorg): we need to make sure that only other resources are referenced (no literal entries, or itself, no loops either)
                                 for(var i = 0; i < resource.DependsOn.Count; ++i) {
                                     var dependency = resource.DependsOn[i];
-                                    TryGetFnRef(visitor(FnRef(dependency)), out string result);
+                                    TryGetFnRef(visitor(entry, FnRef(dependency)), out string result);
                                     resource.DependsOn[i] = result ?? throw new InvalidOperationException($"invalid expression returned (index: {i})");
                                 }
                             });
                             break;
                         case FunctionEntry function:
                             AtLocation("Environment", () => {
-                                function.Environment = (IDictionary<string, object>)visitor(function.Environment);
+                                function.Environment = (IDictionary<string, object>)visitor(entry, function.Environment);
                             });
                             AtLocation("Function", () => {
-                                function.Function = (Humidifier.Lambda.Function)visitor(function.Function);
+                                function.Function = (Humidifier.Lambda.Function)visitor(entry, function.Function);
                             });
 
                             // update function sources
@@ -784,7 +916,32 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                                         switch(source) {
                                         case AlexaSource alexaSource:
                                             if(alexaSource.EventSourceToken != null) {
-                                                alexaSource.EventSourceToken = visitor(alexaSource.EventSourceToken);
+                                                alexaSource.EventSourceToken = visitor(entry, alexaSource.EventSourceToken);
+                                            }
+                                            break;
+                                        case DynamoDBSource dynamoDBSource:
+                                            if(dynamoDBSource.DynamoDB != null) {
+                                                dynamoDBSource.DynamoDB = visitor(entry, dynamoDBSource.DynamoDB);
+                                            }
+                                            break;
+                                        case KinesisSource kinesisSource:
+                                            if(kinesisSource.Kinesis != null) {
+                                                kinesisSource.Kinesis = visitor(entry, kinesisSource.Kinesis);
+                                            }
+                                            break;
+                                        case TopicSource topicSource:
+                                            if(topicSource.TopicName != null) {
+                                                topicSource.TopicName = visitor(entry, topicSource.TopicName);
+                                            }
+                                            break;
+                                        case S3Source s3Source:
+                                            if(s3Source.Bucket != null) {
+                                                s3Source.Bucket = visitor(entry, s3Source.Bucket);
+                                            }
+                                            break;
+                                        case SqsSource sqsSource:
+                                            if(sqsSource.Queue != null) {
+                                                sqsSource.Queue = visitor(entry, sqsSource.Queue);
                                             }
                                             break;
                                         }
@@ -801,7 +958,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
             // resolve references in conditions
             AtLocation("Conditions", () => {
-                _conditions = (IDictionary<string, object>)visitor(_conditions);
+                _conditions = (IDictionary<string, object>)visitor(null, _conditions);
             });
 
             // resolve references in output values
@@ -811,14 +968,14 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                     case ExportOutput exportOutput:
                         AtLocation(exportOutput.Name, () => {
                             AtLocation("Value", () => {
-                                exportOutput.Value = visitor(exportOutput.Value);
+                                exportOutput.Value = visitor(null, exportOutput.Value);
                             });
                         });
                         break;
                     case CustomResourceHandlerOutput customResourceHandlerOutput:
                         AtLocation(customResourceHandlerOutput.CustomResourceType, () => {
                             AtLocation("Handler", () => {
-                                customResourceHandlerOutput.Handler = visitor(customResourceHandlerOutput.Handler);
+                                customResourceHandlerOutput.Handler = visitor(null, customResourceHandlerOutput.Handler);
                             });
                         });
                         break;
@@ -830,7 +987,9 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
             // resolve references in output values
             AtLocation("ResourceStatements", () => {
-                _resourceStatements = (IList<Humidifier.Statement>)visitor(_resourceStatements);
+
+                // TODO: pass in 'Module::Role' entry?
+                _resourceStatements = (IList<Humidifier.Statement>)visitor(null, _resourceStatements);
             });
         }
 

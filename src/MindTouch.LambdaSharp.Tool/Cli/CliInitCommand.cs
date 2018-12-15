@@ -33,6 +33,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
         //--- Class Methods ---
         private static string ReadResource(string resourceName, IDictionary<string, string> substitutions = null) {
+
+            // TODO (2018-12-14, bjorg): multiple copies of this code
             string result;
             var assembly = typeof(CliNewCommand).Assembly;
             using(var resource = assembly.GetManifestResourceStream($"MindTouch.LambdaSharp.Tool.Resources.{resourceName}"))

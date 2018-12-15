@@ -234,10 +234,7 @@ namespace MindTouch.LambdaSharp {
                             if(pair.Length != 2) {
                                 continue;
                             }
-                            encryptionContext.Add(
-                                Uri.UnescapeDataString(pair[0]),
-                                Uri.UnescapeDataString(pair[1])
-                            );
+                            encryptionContext.Add(pair[0], pair[1]);
                         }
                     }
 

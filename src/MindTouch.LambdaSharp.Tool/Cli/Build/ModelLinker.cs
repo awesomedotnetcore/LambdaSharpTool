@@ -148,7 +148,12 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             }
 
             // resolve all references
-            builder.VisitAll(item => Substitute(item, ReportMissingReference));
+            builder.VisitAll((_, item) => Substitute(item, ReportMissingReference));
+
+            // remove any optional entries that are unreachable
+            DiscardUnreachableEntries(builder);
+
+            // replace all references with their logical IDs
             builder.VisitAll(Finalize);
 
             // local functions
@@ -228,7 +233,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 if(_boundEntries.ContainsKey(missingName)) {
                     AddError($"circular !Ref dependency on '{missingName}'");
                 } else {
-                    AddError($"could not find !Ref dependency '{missingName}'");
+                    AddError($"could not find !Ref '{missingName}'");
                 }
             }
         }
@@ -306,22 +311,12 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 // check if the requested key can be resolved using a free entry
                 if(_freeEntries.TryGetValue(key, out AModuleEntry freeEntry)) {
                     if(attribute != null) {
-                        switch(freeEntry) {
-                        case PackageEntry _:
-                        case InputEntry _:
-                        case VariableEntry _:
-                            AddError($"reference '{key}' must be a reference, resource, or function when using Fn::GetAtt");
-                            break;
-                        case FunctionEntry _:
-                        case ResourceEntry _:
-                            if(!freeEntry.HasPragma("skip-type-validation") && !ResourceMapping.HasAttribute(freeEntry.Type, attribute)) {
-                                AddError($"resource type {freeEntry.Type} does not have attribute '{attribute}'");
-                            }
-
-                            // attributes can be used with managed resources/functions
-                            found = FnGetAtt(freeEntry.ResourceName, attribute);
-                            break;
+                        if(!freeEntry.HasPragma("skip-type-validation") && !freeEntry.HasAttribute(attribute)) {
+                            AddError($"entry '{freeEntry.FullName}' of type '{freeEntry.Type}' does not have attribute '{attribute}'");
                         }
+
+                        // attributes can be used with managed resources/functions
+                        found = FnGetAtt(freeEntry.ResourceName, attribute);
                     } else {
                         found = freeEntry.Reference;
                     }
@@ -331,7 +326,77 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             }
         }
 
-        private object Finalize(object root) {
+        private void DiscardUnreachableEntries(ModuleBuilder builder) {
+            HashSet<string> unreachableFullNames;
+            while(true) {
+
+                // collect all potentially deletable entries
+                unreachableFullNames = new HashSet<string>(
+                    builder.Entries
+                        .Where(entry => entry.DiscardIfNotReachable)
+                        .Select(entry => entry.FullName)
+                );
+                builder.VisitAll(Reachable);
+
+                // stop if no unreachable entries were found
+                if(!unreachableFullNames.Any()) {
+                    return;
+                }
+
+                // remove unreachable entries
+                foreach(var unreachableFullName in unreachableFullNames) {
+                    var discardedEntries = builder.RemoveEntry(unreachableFullName);
+                    foreach(var discardedEntry in discardedEntries) {
+                        Console.WriteLine("DISCARDED: " + discardedEntry.FullName);
+                    }
+                }
+            }
+
+            // local functions
+            object Reachable(AModuleEntry entry, object root) {
+                return Visit(root, value => {
+
+                    // handle !Ref expression
+                    if(TryGetFnRef(value, out string refKey) && refKey.StartsWith("@", StringComparison.Ordinal)) {
+                        MarkReachableReference(refKey);
+                        return value;
+                    }
+
+                    // handle !GetAtt expression
+                    if(TryGetFnGetAtt(value, out string getAttKey, out string getAttAttribute) && getAttKey.StartsWith("@", StringComparison.Ordinal)) {
+                        MarkReachableReference(getAttKey);
+                        return value;
+                    }
+
+                    // handle !Sub expression
+                    if(TryGetFnSub(value, out string subPattern, out IDictionary<string, object> subArgs)) {
+
+                        // replace as many ${VAR} occurrences as possible
+                        subPattern = ReplaceSubPattern(subPattern, (subRefKey, suffix) => {
+                            if(!subArgs.ContainsKey(subRefKey) && subRefKey.StartsWith("@", StringComparison.Ordinal)) {
+                                MarkReachableReference(subRefKey);
+                                return "${" + subRefKey.Substring(1) + suffix + "}";
+                            }
+                            return null;
+                        });
+                        return value;
+                    }
+                    return value;
+                });
+
+                // local functions
+                void MarkReachableReference(string refKey) {
+                    var refEntry = builder.GetEntryByResourceName(refKey);
+
+                    // only track references to resources that are not a parent resource
+                    if((entry == null) || !entry.FullName.StartsWith(refEntry.FullName + "::", StringComparison.Ordinal)) {
+                        unreachableFullNames.Remove(refEntry.FullName);
+                    }
+                }
+            }
+        }
+
+        private object Finalize(AModuleEntry entry, object root) {
             return Visit(root, value => {
 
                 // handle !Ref expression
@@ -404,15 +469,20 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     // use reflection to substitute properties
                     foreach(var property in value.GetType().GetProperties().Where(p => !SkipType(p.PropertyType))) {
                         AtLocation(property.Name, () => {
+                            object propertyValue;
                             try {
-                                var propertyValue = property.GetGetMethod()?.Invoke(value, new object[0]);
-                                if((propertyValue != null) && !SkipType(propertyValue.GetType())) {
-                                    property.GetSetMethod()?.Invoke(value, new[] {
-                                        Visit(propertyValue, visitor)
-                                    });
-                                }
+                                propertyValue = property.GetGetMethod()?.Invoke(value, new object[0]);
                             } catch(Exception e) {
-                                throw new ApplicationException($"unable to get/set {value.GetType()}::{property.Name}", e);
+                                throw new ApplicationException($"unable to get {value.GetType()}::{property.Name}", e);
+                            }
+                            if((propertyValue == null) || SkipType(propertyValue.GetType())) {
+                                return;
+                            }
+                            propertyValue = Visit(propertyValue, visitor);
+                            try {
+                                property.GetSetMethod()?.Invoke(value, new[] { propertyValue });
+                            } catch(Exception e) {
+                                throw new ApplicationException($"unable to set {value.GetType()}::{property.Name}", e);
                             }
                         });
                     }

@@ -23,6 +23,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
+using System.Text;
 using MindTouch.LambdaSharp.Tool.Internal;
 using MindTouch.LambdaSharp.Tool.Model;
 using MindTouch.LambdaSharp.Tool.Model.AST;
@@ -32,6 +34,18 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
     using static ModelFunctions;
 
     public class ModelModuleInitializer : AModelProcessor {
+
+        //--- Class Fields ---
+        private static readonly string DecryptSecretFunctionCode;
+
+        //--- Class Constructor ---
+        static ModelModuleInitializer() {
+            var assembly = typeof(ModelModuleInitializer).Assembly;
+            using(var resource = assembly.GetManifestResourceStream($"MindTouch.LambdaSharp.Tool.Resources.DecryptSecretFunction.js"))
+            using(var reader = new StreamReader(resource, Encoding.UTF8)) {
+                DecryptSecretFunctionCode = reader.ReadToEnd().Replace("\r", "");
+            }
+        }
 
         //--- Fields ---
         private ModuleBuilder _builder;
@@ -271,6 +285,23 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 }
             );
 
+            // add decryption function for secret parameters and values
+            var decryptSecretFunction = _builder.AddInlineFunction(
+                parent: moduleEntry,
+                name: "DecryptSecretFunction",
+                description: "Module secret decryption function",
+                environment: null,
+                sources: null,
+                pragmas: null,
+                timeout: "30",
+                reservedConcurrency: null,
+                memory: "128",
+                subnets: null,
+                securityGroups: null,
+                code: DecryptSecretFunctionCode
+            );
+            decryptSecretFunction.DiscardIfNotReachable = true;
+
             // add LambdaSharp Deployment Settings
             section = "LambdaSharp Deployment Settings (DO NOT MODIFY)";
             _builder.AddParameter(
@@ -390,66 +421,63 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             );
 
             // create module IAM role used by all functions
-            var functions = _builder.Entries.OfType<FunctionEntry>().ToList();
-            if(functions.Any()) {
-
-                // check if lambdasharp specific resources need to be initialized
-                if(_builder.HasLambdaSharpDependencies) {
-                    foreach(var function in functions) {
-
-                        // initialize dead-letter queue
-                        function.Function.DeadLetterConfig = new Humidifier.Lambda.FunctionTypes.DeadLetterConfig {
-                            TargetArn = FnRef("Module::DeadLetterQueueArn")
-                        };
-                    }
-                }
-
-                // create module role
-                _builder.AddResource(
-                    parent: moduleEntry,
-                    name: "Role",
-                    description: null,
-                    scope: null,
-                    resource: new Humidifier.IAM.Role {
-                        AssumeRolePolicyDocument = new Humidifier.PolicyDocument {
-                            Version = "2012-10-17",
-                            Statement = new[] {
-                                new Humidifier.Statement {
-                                    Sid = "ModuleLambdaInvocation",
-                                    Effect = "Allow",
-                                    Principal = new Humidifier.Principal {
-                                        Service = "lambda.amazonaws.com"
-                                    },
-                                    Action = "sts:AssumeRole"
-                                }
-                            }.ToList()
-                        },
-                        Policies = new[] {
-                            new Humidifier.IAM.Policy {
-                                PolicyName = FnSub("${AWS::StackName}ModulePolicy"),
-                                PolicyDocument = new Humidifier.PolicyDocument {
-                                    Version = "2012-10-17",
-                                    Statement = new List<Humidifier.Statement>()
-                                }
+            var moduleRole = _builder.AddResource(
+                parent: moduleEntry,
+                name: "Role",
+                description: null,
+                scope: null,
+                resource: new Humidifier.IAM.Role {
+                    AssumeRolePolicyDocument = new Humidifier.PolicyDocument {
+                        Version = "2012-10-17",
+                        Statement = new[] {
+                            new Humidifier.Statement {
+                                Sid = "ModuleLambdaInvocation",
+                                Effect = "Allow",
+                                Principal = new Humidifier.Principal {
+                                    Service = "lambda.amazonaws.com"
+                                },
+                                Action = "sts:AssumeRole"
                             }
                         }.ToList()
                     },
-                    resourceArnAttribute: null,
-                    dependsOn: null,
-                    condition: null,
-                    pragmas: null
-                );
+                    Policies = new[] {
+                        new Humidifier.IAM.Policy {
+                            PolicyName = FnSub("${AWS::StackName}ModulePolicy"),
+                            PolicyDocument = new Humidifier.PolicyDocument {
+                                Version = "2012-10-17",
+                                Statement = new List<Humidifier.Statement>()
+                            }
+                        }
+                    }.ToList()
+                },
+                resourceArnAttribute: null,
+                dependsOn: null,
+                condition: null,
+                pragmas: null
+            );
+            moduleRole.DiscardIfNotReachable = true;
 
-                // permission needed for writing to log streams (but not for creating log groups!)
-                _builder.AddGrant(
-                    sid: "ModuleLogStreamAccess",
-                    awsType: null,
-                    reference: "arn:aws:logs:*:*:*",
-                    allow: new[] {
-                        "logs:CreateLogStream",
-                        "logs:PutLogEvents"
-                    }
-                );
+            // permission needed for writing to log streams (but not for creating log groups!)
+            _builder.AddGrant(
+                sid: "ModuleLogStreamAccess",
+                awsType: null,
+                reference: "arn:aws:logs:*:*:*",
+                allow: new[] {
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                }
+            );
+            var functions = _builder.Entries.OfType<FunctionEntry>().ToList();
+
+            // check if lambdasharp specific resources need to be initialized
+            if(_builder.HasLambdaSharpDependencies) {
+                foreach(var function in functions) {
+
+                    // initialize dead-letter queue
+                    function.Function.DeadLetterConfig = new Humidifier.Lambda.FunctionTypes.DeadLetterConfig {
+                        TargetArn = FnRef("Module::DeadLetterQueueArn")
+                    };
+                }
             }
 
             // permissions needed for lambda functions to exist in a VPC
@@ -558,7 +586,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                                 ["ModuleId"] = FnRef("AWS::StackName"),
                                 ["FunctionId"] = FnRef(function.ResourceName),
                                 ["FunctionName"] = function.Name,
-                                ["FunctionLogGroupName"] = FnSub($"/aws/lambda/${{{function.LogicalId}}}"),
+                                ["FunctionLogGroupName"] = FnSub($"/aws/lambda/${{{function.ResourceName}}}"),
                                 ["FunctionPlatform"] = "AWS Lambda",
                                 ["FunctionFramework"] = function.Function.Runtime,
                                 ["FunctionLanguage"] = function.Language,

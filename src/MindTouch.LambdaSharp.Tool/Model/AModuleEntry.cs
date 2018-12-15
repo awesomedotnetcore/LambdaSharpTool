@@ -66,11 +66,13 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public string Type { get; }
         public IList<string> Scope { get; set; }
         public object Reference { get; set; }
+        public bool DiscardIfNotReachable { get; set; }
         public bool HasSecretType => Type == "Secret";
         public bool HasAwsType => Type.StartsWith("AWS::", StringComparison.Ordinal);
 
         //--- Abstract Methods ---
-        public abstract object GetExportReference();
+        public virtual object GetExportReference() => Reference;
+        public virtual bool HasAttribute(string attribute) => false;
 
         //--- Methods ---
         public virtual bool HasPragma(string pragma) => false;
@@ -87,9 +89,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             IList<string> scope,
             object reference
         ) : base(parent, name, description, type, scope, reference) { }
-
-        //--- Methods ---
-        public override object GetExportReference() => Reference;
     }
 
     public class PackageEntry : AModuleEntry {
@@ -108,9 +107,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         //--- Properties ---
         public string SourceFilepath { get; set; }
         public string PackagePath { get; private set; }
-
-        //--- Methods ---
-        public override object GetExportReference() => Reference;
     }
 
     public class InputEntry : AModuleEntry {
@@ -136,9 +132,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public string Section { get; }
         public string Label { get; }
         public Humidifier.Parameter Parameter { get; }
-
-        //--- Methods ---
-        public override object GetExportReference() => Reference;
     }
 
     public abstract class AResourceEntry : AModuleEntry {
@@ -152,6 +145,9 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             IList<string> scope,
             object reference
         ) : base(parent, name, description, type, scope, reference) { }
+
+        //--- Methods ---
+        public override bool HasAttribute(string attribute) => ResourceMapping.HasAttribute(Type, attribute);
     }
 
     public class ResourceEntry : AResourceEntry {
@@ -186,7 +182,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public override object GetExportReference()
             => (ResourceArnAttribute != null)
                 ? FnGetAtt(ResourceName, ResourceArnAttribute)
-                : ResourceMapping.HasAttribute(Resource.AWSTypeName, "Arn")
+                : HasAttribute("Arn")
                 ? FnGetAtt(ResourceName, "Arn")
                 : FnRef(ResourceName);
 
@@ -229,23 +225,5 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public override object GetExportReference() => FnGetAtt(ResourceName, "Arn");
 
         public override bool HasPragma(string pragma) => Pragmas.Contains(pragma);
-   }
-
-    public class ModuleReferenceEntry : AModuleEntry {
-
-        //--- Constructors ---
-        public ModuleReferenceEntry(
-            AModuleEntry parent,
-            string name,
-            string description,
-            string type,
-            IList<string> scope,
-            object reference
-        ) : base(null, name, description, "String", new string[0], "") { }
-
-        //--- Methods ---
-        public override object GetExportReference() {
-            throw new NotImplementedException();
-        }
     }
 }
