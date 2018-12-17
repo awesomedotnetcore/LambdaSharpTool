@@ -60,7 +60,13 @@ if [ -z "$1" ]; then
     lash Variables
     lash Source-DynamoDB
     lash Source-Kinesis
-    lash Inputs
+    lash Parameter-String
+    lash Parameter-Resource
+    lash Parameter-ConditionalResource
+    lash Parameter-Secret
+    lash Import-String
+    lash Import-Resource
+    lash Import-Secret
     lash Output-LiteralValue
     lash Output-Variable
     lash Output-Resource
@@ -69,7 +75,6 @@ if [ -z "$1" ]; then
     lash Output-Macro
     lash Package
     lash NestedModule
-    lash Parameter-Secret
     lash Variable-Secret
     lash Function-Finalizer
 else

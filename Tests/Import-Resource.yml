@@ -1,0 +1,18 @@
+Module: TestModule
+Description: LambdaSharp CloudFormation Test
+Entries:
+
+  - Import: OtherModule
+    Description: Cross-Module References
+    Entries:
+
+      - Parameter: Resource
+        Scope: "*"
+        Type: AWS::DynamoDB::Table
+        Allow: ReadOnly
+
+  - Function: Function
+    Description: My function
+    Memory: 128
+    Timeout: 30
+

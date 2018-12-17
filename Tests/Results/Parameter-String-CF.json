@@ -11,37 +11,6 @@
       "Description": "input parameter with a default value",
       "Default": "a default value"
     },
-    "SecretInputParameter": {
-      "Type": "String",
-      "Description": "encrypted input parameter"
-    },
-    "OtherModuleExportValue": {
-      "Type": "String",
-      "Description": "cross-module import reference",
-      "AllowedPattern": "^.+$",
-      "ConstraintDescription": "must either be a cross-module import reference or a non-empty value",
-      "Default": "$OtherModule::ExportValue"
-    },
-    "OtherModuleExportSecret": {
-      "Type": "String",
-      "Description": "cross-module import reference",
-      "AllowedPattern": "^.+$",
-      "ConstraintDescription": "must either be a cross-module import reference or a non-empty value",
-      "Default": "$OtherModule::ExportSecret"
-    },
-    "OtherModuleExportResource": {
-      "Type": "String",
-      "AllowedPattern": "^.+$",
-      "ConstraintDescription": "must either be a cross-module import reference or a non-empty value",
-      "Default": "$OtherModule::ExportResource"
-    },
-    "ResourceInputParameter": {
-      "Type": "String"
-    },
-    "ResourceInputParameterOrCreate": {
-      "Type": "String",
-      "Default": ""
-    },
     "Secrets": {
       "Type": "String",
       "Description": "Comma-separated list of optional secret keys",
@@ -88,15 +57,10 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "205527C95FF87C0428E75493083A3783"
+      "Default": "6A120EC97E7826AE589DACCB49A13907"
     }
   },
   "Resources": {
-    "ResourceInputParameterOrCreateResource": {
-      "Type": "AWS::SNS::Topic",
-      "Condition": "ResourceInputParameterOrCreateCreated",
-      "Properties": {}
-    },
     "Function": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
@@ -104,7 +68,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "Modules/TestModule/Assets/Function-NOCOMPILE.zip"
+          "S3Key": "Modules/TestModule/Assets/Function-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -208,152 +172,12 @@
                 }
               ]
             },
-            "SEC_OTHERMODULE_EXPORTSECRET": {
-              "Fn::If": [
-                "OtherModuleExportSecretImported",
-                {
-                  "Fn::ImportValue": {
-                    "Fn::Sub": [
-                      "${DeploymentPrefix}${Import}",
-                      {
-                        "Import": {
-                          "Fn::Select": [
-                            "1",
-                            {
-                              "Fn::Split": [
-                                "$",
-                                {
-                                  "Ref": "OtherModuleExportSecret"
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      }
-                    ]
-                  }
-                },
-                {
-                  "Ref": "OtherModuleExportSecret"
-                }
-              ]
-            },
-            "STR_OTHERMODULE_EXPORTRESOURCE": {
-              "Fn::If": [
-                "OtherModuleExportResourceImported",
-                {
-                  "Fn::ImportValue": {
-                    "Fn::Sub": [
-                      "${DeploymentPrefix}${Import}",
-                      {
-                        "Import": {
-                          "Fn::Select": [
-                            "1",
-                            {
-                              "Fn::Split": [
-                                "$",
-                                {
-                                  "Ref": "OtherModuleExportResource"
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      }
-                    ]
-                  }
-                },
-                {
-                  "Ref": "OtherModuleExportResource"
-                }
-              ]
-            },
-            "STR_RESOURCEINPUTPARAMETER": {
-              "Ref": "ResourceInputParameter"
-            },
-            "STR_RESOURCEINPUTPARAMETERORCREATE": {
-              "Fn::If": [
-                "ResourceInputParameterOrCreateCreated",
-                {
-                  "Ref": "ResourceInputParameterOrCreateResource"
-                },
-                {
-                  "Ref": "ResourceInputParameterOrCreate"
-                }
-              ]
-            },
-            "STR_INPUT": {
+            "STR_INPUTPARAMETER": {
               "Ref": "InputParameter"
-            },
-            "STR_INPUTWITHDEFAULT": {
-              "Ref": "InputParameterWithDefault"
-            },
-            "STR_SECRETINPUT": {
-              "Ref": "SecretInputParameter"
-            },
-            "STR_IMPORTEDINPUT": {
-              "Fn::If": [
-                "OtherModuleExportValueImported",
-                {
-                  "Fn::ImportValue": {
-                    "Fn::Sub": [
-                      "${DeploymentPrefix}${Import}",
-                      {
-                        "Import": {
-                          "Fn::Select": [
-                            "1",
-                            {
-                              "Fn::Split": [
-                                "$",
-                                {
-                                  "Ref": "OtherModuleExportValue"
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      }
-                    ]
-                  }
-                },
-                {
-                  "Ref": "OtherModuleExportValue"
-                }
-              ]
-            },
-            "STR_HIDDENIMPORTPARAMETER": {
-              "Fn::If": [
-                "LambdaSharpLoggingStreamArnImported",
-                {
-                  "Fn::ImportValue": {
-                    "Fn::Sub": [
-                      "${DeploymentPrefix}${Import}",
-                      {
-                        "Import": {
-                          "Fn::Select": [
-                            "1",
-                            {
-                              "Fn::Split": [
-                                "$",
-                                {
-                                  "Ref": "LambdaSharpLoggingStreamArn"
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      }
-                    ]
-                  }
-                },
-                {
-                  "Ref": "LambdaSharpLoggingStreamArn"
-                }
-              ]
             }
           }
         },
-        "Handler": "TestModule.Function::MindTouch.LambdaSharpTestModule.Function.Function::FunctionHandlerAsync",
+        "Handler": "Function::MindTouch.LambdaSharpTestModule.Function.Function::FunctionHandlerAsync",
         "MemorySize": "128",
         "Role": {
           "Fn::GetAtt": [
@@ -395,176 +219,6 @@
             "PolicyDocument": {
               "Version": "2012-10-17",
               "Statement": [
-                {
-                  "Sid": "OtherModuleExportResource",
-                  "Effect": "Allow",
-                  "Action": [
-                    "dynamodb:BatchGetItem",
-                    "dynamodb:DescribeStream",
-                    "dynamodb:DescribeTable",
-                    "dynamodb:GetItem",
-                    "dynamodb:GetRecords",
-                    "dynamodb:GetShardIterator",
-                    "dynamodb:Query",
-                    "dynamodb:Scan"
-                  ],
-                  "Resource": [
-                    {
-                      "Fn::If": [
-                        "OtherModuleExportResourceImported",
-                        {
-                          "Fn::ImportValue": {
-                            "Fn::Sub": [
-                              "${DeploymentPrefix}${Import}",
-                              {
-                                "Import": {
-                                  "Fn::Select": [
-                                    "1",
-                                    {
-                                      "Fn::Split": [
-                                        "$",
-                                        {
-                                          "Ref": "OtherModuleExportResource"
-                                        }
-                                      ]
-                                    }
-                                  ]
-                                }
-                              }
-                            ]
-                          }
-                        },
-                        {
-                          "Ref": "OtherModuleExportResource"
-                        }
-                      ]
-                    },
-                    {
-                      "Fn::Join": [
-                        "/",
-                        [
-                          {
-                            "Fn::If": [
-                              "OtherModuleExportResourceImported",
-                              {
-                                "Fn::ImportValue": {
-                                  "Fn::Sub": [
-                                    "${DeploymentPrefix}${Import}",
-                                    {
-                                      "Import": {
-                                        "Fn::Select": [
-                                          "1",
-                                          {
-                                            "Fn::Split": [
-                                              "$",
-                                              {
-                                                "Ref": "OtherModuleExportResource"
-                                              }
-                                            ]
-                                          }
-                                        ]
-                                      }
-                                    }
-                                  ]
-                                }
-                              },
-                              {
-                                "Ref": "OtherModuleExportResource"
-                              }
-                            ]
-                          },
-                          "stream/*"
-                        ]
-                      ]
-                    },
-                    {
-                      "Fn::Join": [
-                        "/",
-                        [
-                          {
-                            "Fn::If": [
-                              "OtherModuleExportResourceImported",
-                              {
-                                "Fn::ImportValue": {
-                                  "Fn::Sub": [
-                                    "${DeploymentPrefix}${Import}",
-                                    {
-                                      "Import": {
-                                        "Fn::Select": [
-                                          "1",
-                                          {
-                                            "Fn::Split": [
-                                              "$",
-                                              {
-                                                "Ref": "OtherModuleExportResource"
-                                              }
-                                            ]
-                                          }
-                                        ]
-                                      }
-                                    }
-                                  ]
-                                }
-                              },
-                              {
-                                "Ref": "OtherModuleExportResource"
-                              }
-                            ]
-                          },
-                          "index/*"
-                        ]
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "Sid": "ResourceInputParameter",
-                  "Effect": "Allow",
-                  "Action": [
-                    "s3:GetObject",
-                    "s3:GetObjectAcl",
-                    "s3:GetObjectTagging",
-                    "s3:GetObjectTorrent",
-                    "s3:GetObjectVersion",
-                    "s3:GetObjectVersionAcl",
-                    "s3:GetObjectVersionTagging",
-                    "s3:GetObjectVersionTorrent"
-                  ],
-                  "Resource": [
-                    {
-                      "Ref": "ResourceInputParameter"
-                    },
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          {
-                            "Ref": "ResourceInputParameter"
-                          },
-                          "/*"
-                        ]
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "Sid": "ResourceInputParameterOrCreateResource",
-                  "Effect": "Allow",
-                  "Action": [
-                    "sns:Publish"
-                  ],
-                  "Resource": {
-                    "Fn::If": [
-                      "ResourceInputParameterOrCreateCreated",
-                      {
-                        "Ref": "ResourceInputParameterOrCreateResource"
-                      },
-                      {
-                        "Ref": "ResourceInputParameterOrCreate"
-                      }
-                    ]
-                  }
-                },
                 {
                   "Sid": "ModuleDeadLetterQueueLogging",
                   "Effect": "Allow",
@@ -875,116 +529,6 @@
     }
   },
   "Conditions": {
-    "OtherModuleExportValueImported": {
-      "Fn::And": [
-        {
-          "Fn::Not": [
-            {
-              "Fn::Equals": [
-                {
-                  "Ref": "OtherModuleExportValue"
-                },
-                ""
-              ]
-            }
-          ]
-        },
-        {
-          "Fn::Equals": [
-            {
-              "Fn::Select": [
-                "0",
-                {
-                  "Fn::Split": [
-                    "$",
-                    {
-                      "Ref": "OtherModuleExportValue"
-                    }
-                  ]
-                }
-              ]
-            },
-            ""
-          ]
-        }
-      ]
-    },
-    "OtherModuleExportSecretImported": {
-      "Fn::And": [
-        {
-          "Fn::Not": [
-            {
-              "Fn::Equals": [
-                {
-                  "Ref": "OtherModuleExportSecret"
-                },
-                ""
-              ]
-            }
-          ]
-        },
-        {
-          "Fn::Equals": [
-            {
-              "Fn::Select": [
-                "0",
-                {
-                  "Fn::Split": [
-                    "$",
-                    {
-                      "Ref": "OtherModuleExportSecret"
-                    }
-                  ]
-                }
-              ]
-            },
-            ""
-          ]
-        }
-      ]
-    },
-    "OtherModuleExportResourceImported": {
-      "Fn::And": [
-        {
-          "Fn::Not": [
-            {
-              "Fn::Equals": [
-                {
-                  "Ref": "OtherModuleExportResource"
-                },
-                ""
-              ]
-            }
-          ]
-        },
-        {
-          "Fn::Equals": [
-            {
-              "Fn::Select": [
-                "0",
-                {
-                  "Fn::Split": [
-                    "$",
-                    {
-                      "Ref": "OtherModuleExportResource"
-                    }
-                  ]
-                }
-              ]
-            },
-            ""
-          ]
-        }
-      ]
-    },
-    "ResourceInputParameterOrCreateCreated": {
-      "Fn::Equals": [
-        {
-          "Ref": "ResourceInputParameterOrCreate"
-        },
-        ""
-      ]
-    },
     "SecretsIsEmpty": {
       "Fn::Equals": [
         {
@@ -1105,24 +649,6 @@
         "InputParameterWithDefault": {
           "default": "Input Parameter With Default"
         },
-        "SecretInputParameter": {
-          "default": "Secret Input Parameter"
-        },
-        "OtherModuleExportValue": {
-          "default": "Export Value"
-        },
-        "OtherModuleExportSecret": {
-          "default": "Export Secret"
-        },
-        "OtherModuleExportResource": {
-          "default": "Export Resource"
-        },
-        "ResourceInputParameter": {
-          "default": "Resource Input Parameter"
-        },
-        "ResourceInputParameterOrCreate": {
-          "default": "Resource Input Parameter Or Create"
-        },
         "Secrets": {
           "default": "Secret Keys (ARNs)"
         },
@@ -1158,27 +684,7 @@
           },
           "Parameters": [
             "InputParameter",
-            "InputParameterWithDefault",
-            "SecretInputParameter"
-          ]
-        },
-        {
-          "Label": {
-            "default": "Cross-Module References"
-          },
-          "Parameters": [
-            "OtherModuleExportValue",
-            "OtherModuleExportSecret",
-            "OtherModuleExportResource"
-          ]
-        },
-        {
-          "Label": {
-            "default": "Resource Input Parameters"
-          },
-          "Parameters": [
-            "ResourceInputParameter",
-            "ResourceInputParameterOrCreate"
+            "InputParameterWithDefault"
           ]
         },
         {
@@ -1214,11 +720,11 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2018-12-14",
+      "Version": "2018-12-17",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
       "RuntimeCheck": true,
-      "Hash": "205527C95FF87C0428E75493083A3783",
+      "Hash": "6A120EC97E7826AE589DACCB49A13907",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [
@@ -1229,14 +735,17 @@
       ],
       "CustomResourceTypes": {},
       "MacroNames": [],
-      "ResourceFullNames": {
-        "ResourceInputParameterOrCreateResource": "ResourceInputParameterOrCreate::Resource",
+      "ResourceNameMappings": {
         "FunctionLogGroup": "Function::LogGroup",
         "ModuleRole": "Module::Role",
         "ModuleRegistration": "Module::Registration",
         "ModuleCloudWatchLogsRole": "Module::CloudWatchLogsRole",
         "FunctionRegistration": "Function::Registration",
         "FunctionLogGroupSubscription": "Function::LogGroupSubscription"
+      },
+      "CustomResourceNameMappings": {
+        "Custom::LambdaSharpRegisterModule": "LambdaSharp::Register::Module",
+        "Custom::LambdaSharpRegisterFunction": "LambdaSharp::Register::Function"
       }
     }
   }
