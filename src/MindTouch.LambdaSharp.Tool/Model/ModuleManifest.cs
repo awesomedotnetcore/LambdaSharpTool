@@ -29,7 +29,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
     public class ModuleManifest {
 
         //--- Constants ---
-        public const string CurrentVersion = "2018-12-14";
+        public const string CurrentVersion = "2018-12-17";
 
         //--- Properties ---
         public string Version { get; set; } = CurrentVersion;
@@ -42,7 +42,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public IList<ModuleManifestDependency> Dependencies { get; set; }
         public IDictionary<string, ModuleManifestCustomResource> CustomResourceTypes { get; set; }
         public IList<string> MacroNames { get; set; }
-        public IDictionary<string, string> ResourceFullNames { get; set; }
+        public IDictionary<string, string> ResourceNameMappings { get; set; }
+        public IDictionary<string, string> CustomResourceNameMappings { get; set; }
     }
 
     public class ModuleManifestCustomResource {

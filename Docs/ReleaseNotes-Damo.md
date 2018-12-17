@@ -11,7 +11,7 @@ In addition, λ# 0.4 _Damo_ introduces a new module composition model that makes
 Finally, λ# 0.4 _Damo_ introduces a new core service--the `λ# Registrar`--that is responsible for registering modules and processing the CloudWatch Logs of their deployed Lambda functions. By monitoring the logs, `λ# Registrar` can automatically detect and report out-of-memory and timeout failures. As an extra bonus, `λ# Registrar` can optionally be integrated with [Rollbar](http://rollbar.com) to create projects per module to track their warnings and errors.
 
 __Topics__
-1. [Break Changes](#breaking-changes)
+1. [Breaking Changes](#breaking-changes)
 1. [New λ# CLI Features](#new-λ-cli-features)
 1. [New λ# Module Features](#new-λ-module-features)
 1. [New λ# Runtime Features](#new-λ-runtime-features)

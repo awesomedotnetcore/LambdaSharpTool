@@ -36,7 +36,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Publish {
         public PublishStep(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
 
         //--- Methods---
-        public async Task<string> DoAsync(string cloudformationFile) {
+        public async Task<string> DoAsync(string cloudformationFile, bool forcePublish) {
 
             // make sure there is a deployment bucket
             if(Settings.DeploymentBucketName == null) {
@@ -57,7 +57,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Publish {
             }
 
             // publish module
-            return await new ModelPublisher(Settings, cloudformationFile).PublishAsync(manifest);
+            return await new ModelPublisher(Settings, cloudformationFile).PublishAsync(manifest, forcePublish);
         }
     }
 }

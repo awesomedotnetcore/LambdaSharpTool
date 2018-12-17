@@ -37,6 +37,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Publish {
         //--- Fields ---
         private readonly TransferUtility _transferUtility;
         private bool _changesDetected;
+        private bool _forcePublish;
 
         //--- Constructors ---
         public ModelPublisher(Settings settings, string sourceFilename) : base(settings, sourceFilename) {
@@ -44,8 +45,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Publish {
         }
 
         //--- Methods ---
-        public async Task<string> PublishAsync(ModuleManifest manifest) {
+        public async Task<string> PublishAsync(ModuleManifest manifest, bool forcePublish) {
             Console.WriteLine($"Publishing module: {manifest.ModuleName}");
+            _forcePublish = forcePublish;
             _changesDetected = false;
 
             // verify that all files referenced by manifest exist
@@ -95,7 +97,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Publish {
 
             // upload minified json
             var key = $"Modules/{manifest.ModuleName}/Assets/cloudformation_v{manifest.ModuleVersion}_{manifest.Hash}.json";
-            if(!await S3ObjectExistsAsync(key)) {
+            if(_forcePublish || !await S3ObjectExistsAsync(key)) {
                 Console.WriteLine($"=> Uploading {description}: s3://{Settings.DeploymentBucketName}/{key}");
                 await Settings.S3Client.PutObjectAsync(new PutObjectRequest {
                     BucketName = Settings.DeploymentBucketName,
@@ -113,7 +115,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Publish {
             var key = $"Modules/{manifest.ModuleName}/Assets/{Path.GetFileName(filePath)}";
 
             // only upload files that don't exist
-            if(!await S3ObjectExistsAsync(key)) {
+            if(_forcePublish || !await S3ObjectExistsAsync(key)) {
                 Console.WriteLine($"=> Uploading {description}: s3://{Settings.DeploymentBucketName}/{key}");
                 await _transferUtility.UploadAsync(filePath, Settings.DeploymentBucketName, key);
                 _changesDetected = true;

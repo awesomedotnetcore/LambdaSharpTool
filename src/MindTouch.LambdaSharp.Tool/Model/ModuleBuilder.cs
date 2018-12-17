@@ -50,6 +50,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         private IDictionary<string, ModuleDependency> _dependencies;
         private IDictionary<string, ModuleManifestCustomResource> _customResourceTypes;
         private IList<string> _macroNames;
+        private IDictionary<string, string> _customResourceNameMappings;
 
         //--- Constructors ---
         public ModuleBuilder(Settings settings, string sourceFilename, Module module) : base(settings, sourceFilename) {
@@ -70,6 +71,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 ? new Dictionary<string, ModuleManifestCustomResource>(module.CustomResourceTypes)
                 : new Dictionary<string, ModuleManifestCustomResource>();
             _macroNames = new List<string>(module.MacroNames ?? new string[0]);
+            _customResourceNameMappings = module.CustomResourceNameMappings ?? new Dictionary<string, string>();
 
             // extract existing resource statements when they exist
             if(TryGetEntry("Module::Role", out AModuleEntry moduleRoleEntry)) {
@@ -295,10 +297,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                     name: "Plaintext",
                     description: null,
                     scope: null,
-                    resource: new Humidifier.CustomResource("Custom::DecryptSecret") {
-                        ["ServiceToken"] = FnGetAtt("Module::DecryptSecretFunction", "Arn"),
-                        ["Ciphertext"] = FnRef(result.FullName)
-                    },
+                    resource: CreateDecryptSecretResourceFor(result),
                     resourceArnAttribute: null,
                     dependsOn: null,
                     condition: null,
@@ -457,10 +456,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                     name: "Plaintext",
                     description: null,
                     scope: null,
-                    resource: new Humidifier.CustomResource("Custom::DecryptSecret") {
-                        ["ServiceToken"] = FnGetAtt("Module::DecryptSecretFunction", "Arn"),
-                        ["Ciphertext"] = FnRef(result.FullName)
-                    },
+                    resource: CreateDecryptSecretResourceFor(result),
                     resourceArnAttribute: null,
                     dependsOn: null,
                     condition: null,
@@ -539,17 +535,21 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 }
 
                 // create resource entry
+                var customResource = RegisterCustomResourceNameMapping(new Humidifier.CustomResource(type, properties));
                 result = AddResource(
                     parent: parent,
                     name: name,
                     description: description,
                     scope: scope,
-                    resource: new Humidifier.CustomResource(type, properties),
+                    resource: customResource,
                     resourceArnAttribute: arnAttribute,
                     dependsOn: dependsOn,
                     condition: condition,
                     pragmas: pragmas
                 );
+                if(customResource.AWSTypeName != customResource.OriginalTypeName) {
+                    // TODO
+                }
 
                 // add optional grants
                 if(allow != null) {
@@ -1000,6 +1000,39 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 var role = (Humidifier.IAM.Role)((ResourceEntry)moduleRoleEntry).Resource;
                 role.Policies[0].PolicyDocument.Statement = _resourceStatements.ToList();
             }
+
+            // NOTE (2018-12-17, bjorg): at this point, we have to use `LogicalId` for entries since the module is
+            //  generated after the linker has completed its job.
+
+            // check if module contains a finalizer function
+            if(TryGetEntry("Finalizer", out AModuleEntry finalizerEntry) && (finalizerEntry is FunctionEntry)) {
+
+                // check if a finalizer invocation needs to be added
+                if(!TryGetEntry("Finalizer::Invocation", out AModuleEntry finalizerInvocationEntry)) {
+                    finalizerInvocationEntry = AddResource(
+                        parent: finalizerEntry,
+                        name: "Invocation",
+                        description: null,
+                        scope: null,
+                        resource: RegisterCustomResourceNameMapping(new Humidifier.CustomResource("Module::Finalizer") {
+                            ["ServiceToken"] = FnGetAtt(finalizerEntry.LogicalId, "Arn"),
+                            ["DeploymentChecksum"] = FnRef("DeploymentChecksum")
+                        }),
+                        resourceArnAttribute: null,
+                        dependsOn: null,
+                        condition: null,
+                        pragmas: null
+                    );
+                }
+
+                // finalizer depends on all resources having been created
+                ((ResourceEntry)finalizerInvocationEntry).DependsOn = _entries
+                    .OfType<AResourceEntry>()
+                    .Where(entry => entry.LogicalId != finalizerInvocationEntry.LogicalId)
+                    .Select(entry => entry.LogicalId)
+                    .OrderBy(logicalId => logicalId)
+                    .ToList();
+            }
             return new Module {
                 Name = _name,
                 Version = _version,
@@ -1012,19 +1045,9 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 Assets = _assets.OrderBy(value => value).ToList(),
                 Dependencies = _dependencies.OrderBy(kv => kv.Key).ToList(),
                 CustomResourceTypes = _customResourceTypes.OrderBy(kv => kv.Key).ToList(),
-                MacroNames = _macroNames.OrderBy(value => value).ToList()
+                MacroNames = _macroNames.OrderBy(value => value).ToList(),
+                CustomResourceNameMappings = _customResourceNameMappings
             };
-        }
-
-        private IList<string> ConvertScope(object scope) {
-            if(scope == null) {
-                return new string[0];
-            }
-            return AtLocation("Scope", () => {
-                return (scope == null)
-                    ? new List<string>()
-                    : ConvertToStringList(scope);
-            });
         }
 
         private AModuleEntry AddEntry(AModuleEntry entry) {
@@ -1044,7 +1067,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             return entry;
         }
 
-        public void ValidateProperties(
+        private void ValidateProperties(
             string awsType,
             IDictionary properties
         ) {
@@ -1079,10 +1102,14 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             // local functions
             void ValidateProperties(string prefix, ResourceType currentResource, IDictionary currentProperties) {
 
-                // check that all required properties are defined
-                foreach(var property in currentResource.Properties.Where(kv => kv.Value.Required)) {
-                    if(currentProperties[property.Key] == null) {
-                        AddError($"missing property '{prefix + property.Key}");
+                // 'Fn::Transform' can add arbitrary properties at deployment time, so we can't validate the properties at compile time
+                if(!currentProperties.Contains("Fn::Transform")) {
+
+                    // check that all required properties are defined
+                    foreach(var property in currentResource.Properties.Where(kv => kv.Value.Required)) {
+                        if(currentProperties[property.Key] == null) {
+                            AddError($"missing property '{prefix + property.Key}");
+                        }
                     }
                 }
 
@@ -1157,6 +1184,19 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 }
                 return result;
             }
+        }
+
+        private Humidifier.CustomResource CreateDecryptSecretResourceFor(AModuleEntry entry)
+            => RegisterCustomResourceNameMapping(new Humidifier.CustomResource("Module::DecryptSecret") {
+                ["ServiceToken"] = FnGetAtt("Module::DecryptSecretFunction", "Arn"),
+                ["Ciphertext"] = FnRef(entry.FullName)
+            });
+
+        private Humidifier.CustomResource RegisterCustomResourceNameMapping(Humidifier.CustomResource customResource) {
+            if(customResource.AWSTypeName != customResource.OriginalTypeName) {
+                _customResourceNameMappings[customResource.AWSTypeName] = customResource.OriginalTypeName;
+            }
+            return customResource;
         }
     }
 }

@@ -173,9 +173,9 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         //--- Properties ---
         public Humidifier.Resource Resource { get; set; }
-        public string ResourceArnAttribute { get; }
-        public IList<string> DependsOn { get; }
-        public string Condition { get; }
+        public string ResourceArnAttribute { get; set; }
+        public IList<string> DependsOn { get; set; }
+        public string Condition { get; set; }
         public IList<object> Pragmas { get; }
 
         //--- Methods ---

@@ -65,16 +65,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 AddEntry(entry);
             }
 
-            // check if a module `Finalizer` function is defined
-            if(_stack.Resources.TryGetValue("Finalizer", out Humidifier.Resource finalizer) && (finalizer.AWSTypeName == "AWS::Lambda::Function")) {
-
-                // create a custom resource that invokes the finalizer
-                _stack.Add("FinalizerInvocation", new Humidifier.CustomResource("Custom::Finalizer") {
-                    ["ServiceToken"] = Humidifier.Fn.GetAtt("Finalizer", "Arn"),
-                    ["DeploymentChecksum"] = Humidifier.Fn.Ref("DeploymentChecksum")
-                }, dependsOn: _stack.Resources.Select(kv => kv.Key).ToArray());
-            }
-
             // add outputs
             _stack.Add("ModuleName", new Humidifier.Output {
                 Value = _module.Name
@@ -120,7 +110,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 }).OrderBy(dependency => dependency.ModuleName).ToList(),
                 CustomResourceTypes = new Dictionary<string, ModuleManifestCustomResource>(module.CustomResourceTypes),
                 MacroNames = module.MacroNames.ToList(),
-                ResourceFullNames = module.Entries
+                CustomResourceNameMappings = module.CustomResourceNameMappings,
+                ResourceNameMappings = module.Entries
 
                     // we only ned to worry about resource names
                     .Where(entry => (entry is AResourceEntry))

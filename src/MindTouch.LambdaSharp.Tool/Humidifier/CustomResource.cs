@@ -31,22 +31,26 @@ namespace Humidifier {
     public class CustomResource : Resource, IDictionary<string, object>, IDictionary {
 
         //--- Fields ---
-        private readonly string _typeName;
+        private readonly string _awsTypeName;
+        private readonly string _originalTypeName;
         private readonly IDictionary<string, object> _properties;
 
         //--- Constructors ---
         public CustomResource(string typeName, IDictionary<string, object> properties) {
-            _typeName = typeName ?? throw new ArgumentNullException(nameof(typeName));
+            _originalTypeName = typeName ?? throw new ArgumentNullException(nameof(typeName));
             _properties = new Dictionary<string, object>();
 
             // resolve custom resource service token
             if(
-                !_typeName.StartsWith("AWS::", StringComparison.Ordinal)
-                && !_typeName.StartsWith("Custom::", StringComparison.Ordinal)
-                && !_properties.ContainsKey("ServiceToken")
+                !typeName.StartsWith("AWS::", StringComparison.Ordinal)
+                && !typeName.StartsWith("Custom::", StringComparison.Ordinal)
             ) {
-                _properties["ServiceToken"] = FnImportValue(FnSub($"${{DeploymentPrefix}}CustomResource-{_typeName}"));
-                _typeName = "Custom::" + _typeName.Replace("::", "");
+                if(!_properties.ContainsKey("ServiceToken")) {
+                    _properties["ServiceToken"] = FnImportValue(FnSub($"${{DeploymentPrefix}}CustomResource-{typeName}"));
+                }
+                _awsTypeName = "Custom::" + typeName.Replace("::", "");
+            } else {
+                _awsTypeName = typeName;
             }
             if(properties != null) {
                 foreach(var kv in properties) {
@@ -58,7 +62,8 @@ namespace Humidifier {
         public CustomResource(string typeName) : this(typeName, new Dictionary<string, object>()) { }
 
         //--- Properties ---
-        public override string AWSTypeName => _typeName;
+        public override string AWSTypeName => _awsTypeName;
+        public string OriginalTypeName => _originalTypeName;
         public object this[string key] {
             get => _properties[key];
             set => _properties[key] = value;

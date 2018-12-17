@@ -38,7 +38,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
     public class ModelAstToModuleConverter : AModelProcessor {
 
         //--- Constants ---
-        private const string CUSTOM_RESOURCE_PREFIX = "Custom::";
         private const string SECRET_ALIAS_PATTERN = "[0-9a-zA-Z/_\\-]+";
 
         //--- Fields ---

@@ -5,31 +5,43 @@
 ## What's New
 
 > TODO
-* comprehensive variable resolution
-* λ# manifest embedded in cloudformation template
-* use change-sets for deploying stacks
-* new module specification for deploying: `ModuleName[:Version][@Bucket]`
-* generalized input/variable/function/output node types using `Entries:` section
-* new module entries: `Module`, `Resource`, `Package`, `Variable`
-* allow any AWS type as parameter type and map to `String` when AWS type is not natively supported
-* resource `skip-property-validation` pragma
-* resource `skip-type-validation` pragma
-* new `Import` notation
-* module `Requires` section
+
+* Module
+    * generalized input/variable/function/output node types using `Entries:` section
+    * new module entries: `Module`, `Resource`, `Package`, `Variable`
+    * allow any AWS type as parameter type and map to `String` when AWS type is not natively supported
+    * resource `skip-type-validation` pragma
+    * new `Import` notation
+    * module `Requires` section
+    * `Topic` source now supports `Filters` to filter on SNS notifications
+    * `Bucket`, `Queue`, `S3`, `DynamoDB`, `Kinesis` sources can now also be expressions
+    * added module `Finalizer` function
+    * `Type: Secret` parameters/variables can decrypted for resources using `!Ref SecretParameterName::Plaintext`
+
+* CLI
+    * new module specification for deploying: `ModuleName[:Version][@Bucket]`
+    * publish/deploy/init: added `--force-publish` option
+    * files packages are not be created when functions are not compiled (both are about building assets) (i.e. dryrun)
+
+* Build Process
+    * validate that function entry point exists after compiling assembly
+    * comprehensive variable resolution
     * validate custom resource types using module dependencies
-* validate resources using the cloudformation json spec
-* validation of attribute in `!GetAtt` expressions
+    * validate AWS resources using the cloudformation json spec
+    * validation of attribute in `!GetAtt` expressions
+
+* Deploy Process
+    * use change-sets for deploying stacks
+    * translate custom resource types from `Custom::LambdaSharpRegisterFunction` to `LambdaSharp::Register::Function` when showing the stack update
+    * λ# manifest embedded in cloudformation template
+
 * `MindTouch.LambdaSharp` assembly
     * added `ALambdaFinalizerFunction` base class
     * BREAKING CHANGE: merged `ALambdaCustomResourceFunction` into LambdaSharp assembly
     * `ALambdaCustomResourceFunction` can be invoked via SNS or directly from a custom resource
-* added module `Finalizer`
-* validate that function entry point exists after compiling assembly
-* `Topic` source now supports `Filters` to filter on SNS notifications
-* `Bucket`, `Queue`, `S3`, `DynamoDB`, `Kinesis` sources can now also be expressions
 
 __Topics__
-1. [Break Changes](#breaking-changes)
+1. [Breaking Changes](#breaking-changes)
 1. [New λ# CLI Features](#new-λ-cli-features)
 1. [New λ# Module Features](#new-λ-module-features)
 1. [New λ# Runtime Features](#new-λ-runtime-features)

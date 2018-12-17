@@ -69,6 +69,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
         public static CommandOption AddDryRunOption(CommandLineApplication cmd)
             => cmd.Option("--dryrun:<LEVEL>", "(optional) Generate output assets without deploying (0=everything, 1=cloudformation)", CommandOptionType.SingleOrNoValue);
 
+        public static CommandOption AddForcePublishOption(CommandLineApplication cmd)
+            => cmd.Option("--force-publish", "(optional) Publish modules and their assets even when no changes were detected", CommandOptionType.NoValue);
+
         public static Dictionary<string, string> ReadInputParametersFiles(Settings settings, string filename) {
             if(!File.Exists(filename)) {
                 AddError("cannot find inputs file");
@@ -220,6 +223,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 cmd.HelpOption();
                 cmd.Description = "Publish LambdaSharp module";
 
+                // publish options
+                var forcePublishOption = AddForcePublishOption(cmd);
+
                 // build options
                 var compiledModulesArgument = cmd.Argument("<NAME>", "(optional) Path to assets folder or module definition/folder (default: Module.yml)", multipleValues: true);
                 var skipAssemblyValidationOption = AddSkipAssemblyValidationOption(cmd);
@@ -298,7 +304,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                             }
                         }
                         if(dryRun == null) {
-                            if(await PublishStepAsync(settings) == null) {
+                            if(await PublishStepAsync(settings, forcePublishOption.HasValue()) == null) {
                                 break;
                             }
                         }
@@ -319,6 +325,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 var allowDataLossOption = cmd.Option("--allow-data-loss", "(optional) Allow CloudFormation resource update operations that could lead to data loss", CommandOptionType.NoValue);
                 var protectStackOption = cmd.Option("--protect", "(optional) Enable termination protection for the deployed module", CommandOptionType.NoValue);
                 var forceDeployOption = cmd.Option("--force-deploy", "(optional) Force module deployment", CommandOptionType.NoValue);
+
+                // publish options
+                var forcePublishOption = AddForcePublishOption(cmd);
 
                 // build options
                 var skipAssemblyValidationOption = AddSkipAssemblyValidationOption(cmd);
@@ -417,7 +426,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         }
                         if(dryRun == null) {
                             if(moduleReference == null) {
-                                moduleReference = await PublishStepAsync(settings);
+                                moduleReference = await PublishStepAsync(settings, forcePublishOption.HasValue());
                                 if(moduleReference == null) {
                                     break;
                                 }
@@ -469,13 +478,13 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             }
         }
 
-        public async Task<string> PublishStepAsync(Settings settings) {
+        public async Task<string> PublishStepAsync(Settings settings, bool forcePublish) {
             await PopulateToolSettingsAsync(settings);
             if(HasErrors) {
                 return null;
             }
             var cloudformationFile = Path.Combine(settings.OutputDirectory, "cloudformation.json");
-            return await new PublishStep(settings, cloudformationFile).DoAsync(cloudformationFile);
+            return await new PublishStep(settings, cloudformationFile).DoAsync(cloudformationFile, forcePublish);
         }
 
         public async Task<bool> DeployStepAsync(

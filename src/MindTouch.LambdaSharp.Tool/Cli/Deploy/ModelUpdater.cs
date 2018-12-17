@@ -136,7 +136,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
                         AddError("one or more resources could be replaced or deleted; use --allow-data-loss to proceed");
                         Console.WriteLine("=> WARNING: Detected potential data-loss in the following resources");
                         foreach(var lossy in lossyChanges) {
-                            Console.WriteLine($"{lossy.ResourceChange.Replacement,-11} {lossy.ResourceChange.ResourceType,-55} {TranslateToFullName(lossy.ResourceChange.LogicalResourceId)}");
+                            Console.WriteLine($"{lossy.ResourceChange.Replacement,-11} {lossy.ResourceChange.ResourceType,-55} {TranslateLogicalIdToFullName(lossy.ResourceChange.LogicalResourceId)}");
                         }
                         return false;
                     }
@@ -147,7 +147,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
                     ChangeSetName = changeSetName,
                     StackName = stackName
                 });
-                var outcome = await Settings.CfClient.TrackStackUpdateAsync(stackName, mostRecentStackEventId, manifest.ResourceFullNames);
+                var outcome = await Settings.CfClient.TrackStackUpdateAsync(stackName, mostRecentStackEventId, manifest.ResourceNameMappings, manifest.CustomResourceNameMappings);
                 if(outcome.Success) {
                     Console.WriteLine($"=> Stack {updateOrCreate} finished");
                     ShowStackResult(outcome.Stack);
@@ -185,9 +185,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
             }
 
             // local function
-            string TranslateToFullName(string logicalId) {
+            string TranslateLogicalIdToFullName(string logicalId) {
                 var fullName = logicalId;
-                manifest.ResourceFullNames?.TryGetValue(logicalId, out fullName);
+                manifest.ResourceNameMappings?.TryGetValue(logicalId, out fullName);
                 return fullName ?? logicalId;
             }
         }

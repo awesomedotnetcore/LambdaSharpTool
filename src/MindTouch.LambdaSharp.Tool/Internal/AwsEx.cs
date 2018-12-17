@@ -82,7 +82,13 @@ namespace MindTouch.LambdaSharp.Tool.Internal {
             return null;
         }
 
-        public static async Task<(Stack Stack, bool Success)> TrackStackUpdateAsync(this IAmazonCloudFormation cfClient, string stackName, string mostRecentStackEventId, IDictionary<string, string> resourceFullNames = null) {
+        public static async Task<(Stack Stack, bool Success)> TrackStackUpdateAsync(
+            this IAmazonCloudFormation cfClient,
+            string stackName,
+            string mostRecentStackEventId,
+            IDictionary<string, string> resourceNameMappings = null,
+            IDictionary<string, string> customResourceNameMappings = null
+        ) {
             var seenEventIds = new HashSet<string>();
             var foundMostRecentStackEvent = (mostRecentStackEventId == null);
             var request = new DescribeStackEventsRequest {
@@ -116,7 +122,7 @@ namespace MindTouch.LambdaSharp.Tool.Internal {
 
                 // report only on new events
                 foreach(var evt in events.Where(evt => !seenEventIds.Contains(evt.EventId))) {
-                    Console.WriteLine($"{evt.ResourceStatus,-35} {evt.ResourceType,-55} {TranslateToFullName(evt.LogicalResourceId)}{(evt.ResourceStatusReason != null ? $" ({evt.ResourceStatusReason})" : "")}");
+                    Console.WriteLine($"{evt.ResourceStatus,-35} {TranslateResourceTypeToFullName(evt.ResourceType),-55} {TranslateLogicalIdToFullName(evt.LogicalResourceId)}{(evt.ResourceStatusReason != null ? $" ({evt.ResourceStatusReason})" : "")}");
                     if(!seenEventIds.Add(evt.EventId)) {
 
                         // we found an event we already saw in the past, no point in looking at more events
@@ -139,10 +145,16 @@ namespace MindTouch.LambdaSharp.Tool.Internal {
             return (Stack: description.Stacks.FirstOrDefault(), Success: success);
 
             // local function
-            string TranslateToFullName(string logicalId) {
+            string TranslateLogicalIdToFullName(string logicalId) {
                 var fullName = logicalId;
-                resourceFullNames?.TryGetValue(logicalId, out fullName);
+                resourceNameMappings?.TryGetValue(logicalId, out fullName);
                 return fullName ?? logicalId;
+            }
+
+            string TranslateResourceTypeToFullName(string awsType) {
+                var fullName = awsType;
+                customResourceNameMappings?.TryGetValue(awsType, out fullName);
+                return fullName ?? awsType;
             }
         }
 

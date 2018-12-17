@@ -64,6 +64,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 var usePublishedOption = cmd.Option("--use-published", "(optional) Force the init command to use the published LambdaSharp runtime modules", CommandOptionType.NoValue);
                 var inputsFileOption = cmd.Option("--inputs|-I <FILE>", "(optional) Specify filename to read module inputs from (default: none)", CommandOptionType.SingleValue);
                 var inputOption = cmd.Option("--input|-KV <KEY>=<VALUE>", "(optional) Specify module input key-value pair (can be used multiple times)", CommandOptionType.MultipleValue);
+                var forcePublishOption = CliBuildPublishDeployCommand.AddForcePublishOption(cmd);
                 var initSettingsCallback = CreateSettingsInitializer(cmd);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
@@ -100,7 +101,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         forceDeployOption.HasValue(),
                         versionOption.HasValue() ? VersionInfo.Parse(versionOption.Value()) : Version,
                         localOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP"),
-                        inputs
+                        inputs,
+                        forcePublishOption.HasValue()
                     );
                 });
             });
@@ -113,7 +115,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             bool forceDeploy,
             VersionInfo version,
             string lambdaSharpPath,
-            Dictionary<string, string> inputs
+            Dictionary<string, string> inputs,
+            bool forcePublish
         ) {
             var command = new CliBuildPublishDeployCommand();
             Console.WriteLine($"Creating new deployment tier '{settings.Tier}'");
@@ -146,7 +149,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     }
 
                     // publish module
-                    moduleReference = await command.PublishStepAsync(settings);
+                    moduleReference = await command.PublishStepAsync(settings, forcePublish);
                     if(moduleReference == null) {
                         break;
                     }

@@ -43,6 +43,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public IEnumerable<KeyValuePair<string, ModuleDependency>> Dependencies { get; set; }
         public IEnumerable<KeyValuePair<string, ModuleManifestCustomResource>> CustomResourceTypes { get; set; }
         public IEnumerable<string> MacroNames { get; set; }
+        public IDictionary<string, string> CustomResourceNameMappings { get; set; }
 
         //--- Methods ---
         public bool HasPragma(string pragma) => Pragmas?.Contains(pragma) == true;
