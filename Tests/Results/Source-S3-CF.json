@@ -52,7 +52,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "A154CEDFA3E8C8102B91320BCDAE8DFD"
+      "Default": "587D8FB403CBDF526F1F67C077E2C442"
     }
   },
   "Resources": {
@@ -67,7 +67,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "Modules/TestModule/Assets/Function-NOCOMPILE.zip"
+          "S3Key": "Modules/TestModule/Assets/Function-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -182,7 +182,7 @@
             }
           }
         },
-        "Handler": "TestModule.Function::MindTouch.LambdaSharpTestModule.Function.Function::FunctionHandlerAsync",
+        "Handler": "Function::MindTouch.LambdaSharpTestModule.Function.Function::FunctionHandlerAsync",
         "MemorySize": "128",
         "Role": {
           "Fn::GetAtt": [
@@ -927,11 +927,11 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2018-12-14",
+      "Version": "2018-12-17",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
       "RuntimeCheck": true,
-      "Hash": "A154CEDFA3E8C8102B91320BCDAE8DFD",
+      "Hash": "587D8FB403CBDF526F1F67C077E2C442",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [
@@ -946,7 +946,7 @@
       ],
       "CustomResourceTypes": {},
       "MacroNames": [],
-      "ResourceFullNames": {
+      "ResourceNameMappings": {
         "FunctionLogGroup": "Function::LogGroup",
         "ModuleRole": "Module::Role",
         "ModuleRegistration": "Module::Registration",
@@ -957,6 +957,11 @@
         "FunctionSource1Subscription": "Function::Source1Subscription",
         "FunctionSource2Permission": "Function::Source2Permission",
         "FunctionSource2Subscription": "Function::Source2Subscription"
+      },
+      "CustomResourceNameMappings": {
+        "Custom::LambdaSharpRegisterModule": "LambdaSharp::Register::Module",
+        "Custom::LambdaSharpRegisterFunction": "LambdaSharp::Register::Function",
+        "Custom::LambdaSharpS3Subscription": "LambdaSharp::S3::Subscription"
       }
     }
   }

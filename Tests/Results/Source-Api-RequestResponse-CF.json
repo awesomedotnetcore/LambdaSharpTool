@@ -48,7 +48,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "55F4A5685E44F6F78063B546BE2DF29E"
+      "Default": "82E301E21C00CE5FCC5842DD936A9EEF"
     }
   },
   "Resources": {
@@ -59,7 +59,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "Modules/TestModule/Assets/Function-NOCOMPILE.zip"
+          "S3Key": "Modules/TestModule/Assets/Function-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -165,7 +165,7 @@
             }
           }
         },
-        "Handler": "TestModule.Function::MindTouch.LambdaSharpTestModule.Function.Function::FunctionHandlerAsync",
+        "Handler": "Function::MindTouch.LambdaSharpTestModule.Function.Function::FunctionHandlerAsync",
         "MemorySize": "128",
         "Role": {
           "Fn::GetAtt": [
@@ -1008,11 +1008,11 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2018-12-14",
+      "Version": "2018-12-17",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
       "RuntimeCheck": true,
-      "Hash": "55F4A5685E44F6F78063B546BE2DF29E",
+      "Hash": "82E301E21C00CE5FCC5842DD936A9EEF",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [
@@ -1023,7 +1023,7 @@
       ],
       "CustomResourceTypes": {},
       "MacroNames": [],
-      "ResourceFullNames": {
+      "ResourceNameMappings": {
         "FunctionLogGroup": "Function::LogGroup",
         "ModuleRole": "Module::Role",
         "ModuleRegistration": "Module::Registration",
@@ -1047,6 +1047,10 @@
         "ModuleRestApiAccount": "Module::RestApi::Account",
         "ModuleRestApiDeploymentB76494426287A08CA2B55AA7C16D8D64": "Module::RestApi::DeploymentB76494426287A08CA2B55AA7C16D8D64",
         "ModuleRestApiStage": "Module::RestApi::Stage"
+      },
+      "CustomResourceNameMappings": {
+        "Custom::LambdaSharpRegisterModule": "LambdaSharp::Register::Module",
+        "Custom::LambdaSharpRegisterFunction": "LambdaSharp::Register::Function"
       }
     }
   }

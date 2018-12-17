@@ -48,7 +48,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "48A5F6624373BC3418B905A08A2E13B4"
+      "Default": "72D33CD2E7947C090D2B697461D013E6"
     }
   },
   "Resources": {
@@ -73,7 +73,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "Modules/TestModule/Assets/Function-NOCOMPILE.zip"
+          "S3Key": "Modules/TestModule/Assets/Function-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -262,7 +262,7 @@
             "STR_MYMODULEVERSION": "1.0"
           }
         },
-        "Handler": "TestModule.Function::MindTouch.LambdaSharpTestModule.Function.Function::FunctionHandlerAsync",
+        "Handler": "Function::MindTouch.LambdaSharpTestModule.Function.Function::FunctionHandlerAsync",
         "MemorySize": "128",
         "Role": {
           "Fn::GetAtt": [
@@ -857,11 +857,11 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2018-12-14",
+      "Version": "2018-12-17",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
       "RuntimeCheck": true,
-      "Hash": "48A5F6624373BC3418B905A08A2E13B4",
+      "Hash": "72D33CD2E7947C090D2B697461D013E6",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [
@@ -872,7 +872,7 @@
       ],
       "CustomResourceTypes": {},
       "MacroNames": [],
-      "ResourceFullNames": {
+      "ResourceNameMappings": {
         "SourceParameterCollectionSecondSourceResourceParameter": "SourceParameterCollection::SecondSourceResourceParameter",
         "SampleParameterCollectionFourthNestedParameter": "SampleParameterCollection::FourthNestedParameter",
         "FunctionLogGroup": "Function::LogGroup",
@@ -881,6 +881,11 @@
         "ModuleCloudWatchLogsRole": "Module::CloudWatchLogsRole",
         "FunctionRegistration": "Function::Registration",
         "FunctionLogGroupSubscription": "Function::LogGroupSubscription"
+      },
+      "CustomResourceNameMappings": {
+        "Custom::ModuleDecryptSecret": "Module::DecryptSecret",
+        "Custom::LambdaSharpRegisterModule": "LambdaSharp::Register::Module",
+        "Custom::LambdaSharpRegisterFunction": "LambdaSharp::Register::Function"
       }
     }
   }
