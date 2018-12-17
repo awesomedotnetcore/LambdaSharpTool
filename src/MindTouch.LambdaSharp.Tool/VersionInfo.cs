@@ -157,6 +157,20 @@ namespace MindTouch.LambdaSharp.Tool {
             // when Major version is 0, we rely on Minor and Build to match
             return ((Minor == other.Minor) && (Math.Max(0, Version.Build) == Math.Max(0, other.Version.Build)));
         }
+
+        public string GetWildcardVersion() {
+            if(IsPreRelease) {
+
+                // NOTE (2018-12-16, bjorg): for pre-release version, there is no wildcard; the version must match everything
+                return ToString();
+            }
+            if(Major == 0) {
+
+                // when Major version is 0, the build number is relevant
+                return $"{Major}.{Minor}.{Math.Max(0, Version.Build)}.*";
+            }
+            return $"{Major}.{Minor}.*";
+        }
     }
 
     public class VersionInfoConverter : JsonConverter {
