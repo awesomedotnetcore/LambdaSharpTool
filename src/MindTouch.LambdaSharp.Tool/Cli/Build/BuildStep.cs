@@ -85,7 +85,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             );
 
             // package all files
-            new ModelFilesPackager(Settings, SourceFilename).Package(module);
+            new ModelFilesPackager(Settings, SourceFilename).Package(module, skipFunctionBuild);
 
             // augment module definitions
             new ModelFunctionProcessor(Settings, SourceFilename).Process(module);

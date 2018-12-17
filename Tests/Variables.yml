@@ -97,7 +97,6 @@ Entries:
         Value: AQICAHjeGw7GlEczkZKnuQaQHVYq...+CXNRhA/rkOSNUThq4ikMnVU2g==
         EncryptionContext:
           Purpose: Security
-          "Spe|cial": "Char|acter"
 
       - Variable: SeventhParameter
         Description: Seventh nested parameter

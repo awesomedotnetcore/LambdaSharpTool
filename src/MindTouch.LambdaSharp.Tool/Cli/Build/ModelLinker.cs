@@ -23,6 +23,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using Humidifier;
 using MindTouch.LambdaSharp.Tool.Model;
@@ -39,6 +40,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             Console.WriteLine(lazyMessage());
 #endif
         }
+
 
         //--- Fields ---
         private Dictionary<string, AModuleEntry> _freeEntries = new Dictionary<string, AModuleEntry>();
@@ -346,9 +348,13 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 // remove unreachable entries
                 foreach(var unreachableFullName in unreachableFullNames) {
                     var discardedEntries = builder.RemoveEntry(unreachableFullName);
-                    foreach(var discardedEntry in discardedEntries) {
-                        Console.WriteLine("DISCARDED: " + discardedEntry.FullName);
-                    }
+                    DebugWriteLine(() => {
+                        var text = new StringBuilder();
+                        foreach(var discardedEntry in discardedEntries) {
+                            text.AppendLine("DISCARDED: " + discardedEntry.FullName);
+                        }
+                        return text.ToString();
+                    });
                 }
             }
 

@@ -527,7 +527,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
                     // create CloudWatch Logs IAM role to invoke kinesis stream
                     if(_builder.HasLambdaSharpDependencies) {
-                        _builder.AddResource(
+                        var cloudWatchLogRole = _builder.AddResource(
                             parent: moduleEntry,
                             name: "CloudWatchLogsRole",
                             description: null,
@@ -568,6 +568,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                             condition: null,
                             pragmas: null
                         );
+                        cloudWatchLogRole.DiscardIfNotReachable = true;
                     }
 
                     // create registration-related resources for functions

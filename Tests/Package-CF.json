@@ -48,7 +48,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "438562A66AB38D658927EC31F09AB58A"
+      "Default": "4D41C220C4636AE54D0E0CA3630313A4"
     }
   },
   "Resources": {
@@ -74,7 +74,7 @@
         "SourceBucketName": {
           "Ref": "DeploymentBucketName"
         },
-        "SourcePackageKey": "Modules/TestModule/Assets/package_FilesPackage_60BC4F4B0D9DC088E061E7C1EEBAF6D1.zip"
+        "SourcePackageKey": "Modules/TestModule/Assets/FilesPackage-NOCOMPILE.zip"
       }
     },
     "Function": {
@@ -758,11 +758,9 @@
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
       "RuntimeCheck": true,
-      "Hash": "438562A66AB38D658927EC31F09AB58A",
+      "Hash": "4D41C220C4636AE54D0E0CA3630313A4",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
-      "Assets": [
-        "package_FilesPackage_60BC4F4B0D9DC088E061E7C1EEBAF6D1.zip"
-      ],
+      "Assets": [],
       "Dependencies": [
         {
           "ModuleName": "LambdaSharpRegistrar",

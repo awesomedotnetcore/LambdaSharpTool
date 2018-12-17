@@ -649,7 +649,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 description: null,
                 type: "String",
                 scope: null,
-                value: "<PLACEHOLDER>",
+                value: $"{package.LogicalId}-DRYRUN.zip",
                 encryptionContext: null
             );
 
@@ -724,7 +724,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 description: null,
                 type: "String",
                 scope: null,
-                value: $"{function.LogicalId}-NOCOMPILE.zip",
+                value: $"{function.LogicalId}-DRYRUN.zip",
                 encryptionContext: null
             );
             function.Function.Code.S3Key = FnSub($"Modules/${{Module::Name}}/Assets/${{{packageName.FullName}}}");

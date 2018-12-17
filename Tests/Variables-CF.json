@@ -48,7 +48,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "3395B9878F003B6BD4F54337268FC83A"
+      "Default": "48A5F6624373BC3418B905A08A2E13B4"
     }
   },
   "Resources": {
@@ -209,7 +209,7 @@
               "Ref": "SampleParameterCollectionFourthNestedParameter"
             },
             "SEC_SAMPLEPARAMETERCOLLECTION_FIFTHNESTEDPARAMETER": "AQICAHjeGw7GlEczkZKnuQaQHVYq...+CXNRhA/rkOSNUThq4ikMnVU2g==",
-            "SEC_SAMPLEPARAMETERCOLLECTION_SIXTHNESTEDPARAMETER": "AQICAHjeGw7GlEczkZKnuQaQHVYq...+CXNRhA/rkOSNUThq4ikMnVU2g==|Purpose=Security|Spe%7Ccial=Char%7Cacter",
+            "SEC_SAMPLEPARAMETERCOLLECTION_SIXTHNESTEDPARAMETER": "AQICAHjeGw7GlEczkZKnuQaQHVYq...+CXNRhA/rkOSNUThq4ikMnVU2g==|Purpose=Security",
             "STR_SAMPLEPARAMETERCOLLECTION_SEVENTHPARAMETER": "arn:aws:sns:*:*:*",
             "STR_OTHERPARAMETERCOLLECTION": "This collection has a value",
             "STR_OTHERPARAMETERCOLLECTION_FIRSTNESTEDPARAMETER": "Another literal value",
@@ -861,7 +861,7 @@
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
       "RuntimeCheck": true,
-      "Hash": "3395B9878F003B6BD4F54337268FC83A",
+      "Hash": "48A5F6624373BC3418B905A08A2E13B4",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [
