@@ -1,9 +1,9 @@
 lash() {
-    rm $1-CF.json > /dev/null 2>&1
+    rm Results/$1-CF.json > /dev/null 2>&1
     dotnet $LAMBDASHARP/src/MindTouch.LambdaSharp.Tool/bin/Debug/netcoreapp2.1/MindTouch.LambdaSharp.Tool.dll deploy \
         --verbose:exceptions \
         --tier Test \
-        --cf-output $1-CF.json \
+        --cf-output Results/$1-CF.json \
         --dryrun:cloudformation \
         --aws-account-id 123456789012 \
         --aws-region us-east-1 \
@@ -65,14 +65,16 @@ if [ -z "$1" ]; then
     lash Outputs-LiteralValue
     lash Package
     lash NestedModule
+    lash Parameter-Secret
+    lash Variable-Secret
 else
 
     # run requested test
-    rm $1-CF.json > /dev/null 2>&1
+    rm Results/$1-CF.json > /dev/null 2>&1
     dotnet run -p $LAMBDASHARP/src/MindTouch.LambdaSharp.Tool/MindTouch.LambdaSharp.Tool.csproj -- deploy \
         --verbose:exceptions \
         --tier Test \
-        --cf-output $1-CF.json \
+        --cf-output Results/$1-CF.json \
         --dryrun:cloudformation \
         --aws-account-id 123456789012 \
         --aws-region us-east-1 \
