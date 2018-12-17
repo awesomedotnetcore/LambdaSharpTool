@@ -128,11 +128,11 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                                 output.Value = "<BAD>";
                             } else {
                                 output.Value = entry.GetExportReference();
-                            }
 
-                            // only set the description if the value was not set
-                            if(output.Description == null) {
-                                output.Description = entry.Description;
+                                // only set the description if the value was not set
+                                if(output.Description == null) {
+                                    output.Description = entry.Description;
+                                }
                             }
                         }
                     });
