@@ -8,7 +8,11 @@
 
 * Module
     * generalized input/variable/function/output node types using `Entries:` section
-    * new module entries: `Module`, `Resource`, `Package`, `Variable`
+    * **BREAKING CHANGE:** new module entries notation
+        * `Resource`: AWS and custom resources
+        * `Variable`: hold arbitrary literal or intermediate values
+        * `Package`: file package only (**BREAKING CHANGE:** files are no longer always deployed to S3)
+        * `Module`: create nested module resource
     * allow any AWS type as parameter type and map to `String` when AWS type is not natively supported
     * resource `skip-type-validation` pragma
     * new `Import` notation
@@ -37,7 +41,7 @@
 
 * `MindTouch.LambdaSharp` assembly
     * added `ALambdaFinalizerFunction` base class
-    * BREAKING CHANGE: merged `ALambdaCustomResourceFunction` into LambdaSharp assembly
+    * **BREAKING CHANGE:** merged `ALambdaCustomResourceFunction` into LambdaSharp assembly
     * `ALambdaCustomResourceFunction` can be invoked via SNS or directly from a custom resource
 
 __Topics__
