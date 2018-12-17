@@ -21,6 +21,7 @@
     * `Bucket`, `Queue`, `S3`, `DynamoDB`, `Kinesis` sources can now also be expressions
     * added module `Finalizer` function
     * `Type: Secret` parameters/variables can decrypted for resources using `!Ref SecretParameterName::Plaintext`
+    * `DeploymentChecksum` parameter
 
 * CLI
     * new module specification for deploying: `ModuleName[:Version][@Bucket]`
