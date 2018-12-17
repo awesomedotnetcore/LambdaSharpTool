@@ -61,8 +61,12 @@ if [ -z "$1" ]; then
     lash Source-DynamoDB
     lash Source-Kinesis
     lash Inputs
-    lash Outputs
-    lash Outputs-LiteralValue
+    lash Output-LiteralValue
+    lash Output-Variable
+    lash Output-Resource
+    lash Output-Function
+    lash Output-CustomResource
+    lash Output-Macro
     lash Package
     lash NestedModule
     lash Parameter-Secret

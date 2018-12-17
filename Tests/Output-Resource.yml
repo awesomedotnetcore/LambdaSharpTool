@@ -1,0 +1,12 @@
+Module: TestModule
+Description: LambdaSharp CloudFormation Test
+Outputs:
+
+  # Module Outputs
+  - Export: ResourceValue
+
+Entries:
+
+  - Resource: ResourceValue
+    Description: ResourceValue description
+    Type: AWS::SNS::Topic

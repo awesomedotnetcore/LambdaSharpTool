@@ -1,0 +1,22 @@
+Module: TestModule
+Description: LambdaSharp CloudFormation Test
+Outputs:
+
+  - Export: SimpleValue
+
+  - Export: ManyValues
+
+  - Export: OutputExpressionValue
+    Value: !Sub "${SimpleValue} with extra stuff"
+
+Entries:
+
+  - Variable: SimpleValue
+    Description: SimpleValue description
+    Value: this is a value
+
+  - Variable: ManyValues
+    Description: ManyValues description
+    Value:
+      - first value
+      - second value

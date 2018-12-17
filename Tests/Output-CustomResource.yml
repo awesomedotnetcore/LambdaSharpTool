@@ -1,24 +1,10 @@
 Module: TestModule
 Description: LambdaSharp CloudFormation Test
-
 Outputs:
-
-  # Module Outputs
-  - Export: SimpleValue
-
-  - Export: ManyValues
-
-  - Export: ResourceValue
-
-  - Export: OutputExpressionValue
-    Value: !Sub "${SimpleValue} with extra stuff"
-
-  - Export: MyFunction
-    Value: !Ref Function
 
   # Custom Resources
   - CustomResource: TestModule::MyCustomSnsResource
-    Description: A custom resource handler
+    Description: A custom resource handler using an SNS topic
     Handler: ResourceValue
     Properties:
       Request:
@@ -29,7 +15,7 @@ Outputs:
           Type: String
 
   - CustomResource: TestModule::MyCustomLambdaResource
-    Description: Another custom resource handler
+    Description: A custom resource handler using a Lambda Function
     Handler: Function
     Properties:
       Request:
@@ -39,22 +25,7 @@ Outputs:
         - Name: Bar
           Type: String
 
-  # Macros
-  - Macro: MyMacro
-    Description: My test macro
-    Handler: Function
-
 Entries:
-
-  - Variable: SimpleValue
-    Description: SimpleValue description
-    Value: this is a value
-
-  - Variable: ManyValues
-    Description: ManyValues description
-    Value:
-      - first value
-      - second value
 
   - Resource: ResourceValue
     Description: ResourceValue description
@@ -64,3 +35,5 @@ Entries:
     Description: My function
     Memory: 128
     Timeout: 30
+    Sources:
+      - Topic: ResourceValue

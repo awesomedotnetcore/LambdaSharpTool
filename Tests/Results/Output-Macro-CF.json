@@ -48,7 +48,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "E1488A77F57B6D24E9C9003E79F9677A"
+      "Default": "5ECF613DE1085A9CBB707E2D65A66734"
     }
   },
   "Resources": {
@@ -64,10 +64,6 @@
         }
       }
     },
-    "ResourceValue": {
-      "Type": "AWS::SNS::Topic",
-      "Properties": {}
-    },
     "Function": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
@@ -75,7 +71,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "Modules/TestModule/Assets/Function-NOCOMPILE.zip"
+          "S3Key": "Modules/TestModule/Assets/Function-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -181,7 +177,7 @@
             }
           }
         },
-        "Handler": "TestModule.Function::MindTouch.LambdaSharpTestModule.Function.Function::FunctionHandlerAsync",
+        "Handler": "Function::MindTouch.LambdaSharpTestModule.Function.Function::FunctionHandlerAsync",
         "MemorySize": "128",
         "Role": {
           "Fn::GetAtt": [
@@ -530,75 +526,6 @@
     },
     "ModuleVersion": {
       "Value": "1.0"
-    },
-    "SimpleValue": {
-      "Value": "this is a value",
-      "Export": {
-        "Name": {
-          "Fn::Sub": "${AWS::StackName}::SimpleValue"
-        }
-      },
-      "Description": "SimpleValue description"
-    },
-    "ManyValues": {
-      "Value": "first value,second value",
-      "Export": {
-        "Name": {
-          "Fn::Sub": "${AWS::StackName}::ManyValues"
-        }
-      },
-      "Description": "ManyValues description"
-    },
-    "ResourceValue": {
-      "Value": {
-        "Ref": "ResourceValue"
-      },
-      "Export": {
-        "Name": {
-          "Fn::Sub": "${AWS::StackName}::ResourceValue"
-        }
-      },
-      "Description": "ResourceValue description"
-    },
-    "OutputExpressionValue": {
-      "Value": "this is a value with extra stuff",
-      "Export": {
-        "Name": {
-          "Fn::Sub": "${AWS::StackName}::OutputExpressionValue"
-        }
-      }
-    },
-    "MyFunction": {
-      "Value": {
-        "Ref": "Function"
-      },
-      "Export": {
-        "Name": {
-          "Fn::Sub": "${AWS::StackName}::MyFunction"
-        }
-      }
-    },
-    "TestModuleMyCustomSnsResourceHandler": {
-      "Value": {
-        "Ref": "ResourceValue"
-      },
-      "Export": {
-        "Name": {
-          "Fn::Sub": "${DeploymentPrefix}CustomResource-TestModule::MyCustomSnsResource"
-        }
-      },
-      "Description": "A custom resource handler"
-    },
-    "TestModuleMyCustomLambdaResourceHandler": {
-      "Value": {
-        "Ref": "Function"
-      },
-      "Export": {
-        "Name": {
-          "Fn::Sub": "${DeploymentPrefix}CustomResource-TestModule::MyCustomLambdaResource"
-        }
-      },
-      "Description": "Another custom resource handler"
     }
   },
   "Conditions": {
@@ -778,11 +705,11 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2018-12-14",
+      "Version": "2018-12-17",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
       "RuntimeCheck": true,
-      "Hash": "E1488A77F57B6D24E9C9003E79F9677A",
+      "Hash": "5ECF613DE1085A9CBB707E2D65A66734",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [
@@ -791,40 +718,11 @@
           "MinVersion": "0.5-WIP"
         }
       ],
-      "CustomResourceTypes": {
-        "TestModule::MyCustomLambdaResource": {
-          "Request": [
-            {
-              "Name": "Foo",
-              "Type": "String"
-            }
-          ],
-          "Response": [
-            {
-              "Name": "Bar",
-              "Type": "String"
-            }
-          ]
-        },
-        "TestModule::MyCustomSnsResource": {
-          "Request": [
-            {
-              "Name": "Foo",
-              "Type": "String"
-            }
-          ],
-          "Response": [
-            {
-              "Name": "Bar",
-              "Type": "String"
-            }
-          ]
-        }
-      },
+      "CustomResourceTypes": {},
       "MacroNames": [
         "MyMacro"
       ],
-      "ResourceFullNames": {
+      "ResourceNameMappings": {
         "MacrosMyMacro": "Macros::MyMacro",
         "FunctionLogGroup": "Function::LogGroup",
         "ModuleRole": "Module::Role",
@@ -832,6 +730,10 @@
         "ModuleCloudWatchLogsRole": "Module::CloudWatchLogsRole",
         "FunctionRegistration": "Function::Registration",
         "FunctionLogGroupSubscription": "Function::LogGroupSubscription"
+      },
+      "CustomResourceNameMappings": {
+        "Custom::LambdaSharpRegisterModule": "LambdaSharp::Register::Module",
+        "Custom::LambdaSharpRegisterFunction": "LambdaSharp::Register::Function"
       }
     }
   }

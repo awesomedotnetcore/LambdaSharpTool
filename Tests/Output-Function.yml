@@ -1,0 +1,13 @@
+Module: TestModule
+Description: LambdaSharp CloudFormation Test
+Outputs:
+
+  - Export: MyFunction
+    Value: !Ref Function
+
+Entries:
+
+  - Function: Function
+    Description: My function
+    Memory: 128
+    Timeout: 30

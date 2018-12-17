@@ -1,0 +1,14 @@
+Module: TestModule
+Description: LambdaSharp CloudFormation Test
+Outputs:
+
+  - Macro: MyMacro
+    Description: My test macro
+    Handler: Function
+
+Entries:
+
+  - Function: Function
+    Description: My function
+    Memory: 128
+    Timeout: 30
