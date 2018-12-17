@@ -236,7 +236,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 if(function.Function.Handler is string handler) {
                     ValidateEntryPoint(tempDirectory, handler);
                 }
-
                 var package = CreatePackage(function.Name, gitsha, tempDirectory);
                 _builder.AddAsset($"{function.FullName}::PackageName", package);
             } finally {
