@@ -15,13 +15,13 @@
 * resource `skip-property-validation` pragma
 * resource `skip-type-validation` pragma
 * new `Import` notation
-* module `DependsOn` section
+* module `Requires` section
     * validate custom resource types using module dependencies
 * validate resources using the cloudformation json spec
-* validation of attribute name in `!GetAtt` expressions
+* validation of attribute in `!GetAtt` expressions
 * `MindTouch.LambdaSharp` assembly
     * added `ALambdaFinalizerFunction` base class
-    * BREAKING CHANGE: moved `ALambdaCustomResourceFunction` into this assembly
+    * BREAKING CHANGE: merged `ALambdaCustomResourceFunction` into LambdaSharp assembly
     * `ALambdaCustomResourceFunction` can be invoked via SNS or directly from a custom resource
 * added module `Finalizer`
 * validate that function entry point exists after compiling assembly
