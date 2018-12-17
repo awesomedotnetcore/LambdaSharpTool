@@ -444,7 +444,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             Settings settings,
             string outputCloudFormationFilePath,
             bool skipAssemblyValidation,
-            bool skipFunctionBuild,
+            bool skipPackageBuild,
             string gitsha,
             string buildConfiguration,
             string selector,
@@ -458,7 +458,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 return await new BuildStep(settings, moduleSource).DoAsync(
                     outputCloudFormationFilePath,
                     skipAssemblyValidation,
-                    skipFunctionBuild,
+                    skipPackageBuild,
                     gitsha,
                     buildConfiguration,
                     selector

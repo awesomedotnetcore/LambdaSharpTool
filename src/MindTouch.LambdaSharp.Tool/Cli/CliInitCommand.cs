@@ -136,7 +136,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         settings,
                         Path.Combine(settings.OutputDirectory, "cloudformation.json"),
                         skipAssemblyValidation: true,
-                        skipFunctionBuild: false,
+                        skipPackageBuild: false,
                         gitsha: null,
                         buildConfiguration: "Release",
                         selector: null,
