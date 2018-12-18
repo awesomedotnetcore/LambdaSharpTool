@@ -288,7 +288,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         minValue: node.MinValue,
                         allow: node.Allow,
                         properties: node.Properties,
-                        arnAttribute: node.ArnAttribute,
+                        arnAttribute: node.DefaultAttribute,
                         encryptionContext: node.EncryptionContext,
                         pragmas: node.Pragmas
                     );
@@ -359,7 +359,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         allow: node.Allow,
                         properties: node.Properties,
                         dependsOn: ConvertToStringList(node.DependsOn),
-                        arnAttribute: node.ArnAttribute,
+                        arnAttribute: node.DefaultAttribute,
                         condition: null,
                         pragmas: node.Pragmas
                     );

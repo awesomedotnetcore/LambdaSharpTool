@@ -993,6 +993,15 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             });
         }
 
+        public bool HasAttribute(AModuleEntry entry, string attribute) {
+            var dependency = _dependencies.Values.FirstOrDefault(d => d.Manifest?.CustomResourceTypes.ContainsKey(entry.Type) ?? false);
+            if(dependency != null) {
+                return dependency.Manifest.CustomResourceTypes.TryGetValue(entry.Type, out ModuleManifestCustomResource customResource)
+                    && customResource.Response.Any(field => field.Name == attribute);
+            }
+            return entry.HasAttribute(attribute);
+        }
+
         public Module ToModule() {
 
             // update existing resource statements when they exist

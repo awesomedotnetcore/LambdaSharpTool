@@ -43,6 +43,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
 
         //--- Fields ---
+        private ModuleBuilder _builder;
         private Dictionary<string, AModuleEntry> _freeEntries = new Dictionary<string, AModuleEntry>();
         private Dictionary<string, AModuleEntry> _boundEntries = new Dictionary<string, AModuleEntry>();
 
@@ -51,6 +52,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
         //--- Methods ---
         public void Process(ModuleBuilder builder) {
+            _builder = builder;
             _freeEntries.Clear();
             _boundEntries.Clear();
 
@@ -313,7 +315,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 // check if the requested key can be resolved using a free entry
                 if(_freeEntries.TryGetValue(key, out AModuleEntry freeEntry)) {
                     if(attribute != null) {
-                        if(freeEntry.HasTypeValidation && !freeEntry.HasAttribute(attribute)) {
+                        if(freeEntry.HasTypeValidation && !_builder.HasAttribute(freeEntry, attribute)) {
                             AddError($"entry '{freeEntry.FullName}' of type '{freeEntry.Type}' does not have attribute '{attribute}'");
                         }
 

@@ -46,7 +46,7 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
                 "MinValue",
                 "Allow",
                 "Properties",
-                "ArnAttribute",
+                "DefaultAttribute",
                 "EncryptionContext",
                 "Pragmas"
             },
@@ -71,7 +71,7 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
                 "Value",
                 "Properties",
                 "DependsOn",
-                "ArnAttribute",
+                "DefaultAttribute",
                 "Entries",
                 "Pragmas"
             },
@@ -187,12 +187,12 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
          * Value: any
          * DependsOn: string -or- list<string>
          * Properties: map
-         * ArnAttribute: string
+         * DefaultAttribute: string
          * Pragmas: list<any>
          */
         public string Resource { get; set; }
         public object DependsOn { get; set; }
-        public string ArnAttribute { get; set; }
+        public string DefaultAttribute { get; set; }
 
         /*
          * Module: string

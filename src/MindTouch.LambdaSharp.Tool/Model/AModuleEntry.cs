@@ -164,7 +164,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             IList<string> dependsOn,
             string condition,
             IList<object> pragmas
-        ) : base(parent, name, description, resource.AWSTypeName, scope, reference: null) {
+        ) : base(parent, name, description, (resource is Humidifier.CustomResource customResource) ? customResource.OriginalTypeName : resource.AWSTypeName, scope, reference: null) {
             Resource = resource ?? throw new ArgumentNullException(nameof(resource));
             ResourceArnAttribute = resourceArnAttribute;
             DependsOn = dependsOn ?? new string[0];
@@ -182,10 +182,10 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         //--- Methods ---
         public override object GetExportReference()
             => (ResourceArnAttribute != null)
-                ? FnGetAtt(ResourceName, ResourceArnAttribute)
+                ? FnGetAtt(FullName, ResourceArnAttribute)
                 : HasAttribute("Arn")
-                ? FnGetAtt(ResourceName, "Arn")
-                : FnRef(ResourceName);
+                ? FnGetAtt(FullName, "Arn")
+                : FnRef(FullName);
 
         public override bool HasPragma(string pragma) => Pragmas.Contains(pragma);
     }
@@ -226,7 +226,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         //--- Methods ---
         public override object GetExportReference() => FnGetAtt(ResourceName, "Arn");
-
         public override bool HasPragma(string pragma) => Pragmas.Contains(pragma);
     }
 }
