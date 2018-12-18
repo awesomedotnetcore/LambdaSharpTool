@@ -76,7 +76,7 @@ Entries:
       Description: Default encryption/decryption key for LambdaSharp modules
       EnableKeyRotation: !Ref DefaultSecretKeyRotationEnabled
       KeyPolicy:
-        Version: "2012-10-17"
+        Version: 2012-10-17
         Id: !Sub "${AWS::StackName}ModuleDefaultSecretKeyPolicy"
         Statement:
           - Effect: Allow
