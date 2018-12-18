@@ -740,7 +740,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
                     // TODO (2018-09-26, bjorg): make retention configurable
                     //  see https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutRetentionPolicy.html
-                    RetentionInDays = 7
+                    RetentionInDays = 30
                 },
                 resourceArnAttribute: null,
                 dependsOn: null,
@@ -817,7 +817,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
                     // TODO (2018-09-26, bjorg): make retention configurable
                     //  see https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutRetentionPolicy.html
-                    RetentionInDays = 7
+                    RetentionInDays = 30
                 },
                 resourceArnAttribute: null,
                 dependsOn: null,
@@ -1005,7 +1005,10 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             //  generated after the linker has completed its job.
 
             // check if module contains a finalizer function
-            if(TryGetEntry("Finalizer", out AModuleEntry finalizerEntry) && (finalizerEntry is FunctionEntry)) {
+            if(TryGetEntry("Finalizer", out AModuleEntry finalizerEntry) && (finalizerEntry is FunctionEntry finalizerFunctionEntry)) {
+
+                // NOTE (2018-12-18, bjorg): always set the 'Finalizer' timeout to the maximum limit to prevent ugly timeout scenarios
+                finalizerFunctionEntry.Function.Timeout = 900;
 
                 // check if a finalizer invocation needs to be added
                 if(!TryGetEntry("Finalizer::Invocation", out AModuleEntry finalizerInvocationEntry)) {
@@ -1016,7 +1019,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                         scope: null,
                         resource: RegisterCustomResourceNameMapping(new Humidifier.CustomResource("Module::Finalizer") {
                             ["ServiceToken"] = FnGetAtt(finalizerEntry.LogicalId, "Arn"),
-                            ["DeploymentChecksum"] = FnRef("DeploymentChecksum")
+                            ["DeploymentChecksum"] = FnRef("DeploymentChecksum"),
+                            ["ModuleVersion"] = _version.ToString()
                         }),
                         resourceArnAttribute: null,
                         dependsOn: null,

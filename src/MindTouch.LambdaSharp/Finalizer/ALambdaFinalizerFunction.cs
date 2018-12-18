@@ -29,6 +29,7 @@ namespace MindTouch.LambdaSharp.Finalizer {
 
         //--- Properties ---
         public string DeploymentChecksum { get; set; }
+        public string ModuleVersion { get; set; }
     }
 
     public class FinalizerResponseProperties { }
