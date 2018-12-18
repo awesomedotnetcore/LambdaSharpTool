@@ -148,7 +148,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                                                     "logs:GetLogEvents",
                                                     "logs:FilterLogEvents"
                                                 },
-                                                Resource = "*"
+                                                Resource = "arn:aws:logs:*:*:*"
                                             }
                                         }.ToList()
                                     }
