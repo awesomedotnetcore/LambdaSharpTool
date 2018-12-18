@@ -38,7 +38,7 @@ namespace MindTouch.LambdaSharp.Finalizer {
 
         //--- Methods ---
         protected virtual async Task<string> CreateDeployment(string deploymentChecksum) => deploymentChecksum;
-        protected virtual async Task<string> UpdateDeployment(string deploymentChecksum, string oldDeploymentChecksum) => deploymentChecksum;
+        protected virtual async Task<string> UpdateDeployment(string deploymentChecksum, string oldDeploymentChecksum) => oldDeploymentChecksum;
         protected virtual async Task DeleteDeployment(string deploymentChecksum) { }
 
         protected override async Task<Response<FinalizerResponseProperties>> HandleCreateResourceAsync(Request<FinalizerRequestProperties> request) {

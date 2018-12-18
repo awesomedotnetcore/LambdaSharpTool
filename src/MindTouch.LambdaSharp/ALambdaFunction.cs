@@ -249,6 +249,9 @@ namespace MindTouch.LambdaSharp {
         }
 
         #region *** Logging ***
+        protected virtual void RecordErrorReport(ErrorReport report) => LambdaLogger.Log(SerializeJson(report) + "\n");
+        protected virtual void RecordException(Exception exception) => LambdaLogger.Log($"EXCEPTION: {exception}");
+
         protected void LogInfo(string format, params object[] args)
             => Log(LambdaLogLevel.INFO, exception: null, format: format, args: args);
 
@@ -282,16 +285,18 @@ namespace MindTouch.LambdaSharp {
         private void Log(LambdaLogLevel level, Exception exception, string format, params object[] args) {
             string message = ErrorReporter.FormatMessage(format, args) ?? exception?.Message;
             if((level >= LambdaLogLevel.WARNING) && (exception != null)) {
+
+                // NOTE (0218-12-18, bjorg): `ErrorReporter` is null until the function has initialized
                 if(ErrorReporter != null) {
                     try {
                         var report = ErrorReporter.CreateReport(RequestId, level.ToString(), exception, format, args);
-                        LambdaLogger.Log(SerializeJson(report) + "\n");
+                        RecordErrorReport(report);
                     } catch(Exception e) {
-                        LambdaLogger.Log($"EXCEPTION: {e}");
-                        LambdaLogger.Log($"EXCEPTION: {exception}");
+                        RecordException(e);
+                        RecordException(exception);
                     }
                 } else {
-                    LambdaLogger.Log($"EXCEPTION: {exception}");
+                    RecordException(exception);
                 }
             } else {
                 Log(level, $"{message}", exception?.ToString());
