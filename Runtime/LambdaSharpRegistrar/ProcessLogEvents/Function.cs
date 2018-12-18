@@ -154,7 +154,9 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
             if(!_cachedRegistrations.TryGetValue(id, out result)) {
                 result = await _registrations.GetOwnerMetaDataAsync(id);
                 if(result != null) {
-                    result.RollbarAccessToken = await DecryptSecretAsync(result.RollbarAccessToken);
+                    if(result.RollbarAccessToken != null) {
+                        result.RollbarAccessToken = await DecryptSecretAsync(result.RollbarAccessToken);
+                    }
                     _cachedRegistrations[id] = result;
                 }
             }
