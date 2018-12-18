@@ -98,7 +98,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             _stack.AddTemplateMetadata("LambdaSharp::Manifest", new ModuleManifest {
                 ModuleName = module.Name,
                 ModuleVersion = module.Version.ToString(),
-                RuntimeCheck = !module.HasPragma("no-runtime-version-check"),
+                RuntimeCheck = module.HasRuntimeCheck,
                 Hash = templateHash,
                 GitSha = gitSha ?? "",
                 Assets = module.Assets.ToList(),

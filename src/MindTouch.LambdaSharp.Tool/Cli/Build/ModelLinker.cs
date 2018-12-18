@@ -313,7 +313,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 // check if the requested key can be resolved using a free entry
                 if(_freeEntries.TryGetValue(key, out AModuleEntry freeEntry)) {
                     if(attribute != null) {
-                        if(!freeEntry.HasPragma("skip-type-validation") && !freeEntry.HasAttribute(attribute)) {
+                        if(freeEntry.HasTypeValidation && !freeEntry.HasAttribute(attribute)) {
                             AddError($"entry '{freeEntry.FullName}' of type '{freeEntry.Type}' does not have attribute '{attribute}'");
                         }
 

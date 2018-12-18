@@ -76,6 +76,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         //--- Methods ---
         public virtual bool HasPragma(string pragma) => false;
+        public bool HasTypeValidation => !HasPragma("skip-type-validation");
     }
 
     public class VariableEntry : AModuleEntry {
@@ -220,6 +221,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public IList<object> Pragmas { get; set; }
         public Humidifier.Lambda.Function Function { get; set; }
         public bool HasFunctionRegistration => !HasPragma("no-function-registration");
+        public bool HasAssemblyValidation => !HasPragma("skip-assembly-validation");
+        public bool HasHandlerValidation => !HasPragma("skip-handler-validation");
 
         //--- Methods ---
         public override object GetExportReference() => FnGetAtt(ResourceName, "Arn");

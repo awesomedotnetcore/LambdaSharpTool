@@ -160,7 +160,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             var targetFramework = mainPropertyGroup?.Element("TargetFramework").Value;
 
             // validate the project is using the most recent lambdasharp assembly references
-            if(!skipAssemblyValidation) {
+            if(!skipAssemblyValidation && function.HasAssemblyValidation) {
                 var includes = csproj.Element("Project")
                     ?.Elements("ItemGroup")
                     .Elements("PackageReference")
@@ -233,8 +233,10 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 }
 
                 // verify the function handler can be found in the compiled assembly
-                if(function.Function.Handler is string handler) {
-                    ValidateEntryPoint(tempDirectory, handler);
+                if(function.HasHandlerValidation) {
+                    if(function.Function.Handler is string handler) {
+                        ValidateEntryPoint(tempDirectory, handler);
+                    }
                 }
                 var package = CreatePackage(function.Name, gitsha, tempDirectory);
                 _builder.AddAsset($"{function.FullName}::PackageName", package);

@@ -22,6 +22,17 @@
     * added module `Finalizer` function
     * `Type: Secret` parameters/variables can decrypted for resources using `!Ref SecretParameterName::Plaintext`
     * `DeploymentChecksum` parameter
+    * Pragmas
+        * Resources
+            * `skip-type-validation`: don't validate attributes on resource
+        * Functions
+            * `skip-assembly-validation`: don't validate that the λ# assemblies referenced by the .csproj file are consistent with the CLI version
+            * `skip-handler-validation`: don't validate if the lambda function handler can be found in the compiled assembly
+            * `no-function-registration`: don't register function with λ# registrar
+        * Modules
+            * `no-runtime-version-check`: don't check if the λ# runtime and CLI versions match
+            * `no-module-registration`: don't register module with λ# registrar
+            * `no-lambdasharp-dependencies`: don't reference λ# base resources (DLQ, Logging Stream, etc.)
 
 * CLI
     * new module specification for deploying: `ModuleName[:Version][@Bucket]`
