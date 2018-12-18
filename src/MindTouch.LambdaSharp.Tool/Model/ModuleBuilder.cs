@@ -98,7 +98,14 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public AModuleEntry GetEntryByResourceName(string resourceName) => _entries.FirstOrDefault(e => e.ResourceName == resourceName) ?? throw new KeyNotFoundException(resourceName);
         public void AddCondition(string name, object condition) => _conditions.Add(name, condition);
         public void AddPragma(object pragma) => _pragmas.Add(pragma);
-        public bool TryGetEntry(string fullName, out AModuleEntry entry) => _entriesByFullName.TryGetValue(fullName, out entry);
+
+        public bool TryGetEntry(string fullName, out AModuleEntry entry) {
+            if(fullName.StartsWith("@", StringComparison.Ordinal)) {
+                entry = _entries.FirstOrDefault(e => e.ResourceName == fullName);
+                return entry != null;
+            }
+            return _entriesByFullName.TryGetValue(fullName, out entry);
+        }
 
         public IEnumerable<AModuleEntry> RemoveEntry(string fullName) {
             if(TryGetEntry(fullName, out AModuleEntry entry)) {
@@ -1084,12 +1091,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             string awsType,
             IDictionary properties
         ) {
-            if(awsType.StartsWith("AWS::", StringComparison.Ordinal)) {
-                if(!ResourceMapping.CloudformationSpec.ResourceTypes.TryGetValue(awsType, out ResourceType resource)) {
-                    AddError($"unrecognized AWS type {awsType}");
-                } else {
-                    ValidateProperties("", resource, properties);
-                }
+            if(ResourceMapping.CloudformationSpec.ResourceTypes.TryGetValue(awsType, out ResourceType resource)) {
+                ValidateProperties("", resource, properties);
             } else if(!awsType.StartsWith("Custom::", StringComparison.Ordinal)) {
                 var dependency = _dependencies.Values.FirstOrDefault(d => d.Manifest?.CustomResourceTypes.ContainsKey(awsType) ?? false);
                 if(dependency == null) {
@@ -1110,6 +1113,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                         }
                     }
                 }
+            } else {
+                AddError($"unrecognized AWS type {awsType}");
             }
 
             // local functions

@@ -24,6 +24,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using MindTouch.LambdaSharp.Tool;
+using MindTouch.LambdaSharp.Tool.Model;
 
 namespace Humidifier {
     using static ModelFunctions;
@@ -42,7 +43,7 @@ namespace Humidifier {
 
             // resolve custom resource service token
             if(
-                !typeName.StartsWith("AWS::", StringComparison.Ordinal)
+                !ResourceMapping.IsCloudFormationType(typeName)
                 && !typeName.StartsWith("Custom::", StringComparison.Ordinal)
             ) {
                 if(!_properties.ContainsKey("ServiceToken")) {

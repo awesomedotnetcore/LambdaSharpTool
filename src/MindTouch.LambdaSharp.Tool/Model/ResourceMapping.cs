@@ -189,7 +189,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             return resource.Attributes?.ContainsKey(attribute) == true;
         }
 
-        public static bool IsResourceTypeSupported(string awsType) => CloudformationSpec.ResourceTypes.ContainsKey(awsType);
+        public static bool IsCloudFormationType(string awsType) => CloudformationSpec.ResourceTypes.ContainsKey(awsType);
 
         public static string ToCloudFormationParameterType(string type)
             => _cloudFormationParameterTypes.Contains(type) ? type : "String";

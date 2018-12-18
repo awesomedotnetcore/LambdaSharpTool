@@ -68,7 +68,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public object Reference { get; set; }
         public bool DiscardIfNotReachable { get; set; }
         public bool HasSecretType => Type == "Secret";
-        public bool HasAwsType => Type.StartsWith("AWS::", StringComparison.Ordinal);
+        public bool HasAwsType => ResourceMapping.IsCloudFormationType(Type);
 
         //--- Abstract Methods ---
         public virtual object GetExportReference() => Reference;

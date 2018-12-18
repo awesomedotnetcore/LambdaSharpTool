@@ -266,7 +266,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     if(node.Properties != null) {
                         Validate(node.Type != null, "'Type' attribute is required");
                     }
-                    Validate((node.Allow == null) || (node.Type == "AWS") || ResourceMapping.IsResourceTypeSupported(node.Type), "'Allow' attribute can only be used with AWS resource types");
+                    Validate((node.Allow == null) || (node.Type == "AWS") || ResourceMapping.IsCloudFormationType(node.Type), "'Allow' attribute can only be used with AWS resource types");
 
                     // create input parameter entry
                     _builder.AddParameter(
@@ -344,8 +344,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                                 ValidateARN(arn);
                             }
                         }
-                    } else if((awsType != "AWS") && !awsType.StartsWith("AWS::", StringComparison.Ordinal)) {
-                        Validate((node.Allow == null) || (awsType == "AWS") || ResourceMapping.IsResourceTypeSupported(awsType), "'Allow' attribute can only be used with AWS resource types");
+                    } else {
+                        Validate((node.Allow == null) || (awsType == "AWS") || ResourceMapping.IsCloudFormationType(awsType), "'Allow' attribute can only be used with AWS resource types");
                     }
 
                     // create resource entry
