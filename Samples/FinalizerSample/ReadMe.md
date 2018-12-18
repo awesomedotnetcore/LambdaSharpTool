@@ -61,21 +61,27 @@ public class Function : ALambdaFinalizerFunction {
     protected override async Task DeleteDeployment(string deploymentChecksum) {
         LogInfo($"Deleting Deployment: {deploymentChecksum}");
 
-        // enumerate all S3 objects and delete them
+        // enumerate all S3 objects
         var request = new ListObjectsV2Request {
             BucketName = _bucketName
         };
         var counter = 0;
         do {
             var response = await _s3Client.ListObjectsV2Async(request);
+
+            // delete any objects found
+            if(response.S3Objects.Any()) {
+                await _s3Client.DeleteObjectsAsync(new DeleteObjectsRequest {
+                    BucketName = _bucketName,
+                    Objects = response.S3Objects.Select(s3 => new KeyVersion {
+                        Key = s3.Key
+                    }).ToList()
+                });
+                counter += response.S3Objects.Count;
+            }
+
+            // continue until no more objects can be fetched
             request.ContinuationToken = response.NextContinuationToken;
-            counter += response.S3Objects.Count;
-            await _s3Client.DeleteObjectsAsync(new DeleteObjectsRequest {
-                BucketName = _bucketName,
-                Objects = response.S3Objects.Select(s3 => new KeyVersion {
-                    Key = s3.Key
-                }).ToList()
-            });
         } while(request.ContinuationToken != null);
         LogInfo($"Deleted {counter:N0} objects");
     }

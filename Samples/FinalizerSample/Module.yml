@@ -11,4 +11,4 @@ Entries:
   - Function: Finalizer
     Description: This function is invoked once all other resources have been created/updated
     Memory: 128
-    Timeout: 30
+    Timeout: 600
