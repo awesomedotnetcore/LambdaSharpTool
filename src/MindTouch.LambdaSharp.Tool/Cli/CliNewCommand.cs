@@ -262,8 +262,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             // update YAML module definition
             var moduleLines = File.ReadAllLines(moduleFile).ToList();
 
-            // check if `Functions:` section needs to be added
-            var functionsIndex = moduleLines.FindIndex(line => line.StartsWith("Functions:", StringComparison.Ordinal));
+            // check if `Entries:` section needs to be added
+            var functionsIndex = moduleLines.FindIndex(line => line.StartsWith("Entries:", StringComparison.Ordinal));
             if(functionsIndex < 0) {
 
                 // add empty separator line if the last line of the file is not empty
@@ -271,7 +271,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     moduleLines.Add("");
                 }
                 functionsIndex = moduleLines.Count;
-                moduleLines.Add("Functions:");
+                moduleLines.Add("Entries:");
             }
             ++functionsIndex;
 
