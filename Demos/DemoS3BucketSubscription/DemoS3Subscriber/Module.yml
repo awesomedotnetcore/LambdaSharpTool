@@ -1,13 +1,12 @@
 Module: DemoS3Subscriber
+Entries:
 
-Inputs:
+  - Import: DemoS3Bucket
+    Entries:
 
-  - Import: DemoS3Bucket::Bucket
-    Resource:
-      Type: AWS::S3::Bucket
-      Allow: Read
-
-Functions:
+      - Parameter: Bucket
+        Type: AWS::S3::Bucket
+        Allow: Full
 
   - Function: Subscriber
     Memory: 128

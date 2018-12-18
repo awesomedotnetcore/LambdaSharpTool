@@ -1,59 +1,51 @@
 Module: Demo
 Description: LambdaSharp Demo
-
-Inputs:
-
-  - Parameter: SlackToken
-    Description: Slack verification token
-    Scope: SlackCommand
-    Default: ""
-
 Outputs:
 
   - Export: NotifyRecorderTopic
     Description: The topic that the lambda function subscribes to record messages
     Value: !Ref SnsTopic
 
-Variables:
+Entries:
 
-  - Var: MessageTable
-    Scope: "*"
+  - Parameter: SlackToken
+    Description: Slack verification token
+    Scope: SlackCommand
+    Default: ""
+
+  - Resource: MessageTable
     Description: DynamoDB table for storing received messages
-    Resource:
-      Type: AWS::DynamoDB::Table
-      Allow: ReadWrite
-      Properties:
-        AttributeDefinitions:
-          - AttributeName: MessageId
-            AttributeType: S
-        KeySchema:
-          - AttributeName: MessageId
-            KeyType: HASH
-        ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
+    Scope: "*"
+    Type: AWS::DynamoDB::Table
+    Allow: ReadWrite
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: MessageId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: MessageId
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
 
-  - Var: SnsTopic
+  - Resource: SnsTopic
     Description: The topic that the lambda function subscribes to record messages
-    Resource:
-      Type: AWS::SNS::Topic
-      Allow: Subscribe
+    Type: AWS::SNS::Topic
+    Allow: Subscribe
 
-  - Var: UsagePlan
+  - Resource: UsagePlan
     Description: Limit usage for REST API
-    Resource:
-      Type: AWS::ApiGateway::UsagePlan
-      Properties:
-        UsagePlanName: DemoUsagePlan
-        ApiStages:
-          - ApiId: !Ref Module::RestApi
-            Stage: !Ref Module::RestApiStage
-        Description: Sample usage plan for REST API
-        Quota:
-          Limit: 500
-          Period: MONTH
-
-Functions:
+    Type: AWS::ApiGateway::UsagePlan
+    Properties:
+      UsagePlanName: DemoUsagePlan
+      ApiStages:
+        - ApiId: !Ref Module::RestApi
+          Stage: !Ref Module::RestApi::Stage
+      Description: Sample usage plan for REST API
+      Quota:
+        Limit: 500
+        Period: MONTH
 
   - Function: RecordMessage
     Description: Record message in a DynamoDB table

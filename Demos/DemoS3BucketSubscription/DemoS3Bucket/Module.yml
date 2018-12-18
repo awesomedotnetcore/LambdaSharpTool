@@ -1,11 +1,9 @@
 Module: DemoS3Bucket
-
 Outputs:
 
   - Export: Bucket
 
-Variables:
+Entries:
 
-  - Var: Bucket
-    Resource:
-      Type: AWS::S3::Bucket
+  - Resource: Bucket
+    Type: AWS::S3::Bucket
