@@ -20,6 +20,7 @@
     * `Topic` source now supports `Filters` to filter on SNS notifications
     * `Bucket`, `Queue`, `S3`, `DynamoDB`, `Kinesis` sources can now also be expressions
     * added module `Finalizer` function
+        * `Finalizer` is sent two properties: `DeploymentChecksum` to detect changes and `ModuleVersion` to detect upgrade/downgrade scenarios
     * `Type: Secret` parameters/variables can decrypted for resources using `!Ref SecretParameterName::Plaintext`
     * `DeploymentChecksum` parameter
     * Pragmas
