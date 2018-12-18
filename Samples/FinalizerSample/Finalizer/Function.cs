@@ -66,23 +66,28 @@ namespace FinalizerSample.Finalizer {
                 BucketName = _bucketName
             };
             var counter = 0;
+            var deletions = new List<Task>();
             do {
                 var response = await _s3Client.ListObjectsV2Async(request);
 
                 // delete any objects found
                 if(response.S3Objects.Any()) {
-                    await _s3Client.DeleteObjectsAsync(new DeleteObjectsRequest {
+                    deletions.Add(_s3Client.DeleteObjectsAsync(new DeleteObjectsRequest {
                         BucketName = _bucketName,
                         Objects = response.S3Objects.Select(s3 => new KeyVersion {
                             Key = s3.Key
-                        }).ToList()
-                    });
+                        }).ToList(),
+                        Quiet = true
+                    }));
                     counter += response.S3Objects.Count;
                 }
 
                 // continue until no more objects can be fetched
                 request.ContinuationToken = response.NextContinuationToken;
             } while(request.ContinuationToken != null);
+
+            // wait for all deletions to complete
+            await Task.WhenAll(deletions);
             LogInfo($"Deleted {counter:N0} objects");
         }
     }
