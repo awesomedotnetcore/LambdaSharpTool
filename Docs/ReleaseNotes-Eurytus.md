@@ -37,7 +37,7 @@
 
 * Deploy Process
     * use change-sets for deploying stacks
-    * translate custom resource types from `Custom::LambdaSharpRegisterFunction` to `LambdaSharp::Register::Function` when showing the stack update
+    * translate custom resource types from `Custom::LambdaSharpRegisterFunction` to `LambdaSharp::Register::Function` when showing the stack update (also resource names)
     * λ# manifest embedded in cloudformation template
 
 * `MindTouch.LambdaSharp` assembly
