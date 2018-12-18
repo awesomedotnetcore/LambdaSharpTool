@@ -119,7 +119,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                                 Version = "2012-10-17",
                                 Statement = new[] {
                                     new Humidifier.Statement {
-                                        Sid = "ModuleRestApiInvocation",
+                                        Sid = "ModuleRestApiPrincipal",
                                         Effect = "Allow",
                                         Principal = new Humidifier.Principal {
                                             Service = "apigateway.amazonaws.com"

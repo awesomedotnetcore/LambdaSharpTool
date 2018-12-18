@@ -431,7 +431,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         Version = "2012-10-17",
                         Statement = new[] {
                             new Humidifier.Statement {
-                                Sid = "ModuleLambdaInvocation",
+                                Sid = "ModuleLambdaPrincipal",
                                 Effect = "Allow",
                                 Principal = new Humidifier.Principal {
                                     Service = "lambda.amazonaws.com"
@@ -537,7 +537,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                                     Version = "2012-10-17",
                                     Statement = new[] {
                                         new Humidifier.Statement {
-                                            Sid = "CloudWatchLogsKinesisInvocation",
+                                            Sid = "CloudWatchLogsKinesisPrincipal",
                                             Effect = "Allow",
                                             Principal = new Humidifier.Principal {
                                                 Service = FnSub("logs.${AWS::Region}.amazonaws.com")
