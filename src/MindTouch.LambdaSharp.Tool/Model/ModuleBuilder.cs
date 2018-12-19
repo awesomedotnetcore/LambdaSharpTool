@@ -843,25 +843,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 }
             );
             AddEntry(function);
-
-            // create function log-group with retention window
-            var logGroup = AddResource(
-                parent: function,
-                name: "LogGroup",
-                description: null,
-                scope: null,
-                resource: new Humidifier.Logs.LogGroup {
-                    LogGroupName = FnSub($"/aws/lambda/${{{function.ResourceName}}}"),
-
-                    // TODO (2018-09-26, bjorg): make retention configurable
-                    //  see https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutRetentionPolicy.html
-                    RetentionInDays = 30
-                },
-                resourceArnAttribute: null,
-                dependsOn: null,
-                condition: null,
-                pragmas: null
-            );
             return function;
         }
 
