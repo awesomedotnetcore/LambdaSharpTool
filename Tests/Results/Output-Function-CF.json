@@ -48,7 +48,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "CF473A982D52A1C28B1BACEDDC0521CA"
+      "Default": "AA0C90F999A89DA1DF0619A3C82934B3"
     }
   },
   "Resources": {
@@ -183,7 +183,7 @@
         "LogGroupName": {
           "Fn::Sub": "/aws/lambda/${Function}"
         },
-        "RetentionInDays": 7
+        "RetentionInDays": 30
       }
     },
     "ModuleRole": {
@@ -193,7 +193,7 @@
           "Version": "2012-10-17",
           "Statement": [
             {
-              "Sid": "ModuleLambdaInvocation",
+              "Sid": "ModuleLambdaPrincipal",
               "Effect": "Allow",
               "Principal": {
                 "Service": "lambda.amazonaws.com"
@@ -374,7 +374,7 @@
           "Version": "2012-10-17",
           "Statement": [
             {
-              "Sid": "CloudWatchLogsKinesisInvocation",
+              "Sid": "CloudWatchLogsKinesisPrincipal",
               "Effect": "Allow",
               "Principal": {
                 "Service": {
@@ -707,7 +707,7 @@
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
       "RuntimeCheck": true,
-      "Hash": "CF473A982D52A1C28B1BACEDDC0521CA",
+      "Hash": "AA0C90F999A89DA1DF0619A3C82934B3",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [

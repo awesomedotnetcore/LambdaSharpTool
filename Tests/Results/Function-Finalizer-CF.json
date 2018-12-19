@@ -48,7 +48,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "96EB711B29E186F1FDAB09DB67BE6992"
+      "Default": "B89A441068D2676F5FFA146328E102CD"
     }
   },
   "Resources": {
@@ -178,17 +178,29 @@
           ]
         },
         "Runtime": "dotnetcore2.1",
-        "Timeout": "30"
+        "Timeout": 900
       }
     },
-    "FinalizerLogGroup": {
-      "Type": "AWS::Logs::LogGroup",
+    "FinalizerInvocation": {
+      "Type": "Custom::ModuleFinalizer",
       "Properties": {
-        "LogGroupName": {
-          "Fn::Sub": "/aws/lambda/${Finalizer}"
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "Finalizer",
+            "Arn"
+          ]
         },
-        "RetentionInDays": 7
-      }
+        "DeploymentChecksum": {
+          "Ref": "DeploymentChecksum"
+        },
+        "ModuleVersion": "1.0"
+      },
+      "DependsOn": [
+        "Finalizer",
+        "ModuleRegistration",
+        "ModuleRole",
+        "MyTopic"
+      ]
     },
     "ModuleRole": {
       "Type": "AWS::IAM::Role",
@@ -197,7 +209,7 @@
           "Version": "2012-10-17",
           "Statement": [
             {
-              "Sid": "ModuleLambdaInvocation",
+              "Sid": "ModuleLambdaPrincipal",
               "Effect": "Allow",
               "Principal": {
                 "Service": "lambda.amazonaws.com"
@@ -370,170 +382,6 @@
         "ModuleName": "TestModule",
         "ModuleVersion": "1.0"
       }
-    },
-    "ModuleCloudWatchLogsRole": {
-      "Type": "AWS::IAM::Role",
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Version": "2012-10-17",
-          "Statement": [
-            {
-              "Sid": "CloudWatchLogsKinesisInvocation",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": {
-                  "Fn::Sub": "logs.${AWS::Region}.amazonaws.com"
-                }
-              },
-              "Action": "sts:AssumeRole"
-            }
-          ]
-        },
-        "Policies": [
-          {
-            "PolicyDocument": {
-              "Version": "2012-10-17",
-              "Statement": [
-                {
-                  "Sid": "CloudWatchLogsKinesisPermissions",
-                  "Effect": "Allow",
-                  "Action": "kinesis:PutRecord",
-                  "Resource": {
-                    "Fn::If": [
-                      "LambdaSharpLoggingStreamArnImported",
-                      {
-                        "Fn::ImportValue": {
-                          "Fn::Sub": [
-                            "${DeploymentPrefix}${Import}",
-                            {
-                              "Import": {
-                                "Fn::Select": [
-                                  "1",
-                                  {
-                                    "Fn::Split": [
-                                      "$",
-                                      {
-                                        "Ref": "LambdaSharpLoggingStreamArn"
-                                      }
-                                    ]
-                                  }
-                                ]
-                              }
-                            }
-                          ]
-                        }
-                      },
-                      {
-                        "Ref": "LambdaSharpLoggingStreamArn"
-                      }
-                    ]
-                  }
-                }
-              ]
-            },
-            "PolicyName": {
-              "Fn::Sub": "${AWS::StackName}ModuleCloudWatchLogsPolicy"
-            }
-          }
-        ]
-      }
-    },
-    "FinalizerRegistration": {
-      "Type": "Custom::LambdaSharpRegisterFunction",
-      "Properties": {
-        "ServiceToken": {
-          "Fn::ImportValue": {
-            "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::Register::Function"
-          }
-        },
-        "ModuleId": {
-          "Ref": "AWS::StackName"
-        },
-        "FunctionId": {
-          "Ref": "Finalizer"
-        },
-        "FunctionName": "Finalizer",
-        "FunctionLogGroupName": {
-          "Fn::Sub": "/aws/lambda/${Finalizer}"
-        },
-        "FunctionPlatform": "AWS Lambda",
-        "FunctionFramework": "dotnetcore2.1",
-        "FunctionLanguage": "csharp",
-        "FunctionMaxMemory": "128",
-        "FunctionMaxDuration": "30"
-      },
-      "DependsOn": [
-        "ModuleRegistration"
-      ]
-    },
-    "FinalizerLogGroupSubscription": {
-      "Type": "AWS::Logs::SubscriptionFilter",
-      "Properties": {
-        "DestinationArn": {
-          "Fn::If": [
-            "LambdaSharpLoggingStreamArnImported",
-            {
-              "Fn::ImportValue": {
-                "Fn::Sub": [
-                  "${DeploymentPrefix}${Import}",
-                  {
-                    "Import": {
-                      "Fn::Select": [
-                        "1",
-                        {
-                          "Fn::Split": [
-                            "$",
-                            {
-                              "Ref": "LambdaSharpLoggingStreamArn"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  }
-                ]
-              }
-            },
-            {
-              "Ref": "LambdaSharpLoggingStreamArn"
-            }
-          ]
-        },
-        "FilterPattern": "-\"*** \"",
-        "LogGroupName": {
-          "Ref": "FinalizerLogGroup"
-        },
-        "RoleArn": {
-          "Fn::GetAtt": [
-            "ModuleCloudWatchLogsRole",
-            "Arn"
-          ]
-        }
-      }
-    },
-    "FinalizerInvocation": {
-      "Type": "Custom::ModuleFinalizer",
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "Finalizer",
-            "Arn"
-          ]
-        },
-        "DeploymentChecksum": {
-          "Ref": "DeploymentChecksum"
-        }
-      },
-      "DependsOn": [
-        "Finalizer",
-        "FinalizerLogGroup",
-        "FinalizerLogGroupSubscription",
-        "FinalizerRegistration",
-        "ModuleCloudWatchLogsRole",
-        "ModuleRegistration",
-        "ModuleRole",
-        "MyTopic"
-      ]
     }
   },
   "Outputs": {
@@ -725,7 +573,7 @@
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
       "RuntimeCheck": true,
-      "Hash": "96EB711B29E186F1FDAB09DB67BE6992",
+      "Hash": "B89A441068D2676F5FFA146328E102CD",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [
@@ -737,18 +585,13 @@
       "CustomResourceTypes": {},
       "MacroNames": [],
       "ResourceNameMappings": {
-        "FinalizerLogGroup": "Finalizer::LogGroup",
+        "FinalizerInvocation": "Finalizer::Invocation",
         "ModuleRole": "Module::Role",
-        "ModuleRegistration": "Module::Registration",
-        "ModuleCloudWatchLogsRole": "Module::CloudWatchLogsRole",
-        "FinalizerRegistration": "Finalizer::Registration",
-        "FinalizerLogGroupSubscription": "Finalizer::LogGroupSubscription",
-        "FinalizerInvocation": "Finalizer::Invocation"
+        "ModuleRegistration": "Module::Registration"
       },
       "CustomResourceNameMappings": {
-        "Custom::LambdaSharpRegisterModule": "LambdaSharp::Register::Module",
-        "Custom::LambdaSharpRegisterFunction": "LambdaSharp::Register::Function",
-        "Custom::ModuleFinalizer": "Module::Finalizer"
+        "Custom::ModuleFinalizer": "Module::Finalizer",
+        "Custom::LambdaSharpRegisterModule": "LambdaSharp::Register::Module"
       }
     }
   }

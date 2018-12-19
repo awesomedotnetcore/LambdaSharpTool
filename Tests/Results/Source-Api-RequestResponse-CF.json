@@ -48,7 +48,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "82E301E21C00CE5FCC5842DD936A9EEF"
+      "Default": "209338ED08B69973D022F863918733E4"
     }
   },
   "Resources": {
@@ -183,7 +183,7 @@
         "LogGroupName": {
           "Fn::Sub": "/aws/lambda/${Function}"
         },
-        "RetentionInDays": 7
+        "RetentionInDays": 30
       }
     },
     "ModuleRole": {
@@ -193,7 +193,7 @@
           "Version": "2012-10-17",
           "Statement": [
             {
-              "Sid": "ModuleLambdaInvocation",
+              "Sid": "ModuleLambdaPrincipal",
               "Effect": "Allow",
               "Principal": {
                 "Service": "lambda.amazonaws.com"
@@ -374,7 +374,7 @@
           "Version": "2012-10-17",
           "Statement": [
             {
-              "Sid": "CloudWatchLogsKinesisInvocation",
+              "Sid": "CloudWatchLogsKinesisPrincipal",
               "Effect": "Allow",
               "Principal": {
                 "Service": {
@@ -733,7 +733,7 @@
           "Version": "2012-10-17",
           "Statement": [
             {
-              "Sid": "ModuleRestApiInvocation",
+              "Sid": "ModuleRestApiPrincipal",
               "Effect": "Allow",
               "Principal": {
                 "Service": "apigateway.amazonaws.com"
@@ -759,7 +759,7 @@
                     "logs:GetLogEvents",
                     "logs:FilterLogEvents"
                   ],
-                  "Resource": "*"
+                  "Resource": "arn:aws:logs:*:*:*"
                 }
               ]
             },
@@ -1012,7 +1012,7 @@
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
       "RuntimeCheck": true,
-      "Hash": "82E301E21C00CE5FCC5842DD936A9EEF",
+      "Hash": "209338ED08B69973D022F863918733E4",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [
