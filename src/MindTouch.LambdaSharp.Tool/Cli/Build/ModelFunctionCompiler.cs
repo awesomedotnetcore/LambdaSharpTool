@@ -178,7 +178,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
                     // NOTE (2018-06-21, bjorg): the RestApi deployment resource depends on ALL methods resources having been created;
                     //  a new name is used for the deployment to force the stage to be updated
-                    _builder.AddResource(
+                    var deployment = _builder.AddResource(
                         parent: restApiEntry,
                         name: "Deployment" + methodsHash,
                         description: "Module REST API Deployment",
@@ -203,7 +203,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         scope: null,
                         resource: new Humidifier.ApiGateway.Stage {
                             RestApiId = FnRef("Module::RestApi"),
-                            DeploymentId = FnRef("Module::RestApi::Deployment" + methodsHash),
+                            DeploymentId = FnRef(deployment.FullName),
                             StageName = "LATEST",
                             MethodSettings = new[] {
                                 new Humidifier.ApiGateway.StageTypes.MethodSetting {
