@@ -736,24 +736,55 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             );
             function.Function.Code.S3Key = FnSub($"Modules/${{Module::Name}}/Assets/${{{packageName.FullName}}}");
 
-            // create function log-group with retention window
-            var logGroup = AddResource(
-                parent: function,
-                name: "LogGroup",
-                description: null,
-                scope: null,
-                resource: new Humidifier.Logs.LogGroup {
-                    LogGroupName = FnSub($"/aws/lambda/${{{function.ResourceName}}}"),
+            // check if function is a finalizer
+            var isFinalizer = (parent == null) && (name == "Finalizer");
+            if(isFinalizer) {
 
-                    // TODO (2018-09-26, bjorg): make retention configurable
-                    //  see https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutRetentionPolicy.html
-                    RetentionInDays = 30
-                },
-                resourceArnAttribute: null,
-                dependsOn: null,
-                condition: null,
-                pragmas: null
-            );
+                // finalizer doesn't need a log-group or registration b/c it gets deleted anyway on failure or teardown
+                function.Pragmas = new List<object>(function.Pragmas) {
+                    "no-function-registration"
+                };
+
+                // NOTE (2018-12-18, bjorg): always set the 'Finalizer' timeout to the maximum limit to prevent ugly timeout scenarios
+                function.Function.Timeout = 900;
+
+                // add finalizer invocation (dependsOn will be set later when all resources have been added)
+                AddResource(
+                    parent: function,
+                    name: "Invocation",
+                    description: null,
+                    scope: null,
+                    resource: RegisterCustomResourceNameMapping(new Humidifier.CustomResource("Module::Finalizer") {
+                        ["ServiceToken"] = FnGetAtt(function.FullName, "Arn"),
+                        ["DeploymentChecksum"] = FnRef("DeploymentChecksum"),
+                        ["ModuleVersion"] = _version.ToString()
+                    }),
+                    resourceArnAttribute: null,
+                    dependsOn: null,
+                    condition: null,
+                    pragmas: null
+                );
+            } else {
+
+                // create function log-group with retention window
+                AddResource(
+                    parent: function,
+                    name: "LogGroup",
+                    description: null,
+                    scope: null,
+                    resource: new Humidifier.Logs.LogGroup {
+                        LogGroupName = FnSub($"/aws/lambda/${{{function.ResourceName}}}"),
+
+                        // TODO (2018-09-26, bjorg): make retention configurable
+                        //  see https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutRetentionPolicy.html
+                        RetentionInDays = 30
+                    },
+                    resourceArnAttribute: null,
+                    dependsOn: null,
+                    condition: null,
+                    pragmas: null
+                );
+            }
             return function;
         }
 
@@ -1020,30 +1051,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             // NOTE (2018-12-17, bjorg): at this point, we have to use `LogicalId` for entries since the module is
             //  generated after the linker has completed its job.
 
-            // check if module contains a finalizer function
-            if(TryGetEntry("Finalizer", out AModuleEntry finalizerEntry) && (finalizerEntry is FunctionEntry finalizerFunctionEntry)) {
-
-                // NOTE (2018-12-18, bjorg): always set the 'Finalizer' timeout to the maximum limit to prevent ugly timeout scenarios
-                finalizerFunctionEntry.Function.Timeout = 900;
-
-                // check if a finalizer invocation needs to be added
-                if(!TryGetEntry("Finalizer::Invocation", out AModuleEntry finalizerInvocationEntry)) {
-                    finalizerInvocationEntry = AddResource(
-                        parent: finalizerEntry,
-                        name: "Invocation",
-                        description: null,
-                        scope: null,
-                        resource: RegisterCustomResourceNameMapping(new Humidifier.CustomResource("Module::Finalizer") {
-                            ["ServiceToken"] = FnGetAtt(finalizerEntry.LogicalId, "Arn"),
-                            ["DeploymentChecksum"] = FnRef("DeploymentChecksum"),
-                            ["ModuleVersion"] = _version.ToString()
-                        }),
-                        resourceArnAttribute: null,
-                        dependsOn: null,
-                        condition: null,
-                        pragmas: null
-                    );
-                }
+            // check if module contains a finalizer invocation function
+            if(TryGetEntry("Finalizer::Invocation", out AModuleEntry finalizerInvocationEntry)) {
 
                 // finalizer depends on all resources having been created
                 ((ResourceEntry)finalizerInvocationEntry).DependsOn = _entries
