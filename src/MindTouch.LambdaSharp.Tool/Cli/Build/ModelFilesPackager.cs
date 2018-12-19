@@ -60,38 +60,19 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
         }
 
         private void ProcessParameter(PackageEntry parameter) {
-            var files = new List<string>();
             AtLocation("Package", () => {
-
-                // find all files that need to be part of the package
-                string folder;
-                string filePattern;
-                SearchOption searchOption;
-                var packageFiles = Path.Combine(Settings.WorkingDirectory, parameter.SourceFilepath);
-                if((packageFiles.EndsWith("/", StringComparison.Ordinal) || Directory.Exists(packageFiles))) {
-                    folder = Path.GetFullPath(packageFiles);
-                    filePattern = "*";
-                    searchOption = SearchOption.AllDirectories;
-                } else {
-                    folder = Path.GetDirectoryName(packageFiles);
-                    filePattern = Path.GetFileName(packageFiles);
-                    searchOption = SearchOption.TopDirectoryOnly;
-                }
-                files.AddRange(Directory.GetFiles(folder, filePattern, searchOption));
-                files.Sort();
 
                 // compute MD5 hash for package
                 string package;
                 using(var md5 = MD5.Create()) {
                     var bytes = new List<byte>();
-                    foreach(var file in files) {
-                        using(var stream = File.OpenRead(file)) {
-                            var relativeFilePath = Path.GetRelativePath(folder, file);
-                            bytes.AddRange(Encoding.UTF8.GetBytes(relativeFilePath));
+                    foreach(var file in parameter.Files) {
+                        using(var stream = File.OpenRead(file.Value)) {
+                            bytes.AddRange(Encoding.UTF8.GetBytes(file.Key));
                             var fileHash = md5.ComputeHash(stream);
                             bytes.AddRange(fileHash);
                             if(Settings.VerboseLevel >= VerboseLevel.Detailed) {
-                                Console.WriteLine($"... computing md5: {relativeFilePath} => {fileHash.ToHexString()}");
+                                Console.WriteLine($"... computing md5: {file.Key} => {fileHash.ToHexString()}");
                             }
                         }
                     }
@@ -101,9 +82,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 // create zip package
                 Console.WriteLine($"=> Building {parameter.Name} package");
                 using(var zipArchive = ZipFile.Open(package, ZipArchiveMode.Create)) {
-                    foreach(var file in files) {
-                        var filename = Path.GetRelativePath(folder, file);
-                        zipArchive.CreateEntryFromFile(file, filename);
+                    foreach(var file in parameter.Files) {
+                        zipArchive.CreateEntryFromFile(file.Value, file.Key);
                     }
                 }
                 _builder.AddAsset($"{parameter.FullName}::PackageName", package);

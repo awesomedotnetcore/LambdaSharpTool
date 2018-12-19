@@ -100,14 +100,13 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             string name,
             string description,
             IList<string> scope,
-            string sourceFilepath
+            IList<KeyValuePair<string, string>> files
         ) : base(parent, name, description, "String", scope, false) {
-            SourceFilepath = sourceFilepath ?? throw new ArgumentNullException(nameof(sourceFilepath));
+            Files = files ?? throw new ArgumentNullException(nameof(files));
         }
 
         //--- Properties ---
-        public string SourceFilepath { get; set; }
-        public string PackagePath { get; private set; }
+        public IList<KeyValuePair<string, string>> Files { get; }
     }
 
     public class InputEntry : AModuleEntry {

@@ -409,8 +409,34 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 // package resource
                 AtLocation(node.Package, () => {
 
-                    // check if required attributes are present
-                    Validate(node.Files != null, "missing 'Files' attribute");
+                    // discover files to package
+                    var files = new List<KeyValuePair<string, string>>();
+                    if(node.Files != null) {
+                        string folder;
+                        string filePattern;
+                        SearchOption searchOption;
+                        var packageFiles = Path.Combine(Settings.WorkingDirectory, node.Files);
+                        if((packageFiles.EndsWith("/", StringComparison.Ordinal) || Directory.Exists(packageFiles))) {
+                            folder = Path.GetFullPath(packageFiles);
+                            filePattern = "*";
+                            searchOption = SearchOption.AllDirectories;
+                        } else {
+                            folder = Path.GetDirectoryName(packageFiles);
+                            filePattern = Path.GetFileName(packageFiles);
+                            searchOption = SearchOption.TopDirectoryOnly;
+                        }
+                        if(Directory.Exists(folder)) {
+                            foreach(var filePath in Directory.GetFiles(folder, filePattern, searchOption)) {
+                                var entryName = Path.GetRelativePath(folder, filePath);
+                                files.Add(new KeyValuePair<string, string>(entryName, filePath));
+                            }
+                            files = files.OrderBy(file => file.Key).ToList();
+                        } else {
+                            AddError($"cannot find folder '{Path.GetRelativePath(Settings.WorkingDirectory, folder)}'");
+                        }
+                    } else {
+                        AddError("missing 'Files' attribute");
+                    }
 
                     // create package resource entry
                     var result = _builder.AddPackage(
@@ -418,7 +444,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         name: node.Package,
                         description: node.Description,
                         scope: ConvertScope(node.Scope),
-                        sourceFilepath: node.Files
+                        files: files
                     );
 
                     // recurse

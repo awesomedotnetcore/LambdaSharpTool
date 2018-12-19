@@ -636,7 +636,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             string name,
             string description,
             IList<string> scope,
-            string sourceFilepath
+            IList<KeyValuePair<string, string>> files
         ) {
 
             // create variable corresponding to the package definition
@@ -645,7 +645,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 name: name,
                 description: description,
                 scope: scope,
-                sourceFilepath: sourceFilepath
+                files: files
             );
             AddEntry(package);
 
