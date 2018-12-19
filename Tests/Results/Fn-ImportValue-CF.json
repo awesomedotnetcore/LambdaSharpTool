@@ -280,8 +280,7 @@
         "ModuleRegistration": "Module::Registration"
       },
       "CustomResourceNameMappings": {
-        "Custom::LambdaSharpRegisterModule": "LambdaSharp::Register::Module",
-        "Custom::LambdaSharpRegisterFunction": "LambdaSharp::Register::Function"
+        "Custom::LambdaSharpRegisterModule": "LambdaSharp::Register::Module"
       }
     }
   }
