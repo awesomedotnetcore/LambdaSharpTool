@@ -574,7 +574,12 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                             if(token == "*") {
                                 eventSourceToken = null;
                             }
-                        } else if(eventSourceToken != null) {
+                        } else if(
+                            (eventSourceToken != null)
+                            && TryGetFnRef(eventSourceToken, out string refKey)
+                            && _builder.TryGetEntry(refKey, out AModuleEntry entry)
+                            && entry is InputEntry
+                        ) {
 
                             // create conditional expression to allow "*" values
                             var condition = $"{function.LogicalId}Source{sourceSuffix}AlexaIsBlank";
