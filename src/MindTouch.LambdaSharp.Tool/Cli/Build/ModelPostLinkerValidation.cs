@@ -51,7 +51,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
         public void ValidateFunction(FunctionEntry function) {
             var index = 0;
             foreach(var source in function.Sources) {
-                AtLocation($"[{++index}]", () => {
+                AtLocation($"{++index}", () => {
                     switch(source) {
                     case TopicSource topicSource:
                         ValidateSourceParameter(topicSource.TopicName, "AWS::SNS::Topic");

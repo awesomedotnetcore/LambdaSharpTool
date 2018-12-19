@@ -457,7 +457,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 }
             case IList list: {
                     for(var i = 0; i < list.Count; ++i) {
-                        AtLocation($"[{i + 1}]", () => {
+                        AtLocation($"{i + 1}", () => {
                             list[i] = Visit(list[i], visitor);
                         });
                     }

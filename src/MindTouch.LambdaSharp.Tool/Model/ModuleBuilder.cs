@@ -931,7 +931,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                             AtLocation("Sources", () => {
                                 var index = 0;
                                 foreach(var source in function.Sources) {
-                                    AtLocation($"[{++index}]", () => {
+                                    AtLocation($"{++index}", () => {
                                         switch(source) {
                                         case AlexaSource alexaSource:
                                             if(alexaSource.EventSourceToken != null) {
@@ -1188,7 +1188,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 var result = new List<KeyValuePair<string, object>>();
                 var index = 0;
                 foreach(var item in list) {
-                    result.Add(new KeyValuePair<string, object>($"[{++index}]".ToString(), item));
+                    result.Add(new KeyValuePair<string, object>($"{++index}".ToString(), item));
                 }
                 return result;
             }

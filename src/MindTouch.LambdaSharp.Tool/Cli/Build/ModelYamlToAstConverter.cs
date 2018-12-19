@@ -115,7 +115,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             var outputValues = new List<AYamlValue>();
             var counter = 0;
             foreach(var inputValue in inputValues) {
-                AtLocation($"[{counter++}]", () => {
+                AtLocation($"{counter++}", () => {
                     var outputValue = ResolveChoices(inputValue);
                     if(outputValue != null) {
                         outputValues.Add(outputValue);

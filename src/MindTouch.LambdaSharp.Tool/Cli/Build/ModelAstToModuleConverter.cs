@@ -82,11 +82,11 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
         }
 
         private void ConvertPragma(int index, object pragma) {
-            AtLocation($"[{index}]", () => _builder.AddPragma(pragma));
+            AtLocation($"{index}", () => _builder.AddPragma(pragma));
         }
 
         private void ConvertSecret(int index, string secret) {
-            AtLocation($"[{index}]", () => {
+            AtLocation($"{index}", () => {
                 if(string.IsNullOrEmpty(secret)) {
                     AddError($"secret has no value");
                 } else if(secret.Equals("aws/ssm", StringComparison.OrdinalIgnoreCase)) {
@@ -103,7 +103,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
         }
 
         private void ConvertDependency(int index, ModuleDependencyNode dependency) {
-            AtLocation($"[{index}]", () => {
+            AtLocation($"{index}", () => {
                 VersionInfo minVersion = null;
                 VersionInfo maxVersion = null;
                 if(dependency.Version != null) {
@@ -613,7 +613,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
         ) {
             var instanceLookup = JObject.FromObject(instance);
 
-            return AtLocation($"[{index}]", () => {
+            return AtLocation($"{index}", () => {
 
                 // find all declaration fields with a non-null value; use alphabetical order for consistency
                 var matches = typeChecks
