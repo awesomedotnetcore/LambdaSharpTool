@@ -26,6 +26,7 @@ using System.Linq;
 using Amazon.CloudFormation;
 using Amazon.KeyManagementService;
 using Amazon.S3;
+using Amazon.ServerlessApplicationRepository;
 using Amazon.SimpleSystemsManagement;
 using MindTouch.LambdaSharp.Tool.Model;
 
@@ -113,6 +114,7 @@ namespace MindTouch.LambdaSharp.Tool {
         public IAmazonCloudFormation CfClient { get; set; }
         public IAmazonKeyManagementService KmsClient { get; set; }
         public IAmazonS3 S3Client { get; set; }
+        public IAmazonServerlessApplicationRepository RepositoryClient { get; set; }
         public string WorkingDirectory { get; set; }
         public string OutputDirectory { get; set; }
         public bool SkipDependencyValidation { get; set; }
