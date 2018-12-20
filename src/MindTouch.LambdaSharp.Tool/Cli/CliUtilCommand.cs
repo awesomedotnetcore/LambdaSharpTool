@@ -28,6 +28,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using McMaster.Extensions.CommandLineUtils;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace MindTouch.LambdaSharp.Tool.Cli {
@@ -51,12 +52,14 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         AddError("LAMBDASHARP environment variable is not defined");
                         return;
                     }
-                    var destinationLocation = Path.Combine(lambdaSharpFolder, "src/MindTouch.LambdaSharp.Tool/Resources/CloudFormationResourceSpecification.json.gz");
+                    var destinationZipLocation = Path.Combine(lambdaSharpFolder, "src/MindTouch.LambdaSharp.Tool/Resources/CloudFormationResourceSpecification.json.gz");
+                    var destinationJsonLocation = Path.Combine(lambdaSharpFolder, "src/MindTouch.LambdaSharp.Tool/Docs/CloudFormationResourceSpecification.json");
 
                     // determine if we want to install modules from a local check-out
                     await Refresh(
                         "https://d1uauaxba7bl26.cloudfront.net/latest/gzip/CloudFormationResourceSpecification.json",
-                        destinationLocation
+                        destinationZipLocation,
+                        destinationJsonLocation
                     );
                 });
             });
@@ -64,7 +67,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
         public async Task Refresh(
             string specifcationUrl,
-            string destinationLocation
+            string destinationZipLocation,
+            string destinationJsonLocation
         ) {
             Console.WriteLine();
 
@@ -88,15 +92,16 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 .ForEach(attr => attr.Remove());
             text = json.ToString();
             Console.WriteLine($"Stripped size: {text.Length:N0}");
+            File.WriteAllText(destinationJsonLocation, json.ToString(Formatting.Indented).Replace("\r\n", "\n"));
 
             // save compressed file
-            using(var fileStream = File.OpenWrite(destinationLocation)) {
+            using(var fileStream = File.OpenWrite(destinationZipLocation)) {
             using(var compressionStream = new GZipStream(fileStream, CompressionLevel.Optimal))
             using(var memoryStream = new MemoryStream(Encoding.UTF8.GetBytes(text)))
                 await memoryStream.CopyToAsync(compressionStream);
             }
-            var info = new FileInfo(destinationLocation);
-            Console.WriteLine($"Stored compressed spec file {destinationLocation}");
+            var info = new FileInfo(destinationZipLocation);
+            Console.WriteLine($"Stored compressed spec file {destinationZipLocation}");
             Console.WriteLine($"Compressed file size: {info.Length:N0}");
         }
     }
