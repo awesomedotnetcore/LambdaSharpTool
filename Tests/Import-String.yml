@@ -8,6 +8,7 @@ Entries:
 
       - Parameter: Value
         Description: cross-module import reference
+        Scope: "*"
 
   - Function: Function
     Description: My function
