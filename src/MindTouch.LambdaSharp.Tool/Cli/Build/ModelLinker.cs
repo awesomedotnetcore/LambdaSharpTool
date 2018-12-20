@@ -152,13 +152,23 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             }
 
             // resolve all references
-            builder.VisitAll((_, item) => Substitute(item, ReportMissingReference));
+            builder.VisitAll((entry, item) => Substitute(entry, item, ReportMissingReference));
 
             // remove any optional entries that are unreachable
             DiscardUnreachableEntries(builder);
 
             // replace all references with their logical IDs
             builder.VisitAll(Finalize);
+
+            // replace all condition references with their logical IDs
+            foreach(var resource in _builder.Entries.OfType<AResourceEntry>()) {
+                if(resource.Condition?.StartsWith("@", StringComparison.Ordinal) == true) {
+                    var entry = _builder.GetEntryByResourceName(resource.Condition);
+                    if(entry != null) {
+                        resource.Condition = entry.LogicalId;
+                    }
+                }
+            }
 
             // local functions
             void DiscoverEntries() {
@@ -204,7 +214,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
                             var doesNotContainBoundEntries = true;
                             AtLocation("Reference", () => {
-                                entry.Reference = Substitute(entry.Reference, (string missingName) => {
+                                entry.Reference = Substitute(entry, entry.Reference, (string missingName) => {
                                     doesNotContainBoundEntries = doesNotContainBoundEntries && !_boundEntries.ContainsKey(missingName);
                                 });
                             });
@@ -228,7 +238,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             void ReportUnresolvedEntries() {
                 foreach(var entry in builder.Entries) {
                     AtLocation(entry.FullName, () => {
-                        Substitute(entry.Reference, ReportMissingReference);
+                        Substitute(entry, entry.Reference, ReportMissingReference);
                     });
                 }
             }
@@ -242,7 +252,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             }
         }
 
-        private object Substitute(object root, Action<string> missing = null) {
+        private object Substitute(AModuleEntry entry, object root, Action<string> missing = null) {
             return Visit(root, value => {
 
                 // handle !Ref expression
@@ -296,6 +306,18 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     }
                     return FnSub(subPattern, subArgs);
                 }
+
+                // handle !If expression
+                if(
+                    TryGetFnIf(value, out string condition, out object ifTrue, out object ifFalse) && condition.StartsWith("@", StringComparison.Ordinal)
+                    && !condition.StartsWith("@", StringComparison.Ordinal)
+                    && _freeEntries.TryGetValue(condition, out AModuleEntry freeEntry)
+                ) {
+                    if(!(freeEntry is ConditionEntry)) {
+                        AddError($"entry '{freeEntry.FullName}' is not a condition");
+                    }
+                    return FnIf(freeEntry.ResourceName, ifTrue, ifFalse);
+                }
                 return value;
             });
 
@@ -314,7 +336,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
                 // check if the requested key can be resolved using a free entry
                 if(_freeEntries.TryGetValue(key, out AModuleEntry freeEntry)) {
-                    if(attribute != null) {
+                    if(freeEntry is ConditionEntry) {
+                        AddError($"condition '{freeEntry.FullName}' cannot be used here");
+                    } else if(attribute != null) {
                         if(freeEntry.HasTypeValidation && !_builder.HasAttribute(freeEntry, attribute)) {
                             AddError($"entry '{freeEntry.FullName}' of type '{freeEntry.Type}' does not have attribute '{attribute}'");
                         }
@@ -428,6 +452,11 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         return null;
                     });
                     return FnSub(subPattern, subArgs);
+                }
+
+                // handle !If expression
+                if(TryGetFnIf(value, out string condition, out object ifTrue, out object ifFalse) && condition.StartsWith("@", StringComparison.Ordinal)) {
+                    return FnIf(condition.Substring(1), ifTrue, ifFalse);
                 }
                 return value;
             });

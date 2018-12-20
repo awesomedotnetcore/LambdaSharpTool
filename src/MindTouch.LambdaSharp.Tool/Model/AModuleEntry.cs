@@ -143,11 +143,24 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             string description,
             string type,
             IList<string> scope,
-            object reference
-        ) : base(parent, name, description, type, scope, reference) { }
+            object reference,
+            IList<string> dependsOn,
+            string condition,
+            IList<object> pragmas
+        ) : base(parent, name, description, type, scope, reference) {
+            DependsOn = dependsOn ?? new string[0];
+            Condition = condition;
+            Pragmas = pragmas ?? new object[0];
+        }
+
+        //--- Properties ---
+        public string Condition { get; set; }
+        public IList<string> DependsOn { get; set; }
+        public IList<object> Pragmas { get; set; }
 
         //--- Methods ---
         public override bool HasAttribute(string attribute) => ResourceMapping.HasAttribute(Type, attribute);
+        public override bool HasPragma(string pragma) => Pragmas.Contains(pragma);
     }
 
     public class ResourceEntry : AResourceEntry {
@@ -163,20 +176,14 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             IList<string> dependsOn,
             string condition,
             IList<object> pragmas
-        ) : base(parent, name, description, (resource is Humidifier.CustomResource customResource) ? customResource.OriginalTypeName : resource.AWSTypeName, scope, reference: null) {
+        ) : base(parent, name, description, (resource is Humidifier.CustomResource customResource) ? customResource.OriginalTypeName : resource.AWSTypeName, scope, reference: null, dependsOn, condition, pragmas) {
             Resource = resource ?? throw new ArgumentNullException(nameof(resource));
             ResourceArnAttribute = resourceArnAttribute;
-            DependsOn = dependsOn ?? new string[0];
-            Condition = condition;
-            Pragmas = pragmas ?? new object[0];
         }
 
         //--- Properties ---
         public Humidifier.Resource Resource { get; set; }
         public string ResourceArnAttribute { get; set; }
-        public IList<string> DependsOn { get; set; }
-        public string Condition { get; set; }
-        public IList<object> Pragmas { get; }
 
         //--- Methods ---
         public override object GetExportReference()
@@ -185,8 +192,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 : HasAttribute("Arn")
                 ? FnGetAtt(FullName, "Arn")
                 : FnRef(FullName);
-
-        public override bool HasPragma(string pragma) => Pragmas.Contains(pragma);
     }
 
     public class FunctionEntry : AResourceEntry {
@@ -203,12 +208,14 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             IList<AFunctionSource> sources,
             IList<object> pragmas,
             Humidifier.Lambda.Function function
-        ) : base(parent, name, description, function.AWSTypeName, scope, reference: null) {
+
+            // TODO: add 'condition' & 'dependsOn'
+
+        ) : base(parent, name, description, function.AWSTypeName, scope, reference: null, dependsOn: null, condition: null, pragmas) {
             Project = project;
             Language = language;
             Environment = environment;
             Sources = sources ?? new AFunctionSource[0];
-            Pragmas = pragmas ?? new object[0];
             Function = function ?? throw new ArgumentNullException(nameof(function));
         }
 
@@ -217,7 +224,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public string Language { get; set; }
         public IDictionary<string, object> Environment { get; set; }
         public IList<AFunctionSource> Sources { get; set; }
-        public IList<object> Pragmas { get; set; }
         public Humidifier.Lambda.Function Function { get; set; }
         public bool HasFunctionRegistration => !HasPragma("no-function-registration");
         public bool HasAssemblyValidation => !HasPragma("skip-assembly-validation");
@@ -226,5 +232,16 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         //--- Methods ---
         public override object GetExportReference() => FnGetAtt(ResourceName, "Arn");
         public override bool HasPragma(string pragma) => Pragmas.Contains(pragma);
+    }
+
+    public class ConditionEntry : AModuleEntry {
+
+        //--- Constructors ---
+        public ConditionEntry(
+            AModuleEntry parent,
+            string name,
+            string description,
+            object value
+        ) : base(parent, name, description, type: "Condition", scope: null, reference: value) { }
     }
 }

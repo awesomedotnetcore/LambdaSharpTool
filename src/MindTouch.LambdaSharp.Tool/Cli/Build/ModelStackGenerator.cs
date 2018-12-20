@@ -55,11 +55,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     : null
             };
 
-            // add conditions
-            foreach(var condition in _module.Conditions) {
-                _stack.Add(condition.Key, new Condition(condition.Value));
-            }
-
             // add entries
             foreach(var entry in _module.Entries) {
                 AddEntry(entry);
@@ -173,7 +168,15 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 _stack.Add(logicalId, inputEntry.Parameter);
                 break;
             case FunctionEntry functionEntry:
-                _stack.Add(functionEntry.LogicalId, functionEntry.Function);
+                _stack.Add(
+                    functionEntry.LogicalId,
+                    functionEntry.Function,
+                    functionEntry.Condition,
+                    dependsOn: functionEntry.DependsOn.ToArray()
+                );
+                break;
+            case ConditionEntry conditionEntry:
+                _stack.Add(conditionEntry.LogicalId, new Condition(conditionEntry.Reference));
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(entry), entry, "unknown parameter type");

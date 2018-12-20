@@ -29,27 +29,8 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
 
         //--- Class Fields ---
         public static readonly Dictionary<string, IEnumerable<string>> FieldCombinations = new Dictionary<string, IEnumerable<string>> {
-            ["Parameter"] = new[] {
-                "Section",
-                "Label",
-                "Description",
-                "Type",
-                "Scope",
-                "NoEcho",
-                "Default",
-                "ConstraintDescription",
-                "AllowedPattern",
-                "AllowedValues",
-                "MaxLength",
-                "MaxValue",
-                "MinLength",
-                "MinValue",
-                "Allow",
-                "Properties",
-                "DefaultAttribute",
-                "EncryptionContext",
-                "Pragmas"
-            },
+
+            // nodes with optional nested entries
             ["Import"] = new[] {
                 "Description",
                 "Entries"
@@ -72,19 +53,47 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
                 "Properties",
                 "DependsOn",
                 "DefaultAttribute",
-                "Entries",
+                "Pragmas",
+                "Entries"
+            },
+            ["Package"] = new[] {
+                "Description",
+                "Scope",
+                "Files",
+                "Entries"
+            },
+
+            // leaf nodes
+            ["Parameter"] = new[] {
+                "Section",
+                "Label",
+                "Description",
+                "Type",
+                "Scope",
+                "NoEcho",
+                "Default",
+                "ConstraintDescription",
+                "AllowedPattern",
+                "AllowedValues",
+                "MaxLength",
+                "MaxValue",
+                "MinLength",
+                "MinValue",
+                "Allow",
+                "Properties",
+                "DefaultAttribute",
+                "EncryptionContext",
                 "Pragmas"
+            },
+            ["Condition"] = new[] {
+                "Description",
+                "Value"
             },
             ["Module"] = new[] {
                 "Description",
                 "DependsOn",
                 "Properties",
                 "Parameters"
-            },
-            ["Package"] = new[] {
-                "Description",
-                "Scope",
-                "Files"
             },
             ["Function"] = new[] {
                 "Description",
@@ -161,7 +170,7 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         /*
          * Import: string
          * Description: string
-         * Entries: list<Entry>
+         * Entries: list<Parameter>
          */
         public string Import { get; set; }
         public IList<EntryNode> Entries { get; set; }
@@ -179,6 +188,13 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         public object Value { get; set; }
 
         /*
+         * Condition: string
+         * Description: string
+         * Value: any
+         */
+        public string Condition { get; set; }
+
+        /*
          * Resource: string
          * Description: string
          * Type: string
@@ -189,6 +205,7 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
          * Properties: map
          * DefaultAttribute: string
          * Pragmas: list<any>
+         * Entries: list<Entry>
          */
         public string Resource { get; set; }
         public object DependsOn { get; set; }
@@ -199,9 +216,9 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
          * Description: string
          * DependsOn: string -or- list<string>
          * Properties: map
-         *  ModuleName: string
-         *  Version: string
-         *  BucketName: string
+         *   ModuleName: string
+         *   Version: string
+         *   BucketName: string
          * Parameters: map
          */
         public string Module { get; set; }
@@ -227,8 +244,8 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
          * Handler: string
          * ReservedConcurrency: int
          * VPC:
-         *  SubnetIds: string -or- list<string>
-         *  SecurityGroupIds: string -or- list<string>
+         *   SubnetIds: string -or- list<string>
+         *   SecurityGroupIds: string -or- list<string>
          * Environment: map
          * Sources: list<function-source>
          * Pragmas: list<any>

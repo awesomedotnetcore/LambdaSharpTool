@@ -582,13 +582,17 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         ) {
 
                             // create conditional expression to allow "*" values
-                            var condition = $"{function.LogicalId}Source{sourceSuffix}AlexaIsBlank";
+                            var condition = _builder.AddCondition(
+                                parent: function,
+                                name: $"Source{sourceSuffix}AlexaIsBlank",
+                                description: null,
+                                value: FnEquals(alexaSource.EventSourceToken, "*")
+                            );
                             eventSourceToken = FnIf(
-                                condition,
+                                condition.ResourceName,
                                 FnRef("AWS::NoValue"),
                                 alexaSource.EventSourceToken
                             );
-                            _builder.AddCondition(condition, FnEquals(alexaSource.EventSourceToken, "*"));
                         }
                         _builder.AddResource(
                             parent: function,

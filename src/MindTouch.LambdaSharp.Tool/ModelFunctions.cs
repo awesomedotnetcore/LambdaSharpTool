@@ -210,6 +210,26 @@ namespace MindTouch.LambdaSharp.Tool {
                 return replace(key, suffix) ?? matchText;
             });
 
+        public static bool TryGetFnIf(object value, out string condition, out object ifTrue, out object ifFalse) {
+            if(
+                (value is IDictionary<string, object> map)
+                && (map.Count == 1)
+                && map.TryGetValue("Fn::If", out object argsObject)
+                && (argsObject is IList<object> argsList)
+                && (argsList.Count == 3)
+                && (argsList[0] is string conditionText)
+            ) {
+                condition = conditionText;
+                ifTrue = argsList[1];
+                ifFalse = argsList[2];
+                return true;
+            }
+            condition = null;
+            ifTrue = null;
+            ifFalse = null;
+            return false;
+        }
+
         public static bool TryGetFnRef(object value, out string key)  {
             if(
                 (value is IDictionary<string, object> map)

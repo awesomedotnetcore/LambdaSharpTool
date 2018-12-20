@@ -250,9 +250,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 "Module",
                 "Package",
                 "Function",
-                "Export",
-                "CustomResource",
-                "Macro"
+                "Condition"
             });
 
         private void ConvertEntry(AModuleEntry parent, int index, EntryNode node, IEnumerable<string> expectedTypes) {
@@ -303,7 +301,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         description: node.Description
                     );
 
-                    // recurse
+                    // recurse, but only allow 'Parameter' nodes
                     ConvertEntries(result, new[] { "Parameter" });
                 });
                 break;
@@ -483,7 +481,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         .ToList()
                     );
                     var result = _builder.AddFunction(
-                        parent: null,
+                        parent: parent,
                         name: node.Function,
                         description: node.Description,
                         project: project,
@@ -498,6 +496,19 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         handler: handler,
                         subnets: node.VPC?.SubnetIds,
                         securityGroups: node.VPC?.SecurityGroupIds
+                    );
+                });
+                break;
+            case "Condition":
+                AtLocation(node.Condition, () => {
+                    AtLocation("Value", () => {
+                        Validate(node.Value != null, "missing Value attribute");
+                    });
+                    _builder.AddCondition(
+                        parent: parent,
+                        name: node.Condition,
+                        description: node.Description,
+                        value: node.Value
                     );
                 });
                 break;

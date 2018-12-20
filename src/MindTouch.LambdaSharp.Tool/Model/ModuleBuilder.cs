@@ -43,7 +43,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         private IList<object> _secrets;
         private Dictionary<string, AModuleEntry> _entriesByFullName;
         private List<AModuleEntry> _entries;
-        private IDictionary<string, object> _conditions;
         private IList<AOutput> _outputs;
         private IList<Humidifier.Statement> _resourceStatements = new List<Humidifier.Statement>();
         private IList<string> _assets;
@@ -61,7 +60,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             _secrets = new List<object>(module.Secrets ?? new object[0]);
             _entries = new List<AModuleEntry>(module.Entries ?? new AModuleEntry[0]);
             _entriesByFullName = _entries.ToDictionary(entry => entry.FullName);
-            _conditions = new Dictionary<string, object>(module.Conditions ?? new KeyValuePair<string, object>[0]);
             _outputs = new List<AOutput>(module.Outputs ?? new AOutput[0]);
             _assets = new List<string>(module.Assets ?? new string[0]);
             _dependencies = (module.Dependencies != null)
@@ -96,7 +94,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         //--- Methods ---
         public AModuleEntry GetEntry(string fullName) => _entriesByFullName[fullName];
         public AModuleEntry GetEntryByResourceName(string resourceName) => _entries.FirstOrDefault(e => e.ResourceName == resourceName) ?? throw new KeyNotFoundException(resourceName);
-        public void AddCondition(string name, object condition) => _conditions.Add(name, condition);
+
         public void AddPragma(object pragma) => _pragmas.Add(pragma);
 
         public bool TryGetEntry(string fullName, out AModuleEntry entry) {
@@ -283,13 +281,17 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 }
 
                 // register import parameter reference
-                var condition = $"{result.LogicalId}Imported";
-                AddCondition(condition, FnAnd(
-                    FnNot(FnEquals(FnRef(result.ResourceName), "")),
-                    FnEquals(FnSelect("0", FnSplit("$", FnRef(result.ResourceName))), ""))
+                var condition = AddCondition(
+                    parent: result,
+                    name: "Imported",
+                    description: null,
+                    value: FnAnd(
+                        FnNot(FnEquals(FnRef(result.ResourceName), "")),
+                        FnEquals(FnSelect("0", FnSplit("$", FnRef(result.ResourceName))), "")
+                    )
                 );
                 result.Reference = FnIf(
-                    condition,
+                    condition.ResourceName,
                     FnImportValue(FnSub("${DeploymentPrefix}${Import}", new Dictionary<string, object> {
                         ["Import"] = FnSelect("1", FnSplit("$", FnRef(result.ResourceName)))
                     })),
@@ -322,8 +324,12 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             } else {
 
                 // create conditional managed resource
-                var condition = $"{result.LogicalId}Created";
-                AddCondition(condition, FnEquals(FnRef(result.ResourceName), defaultValue));
+                var condition = AddCondition(
+                    parent: result,
+                    name: "Created",
+                    description: null,
+                    value: FnEquals(FnRef(result.ResourceName), defaultValue)
+                );
                 var instance = AddResource(
                     parent: result,
                     name: "Resource",
@@ -335,13 +341,13 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                     properties: properties,
                     arnAttribute: arnAttribute,
                     dependsOn: null,
-                    condition: condition,
+                    condition: condition.ResourceName,
                     pragmas: pragmas
                 );
 
                 // register input parameter reference
                 result.Reference = FnIf(
-                    condition,
+                    condition.ResourceName,
                     instance.GetExportReference(),
                     result.Reference
                 );
@@ -846,6 +852,20 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             return function;
         }
 
+        public AModuleEntry AddCondition(
+            AModuleEntry parent,
+            string name,
+            string description,
+            object value
+        ) {
+            return AddEntry(new ConditionEntry(
+                parent: parent,
+                name: name,
+                description: description,
+                value: value
+            ));
+        }
+
         public void AddGrant(string sid, string awsType, object reference, object allow) {
 
             // resolve shorthands and deduplicate statements
@@ -905,32 +925,32 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
                             // nothing to do
                             break;
-                        case ResourceEntry resource:
+                        case ResourceEntry resourceEntry:
                             AtLocation("Resource", () => {
-                                resource.Resource = (Humidifier.Resource)visitor(entry, resource.Resource);
+                                resourceEntry.Resource = (Humidifier.Resource)visitor(entry, resourceEntry.Resource);
                             });
                             AtLocation("DependsOn", () => {
 
                                 // TODO (2018-11-29, bjorg): we need to make sure that only other resources are referenced (no literal entries, or itself, no loops either)
-                                for(var i = 0; i < resource.DependsOn.Count; ++i) {
-                                    var dependency = resource.DependsOn[i];
+                                for(var i = 0; i < resourceEntry.DependsOn.Count; ++i) {
+                                    var dependency = resourceEntry.DependsOn[i];
                                     TryGetFnRef(visitor(entry, FnRef(dependency)), out string result);
-                                    resource.DependsOn[i] = result ?? throw new InvalidOperationException($"invalid expression returned (index: {i})");
+                                    resourceEntry.DependsOn[i] = result ?? throw new InvalidOperationException($"invalid expression returned (index: {i})");
                                 }
                             });
                             break;
-                        case FunctionEntry function:
+                        case FunctionEntry functionEntry:
                             AtLocation("Environment", () => {
-                                function.Environment = (IDictionary<string, object>)visitor(entry, function.Environment);
+                                functionEntry.Environment = (IDictionary<string, object>)visitor(entry, functionEntry.Environment);
                             });
                             AtLocation("Function", () => {
-                                function.Function = (Humidifier.Lambda.Function)visitor(entry, function.Function);
+                                functionEntry.Function = (Humidifier.Lambda.Function)visitor(entry, functionEntry.Function);
                             });
 
                             // update function sources
                             AtLocation("Sources", () => {
                                 var index = 0;
-                                foreach(var source in function.Sources) {
+                                foreach(var source in functionEntry.Sources) {
                                     AtLocation($"{++index}", () => {
                                         switch(source) {
                                         case AlexaSource alexaSource:
@@ -968,16 +988,16 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                                 }
                             });
                             break;
+                        case ConditionEntry conditionEntry:
+                            AtLocation("Reference", () => {
+                                conditionEntry.Reference = visitor(entry, conditionEntry.Reference);
+                            });
+                            break;
                         default:
                             throw new ApplicationException($"unexpected type: {entry.GetType()}");
                         }
                     });
                 }
-            });
-
-            // resolve references in conditions
-            AtLocation("Conditions", () => {
-                _conditions = (IDictionary<string, object>)visitor(null, _conditions);
             });
 
             // resolve references in output values
@@ -1050,7 +1070,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 Pragmas = _pragmas,
                 Secrets = _secrets,
                 Outputs = _outputs,
-                Conditions = _conditions,
                 Entries = _entries,
                 Assets = _assets.OrderBy(value => value).ToList(),
                 Dependencies = _dependencies.OrderBy(kv => kv.Key).ToList(),
@@ -1091,7 +1110,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                         // NOTE (2018-12-13, bjorg): one or more manifests were not loaded; give the benefit of the doubt
                         Console.WriteLine($"WARNING: unable to validate properties for {awsType}");
                     } else {
-                        AddError($"missing dependency for resource type {awsType}");
+                        AddError($"unrecognized resource type {awsType}");
                     }
                 } else if(properties != null) {
                     var definition = dependency.Manifest.CustomResourceTypes[awsType];
@@ -1103,8 +1122,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                         }
                     }
                 }
-            } else {
-                AddError($"unrecognized AWS type {awsType}");
             }
 
             // local functions

@@ -122,7 +122,12 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 encryptionContext: null,
                 pragmas: null
             );
-            _builder.AddCondition("SecretsIsEmpty", FnEquals(FnRef("Secrets"), ""));
+            var secretsIsEmpty = _builder.AddCondition(
+                parent: null,
+                name: "SecretsIsEmpty",
+                description: null,
+                value: FnEquals(FnRef("Secrets"), "")
+            );
 
             // add standard parameters (unless requested otherwise)
             if(_builder.HasLambdaSharpDependencies) {
@@ -258,7 +263,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 ? FnSplit(
                     ",",
                     FnIf(
-                        "SecretsIsEmpty",
+                        secretsIsEmpty.ResourceName,
                         FnJoin(",", _builder.Secrets),
                         FnJoin(
                             ",",
@@ -267,7 +272,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     )
                 )
                 : FnIf(
-                    "SecretsIsEmpty",
+                    secretsIsEmpty.ResourceName,
 
                     // NOTE (2018-11-26, bjorg): we use a dummy KMS key, because an empty value would fail
                     "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/12345678-1234-1234-1234-123456789012",

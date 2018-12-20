@@ -99,12 +99,12 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             switch(entry) {
             case ResourceEntry resourceEntry:
                 if(awsType != resourceEntry.Resource.AWSTypeName) {
-                    AddError($"function source {fullName} must be {awsType}, but was {resourceEntry.Resource.AWSTypeName}");
+                    AddError($"function source '{fullName}' must be {awsType}, but was {resourceEntry.Resource.AWSTypeName}");
                 }
                 break;
             case FunctionEntry functionEntry:
                 if(awsType != functionEntry.Function.AWSTypeName) {
-                    AddError($"function source {fullName} must be {awsType}, but was {functionEntry.Function.AWSTypeName}");
+                    AddError($"function source '{fullName}' must be {awsType}, but was {functionEntry.Function.AWSTypeName}");
                 }
                 break;
             case VariableEntry _:
@@ -115,6 +115,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 // if(awsType != entry.Type) {
                 //     AddError($"function source {fullName} must be {awsType}, but was {entry.Type}");
                 // }
+                break;
+            case ConditionEntry _:
+                AddError($"function source '{fullName}' cannot reference condition '{entry.FullName}'");
                 break;
             default:
                 throw new ApplicationException($"unexpected entry type: {entry.GetType()}");
