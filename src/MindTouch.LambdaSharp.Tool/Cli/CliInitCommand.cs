@@ -120,16 +120,15 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
         ) {
             var command = new CliBuildPublishDeployCommand();
             Console.WriteLine($"Creating new deployment tier '{settings.Tier}'");
-            var moduleReference = $"LambdaSharp:{version}";
-            foreach(var module in new[] {
-                "LambdaSharpS3PackageLoader",
-                "LambdaSharpS3Subscriber",
-                "LambdaSharpRegistrar",
-                "LambdaSharp"
-            }) {
 
-                // check if the module must be built and published first
-                if(lambdaSharpPath != null) {
+            // check if the module must be built and published first
+            if(lambdaSharpPath != null) {
+                foreach(var module in new[] {
+                    "LambdaSharp",
+                    "LambdaSharpRegistrar",
+                    "LambdaSharpS3Subscriber",
+                    "LambdaSharpS3PackageLoader",
+                }) {
                     var moduleSource = Path.Combine(lambdaSharpPath, "Runtime", module, "Module.yml");
                     settings.WorkingDirectory = Path.GetDirectoryName(moduleSource);
                     settings.OutputDirectory = Path.Combine(settings.WorkingDirectory, "bin");
@@ -149,7 +148,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     }
 
                     // publish module
-                    moduleReference = await command.PublishStepAsync(settings, forcePublish);
+                    var moduleReference = await command.PublishStepAsync(settings, forcePublish);
                     if(moduleReference == null) {
                         break;
                     }
@@ -160,7 +159,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             await command.DeployStepAsync(
                 settings,
                 dryRun: null,
-                moduleReference: moduleReference,
+                moduleReference: $"LambdaSharp:{version}",
                 instanceName: null,
                 allowDataLoos: allowDataLoos,
                 protectStack: protectStack,
