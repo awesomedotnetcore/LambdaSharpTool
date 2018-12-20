@@ -30,39 +30,6 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         //--- Class Fields ---
         public static readonly Dictionary<string, IEnumerable<string>> FieldCombinations = new Dictionary<string, IEnumerable<string>> {
 
-            // nodes with optional nested entries
-            ["Import"] = new[] {
-                "Description",
-                "Entries"
-            },
-            ["Variable"] = new[] {
-                "Variable",
-                "Description",
-                "Type",
-                "Scope",
-                "Value",
-                "EncryptionContext",
-                "Entries"
-            },
-            ["Resource"] = new[] {
-                "Description",
-                "Type",
-                "Scope",
-                "Allow",
-                "Value",
-                "Properties",
-                "DependsOn",
-                "DefaultAttribute",
-                "Pragmas",
-                "Entries"
-            },
-            ["Package"] = new[] {
-                "Description",
-                "Scope",
-                "Files",
-                "Entries"
-            },
-
             // leaf nodes
             ["Parameter"] = new[] {
                 "Section",
@@ -97,6 +64,7 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
             },
             ["Function"] = new[] {
                 "Description",
+                "If",
                 "Memory",
                 "Timeout",
                 "Project",
@@ -109,6 +77,42 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
                 "Sources",
                 "Pragmas"
             },
+
+            // nodes with optional nested entries
+            ["Import"] = new[] {
+                "Description",
+                "Entries"
+            },
+            ["Variable"] = new[] {
+                "Variable",
+                "Description",
+                "Type",
+                "Scope",
+                "Value",
+                "EncryptionContext",
+                "Entries"
+            },
+            ["Resource"] = new[] {
+                "Description",
+                "If",
+                "Type",
+                "Scope",
+                "Allow",
+                "Value",
+                "Properties",
+                "DependsOn",
+                "DefaultAttribute",
+                "Pragmas",
+                "Entries"
+            },
+            ["Package"] = new[] {
+                "Description",
+                "Scope",
+                "Files",
+                "Entries"
+            },
+
+            // output nodes
             ["Export"] = new[] {
                 "Description",
                 "Value"
@@ -208,6 +212,7 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
          * Entries: list<Entry>
          */
         public string Resource { get; set; }
+        public string If { get; set; }
         public object DependsOn { get; set; }
         public string DefaultAttribute { get; set; }
 

@@ -206,12 +206,13 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             string language,
             IDictionary<string, object> environment,
             IList<AFunctionSource> sources,
+            string condition,
             IList<object> pragmas,
             Humidifier.Lambda.Function function
 
             // TODO: add 'condition' & 'dependsOn'
 
-        ) : base(parent, name, description, function.AWSTypeName, scope, reference: null, dependsOn: null, condition: null, pragmas) {
+        ) : base(parent, name, description, function.AWSTypeName, scope, reference: null, dependsOn: null, condition: condition, pragmas) {
             Project = project;
             Language = language;
             Environment = environment;
@@ -242,6 +243,10 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             string name,
             string description,
             object value
-        ) : base(parent, name, description, type: "Condition", scope: null, reference: value) { }
+        ) : base(parent, name, description, type: "Condition", scope: null, reference: value) {
+
+            // NOTE (2018-12-19, bjorg): conditionals should be deleted unless used
+            DiscardIfNotReachable = true;
+        }
     }
 }

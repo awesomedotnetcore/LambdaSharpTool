@@ -123,6 +123,8 @@ namespace MindTouch.LambdaSharp.Tool {
                     value = $"${{{refKey}}}";
                 } else if(TryGetFnGetAtt(kv.Value, out string getAttKey, out string getAttAttribute)) {
                     value = $"${{{getAttKey}.{getAttAttribute}}}";
+                } else if(TryGetFnSub(kv.Value, out string subPattern, out IDictionary<string, object> subArguments) && !subArguments.Any()) {
+                    value = subPattern;
                 }
                 return new {
                     Key = kv.Key,
@@ -132,9 +134,13 @@ namespace MindTouch.LambdaSharp.Tool {
             if(staticVariables.Any()) {
 
                 // substitute static variables
-                foreach(var staticVariable in staticVariables) {
-                    input = input.Replace($"${{{staticVariable.Key}}}", (string)staticVariable.Value);
-                }
+                string original;
+                do {
+                    original = input;
+                    foreach(var staticVariable in staticVariables) {
+                        input = input.Replace($"${{{staticVariable.Key}}}", (string)staticVariable.Value);
+                    }
+                } while(input != original);
             }
             var remainingVariables = variables.Where(variable => !staticVariables.ContainsKey(variable.Key)).ToDictionary(kv => kv.Key, kv => kv.Value);
 
@@ -196,9 +202,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
         public static object FnCondition(string condition)
             => new Dictionary<string, object> {
-                ["Condition"] = new List<object> {
-                    condition ?? throw new ArgumentNullException(nameof(condition))
-                }
+                ["Condition"] = condition ?? throw new ArgumentNullException(nameof(condition))
             };
 
         public static string ReplaceSubPattern(string subPattern, Func<string, string, string> replace)
@@ -290,6 +294,20 @@ namespace MindTouch.LambdaSharp.Tool {
             pattern = null;
             arguments = null;
             return false;
-       }
+        }
+
+        public static bool TryGetFnCondition(object value, out string condition)  {
+            if(
+                (value is IDictionary<string, object> map)
+                && (map.Count == 1)
+                && map.TryGetValue("Condition", out object refObject)
+                && (refObject is string refKey)
+            ) {
+                condition = refKey;
+                return true;
+            }
+            condition = null;
+            return false;
+        }
     }
 }

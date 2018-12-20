@@ -34,6 +34,9 @@
             * `no-runtime-version-check`: don't check if the λ# runtime and CLI versions match
             * `no-module-registration`: don't register module with λ# registrar
             * `no-lambdasharp-dependencies`: don't reference λ# base resources (DLQ, Logging Stream, etc.)
+    * default log retention was increased from 7 to 30 days
+    * added support for `Condition` entry
+    * garbage collection of optional resources and conditions
 
 * CLI
     * new module specification for deploying: `ModuleName[:Version][@Bucket]`

@@ -297,6 +297,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 description: "Module secret decryption function",
                 environment: null,
                 sources: null,
+                condition: null,
                 pragmas: new[] { "no-function-registration" },
                 timeout: "30",
                 reservedConcurrency: null,
@@ -601,7 +602,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                             },
                             dependsOn: new[] { "Module::Registration" },
                             arnAttribute: null,
-                            condition: null,
+                            condition: function.Condition,
                             pragmas: null
                         );
 
@@ -620,7 +621,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                                 },
                                 resourceArnAttribute: null,
                                 dependsOn: null,
-                                condition: null,
+                                condition: function.Condition,
                                 pragmas: null
                             );
                         }

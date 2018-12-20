@@ -48,7 +48,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "E14DAEEB50D3AA3BB4715D858557A433"
+      "Default": "D7F565449057735E8E18F6D4C2312417"
     }
   },
   "Resources": {
@@ -89,118 +89,6 @@
     },
     "ModuleVersion": {
       "Value": "1.0"
-    }
-  },
-  "Conditions": {
-    "SecretsIsEmpty": {
-      "Fn::Equals": [
-        {
-          "Ref": "Secrets"
-        },
-        ""
-      ]
-    },
-    "LambdaSharpDeadLetterQueueArnImported": {
-      "Fn::And": [
-        {
-          "Fn::Not": [
-            {
-              "Fn::Equals": [
-                {
-                  "Ref": "LambdaSharpDeadLetterQueueArn"
-                },
-                ""
-              ]
-            }
-          ]
-        },
-        {
-          "Fn::Equals": [
-            {
-              "Fn::Select": [
-                "0",
-                {
-                  "Fn::Split": [
-                    "$",
-                    {
-                      "Ref": "LambdaSharpDeadLetterQueueArn"
-                    }
-                  ]
-                }
-              ]
-            },
-            ""
-          ]
-        }
-      ]
-    },
-    "LambdaSharpLoggingStreamArnImported": {
-      "Fn::And": [
-        {
-          "Fn::Not": [
-            {
-              "Fn::Equals": [
-                {
-                  "Ref": "LambdaSharpLoggingStreamArn"
-                },
-                ""
-              ]
-            }
-          ]
-        },
-        {
-          "Fn::Equals": [
-            {
-              "Fn::Select": [
-                "0",
-                {
-                  "Fn::Split": [
-                    "$",
-                    {
-                      "Ref": "LambdaSharpLoggingStreamArn"
-                    }
-                  ]
-                }
-              ]
-            },
-            ""
-          ]
-        }
-      ]
-    },
-    "LambdaSharpDefaultSecretKeyArnImported": {
-      "Fn::And": [
-        {
-          "Fn::Not": [
-            {
-              "Fn::Equals": [
-                {
-                  "Ref": "LambdaSharpDefaultSecretKeyArn"
-                },
-                ""
-              ]
-            }
-          ]
-        },
-        {
-          "Fn::Equals": [
-            {
-              "Fn::Select": [
-                "0",
-                {
-                  "Fn::Split": [
-                    "$",
-                    {
-                      "Ref": "LambdaSharpDefaultSecretKeyArn"
-                    }
-                  ]
-                }
-              ]
-            },
-            ""
-          ]
-        }
-      ]
     }
   },
   "Metadata": {
@@ -272,7 +160,7 @@
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
       "RuntimeCheck": true,
-      "Hash": "E14DAEEB50D3AA3BB4715D858557A433",
+      "Hash": "D7F565449057735E8E18F6D4C2312417",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [

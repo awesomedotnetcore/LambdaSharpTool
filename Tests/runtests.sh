@@ -77,6 +77,9 @@ if [ -z "$1" ]; then
     lash NestedModule
     lash Variable-Secret
     lash Function-Finalizer
+    lash Condition-Resource
+    lash Condition-Function
+    lash Condition-Condition
 else
 
     # run requested test

@@ -335,6 +335,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     var awsType = node.Type ?? "AWS";
                     if(node.Value != null) {
                         Validate(node.Properties == null, "cannot use 'Properties' section with a reference resource");
+                        Validate(node.If == null, "cannot use 'Condition' attribute with a reference resource");
                         if(node.Value is string text) {
                             ValidateARN(text);
                         } else if(node.Value is IList<object> values) {
@@ -358,7 +359,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         properties: node.Properties,
                         dependsOn: ConvertToStringList(node.DependsOn),
                         arnAttribute: node.DefaultAttribute,
-                        condition: null,
+                        condition: node.If,
                         pragmas: node.Pragmas
                     );
 
@@ -488,6 +489,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         language: language,
                         environment: node.Environment,
                         sources: sources,
+                        condition: node.If,
                         pragmas: node.Pragmas,
                         timeout: node.Timeout,
                         runtime: runtime,

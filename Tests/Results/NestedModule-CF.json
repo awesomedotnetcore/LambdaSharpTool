@@ -48,7 +48,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "C6886E7BFECD24FFE46984B315A981B8"
+      "Default": "3ED6B7FEA3D488D983390166B99172FE"
     }
   },
   "Resources": {
@@ -193,14 +193,6 @@
     }
   },
   "Conditions": {
-    "SecretsIsEmpty": {
-      "Fn::Equals": [
-        {
-          "Ref": "Secrets"
-        },
-        ""
-      ]
-    },
     "LambdaSharpDeadLetterQueueArnImported": {
       "Fn::And": [
         {
@@ -373,7 +365,7 @@
       "ModuleName": "TestModule2",
       "ModuleVersion": "1.0",
       "RuntimeCheck": true,
-      "Hash": "C6886E7BFECD24FFE46984B315A981B8",
+      "Hash": "3ED6B7FEA3D488D983390166B99172FE",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [

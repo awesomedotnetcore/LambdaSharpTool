@@ -37,7 +37,10 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
         //--- Class Methods ---
         private static void DebugWriteLine(Func<string> lazyMessage) {
 #if false
-            Console.WriteLine(lazyMessage());
+            var text = lazyMessage();
+            if(text != null) {
+                Console.WriteLine(text);
+            }
 #endif
         }
 
@@ -155,19 +158,20 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             builder.VisitAll((entry, item) => Substitute(entry, item, ReportMissingReference));
 
             // remove any optional entries that are unreachable
-            DiscardUnreachableEntries(builder);
+            DiscardUnreachableEntries();
 
             // replace all references with their logical IDs
             builder.VisitAll(Finalize);
 
-            // replace all condition references with their logical IDs
-            foreach(var resource in _builder.Entries.OfType<AResourceEntry>()) {
-                if(resource.Condition?.StartsWith("@", StringComparison.Ordinal) == true) {
-                    var entry = _builder.GetEntryByResourceName(resource.Condition);
-                    if(entry != null) {
+            // replace all resource condition references with their logical IDs
+            foreach(var resource in _builder.Entries.OfType<AResourceEntry>().Where(res => res.Condition != null)) {
+                AtLocation(resource.FullName, () => {
+                    if(_builder.TryGetEntry(resource.Condition, out AModuleEntry entry)) {
                         resource.Condition = entry.LogicalId;
+                    } else {
+                        AddError($"could not find condition '{resource.Condition}'");
                     }
-                }
+                });
             }
 
             // local functions
@@ -308,15 +312,33 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 }
 
                 // handle !If expression
-                if(
-                    TryGetFnIf(value, out string condition, out object ifTrue, out object ifFalse) && condition.StartsWith("@", StringComparison.Ordinal)
-                    && !condition.StartsWith("@", StringComparison.Ordinal)
-                    && _freeEntries.TryGetValue(condition, out AModuleEntry freeEntry)
-                ) {
-                    if(!(freeEntry is ConditionEntry)) {
-                        AddError($"entry '{freeEntry.FullName}' is not a condition");
+                if(TryGetFnIf(value, out string condition, out object ifTrue, out object ifFalse)) {
+                    if(condition.StartsWith("@", StringComparison.Ordinal)) {
+                        return value;
                     }
-                    return FnIf(freeEntry.ResourceName, ifTrue, ifFalse);
+                    if(_freeEntries.TryGetValue(condition, out AModuleEntry freeEntry)) {
+                        if(!(freeEntry is ConditionEntry)) {
+                            AddError($"entry '{freeEntry.FullName}' must be a condition");
+                        }
+                        return FnIf(freeEntry.ResourceName, ifTrue, ifFalse);
+                    }
+                    DebugWriteLine(() => $"NOT FOUND => {condition}");
+                    missing?.Invoke(condition);
+                }
+
+                // handle !Condition expression
+                if(TryGetFnCondition(value, out condition)) {
+                    if(condition.StartsWith("@", StringComparison.Ordinal)) {
+                        return value;
+                    }
+                    if(_freeEntries.TryGetValue(condition, out AModuleEntry freeEntry)) {
+                        if(!(freeEntry is ConditionEntry)) {
+                            AddError($"entry '{freeEntry.FullName}' must be a condition");
+                        }
+                        return FnCondition(freeEntry.ResourceName);
+                    }
+                    DebugWriteLine(() => $"NOT FOUND => {condition}");
+                    missing?.Invoke(condition);
                 }
                 return value;
             });
@@ -354,17 +376,24 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             }
         }
 
-        private void DiscardUnreachableEntries(ModuleBuilder builder) {
+        private void DiscardUnreachableEntries() {
             HashSet<string> unreachableFullNames;
             while(true) {
 
                 // collect all potentially deletable entries
                 unreachableFullNames = new HashSet<string>(
-                    builder.Entries
+                    _builder.Entries
                         .Where(entry => entry.DiscardIfNotReachable)
                         .Select(entry => entry.FullName)
                 );
-                builder.VisitAll(Reachable);
+
+                // visit all expressions
+                _builder.VisitAll(Reachable);
+
+                // visit all conditions
+                foreach(var resource in _builder.Entries.OfType<AResourceEntry>().Where(res => res.Condition != null)) {
+                    MarkReachableEntry(resource, resource.Condition);
+                }
 
                 // stop if no unreachable entries were found
                 if(!unreachableFullNames.Any()) {
@@ -373,13 +402,19 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
                 // remove unreachable entries
                 foreach(var unreachableFullName in unreachableFullNames) {
-                    var discardedEntries = builder.RemoveEntry(unreachableFullName);
+                    var discardedEntries = _builder.RemoveEntry(unreachableFullName);
                     DebugWriteLine(() => {
-                        var text = new StringBuilder();
-                        foreach(var discardedEntry in discardedEntries) {
-                            text.AppendLine("DISCARDED: " + discardedEntry.FullName);
+                        if(discardedEntries.Any()) {
+                            var text = new StringBuilder();
+                            foreach(var discardedEntry in discardedEntries) {
+                                if(text.Length > 0) {
+                                    text.AppendLine();
+                                }
+                                text.Append("DISCARDED: " + discardedEntry.FullName);
+                            }
+                            return text.ToString();
                         }
-                        return text.ToString();
+                        return null;
                     });
                 }
             }
@@ -390,13 +425,13 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
                     // handle !Ref expression
                     if(TryGetFnRef(value, out string refKey) && refKey.StartsWith("@", StringComparison.Ordinal)) {
-                        MarkReachableReference(refKey);
+                        MarkReachableEntry(entry, refKey);
                         return value;
                     }
 
                     // handle !GetAtt expression
                     if(TryGetFnGetAtt(value, out string getAttKey, out string getAttAttribute) && getAttKey.StartsWith("@", StringComparison.Ordinal)) {
-                        MarkReachableReference(getAttKey);
+                        MarkReachableEntry(entry, getAttKey);
                         return value;
                     }
 
@@ -406,24 +441,39 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         // replace as many ${VAR} occurrences as possible
                         subPattern = ReplaceSubPattern(subPattern, (subRefKey, suffix) => {
                             if(!subArgs.ContainsKey(subRefKey) && subRefKey.StartsWith("@", StringComparison.Ordinal)) {
-                                MarkReachableReference(subRefKey);
+                                MarkReachableEntry(entry, subRefKey);
                                 return "${" + subRefKey.Substring(1) + suffix + "}";
                             }
                             return null;
                         });
                         return value;
                     }
+
+                    // handle !If expression
+                    if(TryGetFnIf(value, out string condition, out object _, out object _)) {
+                        MarkReachableEntry(entry, condition);
+                        return value;
+                    }
+
+                    // handle !Condition expression
+                    if(TryGetFnCondition(value, out condition)) {
+                        MarkReachableEntry(entry, condition);
+                        return value;
+                    }
                     return value;
                 });
+            }
 
-                // local functions
-                void MarkReachableReference(string refKey) {
-                    var refEntry = builder.GetEntryByResourceName(refKey);
+            void MarkReachableEntry(AModuleEntry entry, string resourceName) {
+                var refEntry = _builder.GetEntry(resourceName);
 
-                    // only track references to resources that are not a parent resource
-                    if((entry == null) || !entry.FullName.StartsWith(refEntry.FullName + "::", StringComparison.Ordinal)) {
-                        unreachableFullNames.Remove(refEntry.FullName);
-                    }
+                // only track references to resources that are not a parent resource
+                if(
+                    (entry == null)
+                    || !entry.FullName.StartsWith(refEntry.FullName + "::", StringComparison.Ordinal)
+                ) {
+                    DebugWriteLine(() => $"REACHED {entry?.FullName ?? "<null>"} -> {refEntry?.FullName ?? "<null>"}");
+                    unreachableFullNames.Remove(refEntry.FullName);
                 }
             }
         }
@@ -457,6 +507,11 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 // handle !If expression
                 if(TryGetFnIf(value, out string condition, out object ifTrue, out object ifFalse) && condition.StartsWith("@", StringComparison.Ordinal)) {
                     return FnIf(condition.Substring(1), ifTrue, ifFalse);
+                }
+
+                // handle !Condition expression
+                if(TryGetFnCondition(value, out condition) && condition.StartsWith("@", StringComparison.Ordinal)) {
+                    return FnCondition(condition.Substring(1));
                 }
                 return value;
             });

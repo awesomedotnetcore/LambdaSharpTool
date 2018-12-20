@@ -2,6 +2,9 @@
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "LambdaSharp CloudFormation Test (v1.0)",
   "Parameters": {
+    "MyParameter": {
+      "Type": "String"
+    },
     "Secrets": {
       "Type": "String",
       "Description": "Comma-separated list of optional secret keys",
@@ -48,22 +51,19 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "6D576E30F121877F476DBFE6ED66945A"
+      "Default": "E6551D372EA086D52DA6B73BDB3A7608"
     }
   },
   "Resources": {
-    "MyTopic": {
-      "Type": "AWS::SNS::Topic",
-      "Properties": {}
-    },
-    "Finalizer": {
+    "Function": {
       "Type": "AWS::Lambda::Function",
+      "Condition": "MyCondition",
       "Properties": {
         "Code": {
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "Modules/TestModule/Assets/Finalizer-DRYRUN.zip"
+          "S3Key": "Modules/TestModule/Assets/Function-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -97,7 +97,6 @@
             ]
           }
         },
-        "Description": "My finalizer function (v1.0)",
         "Environment": {
           "Variables": {
             "MODULE_NAME": "TestModule",
@@ -105,7 +104,7 @@
               "Ref": "AWS::StackName"
             },
             "MODULE_VERSION": "1.0",
-            "LAMBDA_NAME": "Finalizer",
+            "LAMBDA_NAME": "Function",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
               "Fn::If": [
@@ -169,7 +168,7 @@
             }
           }
         },
-        "Handler": "Finalizer::MindTouch.LambdaSharpTestModule.Finalizer.Function::FunctionHandlerAsync",
+        "Handler": "Function::MindTouch.LambdaSharpTestModule.Function.Function::FunctionHandlerAsync",
         "MemorySize": "128",
         "Role": {
           "Fn::GetAtt": [
@@ -178,29 +177,18 @@
           ]
         },
         "Runtime": "dotnetcore2.1",
-        "Timeout": 900
+        "Timeout": "30"
       }
     },
-    "FinalizerInvocation": {
-      "Type": "Custom::ModuleFinalizer",
+    "FunctionLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Condition": "MyCondition",
       "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "Finalizer",
-            "Arn"
-          ]
+        "LogGroupName": {
+          "Fn::Sub": "/aws/lambda/${Function}"
         },
-        "DeploymentChecksum": {
-          "Ref": "DeploymentChecksum"
-        },
-        "ModuleVersion": "1.0"
-      },
-      "DependsOn": [
-        "Finalizer",
-        "ModuleRegistration",
-        "ModuleRole",
-        "MyTopic"
-      ]
+        "RetentionInDays": 30
+      }
     },
     "ModuleRole": {
       "Type": "AWS::IAM::Role",
@@ -382,6 +370,148 @@
         "ModuleName": "TestModule",
         "ModuleVersion": "1.0"
       }
+    },
+    "ModuleCloudWatchLogsRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "CloudWatchLogsKinesisPrincipal",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": {
+                  "Fn::Sub": "logs.${AWS::Region}.amazonaws.com"
+                }
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Sid": "CloudWatchLogsKinesisPermissions",
+                  "Effect": "Allow",
+                  "Action": "kinesis:PutRecord",
+                  "Resource": {
+                    "Fn::If": [
+                      "LambdaSharpLoggingStreamArnImported",
+                      {
+                        "Fn::ImportValue": {
+                          "Fn::Sub": [
+                            "${DeploymentPrefix}${Import}",
+                            {
+                              "Import": {
+                                "Fn::Select": [
+                                  "1",
+                                  {
+                                    "Fn::Split": [
+                                      "$",
+                                      {
+                                        "Ref": "LambdaSharpLoggingStreamArn"
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "Ref": "LambdaSharpLoggingStreamArn"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "PolicyName": {
+              "Fn::Sub": "${AWS::StackName}ModuleCloudWatchLogsPolicy"
+            }
+          }
+        ]
+      }
+    },
+    "FunctionRegistration": {
+      "Type": "Custom::LambdaSharpRegisterFunction",
+      "Condition": "MyCondition",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::Register::Function"
+          }
+        },
+        "ModuleId": {
+          "Ref": "AWS::StackName"
+        },
+        "FunctionId": {
+          "Ref": "Function"
+        },
+        "FunctionName": "Function",
+        "FunctionLogGroupName": {
+          "Fn::Sub": "/aws/lambda/${Function}"
+        },
+        "FunctionPlatform": "AWS Lambda",
+        "FunctionFramework": "dotnetcore2.1",
+        "FunctionLanguage": "csharp",
+        "FunctionMaxMemory": "128",
+        "FunctionMaxDuration": "30"
+      },
+      "DependsOn": [
+        "ModuleRegistration"
+      ]
+    },
+    "FunctionLogGroupSubscription": {
+      "Type": "AWS::Logs::SubscriptionFilter",
+      "Condition": "MyCondition",
+      "Properties": {
+        "DestinationArn": {
+          "Fn::If": [
+            "LambdaSharpLoggingStreamArnImported",
+            {
+              "Fn::ImportValue": {
+                "Fn::Sub": [
+                  "${DeploymentPrefix}${Import}",
+                  {
+                    "Import": {
+                      "Fn::Select": [
+                        "1",
+                        {
+                          "Fn::Split": [
+                            "$",
+                            {
+                              "Ref": "LambdaSharpLoggingStreamArn"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "Ref": "LambdaSharpLoggingStreamArn"
+            }
+          ]
+        },
+        "FilterPattern": "-\"*** \"",
+        "LogGroupName": {
+          "Ref": "FunctionLogGroup"
+        },
+        "RoleArn": {
+          "Fn::GetAtt": [
+            "ModuleCloudWatchLogsRole",
+            "Arn"
+          ]
+        }
+      }
     }
   },
   "Outputs": {
@@ -393,6 +523,14 @@
     }
   },
   "Conditions": {
+    "MyCondition": {
+      "Fn::Equals": [
+        {
+          "Ref": "MyParameter"
+        },
+        "value"
+      ]
+    },
     "SecretsIsEmpty": {
       "Fn::Equals": [
         {
@@ -425,6 +563,40 @@
                     "$",
                     {
                       "Ref": "LambdaSharpDeadLetterQueueArn"
+                    }
+                  ]
+                }
+              ]
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "LambdaSharpLoggingStreamArnImported": {
+      "Fn::And": [
+        {
+          "Fn::Not": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "LambdaSharpLoggingStreamArn"
+                },
+                ""
+              ]
+            }
+          ]
+        },
+        {
+          "Fn::Equals": [
+            {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "$",
+                    {
+                      "Ref": "LambdaSharpLoggingStreamArn"
                     }
                   ]
                 }
@@ -473,6 +645,9 @@
   "Metadata": {
     "AWS::CloudFormation::Interface": {
       "ParameterLabels": {
+        "MyParameter": {
+          "default": "My Parameter"
+        },
         "Secrets": {
           "default": "Secret Keys (ARNs)"
         },
@@ -502,6 +677,14 @@
         }
       },
       "ParameterGroups": [
+        {
+          "Label": {
+            "default": "Module Settings"
+          },
+          "Parameters": [
+            "MyParameter"
+          ]
+        },
         {
           "Label": {
             "default": "LambdaSharp Module Options"
@@ -539,7 +722,7 @@
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
       "RuntimeCheck": true,
-      "Hash": "6D576E30F121877F476DBFE6ED66945A",
+      "Hash": "E6551D372EA086D52DA6B73BDB3A7608",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [
@@ -551,13 +734,16 @@
       "CustomResourceTypes": {},
       "MacroNames": [],
       "ResourceNameMappings": {
-        "FinalizerInvocation": "Finalizer::Invocation",
+        "FunctionLogGroup": "Function::LogGroup",
         "ModuleRole": "Module::Role",
-        "ModuleRegistration": "Module::Registration"
+        "ModuleRegistration": "Module::Registration",
+        "ModuleCloudWatchLogsRole": "Module::CloudWatchLogsRole",
+        "FunctionRegistration": "Function::Registration",
+        "FunctionLogGroupSubscription": "Function::LogGroupSubscription"
       },
       "CustomResourceNameMappings": {
-        "Custom::ModuleFinalizer": "Module::Finalizer",
-        "Custom::LambdaSharpRegisterModule": "LambdaSharp::Register::Module"
+        "Custom::LambdaSharpRegisterModule": "LambdaSharp::Register::Module",
+        "Custom::LambdaSharpRegisterFunction": "LambdaSharp::Register::Function"
       }
     }
   }

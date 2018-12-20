@@ -2,6 +2,9 @@
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "LambdaSharp CloudFormation Test (v1.0)",
   "Parameters": {
+    "MyParameter": {
+      "Type": "String"
+    },
     "Secrets": {
       "Type": "String",
       "Description": "Comma-separated list of optional secret keys",
@@ -48,17 +51,14 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "9962D9E88C590A3F649755EC95296A7E"
+      "Default": "815ADB0AA1B35732B41CC66C69057AE6"
     }
   },
   "Resources": {
     "MyResource": {
-      "Type": "Custom::Handler",
-      "Properties": {
-        "Result": {
-          "Fn::ImportValue": "OtherStack-ExportedParameterName"
-        }
-      }
+      "Type": "AWS::SNS::Topic",
+      "Condition": "MyCondition",
+      "Properties": {}
     },
     "ModuleRegistration": {
       "Type": "Custom::LambdaSharpRegisterModule",
@@ -84,9 +84,22 @@
       "Value": "1.0"
     }
   },
+  "Conditions": {
+    "MyCondition": {
+      "Fn::Equals": [
+        {
+          "Ref": "MyParameter"
+        },
+        "value"
+      ]
+    }
+  },
   "Metadata": {
     "AWS::CloudFormation::Interface": {
       "ParameterLabels": {
+        "MyParameter": {
+          "default": "My Parameter"
+        },
         "Secrets": {
           "default": "Secret Keys (ARNs)"
         },
@@ -116,6 +129,14 @@
         }
       },
       "ParameterGroups": [
+        {
+          "Label": {
+            "default": "Module Settings"
+          },
+          "Parameters": [
+            "MyParameter"
+          ]
+        },
         {
           "Label": {
             "default": "LambdaSharp Module Options"
@@ -153,7 +174,7 @@
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
       "RuntimeCheck": true,
-      "Hash": "9962D9E88C590A3F649755EC95296A7E",
+      "Hash": "815ADB0AA1B35732B41CC66C69057AE6",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [

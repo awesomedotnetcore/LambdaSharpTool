@@ -84,7 +84,8 @@ namespace MindTouch.LambdaSharp.Tool.Internal {
             "!Ref",
             "!Select",
             "!Split",
-            "!Sub"
+            "!Sub",
+            "!Condition"
         };
 
         //--- Methods ---
@@ -144,6 +145,9 @@ namespace MindTouch.LambdaSharp.Tool.Internal {
 
                 // special case for !Ref as it doesn't get the Fn:: prefix
                 if(suffix == "Ref") {
+                    return suffix;
+                }
+                if(suffix == "Condition") {
                     return suffix;
                 }
                 return "Fn::" + suffix;

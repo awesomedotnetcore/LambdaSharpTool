@@ -92,8 +92,12 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public bool HasLambdaSharpDependencies => !HasPragma("no-lambdasharp-dependencies");
 
         //--- Methods ---
-        public AModuleEntry GetEntry(string fullName) => _entriesByFullName[fullName];
-        public AModuleEntry GetEntryByResourceName(string resourceName) => _entries.FirstOrDefault(e => e.ResourceName == resourceName) ?? throw new KeyNotFoundException(resourceName);
+        public AModuleEntry GetEntry(string fullName) {
+            if(fullName.StartsWith("@", StringComparison.Ordinal)) {
+                return _entries.FirstOrDefault(e => e.ResourceName == fullName) ?? throw new KeyNotFoundException(fullName);
+            }
+            return _entriesByFullName[fullName];
+        }
 
         public void AddPragma(object pragma) => _pragmas.Add(pragma);
 
@@ -107,6 +111,16 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         public IEnumerable<AModuleEntry> RemoveEntry(string fullName) {
             if(TryGetEntry(fullName, out AModuleEntry entry)) {
+
+                // check if the module role is being removed
+                if(fullName == "Module::Role") {
+
+                    // remove all resource statements
+                    _resourceStatements.Clear();
+
+                    // remove all secrets
+                    _secrets.Clear();
+                }
 
                 // find all nested entries and remove them as well
                 var subEntriesPrefix = entry.FullName + "::";
@@ -679,6 +693,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             string language,
             IDictionary<string, object> environment,
             IList<AFunctionSource> sources,
+            string condition,
             IList<object> pragmas,
             string timeout,
             string runtime,
@@ -699,6 +714,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 language: language,
                 environment: environment ?? new Dictionary<string, object>(),
                 sources: sources ?? new AFunctionSource[0],
+                condition: condition,
                 pragmas: pragmas ?? new object[0],
                 function: new Humidifier.Lambda.Function {
 
@@ -767,7 +783,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                     }),
                     resourceArnAttribute: null,
                     dependsOn: null,
-                    condition: null,
+                    condition: condition,
                     pragmas: null
                 );
             } else {
@@ -787,7 +803,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                     },
                     resourceArnAttribute: null,
                     dependsOn: null,
-                    condition: null,
+                    condition: condition,
                     pragmas: null
                 );
             }
@@ -800,6 +816,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             string description,
             IDictionary<string, object> environment,
             IList<AFunctionSource> sources,
+            string condition,
             IList<object> pragmas,
             string timeout,
             string reservedConcurrency,
@@ -819,6 +836,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 language: "javascript",
                 environment: environment ?? new Dictionary<string, object>(),
                 sources: sources ?? new AFunctionSource[0],
+                condition: condition,
                 pragmas: pragmas ?? new object[0],
                 function: new Humidifier.Lambda.Function {
 
