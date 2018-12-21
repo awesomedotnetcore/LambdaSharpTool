@@ -33,7 +33,6 @@ using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.SecurityToken;
 using Amazon.SecurityToken.Model;
-using Amazon.ServerlessApplicationRepository;
 using Amazon.SimpleSystemsManagement;
 using McMaster.Extensions.CommandLineUtils;
 using MindTouch.LambdaSharp.Tool.Internal;
@@ -141,7 +140,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     IAmazonCloudFormation cfClient = null;
                     IAmazonKeyManagementService kmsClient = null;
                     IAmazonS3 s3Client = null;
-                    IAmazonServerlessApplicationRepository repositoryClient = null;
                     if(requireAwsProfile) {
                         awsAccount = await InitializeAwsProfile(
                             awsProfileOption.Value(),
@@ -154,7 +152,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         cfClient = new AmazonCloudFormationClient();
                         kmsClient = new AmazonKeyManagementServiceClient();
                         s3Client = new AmazonS3Client();
-                        repositoryClient = new AmazonServerlessApplicationRepositoryClient();
                     }
                     if(HasErrors) {
                         return null;
@@ -179,8 +176,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         SsmClient = ssmClient,
                         CfClient = cfClient,
                         KmsClient = kmsClient,
-                        S3Client = s3Client,
-                        RepositoryClient = repositoryClient
+                        S3Client = s3Client
                     };
                 } catch(AmazonClientException e) when(e.Message == "No RegionEndpoint or ServiceURL configured") {
                     AddError("AWS profile configuration is missing a region specifier");

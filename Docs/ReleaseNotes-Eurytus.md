@@ -42,6 +42,9 @@
     * new module specification for deploying: `ModuleName[:Version][@Bucket]`
     * publish/deploy/init: added `--force-publish` option
     * files packages are not be created when functions are not compiled (both are about building assets) (i.e. dryrun)
+    * `config` command
+        * now has the option to set a specific bucket name
+        * set bucket policy to allow serverlessrepo to access the contents
 
 * Build Process
     * validate that function entry point exists after compiling assembly

@@ -71,10 +71,21 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     if(settings == null) {
                         return;
                     }
+
+                    // check which parameters were provided
+                    var parameters = new Dictionary<string, string> {
+                        ["LambdaSharpToolVersion"] = Version.ToString(),
+                        ["LambdaSharpToolProfile"] = settings.ToolProfile
+                    };
+                    if(moduleS3BucketNameOption.HasValue()) {
+                        parameters.Add("DeploymentBucketName", moduleS3BucketNameOption.Value());
+                    }
+                    if(cloudFormationNotificationsTopicArnOption.HasValue()) {
+                        parameters.Add("DeploymentNotificationTopicArn", cloudFormationNotificationsTopicArnOption.Value());
+                    }
                     await Config(
                         settings,
-                        moduleS3BucketNameOption.Value(),
-                        cloudFormationNotificationsTopicArnOption.Value(),
+                        parameters,
                         protectStackOption.HasValue(),
                         forceUpdateOption.HasValue(),
                         new AmazonCloudFormationClient(),
@@ -86,8 +97,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
         private async Task Config(
             Settings settings,
-            string moduleS3BucketName,
-            string cloudFormationNotificationsTopicArn,
+            IDictionary<string, string> parameters,
             bool protectStack,
             bool forceUpdate,
             IAmazonCloudFormation cfClient,
@@ -103,54 +113,28 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             if(!lambdaSharpToolSettings.Any()) {
                 Console.WriteLine($"Configuring a new profile for LambdaSharp CLI");
 
-                // prompt for missing values
+                // prompt for CLI profile name
                 if(settings.ToolProfileExplicitlyProvided) {
                     Console.WriteLine($"Creating CLI profile: {settings.ToolProfile}");
                 } else {
+
+                    // confirm that the implicit profile is the desired profile
                     settings.ToolProfile = Prompt.GetString("CLI profile name:", settings.ToolProfile);
-                }
-                if(moduleS3BucketName == "") {
-                    Console.WriteLine($"Creating new S3 bucket");
-                } else if(moduleS3BucketName != null) {
-                    Console.WriteLine($"Using existing S3 bucket name: {moduleS3BucketName}");
-                } else {
-                    moduleS3BucketName = Prompt.GetString("Existing S3 bucket name for module deployments (blank value creates new bucket):") ?? "";
-                }
-                if(cloudFormationNotificationsTopicArn == "") {
-                    Console.WriteLine($"Creating new SNS topic for CloudFormation notifications");
-                } else if(cloudFormationNotificationsTopicArn != null) {
-                    Console.WriteLine($"SNS topic ARN for CloudFormation notifications: {cloudFormationNotificationsTopicArn}");
-                } else {
-                    cloudFormationNotificationsTopicArn = Prompt.GetString("Existing SNS topic ARN for CloudFormation notifications (empty value creates new topic):") ?? "";
+                    parameters["LambdaSharpToolProfile"] = settings.ToolProfile;
                 }
 
                 // create lambdasharp CLI resources stack
                 var stackName = $"LambdaSharpTool-{settings.ToolProfile}";
+                var templateParameters = await ValidateTemplateParameters(cfClient, stackName, parameters, template);
                 Console.WriteLine($"=> Stack creation initiated for {stackName}");
+                if(templateParameters == null) {
+                    return;
+                }
                 var request = new CreateStackRequest {
                     StackName = stackName,
-                    Capabilities = new List<string> {
-                        "CAPABILITY_NAMED_IAM"
-                    },
+                    Capabilities = new List<string> { },
                     OnFailure = OnFailure.DELETE,
-                    Parameters = new List<Parameter> {
-                        new Parameter {
-                            ParameterKey = "DeploymentBucketName",
-                            ParameterValue = moduleS3BucketName
-                        },
-                        new Parameter {
-                            ParameterKey = "DeploymentNotificationTopicArn",
-                            ParameterValue = cloudFormationNotificationsTopicArn
-                        },
-                        new Parameter {
-                            ParameterKey = "LambdaSharpToolVersion",
-                            ParameterValue = Version.ToString()
-                        },
-                        new Parameter {
-                            ParameterKey = "LambdaSharpToolProfile",
-                            ParameterValue = settings.ToolProfile
-                        }
-                    },
+                    Parameters = templateParameters,
                     EnableTerminationProtection = protectStack,
                     TemplateBody = template
                 };
@@ -182,34 +166,21 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     }
                 }
                 try {
+
+                    // update lambdasharp CLI resources stack
                     var stackName = $"LambdaSharpTool-{settings.ToolProfile}";
+                    var templateParameters = await ValidateTemplateParameters(cfClient, stackName, parameters, template);
                     Console.WriteLine($"=> Stack update initiated for {stackName}");
-                    var mostRecentStackEventId = await cfClient.GetMostRecentStackEventIdAsync(stackName);
+                    if(templateParameters == null) {
+                        return;
+                    }
                     var request = new UpdateStackRequest {
                         StackName = stackName,
-                        Capabilities = new List<string> {
-                            "CAPABILITY_NAMED_IAM"
-                        },
-                        Parameters = new List<Parameter> {
-                            new Parameter {
-                                ParameterKey = "DeploymentBucketName",
-                                UsePreviousValue = true
-                            },
-                            new Parameter {
-                                ParameterKey = "DeploymentNotificationTopicArn",
-                                UsePreviousValue = true
-                            },
-                            new Parameter {
-                                ParameterKey = "LambdaSharpToolVersion",
-                                ParameterValue = Version.ToString()
-                            },
-                            new Parameter {
-                                ParameterKey = "LambdaSharpToolProfile",
-                                UsePreviousValue = true
-                            }
-                        },
+                        Capabilities = new List<string> { },
+                        Parameters = templateParameters,
                         TemplateBody = template
                     };
+                    var mostRecentStackEventId = await cfClient.GetMostRecentStackEventIdAsync(stackName);
                     var response = await cfClient.UpdateStackAsync(request);
                     var outcome = await cfClient.TrackStackUpdateAsync(stackName, mostRecentStackEventId);
                     if(outcome.Success) {
@@ -229,6 +200,85 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 lambdaSharpToolSettings.TryGetValue(lambdaSharpToolPath + name, out KeyValuePair<string, string> kv);
                 return kv.Value;
             }
+        }
+
+        public async Task<List<Parameter>> ValidateTemplateParameters(
+            IAmazonCloudFormation cfClient,
+            string stackName,
+            IDictionary<string, string> providedParameters,
+            string templateBody
+        ) {
+
+            // get summary of new template
+            GetTemplateSummaryResponse templateSummary;
+            try {
+                templateSummary = await cfClient.GetTemplateSummaryAsync(new GetTemplateSummaryRequest {
+                    TemplateBody = templateBody
+                });
+            } catch(AmazonCloudFormationException e) {
+                AddError(e.Message);
+                return null;
+            }
+
+            // find configuration for existing stack
+            Stack existing = null;
+            if(stackName != null) {
+                try {
+                    existing = (await cfClient.DescribeStacksAsync(new DescribeStacksRequest {
+                        StackName = stackName
+                    })).Stacks.First();
+                } catch(AmazonCloudFormationException) { }
+            }
+            var result = new List<Parameter>();
+            var missingParameters = new List<ParameterDeclaration>();
+            foreach(var templateParameter in templateSummary.Parameters) {
+                if(providedParameters.TryGetValue(templateParameter.ParameterKey, out string providedValue)) {
+
+                    // use the provided parameter value
+                    result.Add(new Parameter {
+                        ParameterKey = templateParameter.ParameterKey,
+                        ParameterValue = providedValue
+                    });
+                } else if(existing?.Parameters.Any(existingParam => existingParam.ParameterKey == templateParameter.ParameterKey) == true) {
+
+                    // re-use the existing parameter value
+                    result.Add(new Parameter {
+                        ParameterKey = templateParameter.ParameterKey,
+                        UsePreviousValue = true
+                    });
+                } else {
+
+                    // add parameter to missing parameters
+                    missingParameters.Add(templateParameter);
+                }
+            }
+
+            // ask user for missing values
+            if(missingParameters.Any()) {
+                Console.WriteLine();
+                Console.WriteLine($"Configuring {templateSummary.Description} Parameters");
+                foreach(var missingParameter in missingParameters) {
+                    var enteredValue = Prompt.GetString($"=> {missingParameter.Description ?? missingParameter.ParameterKey}:", missingParameter.DefaultValue) ?? "";
+                    result.Add(new Parameter {
+                        ParameterKey = missingParameter.ParameterKey,
+                        ParameterValue = enteredValue
+                    });
+                }
+                Console.WriteLine();
+            }
+
+            // report any parameters that were provided, but are not needed
+            foreach(var providedParameter in providedParameters) {
+                if(!templateSummary.Parameters.Any(expectedParam => expectedParam.ParameterKey == providedParameter.Key)) {
+                    AddError($"unexpected module parameter '{providedParameter.Key}'");
+                }
+            }
+            if(HasErrors) {
+                return null;
+            }
+
+            // return the collected paramaters
+            return result;
         }
     }
 }
