@@ -297,7 +297,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 // register import parameter reference
                 var condition = AddCondition(
                     parent: result,
-                    name: "Imported",
+                    name: "IsImported",
                     description: null,
                     value: FnAnd(
                         FnNot(FnEquals(FnRef(result.ResourceName), "")),
@@ -340,7 +340,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 // create conditional managed resource
                 var condition = AddCondition(
                     parent: result,
-                    name: "Created",
+                    name: "IsCreated",
                     description: null,
                     value: FnEquals(FnRef(result.ResourceName), defaultValue)
                 );

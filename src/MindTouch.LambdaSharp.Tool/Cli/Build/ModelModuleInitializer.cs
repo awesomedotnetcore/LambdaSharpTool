@@ -163,7 +163,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     arnAttribute: null,
                     encryptionContext: null,
                     pragmas: null
-                );
+                ).DiscardIfNotReachable = true;
                 _builder.AddParameter(
                     parent: lambdasharp,
                     name: "LoggingStreamArn",
@@ -188,7 +188,32 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     arnAttribute: null,
                     encryptionContext: null,
                     pragmas: null
-                );
+                ).DiscardIfNotReachable = true;
+                _builder.AddParameter(
+                    parent: lambdasharp,
+                    name: "LoggingStreamRoleArn",
+                    section: null,
+                    label: "Logging Stream Role (ARN)",
+                    description: "Role for logging to kinesis stream for functions",
+
+                    // NOTE (2018-12-11, bjorg): we use type 'String' to be more flexible with the type of values we're willing to take
+                    type: "String",
+                    scope: null,
+                    noEcho: null,
+                    defaultValue: null,
+                    constraintDescription: null,
+                    allowedPattern: null,
+                    allowedValues: null,
+                    maxLength: null,
+                    maxValue: null,
+                    minLength: null,
+                    minValue: null,
+                    allow: null,
+                    properties: null,
+                    arnAttribute: null,
+                    encryptionContext: null,
+                    pragmas: null
+                ).DiscardIfNotReachable = true;
                 _builder.AddParameter(
                     parent: lambdasharp,
                     name: "DefaultSecretKeyArn",
@@ -215,7 +240,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     arnAttribute: null,
                     encryptionContext: null,
                     pragmas: null
-                );
+                ).DiscardIfNotReachable = true;
                 _builder.AddSecret(FnRef("Module::DefaultSecretKeyArn"));
 
                 // add lambdasharp imports
@@ -235,6 +260,15 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     type: "String",
                     scope: null,
                     value: FnRef("LambdaSharp::LoggingStreamArn"),
+                    encryptionContext: null
+                );
+                _builder.AddVariable(
+                    parent: moduleEntry,
+                    name: "LoggingStreamRoleArn",
+                    description: "Module Logging Stream Role (ARN)",
+                    type: "String",
+                    scope: null,
+                    value: FnRef("LambdaSharp::LoggingStreamRoleArn"),
                     encryptionContext: null
                 );
                 _builder.AddVariable(
@@ -291,7 +325,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             );
 
             // add decryption function for secret parameters and values
-            var decryptSecretFunction = _builder.AddInlineFunction(
+            _builder.AddInlineFunction(
                 parent: moduleEntry,
                 name: "DecryptSecretFunction",
                 description: "Module secret decryption function",
@@ -305,8 +339,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 subnets: null,
                 securityGroups: null,
                 code: DecryptSecretFunctionCode
-            );
-            decryptSecretFunction.DiscardIfNotReachable = true;
+            ).DiscardIfNotReachable = true;
 
             // add LambdaSharp Deployment Settings
             section = "LambdaSharp Deployment Settings (DO NOT MODIFY)";
@@ -427,7 +460,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             );
 
             // create module IAM role used by all functions
-            var moduleRole = _builder.AddResource(
+            _builder.AddResource(
                 parent: moduleEntry,
                 name: "Role",
                 description: null,
@@ -460,8 +493,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 dependsOn: null,
                 condition: null,
                 pragmas: null
-            );
-            moduleRole.DiscardIfNotReachable = true;
+            ).DiscardIfNotReachable = true;
 
             // permission needed for writing to log streams (but not for creating log groups!)
             _builder.AddGrant(
@@ -531,52 +563,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     .ToList();
                 if(registeredFunctions.Any()) {
 
-                    // create CloudWatch Logs IAM role to invoke kinesis stream
-                    if(_builder.HasLambdaSharpDependencies) {
-                        var cloudWatchLogRole = _builder.AddResource(
-                            parent: moduleEntry,
-                            name: "CloudWatchLogsRole",
-                            description: null,
-                            scope: null,
-                            resource:  new Humidifier.IAM.Role {
-                                AssumeRolePolicyDocument = new Humidifier.PolicyDocument {
-                                    Version = "2012-10-17",
-                                    Statement = new[] {
-                                        new Humidifier.Statement {
-                                            Sid = "CloudWatchLogsKinesisPrincipal",
-                                            Effect = "Allow",
-                                            Principal = new Humidifier.Principal {
-                                                Service = FnSub("logs.${AWS::Region}.amazonaws.com")
-                                            },
-                                            Action = "sts:AssumeRole"
-                                        }
-                                    }.ToList()
-                                },
-                                Policies = new[] {
-                                    new Humidifier.IAM.Policy {
-                                        PolicyName = FnSub("${AWS::StackName}ModuleCloudWatchLogsPolicy"),
-                                        PolicyDocument = new Humidifier.PolicyDocument {
-                                            Version = "2012-10-17",
-                                            Statement = new[] {
-                                                new Humidifier.Statement {
-                                                    Sid = "CloudWatchLogsKinesisPermissions",
-                                                    Effect = "Allow",
-                                                    Action = "kinesis:PutRecord",
-                                                    Resource = FnRef("Module::LoggingStreamArn")
-                                                }
-                                            }.ToList()
-                                        }
-                                    }
-                                }.ToList()
-                            },
-                            resourceArnAttribute: null,
-                            dependsOn: null,
-                            condition: null,
-                            pragmas: null
-                        );
-                        cloudWatchLogRole.DiscardIfNotReachable = true;
-                    }
-
                     // create registration-related resources for functions
                     foreach(var function in registeredFunctions) {
 
@@ -617,7 +603,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                                     DestinationArn = FnRef("Module::LoggingStreamArn"),
                                     FilterPattern = "-\"*** \"",
                                     LogGroupName = FnRef($"{function.FullName}::LogGroup"),
-                                    RoleArn = FnGetAtt("Module::CloudWatchLogsRole", "Arn")
+                                    RoleArn = FnRef("Module::LoggingStreamRoleArn")
                                 },
                                 resourceArnAttribute: null,
                                 dependsOn: null,

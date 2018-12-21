@@ -48,7 +48,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "3ED6B7FEA3D488D983390166B99172FE"
+      "Default": "2C547AB1FB7EEB71651D1F5BBB69FC02"
     }
   },
   "Resources": {
@@ -61,7 +61,7 @@
         "Parameters": {
           "LambdaSharpDeadLetterQueueArn": {
             "Fn::If": [
-              "LambdaSharpDeadLetterQueueArnImported",
+              "LambdaSharpDeadLetterQueueArnIsImported",
               {
                 "Fn::ImportValue": {
                   "Fn::Sub": [
@@ -91,7 +91,7 @@
           },
           "LambdaSharpLoggingStreamArn": {
             "Fn::If": [
-              "LambdaSharpLoggingStreamArnImported",
+              "LambdaSharpLoggingStreamArnIsImported",
               {
                 "Fn::ImportValue": {
                   "Fn::Sub": [
@@ -121,7 +121,7 @@
           },
           "LambdaSharpDefaultSecretKeyArn": {
             "Fn::If": [
-              "LambdaSharpDefaultSecretKeyArnImported",
+              "LambdaSharpDefaultSecretKeyArnIsImported",
               {
                 "Fn::ImportValue": {
                   "Fn::Sub": [
@@ -193,7 +193,7 @@
     }
   },
   "Conditions": {
-    "LambdaSharpDeadLetterQueueArnImported": {
+    "LambdaSharpDeadLetterQueueArnIsImported": {
       "Fn::And": [
         {
           "Fn::Not": [
@@ -227,7 +227,7 @@
         }
       ]
     },
-    "LambdaSharpLoggingStreamArnImported": {
+    "LambdaSharpLoggingStreamArnIsImported": {
       "Fn::And": [
         {
           "Fn::Not": [
@@ -261,7 +261,7 @@
         }
       ]
     },
-    "LambdaSharpDefaultSecretKeyArnImported": {
+    "LambdaSharpDefaultSecretKeyArnIsImported": {
       "Fn::And": [
         {
           "Fn::Not": [
@@ -365,7 +365,7 @@
       "ModuleName": "TestModule2",
       "ModuleVersion": "1.0",
       "RuntimeCheck": true,
-      "Hash": "3ED6B7FEA3D488D983390166B99172FE",
+      "Hash": "2C547AB1FB7EEB71651D1F5BBB69FC02",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [

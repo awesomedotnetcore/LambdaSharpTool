@@ -21,6 +21,13 @@
       "ConstraintDescription": "must either be a cross-module import reference or a non-empty value",
       "Default": "$LambdaSharp::LoggingStreamArn"
     },
+    "LambdaSharpLoggingStreamRoleArn": {
+      "Type": "String",
+      "Description": "Role for logging to kinesis stream for functions",
+      "AllowedPattern": "^.+$",
+      "ConstraintDescription": "must either be a cross-module import reference or a non-empty value",
+      "Default": "$LambdaSharp::LoggingStreamRoleArn"
+    },
     "LambdaSharpDefaultSecretKeyArn": {
       "Type": "String",
       "Description": "Default secret key for functions",
@@ -48,7 +55,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "26E1B44BC2AA61CFACE43C1D49D349FB"
+      "Default": "F404C2AB049204E6E29F9C4CB8C6B3C8"
     }
   },
   "Resources": {
@@ -89,7 +96,7 @@
         "DeadLetterConfig": {
           "TargetArn": {
             "Fn::If": [
-              "LambdaSharpDeadLetterQueueArnImported",
+              "LambdaSharpDeadLetterQueueArnIsImported",
               {
                 "Fn::ImportValue": {
                   "Fn::Sub": [
@@ -130,7 +137,7 @@
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
               "Fn::If": [
-                "LambdaSharpDeadLetterQueueArnImported",
+                "LambdaSharpDeadLetterQueueArnIsImported",
                 {
                   "Fn::ImportValue": {
                     "Fn::Sub": [
@@ -160,7 +167,7 @@
             },
             "DEFAULTSECRETKEY": {
               "Fn::If": [
-                "LambdaSharpDefaultSecretKeyArnImported",
+                "LambdaSharpDefaultSecretKeyArnIsImported",
                 {
                   "Fn::ImportValue": {
                     "Fn::Sub": [
@@ -276,7 +283,7 @@
                   ],
                   "Resource": {
                     "Fn::If": [
-                      "LambdaSharpDeadLetterQueueArnImported",
+                      "LambdaSharpDeadLetterQueueArnIsImported",
                       {
                         "Fn::ImportValue": {
                           "Fn::Sub": [
@@ -322,7 +329,7 @@
                           "SecretsIsEmpty",
                           {
                             "Fn::If": [
-                              "LambdaSharpDefaultSecretKeyArnImported",
+                              "LambdaSharpDefaultSecretKeyArnIsImported",
                               {
                                 "Fn::ImportValue": {
                                   "Fn::Sub": [
@@ -356,7 +363,7 @@
                               [
                                 {
                                   "Fn::If": [
-                                    "LambdaSharpDefaultSecretKeyArnImported",
+                                    "LambdaSharpDefaultSecretKeyArnIsImported",
                                     {
                                       "Fn::ImportValue": {
                                         "Fn::Sub": [
@@ -428,73 +435,6 @@
         "ModuleVersion": "1.0"
       }
     },
-    "ModuleCloudWatchLogsRole": {
-      "Type": "AWS::IAM::Role",
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Version": "2012-10-17",
-          "Statement": [
-            {
-              "Sid": "CloudWatchLogsKinesisPrincipal",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": {
-                  "Fn::Sub": "logs.${AWS::Region}.amazonaws.com"
-                }
-              },
-              "Action": "sts:AssumeRole"
-            }
-          ]
-        },
-        "Policies": [
-          {
-            "PolicyDocument": {
-              "Version": "2012-10-17",
-              "Statement": [
-                {
-                  "Sid": "CloudWatchLogsKinesisPermissions",
-                  "Effect": "Allow",
-                  "Action": "kinesis:PutRecord",
-                  "Resource": {
-                    "Fn::If": [
-                      "LambdaSharpLoggingStreamArnImported",
-                      {
-                        "Fn::ImportValue": {
-                          "Fn::Sub": [
-                            "${DeploymentPrefix}${Import}",
-                            {
-                              "Import": {
-                                "Fn::Select": [
-                                  "1",
-                                  {
-                                    "Fn::Split": [
-                                      "$",
-                                      {
-                                        "Ref": "LambdaSharpLoggingStreamArn"
-                                      }
-                                    ]
-                                  }
-                                ]
-                              }
-                            }
-                          ]
-                        }
-                      },
-                      {
-                        "Ref": "LambdaSharpLoggingStreamArn"
-                      }
-                    ]
-                  }
-                }
-              ]
-            },
-            "PolicyName": {
-              "Fn::Sub": "${AWS::StackName}ModuleCloudWatchLogsPolicy"
-            }
-          }
-        ]
-      }
-    },
     "FunctionRegistration": {
       "Type": "Custom::LambdaSharpRegisterFunction",
       "Properties": {
@@ -528,7 +468,7 @@
       "Properties": {
         "DestinationArn": {
           "Fn::If": [
-            "LambdaSharpLoggingStreamArnImported",
+            "LambdaSharpLoggingStreamArnIsImported",
             {
               "Fn::ImportValue": {
                 "Fn::Sub": [
@@ -561,9 +501,33 @@
           "Ref": "FunctionLogGroup"
         },
         "RoleArn": {
-          "Fn::GetAtt": [
-            "ModuleCloudWatchLogsRole",
-            "Arn"
+          "Fn::If": [
+            "LambdaSharpLoggingStreamRoleArnIsImported",
+            {
+              "Fn::ImportValue": {
+                "Fn::Sub": [
+                  "${DeploymentPrefix}${Import}",
+                  {
+                    "Import": {
+                      "Fn::Select": [
+                        "1",
+                        {
+                          "Fn::Split": [
+                            "$",
+                            {
+                              "Ref": "LambdaSharpLoggingStreamRoleArn"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "Ref": "LambdaSharpLoggingStreamRoleArn"
+            }
           ]
         }
       }
@@ -586,7 +550,7 @@
         ""
       ]
     },
-    "LambdaSharpDeadLetterQueueArnImported": {
+    "LambdaSharpDeadLetterQueueArnIsImported": {
       "Fn::And": [
         {
           "Fn::Not": [
@@ -620,7 +584,7 @@
         }
       ]
     },
-    "LambdaSharpLoggingStreamArnImported": {
+    "LambdaSharpLoggingStreamArnIsImported": {
       "Fn::And": [
         {
           "Fn::Not": [
@@ -654,7 +618,41 @@
         }
       ]
     },
-    "LambdaSharpDefaultSecretKeyArnImported": {
+    "LambdaSharpLoggingStreamRoleArnIsImported": {
+      "Fn::And": [
+        {
+          "Fn::Not": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "LambdaSharpLoggingStreamRoleArn"
+                },
+                ""
+              ]
+            }
+          ]
+        },
+        {
+          "Fn::Equals": [
+            {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "$",
+                    {
+                      "Ref": "LambdaSharpLoggingStreamRoleArn"
+                    }
+                  ]
+                }
+              ]
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "LambdaSharpDefaultSecretKeyArnIsImported": {
       "Fn::And": [
         {
           "Fn::Not": [
@@ -701,6 +699,9 @@
         "LambdaSharpLoggingStreamArn": {
           "default": "Logging Stream (ARN)"
         },
+        "LambdaSharpLoggingStreamRoleArn": {
+          "default": "Logging Stream Role (ARN)"
+        },
         "LambdaSharpDefaultSecretKeyArn": {
           "default": "Secret Key (ARN)"
         },
@@ -736,6 +737,7 @@
           "Parameters": [
             "LambdaSharpDeadLetterQueueArn",
             "LambdaSharpLoggingStreamArn",
+            "LambdaSharpLoggingStreamRoleArn",
             "LambdaSharpDefaultSecretKeyArn"
           ]
         },
@@ -758,7 +760,7 @@
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
       "RuntimeCheck": true,
-      "Hash": "26E1B44BC2AA61CFACE43C1D49D349FB",
+      "Hash": "F404C2AB049204E6E29F9C4CB8C6B3C8",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [
@@ -773,7 +775,6 @@
         "FunctionLogGroup": "Function::LogGroup",
         "ModuleRole": "Module::Role",
         "ModuleRegistration": "Module::Registration",
-        "ModuleCloudWatchLogsRole": "Module::CloudWatchLogsRole",
         "FunctionRegistration": "Function::Registration",
         "FunctionLogGroupSubscription": "Function::LogGroupSubscription"
       },

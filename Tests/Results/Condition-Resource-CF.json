@@ -10,27 +10,6 @@
       "Description": "Comma-separated list of optional secret keys",
       "Default": ""
     },
-    "LambdaSharpDeadLetterQueueArn": {
-      "Type": "String",
-      "Description": "Dead letter queue for functions",
-      "AllowedPattern": "^.+$",
-      "ConstraintDescription": "must either be a cross-module import reference or a non-empty value",
-      "Default": "$LambdaSharp::DeadLetterQueueArn"
-    },
-    "LambdaSharpLoggingStreamArn": {
-      "Type": "String",
-      "Description": "Logging kinesis stream for functions",
-      "AllowedPattern": "^.+$",
-      "ConstraintDescription": "must either be a cross-module import reference or a non-empty value",
-      "Default": "$LambdaSharp::LoggingStreamArn"
-    },
-    "LambdaSharpDefaultSecretKeyArn": {
-      "Type": "String",
-      "Description": "Default secret key for functions",
-      "AllowedPattern": "^.+$",
-      "ConstraintDescription": "must either be a cross-module import reference or a non-empty value",
-      "Default": "$LambdaSharp::DefaultSecretKeyArn"
-    },
     "DeploymentBucketName": {
       "Type": "String",
       "Description": "Source deployment S3 bucket name"
@@ -51,7 +30,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "815ADB0AA1B35732B41CC66C69057AE6"
+      "Default": "14A115174C49E18CDE3DEF8BC1C0B2C6"
     }
   },
   "Resources": {
@@ -103,15 +82,6 @@
         "Secrets": {
           "default": "Secret Keys (ARNs)"
         },
-        "LambdaSharpDeadLetterQueueArn": {
-          "default": "Dead Letter Queue (ARN)"
-        },
-        "LambdaSharpLoggingStreamArn": {
-          "default": "Logging Stream (ARN)"
-        },
-        "LambdaSharpDefaultSecretKeyArn": {
-          "default": "Secret Key (ARN)"
-        },
         "DeploymentBucketName": {
           "default": "Deployment S3 Bucket"
         },
@@ -147,16 +117,6 @@
         },
         {
           "Label": {
-            "default": "LambdaSharp Dependencies"
-          },
-          "Parameters": [
-            "LambdaSharpDeadLetterQueueArn",
-            "LambdaSharpLoggingStreamArn",
-            "LambdaSharpDefaultSecretKeyArn"
-          ]
-        },
-        {
-          "Label": {
             "default": "LambdaSharp Deployment Settings (DO NOT MODIFY)"
           },
           "Parameters": [
@@ -174,7 +134,7 @@
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
       "RuntimeCheck": true,
-      "Hash": "815ADB0AA1B35732B41CC66C69057AE6",
+      "Hash": "14A115174C49E18CDE3DEF8BC1C0B2C6",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [

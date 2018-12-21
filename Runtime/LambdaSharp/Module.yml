@@ -36,6 +36,10 @@ Outputs:
     Description: LambdaSharp Logging Stream
     Value: !Ref LoggingStreamArn
 
+  - Export: LoggingStreamRoleArn
+    Description: LambdaSharp Logging Stream Role
+    Value: !GetAtt LoggingStreamRole.Arn
+
   - Export: DefaultSecretKeyArn
     Description: LambdaSharp Default Secrets Key
     Value: !Ref DefaultSecretKeyArn
@@ -91,6 +95,27 @@ Entries:
     Label: Enable key rotation
     Description: Rotate KMS key automatically every 365 days
     Default: false
+
+  - Resource: LoggingStreamRole
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: CloudWatchLogsPrincipal
+            Effect: Allow
+            Principal:
+              Service: !Sub "logs.${AWS::Region}.amazonaws.com"
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: !Sub "${AWS::StackName}CloudWatchLogsKinesisPolicy"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: CloudWatchLogsKinesisPermissions
+                Effect: Allow
+                Action: kinesis:PutRecord
+                Resource: !Ref LoggingStreamArn
 
   # Resource Definitions
   - Resource: DefaultSecretKeyAlias

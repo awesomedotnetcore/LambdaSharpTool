@@ -14,13 +14,6 @@
       "ConstraintDescription": "must either be a cross-module import reference or a non-empty value",
       "Default": "$LambdaSharp::DeadLetterQueueArn"
     },
-    "LambdaSharpLoggingStreamArn": {
-      "Type": "String",
-      "Description": "Logging kinesis stream for functions",
-      "AllowedPattern": "^.+$",
-      "ConstraintDescription": "must either be a cross-module import reference or a non-empty value",
-      "Default": "$LambdaSharp::LoggingStreamArn"
-    },
     "LambdaSharpDefaultSecretKeyArn": {
       "Type": "String",
       "Description": "Default secret key for functions",
@@ -48,7 +41,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "6D576E30F121877F476DBFE6ED66945A"
+      "Default": "68166C95BA0FC98A6A901FDE92D0D516"
     }
   },
   "Resources": {
@@ -68,7 +61,7 @@
         "DeadLetterConfig": {
           "TargetArn": {
             "Fn::If": [
-              "LambdaSharpDeadLetterQueueArnImported",
+              "LambdaSharpDeadLetterQueueArnIsImported",
               {
                 "Fn::ImportValue": {
                   "Fn::Sub": [
@@ -109,7 +102,7 @@
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
               "Fn::If": [
-                "LambdaSharpDeadLetterQueueArnImported",
+                "LambdaSharpDeadLetterQueueArnIsImported",
                 {
                   "Fn::ImportValue": {
                     "Fn::Sub": [
@@ -139,7 +132,7 @@
             },
             "DEFAULTSECRETKEY": {
               "Fn::If": [
-                "LambdaSharpDefaultSecretKeyArnImported",
+                "LambdaSharpDefaultSecretKeyArnIsImported",
                 {
                   "Fn::ImportValue": {
                     "Fn::Sub": [
@@ -231,7 +224,7 @@
                   ],
                   "Resource": {
                     "Fn::If": [
-                      "LambdaSharpDeadLetterQueueArnImported",
+                      "LambdaSharpDeadLetterQueueArnIsImported",
                       {
                         "Fn::ImportValue": {
                           "Fn::Sub": [
@@ -277,7 +270,7 @@
                           "SecretsIsEmpty",
                           {
                             "Fn::If": [
-                              "LambdaSharpDefaultSecretKeyArnImported",
+                              "LambdaSharpDefaultSecretKeyArnIsImported",
                               {
                                 "Fn::ImportValue": {
                                   "Fn::Sub": [
@@ -311,7 +304,7 @@
                               [
                                 {
                                   "Fn::If": [
-                                    "LambdaSharpDefaultSecretKeyArnImported",
+                                    "LambdaSharpDefaultSecretKeyArnIsImported",
                                     {
                                       "Fn::ImportValue": {
                                         "Fn::Sub": [
@@ -401,7 +394,7 @@
         ""
       ]
     },
-    "LambdaSharpDeadLetterQueueArnImported": {
+    "LambdaSharpDeadLetterQueueArnIsImported": {
       "Fn::And": [
         {
           "Fn::Not": [
@@ -435,7 +428,7 @@
         }
       ]
     },
-    "LambdaSharpDefaultSecretKeyArnImported": {
+    "LambdaSharpDefaultSecretKeyArnIsImported": {
       "Fn::And": [
         {
           "Fn::Not": [
@@ -479,9 +472,6 @@
         "LambdaSharpDeadLetterQueueArn": {
           "default": "Dead Letter Queue (ARN)"
         },
-        "LambdaSharpLoggingStreamArn": {
-          "default": "Logging Stream (ARN)"
-        },
         "LambdaSharpDefaultSecretKeyArn": {
           "default": "Secret Key (ARN)"
         },
@@ -516,7 +506,6 @@
           },
           "Parameters": [
             "LambdaSharpDeadLetterQueueArn",
-            "LambdaSharpLoggingStreamArn",
             "LambdaSharpDefaultSecretKeyArn"
           ]
         },
@@ -539,7 +528,7 @@
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
       "RuntimeCheck": true,
-      "Hash": "6D576E30F121877F476DBFE6ED66945A",
+      "Hash": "68166C95BA0FC98A6A901FDE92D0D516",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [

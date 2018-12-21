@@ -201,6 +201,7 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         /*
          * Resource: string
          * Description: string
+         * If: string
          * Type: string
          * Scope: string -or- list<string>
          * Allow: string or list<string>
@@ -241,6 +242,7 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         /*
          * Function: string
          * Description: string
+         * If: string
          * Memory: int
          * Timeout: int
          * Project: string
