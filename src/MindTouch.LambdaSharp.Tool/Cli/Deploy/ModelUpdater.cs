@@ -64,13 +64,12 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
             string stackName,
             bool allowDataLoss,
             bool protectStack,
-            Dictionary<string, string> inputs,
-            bool forceDeploy
+            Dictionary<string, string> inputs
         ) {
             var now = DateTime.UtcNow;
 
             // check if cloudformation stack already exists and is in a final state
-            Console.WriteLine($"Deploying stack: {stackName} [{location.ModuleName}]");
+            Console.WriteLine($"Deploying stack: {stackName} [{location.ModuleName}:{location.ModuleVersion}]");
             var mostRecentStackEventId = await Settings.CfClient.GetMostRecentStackEventIdAsync(stackName);
 
             // set optional notification topics for cloudformation operations
@@ -101,16 +100,22 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
                 });
             }
 
+            // validate template
+            var templateUrl = $"https://{location.BucketName}.s3.amazonaws.com/{location.TemplatePath}";
+            var validation = await Settings.CfClient.ValidateTemplateAsync(new ValidateTemplateRequest  {
+                TemplateURL = templateUrl
+            });
+
             // create change-set
             var success = false;
             var changeSetName = $"{location.ModuleName}-{now:yyyy-MM-dd-hh-mm-ss}";
-            var templateUrl = $"https://{location.BucketName}.s3.amazonaws.com/{location.TemplatePath}";
             var updateOrCreate = (mostRecentStackEventId != null) ? "update" : "create";
-            Console.WriteLine($"=> Stack {updateOrCreate} initiated for {stackName}");
+            var capabilities = validation.Capabilities.Any()
+                ? "[" + string.Join(", ", validation.Capabilities) + "]"
+                : "";
+            Console.WriteLine($"=> Stack {updateOrCreate} initiated for {stackName} {capabilities}");
             var response = await Settings.CfClient.CreateChangeSetAsync(new CreateChangeSetRequest {
-                Capabilities = new List<string> {
-                    "CAPABILITY_NAMED_IAM"
-                },
+                Capabilities = validation.Capabilities,
                 ChangeSetName = changeSetName,
                 ChangeSetType = (mostRecentStackEventId != null) ? ChangeSetType.UPDATE : ChangeSetType.CREATE,
                 Description = $"Stack {updateOrCreate} {location.ModuleName} (v{location.ModuleVersion})",
@@ -246,11 +251,13 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
             return changes
                 .Where(change => change.Type == ChangeType.Resource)
                 .Where(change =>
-                    (change.ResourceChange.Action == ChangeAction.Remove)
-                    || (
-                        (change.ResourceChange.Action == ChangeAction.Modify)
-                        && (change.ResourceChange.Replacement != Replacement.False)
-                        && (_protectedResourceTypes.Contains(change.ResourceChange.ResourceType))
+                    _protectedResourceTypes.Contains(change.ResourceChange.ResourceType)
+                    && (
+                        (change.ResourceChange.Action == ChangeAction.Remove)
+                        || (
+                            (change.ResourceChange.Action == ChangeAction.Modify)
+                            && (change.ResourceChange.Replacement != Replacement.False)
+                        )
                     )
                 ).ToArray();
         }

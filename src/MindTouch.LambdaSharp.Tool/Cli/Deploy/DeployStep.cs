@@ -117,8 +117,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
                             protectStack,
 
                             // TODO (2018-12-11, bjorg): allow interactive mode to deploy dependencies with parameters
-                            new Dictionary<string, string>(),
-                            forceDeploy
+                            new Dictionary<string, string>()
                         )) {
                             return false;
                         }
@@ -130,8 +129,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
                     stackName,
                     allowDataLoos,
                     protectStack,
-                    inputs,
-                    forceDeploy
+                    inputs
                 );
             }
             return true;
