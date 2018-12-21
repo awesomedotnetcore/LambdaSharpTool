@@ -140,6 +140,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
                 var describe = await Settings.CfClient.DescribeStacksAsync(new DescribeStacksRequest {
                     StackName = stackName
                 });
+
+                // TODO: prompt for missing module parameters
+
                 var deployedOutputs = describe.Stacks.FirstOrDefault()?.Outputs;
                 var deployedName = deployedOutputs?.FirstOrDefault(output => output.OutputKey == "ModuleName")?.OutputValue;
                 var deployedVersionText = deployedOutputs?.FirstOrDefault(output => output.OutputKey == "ModuleVersion")?.OutputValue;

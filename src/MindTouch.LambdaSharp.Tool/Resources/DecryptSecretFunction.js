@@ -1,3 +1,5 @@
+// TODO: review and condense
+
 'use strict';
 
 var AWS = require('aws-sdk');

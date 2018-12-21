@@ -125,7 +125,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
                 // create lambdasharp CLI resources stack
                 var stackName = $"LambdaSharpTool-{settings.ToolProfile}";
-                var templateParameters = await ValidateTemplateParameters(cfClient, stackName, parameters, template);
+                var templateParameters = await PromptMissingTemplateParameters(cfClient, stackName, parameters, template);
                 Console.WriteLine($"=> Stack creation initiated for {stackName}");
                 if(templateParameters == null) {
                     return;
@@ -169,7 +169,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
                     // update lambdasharp CLI resources stack
                     var stackName = $"LambdaSharpTool-{settings.ToolProfile}";
-                    var templateParameters = await ValidateTemplateParameters(cfClient, stackName, parameters, template);
+                    var templateParameters = await PromptMissingTemplateParameters(cfClient, stackName, parameters, template);
                     Console.WriteLine($"=> Stack update initiated for {stackName}");
                     if(templateParameters == null) {
                         return;
@@ -202,7 +202,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             }
         }
 
-        public async Task<List<Parameter>> ValidateTemplateParameters(
+        public async Task<List<Parameter>> PromptMissingTemplateParameters(
             IAmazonCloudFormation cfClient,
             string stackName,
             IDictionary<string, string> providedParameters,

@@ -92,21 +92,25 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public bool HasLambdaSharpDependencies => !HasPragma("no-lambdasharp-dependencies");
 
         //--- Methods ---
-        public AModuleEntry GetEntry(string fullName) {
-            if(fullName.StartsWith("@", StringComparison.Ordinal)) {
-                return _entries.FirstOrDefault(e => e.ResourceName == fullName) ?? throw new KeyNotFoundException(fullName);
+        public AModuleEntry GetEntry(string fullNameOrResourceName) {
+            if(fullNameOrResourceName.StartsWith("@", StringComparison.Ordinal)) {
+                return _entries.FirstOrDefault(e => e.ResourceName == fullNameOrResourceName) ?? throw new KeyNotFoundException(fullNameOrResourceName);
             }
-            return _entriesByFullName[fullName];
+            return _entriesByFullName[fullNameOrResourceName];
         }
 
         public void AddPragma(object pragma) => _pragmas.Add(pragma);
 
-        public bool TryGetEntry(string fullName, out AModuleEntry entry) {
-            if(fullName.StartsWith("@", StringComparison.Ordinal)) {
-                entry = _entries.FirstOrDefault(e => e.ResourceName == fullName);
+        public bool TryGetEntry(string fullNameOrResourceName, out AModuleEntry entry) {
+            if(fullNameOrResourceName == null) {
+                entry = null;
+                return false;
+            }
+            if(fullNameOrResourceName.StartsWith("@", StringComparison.Ordinal)) {
+                entry = _entries.FirstOrDefault(e => e.ResourceName == fullNameOrResourceName);
                 return entry != null;
             }
-            return _entriesByFullName.TryGetValue(fullName, out entry);
+            return _entriesByFullName.TryGetValue(fullNameOrResourceName, out entry);
         }
 
         public IEnumerable<AModuleEntry> RemoveEntry(string fullName) {
@@ -574,9 +578,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                     condition: condition,
                     pragmas: pragmas
                 );
-                if(customResource.AWSTypeName != customResource.OriginalTypeName) {
-                    // TODO
-                }
 
                 // add optional grants
                 if(allow != null) {
@@ -764,7 +765,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
                 // finalizer doesn't need a log-group or registration b/c it gets deleted anyway on failure or teardown
                 function.Pragmas = new List<object>(function.Pragmas) {
-                    "no-function-registration"
+                    "no-function-registration",
+                    "no-dead-letter-queue"
                 };
 
                 // NOTE (2018-12-18, bjorg): always set the 'Finalizer' timeout to the maximum limit to prevent ugly timeout scenarios
@@ -938,10 +940,14 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                     AtLocation(entry.FullName, () => {
                         switch(entry) {
                         case InputEntry _:
-                        case VariableEntry _:
                         case PackageEntry _:
 
                             // nothing to do
+                            break;
+                        case VariableEntry variableEntry:
+                            AtLocation("Value", () => {
+                                variableEntry.Reference = visitor(entry, variableEntry.Reference);
+                            });
                             break;
                         case ResourceEntry resourceEntry:
                             AtLocation("Resource", () => {

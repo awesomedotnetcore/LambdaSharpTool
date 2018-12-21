@@ -37,6 +37,10 @@
     * default log retention was increased from 7 to 30 days
     * added support for `Condition` entry
     * garbage collection of optional resources and conditions
+    * entry type `Condition`
+        * allow custom condition in resources and functions
+        * add support for `!Condition`
+        * add tests
 
 * CLI
     * new module specification for deploying: `ModuleName[:Version][@Bucket]`
@@ -52,6 +56,8 @@
     * validate custom resource types using module dependencies
     * validate AWS resources using the cloudformation json spec
     * validation of attribute in `!GetAtt` expressions
+    * `ModuleCloudWatchLogsRole` is defined once in base module and then re-used by all modules
+    * garbage collection generated import parameters if not used
 
 * Deploy Process
     * use change-sets for deploying stacks
@@ -62,6 +68,7 @@
     * added `ALambdaFinalizerFunction` base class
     * **BREAKING CHANGE:** merged `ALambdaCustomResourceFunction` into LambdaSharp assembly
     * `ALambdaCustomResourceFunction` can be invoked via SNS or directly from a custom resource
+
 
 __Topics__
 1. [Breaking Changes](#breaking-changes)

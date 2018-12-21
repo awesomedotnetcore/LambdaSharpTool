@@ -36,18 +36,18 @@ namespace MindTouch.LambdaSharpTestModule.Finalizer {
         public override Task InitializeAsync(LambdaConfig config)
             => Task.CompletedTask;
 
-        protected override async Task<string> CreateDeployment(string deploymentChecksum) {
-            LogInfo($"Creating Deployment: {deploymentChecksum}");
-            return deploymentChecksum;
+        protected override async Task<string> CreateDeployment(FinalizerRequestProperties current) {
+            LogInfo($"Creating Deployment: {current.DeploymentChecksum}");
+            return current.DeploymentChecksum;
         }
 
-        protected override async Task<string> UpdateDeployment(string deploymentChecksum, string oldDeploymentChecksum) {
-            LogInfo($"Updating Deployment: {oldDeploymentChecksum} -> {deploymentChecksum}");
-            return deploymentChecksum;
+        protected override async Task<string> UpdateDeployment(FinalizerRequestProperties current, FinalizerRequestProperties previous) {
+            LogInfo($"Updating Deployment: {previous.DeploymentChecksum} -> {current.DeploymentChecksum}");
+            return previous.DeploymentChecksum;
         }
 
-        protected override async Task DeleteDeployment(string deploymentChecksum) {
-            LogInfo($"Deleting Deployment: {deploymentChecksum}");
+        protected override async Task DeleteDeployment(FinalizerRequestProperties current) {
+            LogInfo($"Deleting Deployment: {current.DeploymentChecksum}");
         }
     }
 }

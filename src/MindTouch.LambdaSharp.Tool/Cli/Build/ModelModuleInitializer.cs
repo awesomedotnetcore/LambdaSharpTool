@@ -332,7 +332,10 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 environment: null,
                 sources: null,
                 condition: null,
-                pragmas: new[] { "no-function-registration" },
+                pragmas: new[] {
+                    "no-function-registration",
+                    "no-dead-letter-queue"
+                },
                 timeout: "30",
                 reservedConcurrency: null,
                 memory: "128",
@@ -509,7 +512,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
             // check if lambdasharp specific resources need to be initialized
             if(_builder.HasLambdaSharpDependencies) {
-                foreach(var function in functions) {
+                foreach(var function in functions.Where(f => f.HasDeadLetterQueue)) {
 
                     // initialize dead-letter queue
                     function.Function.DeadLetterConfig = new Humidifier.Lambda.FunctionTypes.DeadLetterConfig {
