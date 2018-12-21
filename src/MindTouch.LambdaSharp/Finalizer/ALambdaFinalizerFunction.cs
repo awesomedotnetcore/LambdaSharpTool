@@ -37,12 +37,12 @@ namespace MindTouch.LambdaSharp.Finalizer {
     public abstract class ALambdaFinalizerFunction : ALambdaCustomResourceFunction<FinalizerRequestProperties, FinalizerResponseProperties> {
 
         //--- Methods ---
-        protected virtual async Task<string> CreateDeployment(string deploymentChecksum) => deploymentChecksum;
-        protected virtual async Task<string> UpdateDeployment(string deploymentChecksum, string oldDeploymentChecksum) => oldDeploymentChecksum;
-        protected virtual async Task DeleteDeployment(string deploymentChecksum) { }
+        protected virtual async Task<string> CreateDeployment(FinalizerRequestProperties request) => request.DeploymentChecksum;
+        protected virtual async Task<string> UpdateDeployment(FinalizerRequestProperties current, FinalizerRequestProperties previous) => previous.DeploymentChecksum;
+        protected virtual async Task DeleteDeployment(FinalizerRequestProperties current) { }
 
         protected override async Task<Response<FinalizerResponseProperties>> HandleCreateResourceAsync(Request<FinalizerRequestProperties> request) {
-            var id = await CreateDeployment(request.ResourceProperties.DeploymentChecksum);
+            var id = await CreateDeployment(request.ResourceProperties);
             return new Response<FinalizerResponseProperties> {
                 PhysicalResourceId = "Finalizer:" + id,
                 Properties = new FinalizerResponseProperties { }
@@ -50,12 +50,12 @@ namespace MindTouch.LambdaSharp.Finalizer {
         }
 
         protected override async Task<Response<FinalizerResponseProperties>> HandleDeleteResourceAsync(Request<FinalizerRequestProperties> request) {
-            await DeleteDeployment(request.ResourceProperties.DeploymentChecksum);
+            await DeleteDeployment(request.ResourceProperties);
             return new Response<FinalizerResponseProperties>();
         }
 
         protected override async Task<Response<FinalizerResponseProperties>> HandleUpdateResourceAsync(Request<FinalizerRequestProperties> request) {
-            var id = await UpdateDeployment(request.ResourceProperties.DeploymentChecksum, request.OldResourceProperties.DeploymentChecksum);
+            var id = await UpdateDeployment(request.ResourceProperties, request.OldResourceProperties);
             return new Response<FinalizerResponseProperties> {
                 PhysicalResourceId = "Finalizer:" + id,
                 Properties = new FinalizerResponseProperties { }
