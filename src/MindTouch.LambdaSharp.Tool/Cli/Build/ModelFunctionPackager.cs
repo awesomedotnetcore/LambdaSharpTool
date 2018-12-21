@@ -89,7 +89,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
             // delete old packages
             if(Directory.Exists(Settings.OutputDirectory)) {
-                foreach(var file in Directory.GetFiles(Settings.OutputDirectory, $"function_*.zip")) {
+                foreach(var file in Directory.GetFiles(Settings.OutputDirectory, $"function*.zip")) {
                     try {
                         File.Delete(file);
                     } catch { }

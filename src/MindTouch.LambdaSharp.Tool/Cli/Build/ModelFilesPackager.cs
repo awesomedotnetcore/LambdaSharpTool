@@ -43,7 +43,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
         public void Package(ModuleBuilder builder, bool skipPackageBuild) {
             _builder = builder;
             if(Directory.Exists(Settings.OutputDirectory)) {
-                foreach(var file in Directory.GetFiles(Settings.OutputDirectory, $"package_*.zip")) {
+                foreach(var file in Directory.GetFiles(Settings.OutputDirectory, $"package*.zip")) {
                     try {
                         File.Delete(file);
                     } catch { }
