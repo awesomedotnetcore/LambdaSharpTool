@@ -99,6 +99,17 @@ Entries:
     Scope: Register
     Default: ""
 
+  # Firehose Settings
+  - Parameter: EnableFirehose
+    Section: Firehose Settings
+    Label: Enable Firehose
+    Description: Enable Kinesis Firehose logging to S3 Bucket
+    Type: String
+    Default: no
+    AllowedValues:
+      - yes
+      - no
+
   # Resources
   - Resource: LoggingStreamReference
     Description: Reference to the Kinesis stream used to ingest the function logs
@@ -137,6 +148,107 @@ Entries:
         - AttributeName: Id
           KeyType: HASH
 
+  - Variable: Firehose
+    Entries:
+
+    - Condition: IsEnabled
+      Value: !Equals [ !Ref EnableFirehose, "yes" ]
+
+    - Resource: LoggingBucket
+      If: Firehose::IsEnabled
+      Scope: Finalizer
+      Type: AWS::S3::Bucket
+      Allow: ReadWrite
+      Properties:
+        LifecycleConfiguration:
+          Rules:
+            - Id: LogDeletion
+              ExpirationInDays: 90
+              Status: Enabled
+
+    - Resource: LoggingStream
+      If: Firehose::IsEnabled
+      Type: AWS::KinesisFirehose::DeliveryStream
+      Properties:
+        DeliveryStreamType: KinesisStreamAsSource
+        KinesisStreamSourceConfiguration:
+          KinesisStreamARN: !Ref LoggingStreamReference
+          RoleARN: !GetAtt Firehose::LoggingRole.Arn
+        S3DestinationConfiguration:
+          BucketARN: !GetAtt Firehose::LoggingBucket.Arn
+          CloudWatchLoggingOptions:
+            Enabled: true
+            LogGroupName: !Ref Firehose::CloudWatchGroup
+            LogStreamName: !Ref Firehose::CloudWatchStream
+          Prefix: "firehose/"
+          BufferingHints:
+            IntervalInSeconds: 60
+            SizeInMBs: 100
+          CompressionFormat: GZIP
+          EncryptionConfiguration:
+            NoEncryptionConfig: NoEncryption
+          RoleARN: !GetAtt Firehose::LoggingRole.Arn
+
+    - Resource: CloudWatchGroup
+      If: Firehose::IsEnabled
+      Type: AWS::Logs::LogGroup
+      Properties:
+        RetentionInDays: 30
+
+    - Resource: CloudWatchStream
+      If: Firehose::IsEnabled
+      Type: AWS::Logs::LogStream
+      Properties:
+        LogGroupName: !Ref Firehose::CloudWatchGroup
+
+    - Resource: LoggingRole
+      If: Firehose::IsEnabled
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: 2012-10-17
+          Statement:
+            Sid: FirehoseLoggingPrincipal
+            Effect: Allow
+            Principal:
+              Service: firehose.amazonaws.com
+            Action: sts:AssumeRole
+        Policies:
+          - PolicyName: !Sub "${AWS::StackName}FirehoseLoggingPolicy"
+            PolicyDocument:
+              Version: 2012-10-17
+              Statement:
+                - Sid: FirehoseLoggingDestinationS3Access
+                  Effect: Allow
+                  Action:
+                    - s3:AbortMultipartUpload
+                    - s3:GetBucketLocation
+                    - s3:GetObject
+                    - s3:ListBucket
+                    - s3:ListBucketMultipartUploads
+                    - s3:PutObject
+                  Resource:
+                    - !Sub "${Firehose::LoggingBucket.Arn}"
+                    - !Sub "${Firehose::LoggingBucket.Arn}/*"
+                - Sid: FirehoseLoggingSourceStreamAccess
+                  Effect: Allow
+                  Action:
+                    - kinesis:DescribeStream
+                    - kinesis:GetShardIterator
+                    - kinesis:GetRecords
+                  Resource: !Ref Module::LoggingStreamArn
+                - Sid: FirehoseLoggingCloudWatchLogsAccess
+                  Effect: Allow
+                  Action:
+                    - logs:CreateLogGroup
+                    - logs:CreateLogStream
+                    - logs:DescribeLogGroups
+                    - logs:DescribeLogStreams
+                    - logs:PutLogEvents
+                    - logs:GetLogEvents
+                    - logs:FilterLogEvents
+                  Resource: arn:aws:logs:*:*:*
+
   # Functions
   - Function: ProcessLogEvents
     Description: Process log events from all LambdaSharp module functions
@@ -153,3 +265,10 @@ Entries:
     Timeout: 30
     Sources:
       - Topic: RegistrationTopic
+
+  - Function: Finalizer
+    If: Firehose::IsEnabled
+    Description: Clean-up on deletion
+    Memory: 256
+    Timeout: 900
+
