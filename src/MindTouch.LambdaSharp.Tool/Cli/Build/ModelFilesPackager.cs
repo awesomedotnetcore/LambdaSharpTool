@@ -40,7 +40,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
         public ModelFilesPackager(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
 
         //--- Methods ---
-        public void Package(ModuleBuilder builder, bool skipPackageBuild) {
+        public void Package(ModuleBuilder builder, bool noPackageBuild) {
             _builder = builder;
             if(Directory.Exists(Settings.OutputDirectory)) {
                 foreach(var file in Directory.GetFiles(Settings.OutputDirectory, $"package*.zip")) {
@@ -49,7 +49,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     } catch { }
                 }
             }
-            if(skipPackageBuild) {
+            if(noPackageBuild) {
                 return;
             }
             foreach(var entry in builder.Entries.OfType<PackageEntry>()) {

@@ -48,7 +48,8 @@
     * files packages are not be created when functions are not compiled (both are about building assets) (i.e. dryrun)
     * `config` command
         * now has the option to set a specific bucket name
-        * set bucket policy to allow serverlessrepo to access the contents
+        * set bucket policy to allow serverless-repo to access the contents
+        * prompt for parameters when missing (computes delta of old and new cloudformation template)
     * BREAKING: `--skip-assembly-validation` is now `--no-assembly-validation` for consistency reasons
     * `--no-dependency-validation` to disable downloading of dependencies
 

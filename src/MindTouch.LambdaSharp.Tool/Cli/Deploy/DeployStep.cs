@@ -141,7 +141,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
                     StackName = stackName
                 });
 
-                // TODO: prompt for missing module parameters
+                // TODO (2018-12-22, bjorg): prompt for missing module parameters
 
                 var deployedOutputs = describe.Stacks.FirstOrDefault()?.Outputs;
                 var deployedName = deployedOutputs?.FirstOrDefault(output => output.OutputKey == "ModuleName")?.OutputValue;

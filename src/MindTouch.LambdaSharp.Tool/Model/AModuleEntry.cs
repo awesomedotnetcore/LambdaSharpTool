@@ -244,7 +244,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             IList<object> pragmas,
             Humidifier.Lambda.Function function
 
-            // TODO: add 'condition' & 'dependsOn'
+            // TODO: add 'dependsOn'
 
         ) : base(parent, name, description, function.AWSTypeName, scope, reference: null, dependsOn: null, condition: condition, pragmas) {
             Project = project;

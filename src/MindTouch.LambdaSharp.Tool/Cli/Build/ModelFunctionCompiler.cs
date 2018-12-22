@@ -138,8 +138,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                                                 Sid = "ModuleRestApiLogging",
                                                 Effect = "Allow",
                                                 Action = new[] {
-
-                                                    // TODO (2018-12-18, bjorg): create log-group in CFN template instead
                                                     "logs:CreateLogGroup",
                                                     "logs:CreateLogStream",
                                                     "logs:DescribeLogGroups",

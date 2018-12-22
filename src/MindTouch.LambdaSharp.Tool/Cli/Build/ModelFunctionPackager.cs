@@ -80,8 +80,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
         public void Package(
             ModuleBuilder builder,
-            bool skipCompile,
-            bool skipAssemblyValidation,
+            bool noCompile,
+            bool noAssemblyValidation,
             string gitsha,
             string buildConfiguration
         ) {
@@ -99,8 +99,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 AtLocation(function.FullName, () => {
                     Process(
                         function,
-                        skipCompile,
-                        skipAssemblyValidation,
+                        noCompile,
+                        noAssemblyValidation,
                         gitsha,
                         buildConfiguration
                     );
@@ -110,8 +110,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
         private void Process(
             FunctionEntry function,
-            bool skipCompile,
-            bool skipAssemblyValidation,
+            bool noCompile,
+            bool noAssemblyValidation,
             string gitsha,
             string buildConfiguration
         ) {
@@ -123,8 +123,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             case ".csproj":
                 ProcessDotNet(
                     function,
-                    skipCompile,
-                    skipAssemblyValidation,
+                    noCompile,
+                    noAssemblyValidation,
                     gitsha,
                     buildConfiguration
                 );
@@ -132,8 +132,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             case ".js":
                 ProcessJavascript(
                     function,
-                    skipCompile,
-                    skipAssemblyValidation,
+                    noCompile,
+                    noAssemblyValidation,
                     gitsha,
                     buildConfiguration
                 );
@@ -146,8 +146,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
         private void ProcessDotNet(
             FunctionEntry function,
-            bool skipCompile,
-            bool skipAssemblyValidation,
+            bool noCompile,
+            bool noAssemblyValidation,
             string gitsha,
             string buildConfiguration
         ) {
@@ -160,7 +160,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             var targetFramework = mainPropertyGroup?.Element("TargetFramework").Value;
 
             // validate the project is using the most recent lambdasharp assembly references
-            if(!skipAssemblyValidation && function.HasAssemblyValidation) {
+            if(!noAssemblyValidation && function.HasAssemblyValidation) {
                 var includes = csproj.Element("Project")
                     ?.Elements("ItemGroup")
                     .Elements("PackageReference")
@@ -189,7 +189,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     }
                 }
             }
-            if(skipCompile) {
+            if(noCompile) {
                 return;
             }
 
@@ -309,12 +309,12 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
         private void ProcessJavascript(
             FunctionEntry function,
-            bool skipCompile,
-            bool skipAssemblyValidation,
+            bool noCompile,
+            bool noAssemblyValidation,
             string gitsha,
             string buildConfiguration
         ) {
-            if(skipCompile) {
+            if(noCompile) {
                 return;
             }
             Console.WriteLine($"=> Building function {function.Name} [{function.Function.Runtime}]");

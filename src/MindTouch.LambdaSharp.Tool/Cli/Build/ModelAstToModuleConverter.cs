@@ -515,14 +515,11 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 });
                 break;
             case "Export":
-
-                // TODO (2018-09-20, bjorg): add name validation
                 AtLocation(node.Export, () => _builder.AddExport(node.Export, node.Description, node.Value));
                 break;
             case "CustomResource":
                 Validate(node.Handler != null, "missing Handler attribute");
 
-                // TODO (2018-09-20, bjorg): add custom resource name validation
                 // TODO (2018-09-20, bjorg): confirm that `Handler` is set to an SNS topic or lambda function
 
                 AtLocation(node.CustomResource, () => {
@@ -546,8 +543,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 });
                 break;
             case "Macro":
-
-                // TODO (2018-11-29, bjorg): add macro name validation
                 Validate(node.Handler != null, "missing Handler attribute");
 
                 // TODO (2018-10-30, bjorg): confirm that `Handler` is set to a lambda function

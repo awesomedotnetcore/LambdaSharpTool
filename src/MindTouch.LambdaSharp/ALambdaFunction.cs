@@ -183,7 +183,6 @@ namespace MindTouch.LambdaSharp {
 
         public virtual async Task InitializeFailedAsync(Stream stream, ILambdaContext context) { }
 
-        // TODO (2018-12-12, bjorg): should this method be moved to `ALambdaSharpFunction<T>`?
         protected virtual async Task RecordFailedMessageAsync(LambdaLogLevel level, string body, Exception exception) {
             if(!string.IsNullOrEmpty(_deadLetterQueueUrl)) {
                 await _sqsClient.SendMessageAsync(_deadLetterQueueUrl, body);

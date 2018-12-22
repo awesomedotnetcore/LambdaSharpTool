@@ -33,8 +33,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
         //--- Class Methods ---
         public async Task<bool> DoAsync(
             string outputCloudFormationFilePath,
-            bool skipAssemblyValidation,
-            bool skipPackageBuild,
+            bool noAssemblyValidation,
+            bool noPackageBuild,
             string gitsha,
             string buildConfiguration,
             string selector
@@ -78,14 +78,14 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             // package all functions
             new ModelFunctionPackager(Settings, SourceFilename).Package(
                 module,
-                skipCompile: skipPackageBuild,
-                skipAssemblyValidation: skipAssemblyValidation,
+                noCompile: noPackageBuild,
+                noAssemblyValidation: noAssemblyValidation,
                 gitsha: gitsha,
                 buildConfiguration: buildConfiguration
             );
 
             // package all files
-            new ModelFilesPackager(Settings, SourceFilename).Package(module, skipPackageBuild);
+            new ModelFilesPackager(Settings, SourceFilename).Package(module, noPackageBuild);
 
             // augment module definitions
             new ModelFunctionProcessor(Settings, SourceFilename).Process(module);

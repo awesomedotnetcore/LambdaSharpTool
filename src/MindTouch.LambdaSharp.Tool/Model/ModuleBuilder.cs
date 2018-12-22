@@ -383,6 +383,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         }
 
         public void AddExport(string name, string description, object value) {
+            Validate(Regex.IsMatch(name, CLOUDFORMATION_ID_PATTERN), "name is not valid");
             _outputs.Add(new ExportOutput {
                 Name = name,
                 Description = description,
@@ -396,6 +397,9 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             string handler,
             ModuleManifestCustomResource properties
         ) {
+
+            // TODO (2018-09-20, bjorg): add custom resource name validation
+
             _outputs.Add(new CustomResourceHandlerOutput {
                 CustomResourceType = customResourceType,
                 Description = description,
@@ -405,6 +409,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         }
 
         public void AddMacro(string macroName, string description, string handler) {
+            Validate(Regex.IsMatch(macroName, CLOUDFORMATION_ID_PATTERN), "name is not valid");
 
             // check if a root macros collection needs to be created
             if(!TryGetEntry("Macros", out AModuleEntry macrosEntry)) {

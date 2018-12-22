@@ -62,7 +62,7 @@ namespace CustomResourceSample.ResourceHandler {
                 // set response properties
                 Properties = new ResponseProperties {
 
-                    // TODO
+                    // TODO: set response properties
                 }
             };
         }
@@ -86,8 +86,8 @@ namespace CustomResourceSample.ResourceHandler {
                 // set updated response properties
                 Properties = new ResponseProperties {
 
-                    // TODO
-               }
+                    // TODO: set response properties
+                }
             };
         }
     }
