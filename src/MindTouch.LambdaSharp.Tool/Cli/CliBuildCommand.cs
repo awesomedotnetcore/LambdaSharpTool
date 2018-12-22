@@ -46,10 +46,10 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
         //--- Class Methods ---
         public static CommandOption AddSkipAssemblyValidationOption(CommandLineApplication cmd)
-            => cmd.Option("--skip-assembly-validation", "(optional) Disable validating LambdaSharp assembly references in function project files", CommandOptionType.NoValue);
+            => cmd.Option("--no-assembly-validation", "(optional) Disable validating LambdaSharp assembly references in function project files", CommandOptionType.NoValue);
 
         public static CommandOption AddSkipDependencyValidationOption(CommandLineApplication cmd)
-            => cmd.Option("--skip-dependency-validation", "(optional) Disable validating LambdaSharp module dependencies", CommandOptionType.NoValue);
+            => cmd.Option("--no-dependency-validation", "(optional) Disable validating LambdaSharp module dependencies", CommandOptionType.NoValue);
 
         public static CommandOption AddBuildConfigurationOption(CommandLineApplication cmd)
             => cmd.Option("-c|--configuration <CONFIGURATION>", "(optional) Build configuration for function projects (default: \"Release\")", CommandOptionType.SingleValue);

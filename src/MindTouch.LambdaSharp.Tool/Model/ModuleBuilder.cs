@@ -550,11 +550,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 }
             } else {
 
-                // validate resource properties
-                if(pragmas?.Contains("skip-type-validation") != true) {
-                    ValidateProperties(type, properties?.ToDictionary(kv => (object)kv.Key, kv => kv.Value) ?? new Dictionary<object, object>());
-                }
-
                 // create resource entry
                 var customResource = RegisterCustomResourceNameMapping(new Humidifier.CustomResource(type, properties));
                 result = AddResource(
@@ -568,6 +563,11 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                     condition: condition,
                     pragmas: pragmas
                 );
+
+                // validate resource properties
+                if(result.HasTypeValidation) {
+                    ValidateProperties(type, customResource);
+                }
 
                 // add optional grants
                 if(allow != null) {

@@ -12,7 +12,7 @@ lash() {
         --cli-version 0.5-WIP \
         --deployment-bucket-name lambdasharp-bucket-name \
         --deployment-notifications-topic-arn  arn:aws:sns:us-east-1:123456789012:LambdaSharp-DeploymentNotificationTopic \
-        --skip-dependency-validation \
+        --no-dependency-validation \
         $1.yml
 }
 
@@ -96,6 +96,6 @@ else
         --cli-version 0.5-WIP \
         --deployment-bucket-name lambdasharp-bucket-name \
         --deployment-notifications-topic-arn  arn:aws:sns:us-east-1:123456789012:LambdaSharp-DeploymentNotificationTopic \
-        --skip-dependency-validation \
+        --no-dependency-validation \
         $1.yml
 fi

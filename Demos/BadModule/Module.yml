@@ -18,7 +18,7 @@ Entries:
     Memory: 128
     Timeout: 30
     Pragmas:
-      - skip-handler-validation
+      - no-handler-validation
 
   - Function: FailError
     Description: Throws an exception

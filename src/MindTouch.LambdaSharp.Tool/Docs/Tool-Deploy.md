@@ -36,7 +36,7 @@ If the argument refers to a module definition, the `deploy` command invokes the 
 <dt><code>--force-deploy</code></dt>
 <dd>(optional) Force module deployment</dd>
 
-<dt><code>--skip-assembly-validation</code></dt>
+<dt><code>--no-assembly-validation</code></dt>
 <dd>(optional) Disable validating LambdaSharp assembly references in function project files</dd>
 
 <dt><code>-c|--configuration &lt;CONFIGURATION&gt;</code></dt>

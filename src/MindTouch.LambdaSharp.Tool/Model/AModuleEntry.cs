@@ -78,7 +78,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public virtual bool HasAttribute(string attribute) => false;
 
         public virtual bool HasPragma(string pragma) => false;
-        public bool HasTypeValidation => !HasPragma("skip-type-validation");
+        public bool HasTypeValidation => !HasPragma("no-type-validation");
     }
 
     public class VariableEntry : AModuleEntry {
@@ -262,8 +262,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public Humidifier.Lambda.Function Function { get; set; }
         public bool HasFunctionRegistration => !HasPragma("no-function-registration");
         public bool HasDeadLetterQueue => !HasPragma("no-dead-letter-queue");
-        public bool HasAssemblyValidation => !HasPragma("skip-assembly-validation");
-        public bool HasHandlerValidation => !HasPragma("skip-handler-validation");
+        public bool HasAssemblyValidation => !HasPragma("no-assembly-validation");
+        public bool HasHandlerValidation => !HasPragma("no-handler-validation");
 
         //--- Methods ---
         public override void Visit(Func<AModuleEntry, object, object> visitor) {

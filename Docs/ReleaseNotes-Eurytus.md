@@ -14,7 +14,6 @@
         * `Package`: file package only (**BREAKING CHANGE:** files are no longer always deployed to S3)
         * `Module`: create nested module resource
     * allow any AWS type as parameter type and map to `String` when AWS type is not natively supported
-    * resource `skip-type-validation` pragma
     * new `Import` notation
     * module `Requires` section
     * `Topic` source now supports `Filters` to filter on SNS notifications
@@ -25,11 +24,12 @@
     * `DeploymentChecksum` parameter
     * Pragmas
         * Resources
-            * `skip-type-validation`: don't validate attributes on resource
+            * `no-type-validation`: don't validate attributes on resource
         * Functions
-            * `skip-assembly-validation`: don't validate that the λ# assemblies referenced by the .csproj file are consistent with the CLI version
-            * `skip-handler-validation`: don't validate if the lambda function handler can be found in the compiled assembly
+            * `no-assembly-validation`: don't validate that the λ# assemblies referenced by the .csproj file are consistent with the CLI version
+            * `no-handler-validation`: don't validate if the lambda function handler can be found in the compiled assembly
             * `no-function-registration`: don't register function with λ# registrar
+            * `no-dead-letter-queue`: don't add the DLQ to the function
         * Modules
             * `no-runtime-version-check`: don't check if the λ# runtime and CLI versions match
             * `no-module-registration`: don't register module with λ# registrar
@@ -49,6 +49,8 @@
     * `config` command
         * now has the option to set a specific bucket name
         * set bucket policy to allow serverlessrepo to access the contents
+    * BREAKING: `--skip-assembly-validation` is now `--no-assembly-validation` for consistency reasons
+    * `--no-dependency-validation` to disable downloading of dependencies
 
 * Build Process
     * validate that function entry point exists after compiling assembly
