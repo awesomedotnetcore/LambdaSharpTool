@@ -110,7 +110,7 @@ namespace MindTouch.LambdaSharp.Tool {
         public string DeploymentBucketName { get; set; }
         public string DeploymentNotificationsTopicArn { get; set; }
         public IAmazonSimpleSystemsManagement SsmClient { get; set; }
-        public IAmazonCloudFormation CfClient { get; set; }
+        public IAmazonCloudFormation CfnClient { get; set; }
         public IAmazonKeyManagementService KmsClient { get; set; }
         public IAmazonS3 S3Client { get; set; }
         public string WorkingDirectory { get; set; }

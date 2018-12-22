@@ -87,6 +87,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public IEnumerable<object> Secrets => _secrets;
         public IEnumerable<AModuleEntry> Entries => _entries;
         public IEnumerable<AOutput> Outputs => _outputs;
+        public IEnumerable<Humidifier.Statement> ResourceStatements => _resourceStatements;
         public bool HasPragma(string pragma) => _pragmas.Contains(pragma);
         public bool HasModuleRegistration => !HasPragma("no-module-registration");
         public bool HasLambdaSharpDependencies => !HasPragma("no-lambdasharp-dependencies");
@@ -113,7 +114,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             return _entriesByFullName.TryGetValue(fullNameOrResourceName, out entry);
         }
 
-        public IEnumerable<AModuleEntry> RemoveEntry(string fullName) {
+        public void RemoveEntry(string fullName) {
             if(TryGetEntry(fullName, out AModuleEntry entry)) {
 
                 // check if the module role is being removed
@@ -125,20 +126,9 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                     // remove all secrets
                     _secrets.Clear();
                 }
-
-                // find all nested entries and remove them as well
-                var subEntriesPrefix = entry.FullName + "::";
-                var entriesToRemove = _entries
-                    .Where(e => e.FullName.StartsWith(subEntriesPrefix, StringComparison.Ordinal))
-                    .Append(entry)
-                    .ToList();
-                foreach(var entryToRemove in entriesToRemove) {
-                    _entries.Remove(entryToRemove);
-                    _entriesByFullName.Remove(entryToRemove.FullName);
-                }
-                return entriesToRemove;
+                _entries.Remove(entry);
+                _entriesByFullName.Remove(entry.FullName);
             }
-            return Enumerable.Empty<AModuleEntry>();
         }
 
         public void AddAsset(string fullName, string asset) {
@@ -938,88 +928,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             AtLocation("Entries", () => {
                 foreach(var entry in _entries) {
                     AtLocation(entry.FullName, () => {
-                        switch(entry) {
-                        case InputEntry _:
-                        case PackageEntry _:
-
-                            // nothing to do
-                            break;
-                        case VariableEntry variableEntry:
-                            AtLocation("Value", () => {
-                                variableEntry.Reference = visitor(entry, variableEntry.Reference);
-                            });
-                            break;
-                        case ResourceEntry resourceEntry:
-                            AtLocation("Resource", () => {
-                                resourceEntry.Resource = (Humidifier.Resource)visitor(entry, resourceEntry.Resource);
-                            });
-                            AtLocation("DependsOn", () => {
-
-                                // TODO (2018-11-29, bjorg): we need to make sure that only other resources are referenced (no literal entries, or itself, no loops either)
-                                for(var i = 0; i < resourceEntry.DependsOn.Count; ++i) {
-                                    var dependency = resourceEntry.DependsOn[i];
-                                    TryGetFnRef(visitor(entry, FnRef(dependency)), out string result);
-                                    resourceEntry.DependsOn[i] = result ?? throw new InvalidOperationException($"invalid expression returned (index: {i})");
-                                }
-                            });
-                            break;
-                        case FunctionEntry functionEntry:
-                            AtLocation("Environment", () => {
-                                functionEntry.Environment = (IDictionary<string, object>)visitor(entry, functionEntry.Environment);
-                            });
-                            AtLocation("Function", () => {
-                                functionEntry.Function = (Humidifier.Lambda.Function)visitor(entry, functionEntry.Function);
-                            });
-
-                            // update function sources
-                            AtLocation("Sources", () => {
-                                var index = 0;
-                                foreach(var source in functionEntry.Sources) {
-                                    AtLocation($"{++index}", () => {
-                                        switch(source) {
-                                        case AlexaSource alexaSource:
-                                            if(alexaSource.EventSourceToken != null) {
-                                                alexaSource.EventSourceToken = visitor(entry, alexaSource.EventSourceToken);
-                                            }
-                                            break;
-                                        case DynamoDBSource dynamoDBSource:
-                                            if(dynamoDBSource.DynamoDB != null) {
-                                                dynamoDBSource.DynamoDB = visitor(entry, dynamoDBSource.DynamoDB);
-                                            }
-                                            break;
-                                        case KinesisSource kinesisSource:
-                                            if(kinesisSource.Kinesis != null) {
-                                                kinesisSource.Kinesis = visitor(entry, kinesisSource.Kinesis);
-                                            }
-                                            break;
-                                        case TopicSource topicSource:
-                                            if(topicSource.TopicName != null) {
-                                                topicSource.TopicName = visitor(entry, topicSource.TopicName);
-                                            }
-                                            break;
-                                        case S3Source s3Source:
-                                            if(s3Source.Bucket != null) {
-                                                s3Source.Bucket = visitor(entry, s3Source.Bucket);
-                                            }
-                                            break;
-                                        case SqsSource sqsSource:
-                                            if(sqsSource.Queue != null) {
-                                                sqsSource.Queue = visitor(entry, sqsSource.Queue);
-                                            }
-                                            break;
-                                        }
-                                    });
-                                }
-                            });
-                            break;
-                        case ConditionEntry conditionEntry:
-                            AtLocation("Reference", () => {
-                                conditionEntry.Reference = visitor(entry, conditionEntry.Reference);
-                            });
-                            break;
-                        default:
-                            throw new ApplicationException($"unexpected type: {entry.GetType()}");
-                        }
+                        entry.Visit(visitor);
                     });
                 }
             });
@@ -1030,16 +939,12 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                     switch(output) {
                     case ExportOutput exportOutput:
                         AtLocation(exportOutput.Name, () => {
-                            AtLocation("Value", () => {
-                                exportOutput.Value = visitor(null, exportOutput.Value);
-                            });
+                            output.Visit(visitor);
                         });
                         break;
                     case CustomResourceHandlerOutput customResourceHandlerOutput:
                         AtLocation(customResourceHandlerOutput.CustomResourceType, () => {
-                            AtLocation("Handler", () => {
-                                customResourceHandlerOutput.Handler = visitor(null, customResourceHandlerOutput.Handler);
-                            });
+                            output.Visit(visitor);
                         });
                         break;
                     default:

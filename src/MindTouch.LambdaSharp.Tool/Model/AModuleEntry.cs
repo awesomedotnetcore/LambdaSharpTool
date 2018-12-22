@@ -71,10 +71,12 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public bool HasAwsType => ResourceMapping.IsCloudFormationType(Type);
 
         //--- Abstract Methods ---
+        public abstract void Visit(Func<AModuleEntry, object, object> visitor);
+
+        //--- Methods ---
         public virtual object GetExportReference() => Reference;
         public virtual bool HasAttribute(string attribute) => false;
 
-        //--- Methods ---
         public virtual bool HasPragma(string pragma) => false;
         public bool HasTypeValidation => !HasPragma("skip-type-validation");
     }
@@ -90,6 +92,11 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             IList<string> scope,
             object reference
         ) : base(parent, name, description, type, scope, reference) { }
+
+        //--- Methods ---
+        public override void Visit(Func<AModuleEntry, object, object> visitor) {
+            Reference = visitor(this, Reference);
+        }
     }
 
     public class PackageEntry : AModuleEntry {
@@ -107,6 +114,9 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         //--- Properties ---
         public IList<KeyValuePair<string, string>> Files { get; }
+
+        //--- Methods ---
+        public override void Visit(Func<AModuleEntry, object, object> visitor) { }
     }
 
     public class InputEntry : AModuleEntry {
@@ -132,6 +142,9 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public string Section { get; }
         public string Label { get; }
         public Humidifier.Parameter Parameter { get; }
+
+        //--- Methods ---
+        public override void Visit(Func<AModuleEntry, object, object> visitor) { }
     }
 
     public abstract class AResourceEntry : AModuleEntry {
@@ -159,6 +172,22 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public IList<object> Pragmas { get; set; }
 
         //--- Methods ---
+        public override void Visit(Func<AModuleEntry, object, object> visitor) {
+
+            // TODO (2018-11-29, bjorg): we need to make sure that only other resources are referenced (no literal entries, or itself, no loops either)
+            if(Condition != null) {
+                TryGetFnCondition(visitor(this, FnCondition(Condition)), out string result);
+                Condition = result ?? throw new InvalidOperationException($"invalid expression returned (condition)");
+            }
+
+            // TODO (2018-11-29, bjorg): we need to make sure that only other resources are referenced (no literal entries, or itself, no loops either)
+            for(var i = 0; i < DependsOn.Count; ++i) {
+                var dependency = DependsOn[i];
+                TryGetFnRef(visitor(this, FnRef(dependency)), out string result);
+                DependsOn[i] = result ?? throw new InvalidOperationException($"invalid expression returned (DependsOn[{i}])");
+            }
+        }
+
         public override bool HasAttribute(string attribute) => ResourceMapping.HasAttribute(Type, attribute);
         public override bool HasPragma(string pragma) => Pragmas.Contains(pragma);
     }
@@ -186,6 +215,11 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public string ResourceArnAttribute { get; set; }
 
         //--- Methods ---
+        public override void Visit(Func<AModuleEntry, object, object> visitor) {
+            base.Visit(visitor);
+            Resource = (Humidifier.Resource)visitor(this, Resource);
+        }
+
         public override object GetExportReference()
             => (ResourceArnAttribute != null)
                 ? FnGetAtt(FullName, ResourceArnAttribute)
@@ -227,10 +261,53 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public IList<AFunctionSource> Sources { get; set; }
         public Humidifier.Lambda.Function Function { get; set; }
         public bool HasFunctionRegistration => !HasPragma("no-function-registration");
+        public bool HasDeadLetterQueue => !HasPragma("no-dead-letter-queue");
         public bool HasAssemblyValidation => !HasPragma("skip-assembly-validation");
         public bool HasHandlerValidation => !HasPragma("skip-handler-validation");
 
         //--- Methods ---
+        public override void Visit(Func<AModuleEntry, object, object> visitor) {
+            base.Visit(visitor);
+            Environment = (IDictionary<string, object>)visitor(this, Environment);
+            Function = (Humidifier.Lambda.Function)visitor(this, Function);
+
+            // update function sources
+            foreach(var source in Sources) {
+                switch(source) {
+                case AlexaSource alexaSource:
+                    if(alexaSource.EventSourceToken != null) {
+                        alexaSource.EventSourceToken = visitor(this, alexaSource.EventSourceToken);
+                    }
+                    break;
+                case DynamoDBSource dynamoDBSource:
+                    if(dynamoDBSource.DynamoDB != null) {
+                        dynamoDBSource.DynamoDB = visitor(this, dynamoDBSource.DynamoDB);
+                    }
+                    break;
+                case KinesisSource kinesisSource:
+                    if(kinesisSource.Kinesis != null) {
+                        kinesisSource.Kinesis = visitor(this, kinesisSource.Kinesis);
+                    }
+                    break;
+                case TopicSource topicSource:
+                    if(topicSource.TopicName != null) {
+                        topicSource.TopicName = visitor(this, topicSource.TopicName);
+                    }
+                    break;
+                case S3Source s3Source:
+                    if(s3Source.Bucket != null) {
+                        s3Source.Bucket = visitor(this, s3Source.Bucket);
+                    }
+                    break;
+                case SqsSource sqsSource:
+                    if(sqsSource.Queue != null) {
+                        sqsSource.Queue = visitor(this, sqsSource.Queue);
+                    }
+                    break;
+                }
+            }
+        }
+
         public override object GetExportReference() => FnGetAtt(ResourceName, "Arn");
         public override bool HasPragma(string pragma) => Pragmas.Contains(pragma);
     }
@@ -247,6 +324,11 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
             // NOTE (2018-12-19, bjorg): conditionals should be deleted unless used
             DiscardIfNotReachable = true;
+        }
+
+        //--- Methods ---
+        public override void Visit(Func<AModuleEntry, object, object> visitor) {
+            Reference = visitor(this, Reference);
         }
     }
 }

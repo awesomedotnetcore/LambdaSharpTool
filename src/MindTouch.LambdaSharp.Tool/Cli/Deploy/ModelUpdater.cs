@@ -70,7 +70,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
 
             // check if cloudformation stack already exists and is in a final state
             Console.WriteLine($"Deploying stack: {stackName} [{location.ModuleName}:{location.ModuleVersion}]");
-            var mostRecentStackEventId = await Settings.CfClient.GetMostRecentStackEventIdAsync(stackName);
+            var mostRecentStackEventId = await Settings.CfnClient.GetMostRecentStackEventIdAsync(stackName);
 
             // set optional notification topics for cloudformation operations
             var notificationArns =  new List<string>();
@@ -102,7 +102,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
 
             // validate template
             var templateUrl = $"https://{location.BucketName}.s3.amazonaws.com/{location.TemplatePath}";
-            var validation = await Settings.CfClient.ValidateTemplateAsync(new ValidateTemplateRequest  {
+            var validation = await Settings.CfnClient.ValidateTemplateAsync(new ValidateTemplateRequest  {
                 TemplateURL = templateUrl
             });
 
@@ -114,7 +114,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
                 ? "[" + string.Join(", ", validation.Capabilities) + "]"
                 : "";
             Console.WriteLine($"=> Stack {updateOrCreate} initiated for {stackName} {capabilities}");
-            var response = await Settings.CfClient.CreateChangeSetAsync(new CreateChangeSetRequest {
+            var response = await Settings.CfnClient.CreateChangeSetAsync(new CreateChangeSetRequest {
                 Capabilities = validation.Capabilities,
                 ChangeSetName = changeSetName,
                 ChangeSetType = (mostRecentStackEventId != null) ? ChangeSetType.UPDATE : ChangeSetType.CREATE,
@@ -148,11 +148,11 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
                 }
 
                 // execute change-set
-                await Settings.CfClient.ExecuteChangeSetAsync(new ExecuteChangeSetRequest {
+                await Settings.CfnClient.ExecuteChangeSetAsync(new ExecuteChangeSetRequest {
                     ChangeSetName = changeSetName,
                     StackName = stackName
                 });
-                var outcome = await Settings.CfClient.TrackStackUpdateAsync(stackName, mostRecentStackEventId, manifest.ResourceNameMappings, manifest.CustomResourceNameMappings);
+                var outcome = await Settings.CfnClient.TrackStackUpdateAsync(stackName, mostRecentStackEventId, manifest.ResourceNameMappings, manifest.CustomResourceNameMappings);
                 if(outcome.Success) {
                     Console.WriteLine($"=> Stack {updateOrCreate} finished");
                     ShowStackResult(outcome.Stack);
@@ -166,7 +166,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
 
                     // on success, protect the stack if requested
                     if(protectStack) {
-                        await Settings.CfClient.UpdateTerminationProtectionAsync(new UpdateTerminationProtectionRequest {
+                        await Settings.CfnClient.UpdateTerminationProtectionAsync(new UpdateTerminationProtectionRequest {
                             EnableTerminationProtection = protectStack,
                             StackName = stackName
                         });
@@ -175,7 +175,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
 
                     // delete a new stack that failed to create
                     try {
-                        await Settings.CfClient.DeleteStackAsync(new DeleteStackRequest {
+                        await Settings.CfnClient.DeleteStackAsync(new DeleteStackRequest {
                             StackName = stackName
                         });
                      } catch { }
@@ -183,7 +183,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
                 return success;
             } finally {
                 try {
-                    await Settings.CfClient.DeleteChangeSetAsync(new DeleteChangeSetRequest {
+                    await Settings.CfnClient.DeleteChangeSetAsync(new DeleteChangeSetRequest {
                         ChangeSetName = response.Id
                     });
                 } catch { }
@@ -216,7 +216,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
             var changes = new List<Change>();
             while(true) {
                 await Task.Delay(TimeSpan.FromSeconds(3));
-                var changeSetResponse = await Settings.CfClient.DescribeChangeSetAsync(changeSetRequest);
+                var changeSetResponse = await Settings.CfnClient.DescribeChangeSetAsync(changeSetRequest);
                 if(changeSetResponse.Status == ChangeSetStatus.CREATE_PENDING) {
 
                     // wait until the change-set is CREATE_COMPLETE

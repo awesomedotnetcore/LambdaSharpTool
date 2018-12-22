@@ -137,7 +137,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
 
         private async Task<bool> IsValidModuleUpdateAsync(string stackName, ModuleManifest manifest) {
             try {
-                var describe = await Settings.CfClient.DescribeStacksAsync(new DescribeStacksRequest {
+                var describe = await Settings.CfnClient.DescribeStacksAsync(new DescribeStacksRequest {
                     StackName = stackName
                 });
 
@@ -259,7 +259,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
 
         private async Task<ModuleLocation> FindExistingDependencyAsync(ModuleManifestDependency dependency) {
             try {
-                var describe = await Settings.CfClient.DescribeStacksAsync(new DescribeStacksRequest {
+                var describe = await Settings.CfnClient.DescribeStacksAsync(new DescribeStacksRequest {
                     StackName = ToStackName(dependency.ModuleName)
                 });
                 var deployedOutputs = describe.Stacks.FirstOrDefault()?.Outputs;

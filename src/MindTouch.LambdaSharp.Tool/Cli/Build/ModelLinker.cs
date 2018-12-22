@@ -96,7 +96,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         environment["LAMBDA_NAME"] = function.FullName;
                         environment["LAMBDA_RUNTIME"] = function.Function.Runtime;
                         if(builder.HasLambdaSharpDependencies) {
-                            environment["DEADLETTERQUEUE"] = FnRef("Module::DeadLetterQueueArn");
+                            if(function.HasDeadLetterQueue) {
+                                environment["DEADLETTERQUEUE"] = FnRef("Module::DeadLetterQueueArn");
+                            }
                             environment["DEFAULTSECRETKEY"] = FnRef("Module::DefaultSecretKeyArn");
                         }
 
@@ -162,17 +164,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
             // replace all references with their logical IDs
             builder.VisitAll(Finalize);
-
-            // replace all resource condition references with their logical IDs
-            foreach(var resource in _builder.Entries.OfType<AResourceEntry>().Where(res => res.Condition != null)) {
-                AtLocation(resource.FullName, () => {
-                    if(_builder.TryGetEntry(resource.Condition, out AModuleEntry entry)) {
-                        resource.Condition = entry.LogicalId;
-                    } else {
-                        AddError($"could not find condition '{resource.Condition}'");
-                    }
-                });
-            }
 
             // local functions
             void DiscoverEntries() {
@@ -377,60 +368,80 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
         }
 
         private void DiscardUnreachableEntries() {
-            HashSet<string> unreachableFullNames;
-            while(true) {
-
-                // collect all potentially deletable entries
-                unreachableFullNames = new HashSet<string>(
-                    _builder.Entries
-                        .Where(entry => entry.DiscardIfNotReachable)
-                        .Select(entry => entry.FullName)
-                );
-
-                // visit all expressions
-                _builder.VisitAll(Reachable);
-
-                // visit all conditions
-                foreach(var resource in _builder.Entries.OfType<AResourceEntry>().Where(res => res.Condition != null)) {
-                    MarkReachableEntry(resource, resource.Condition);
+            var reachable = new Dictionary<string, AModuleEntry>();
+            var found = new Dictionary<string, AModuleEntry>();
+            var unused = new Dictionary<string, AModuleEntry>();
+            var foundEntriesToRemove = true;
+            while(foundEntriesToRemove) {
+                foundEntriesToRemove = false;
+                reachable.Clear();
+                found.Clear();
+                foreach(var entry in _builder.Entries.OfType<AResourceEntry>().Where(res => !res.DiscardIfNotReachable)) {
+                    found[entry.FullName] = entry;
+                    entry.Visit(FindReachable);
                 }
-
-                // stop if no unreachable entries were found
-                if(!unreachableFullNames.Any()) {
-                    return;
+                foreach(var output in _builder.Outputs) {
+                    output.Visit(FindReachable);
                 }
+                foreach(var statement in _builder.ResourceStatements) {
+                    FindReachable(null, statement);
+                }
+                while(found.Any()) {
 
-                // remove unreachable entries
-                foreach(var unreachableFullName in unreachableFullNames) {
-                    var discardedEntries = _builder.RemoveEntry(unreachableFullName);
-                    DebugWriteLine(() => {
-                        if(discardedEntries.Any()) {
-                            var text = new StringBuilder();
-                            foreach(var discardedEntry in discardedEntries) {
-                                if(text.Length > 0) {
-                                    text.AppendLine();
-                                }
-                                text.Append("DISCARDED: " + discardedEntry.FullName);
+                    // record found names as reachable
+                    foreach(var kv in found) {
+                        reachable[kv.Key] = kv.Value;
+                    }
+
+                    // detect what is reachable from found entries entry
+                    var current = found;
+                    found = new Dictionary<string, AModuleEntry>();
+                    foreach(var kv in current) {
+                        kv.Value.Visit(FindReachable);
+                    }
+                }
+                foreach(var entry in _builder.Entries.ToList()) {
+                    if(!reachable.ContainsKey(entry.FullName)) {
+                        if(entry.DiscardIfNotReachable) {
+                            foundEntriesToRemove = true;
+                            DebugWriteLine(() => $"DISCARD '{entry.FullName}'");
+                            _builder.RemoveEntry(entry.FullName);
+                        } else if(entry is InputEntry) {
+                            switch(entry.FullName) {
+                            case "Secrets":
+                            case "DeploymentBucketName":
+                            case "DeploymentPrefix":
+                            case "DeploymentPrefixLowercase":
+                            case "DeploymentParent":
+                            case "DeploymentChecksum":
+
+                                // these are built-in parameters; don't report them
+                                break;
+                            default:
+                                unused[entry.FullName] = entry;
+                                break;
                             }
-                            return text.ToString();
                         }
-                        return null;
-                    });
+                    }
                 }
+            }
+            foreach(var entry in unused.Values.OrderBy(e => e.FullName)) {
+                Console.WriteLine($"WARNING: '{entry.FullName}' is defined but never used");
+
             }
 
             // local functions
-            object Reachable(AModuleEntry entry, object root) {
+            object FindReachable(AModuleEntry entry, object root) {
                 return Visit(root, value => {
 
                     // handle !Ref expression
-                    if(TryGetFnRef(value, out string refKey) && refKey.StartsWith("@", StringComparison.Ordinal)) {
+                    if(TryGetFnRef(value, out string refKey)) {
                         MarkReachableEntry(entry, refKey);
                         return value;
                     }
 
                     // handle !GetAtt expression
-                    if(TryGetFnGetAtt(value, out string getAttKey, out string getAttAttribute) && getAttKey.StartsWith("@", StringComparison.Ordinal)) {
+                    if(TryGetFnGetAtt(value, out string getAttKey, out string getAttAttribute)) {
                         MarkReachableEntry(entry, getAttKey);
                         return value;
                     }
@@ -440,7 +451,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
                         // replace as many ${VAR} occurrences as possible
                         subPattern = ReplaceSubPattern(subPattern, (subRefKey, suffix) => {
-                            if(!subArgs.ContainsKey(subRefKey) && subRefKey.StartsWith("@", StringComparison.Ordinal)) {
+                            if(!subArgs.ContainsKey(subRefKey)) {
                                 MarkReachableEntry(entry, subRefKey);
                                 return "${" + subRefKey.Substring(1) + suffix + "}";
                             }
@@ -464,16 +475,16 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 });
             }
 
-            void MarkReachableEntry(AModuleEntry entry, string resourceName) {
-                var refEntry = _builder.GetEntry(resourceName);
-
-                // only track references to resources that are not a parent resource
-                if(
-                    (entry == null)
-                    || !entry.FullName.StartsWith(refEntry.FullName + "::", StringComparison.Ordinal)
-                ) {
-                    DebugWriteLine(() => $"REACHED {entry?.FullName ?? "<null>"} -> {refEntry?.FullName ?? "<null>"}");
-                    unreachableFullNames.Remove(refEntry.FullName);
+            void MarkReachableEntry(AModuleEntry entry, string fullNameOrResourceName) {
+                if(fullNameOrResourceName.StartsWith("AWS::", StringComparison.Ordinal)) {
+                    return;
+                }
+                var refEntry = _builder.GetEntry(fullNameOrResourceName);
+                if(!reachable.ContainsKey(refEntry.FullName)) {
+                    if(!found.ContainsKey(refEntry.FullName)) {
+                        DebugWriteLine(() => $"REACHED {entry?.FullName ?? "<null>"} -> {refEntry?.FullName ?? "<null>"}");
+                    }
+                    found[refEntry.FullName] = refEntry;
                 }
             }
         }

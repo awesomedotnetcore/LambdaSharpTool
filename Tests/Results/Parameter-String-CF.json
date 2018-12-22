@@ -64,7 +64,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "8D90A510D2A7B24A446175AF7266759A"
+      "Default": "7A9AEC810941BDE79533987EDC70A4F4"
     }
   },
   "Resources": {
@@ -181,6 +181,9 @@
             },
             "STR_INPUTPARAMETER": {
               "Ref": "InputParameter"
+            },
+            "STR_INPUTPARAMETERWITHDEFAULT": {
+              "Ref": "InputParameterWithDefault"
             }
           }
         },
@@ -726,7 +729,7 @@
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
       "RuntimeCheck": true,
-      "Hash": "8D90A510D2A7B24A446175AF7266759A",
+      "Hash": "7A9AEC810941BDE79533987EDC70A4F4",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [

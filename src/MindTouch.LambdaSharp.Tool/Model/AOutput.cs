@@ -20,12 +20,17 @@
  */
 
 
+using System;
+
 namespace MindTouch.LambdaSharp.Tool.Model {
 
     public abstract class AOutput {
 
         //--- Properties ---
         public string Description { get; set; }
+
+        //--- Abstract Methods ---
+        public abstract void Visit(Func<AModuleEntry, object, object> visitor);
     }
 
     public class ExportOutput : AOutput {
@@ -33,6 +38,11 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         //--- Properties ---
         public string Name { get; set; }
         public object Value { get; set; }
+
+        //--- Methods ---
+        public override void Visit(Func<AModuleEntry, object, object> visitor) {
+            Value = visitor(null, Value);
+        }
     }
 
     public class CustomResourceHandlerOutput : AOutput {
@@ -40,5 +50,10 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         //--- Properties ---
         public string CustomResourceType { get; set; }
         public object Handler { get; set; }
+
+        //--- Methods ---
+        public override void Visit(Func<AModuleEntry, object, object> visitor) {
+            Handler = visitor(null, Handler);
+        }
     }
 }

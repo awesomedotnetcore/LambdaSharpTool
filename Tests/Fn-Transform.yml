@@ -3,9 +3,6 @@ Description: LambdaSharp CloudFormation Test
 
 Entries:
 
-  - Parameter: RootDomainName
-    Default: "example.org"
-
   - Resource: MyResource
     Description: A CloudFormation dummy resource
     Type: Custom::Handler

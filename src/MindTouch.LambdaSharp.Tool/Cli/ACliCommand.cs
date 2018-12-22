@@ -174,7 +174,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         DeploymentBucketName = deploymentBucketName,
                         DeploymentNotificationsTopicArn = deploymentNotificationTopicArn,
                         SsmClient = ssmClient,
-                        CfClient = cfClient,
+                        CfnClient = cfClient,
                         KmsClient = kmsClient,
                         S3Client = s3Client
                     };
@@ -247,7 +247,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 try {
 
                     // check version of base LambadSharp module
-                    var describe = await settings.CfClient.DescribeStacksAsync(new DescribeStacksRequest {
+                    var describe = await settings.CfnClient.DescribeStacksAsync(new DescribeStacksRequest {
                         StackName = $"{settings.Tier}-LambdaSharp"
                     });
                     var deployedOutputs = describe.Stacks.FirstOrDefault()?.Outputs;

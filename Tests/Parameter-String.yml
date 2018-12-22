@@ -11,6 +11,7 @@ Entries:
   - Parameter: InputParameterWithDefault
     Section: Plain Input Parameters
     Description: input parameter with a default value
+    Scope: "*"
     Default: a default value
 
   - Function: Function
