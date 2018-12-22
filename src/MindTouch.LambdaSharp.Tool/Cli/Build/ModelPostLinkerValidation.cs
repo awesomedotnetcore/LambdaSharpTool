@@ -97,24 +97,14 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 return;
             }
             switch(entry) {
-            case ResourceEntry resourceEntry:
-                if(awsType != resourceEntry.Resource.AWSTypeName) {
-                    AddError($"function source '{fullName}' must be {awsType}, but was {resourceEntry.Resource.AWSTypeName}");
-                }
-                break;
-            case FunctionEntry functionEntry:
-                if(awsType != functionEntry.Function.AWSTypeName) {
-                    AddError($"function source '{fullName}' must be {awsType}, but was {functionEntry.Function.AWSTypeName}");
-                }
-                break;
             case VariableEntry _:
             case InputEntry _:
             case PackageEntry _:
-
-                // TODO (2018-11-30): type erasure prevents us from validating against these entries
-                // if(awsType != entry.Type) {
-                //     AddError($"function source {fullName} must be {awsType}, but was {entry.Type}");
-                // }
+            case ResourceEntry _:
+            case FunctionEntry _:
+                if(awsType != entry.Type) {
+                    AddError($"function source '{fullName}' must be {awsType}, but was {entry.Type}");
+                }
                 break;
             case ConditionEntry _:
                 AddError($"function source '{fullName}' cannot reference condition '{entry.FullName}'");
