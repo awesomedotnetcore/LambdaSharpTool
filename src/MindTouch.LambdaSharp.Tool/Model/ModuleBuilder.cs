@@ -1050,7 +1050,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                     var definition = dependency.Manifest.CustomResourceTypes[awsType];
                     if(definition != null) {
                         foreach(var key in properties.Keys) {
-                            if(!definition.Request.Any(field => field.Name == (string)key)) {
+                            var stringKey = (string)key;
+                            if((stringKey != "ServiceToken") && !definition.Request.Any(field => field.Name == stringKey)) {
                                 AddError($"unrecognized attribute '{key}' on type {awsType}");
                             }
                         }
