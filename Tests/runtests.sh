@@ -1,21 +1,3 @@
-lash() {
-    rm Results/$1-CF.json > /dev/null 2>&1
-    dotnet $LAMBDASHARP/src/MindTouch.LambdaSharp.Tool/bin/Debug/netcoreapp2.1/MindTouch.LambdaSharp.Tool.dll deploy \
-        --verbose:exceptions \
-        --tier Test \
-        --cf-output Results/$1-CF.json \
-        --dryrun:cloudformation \
-        --aws-account-id 123456789012 \
-        --aws-region us-east-1 \
-        --gitsha 0123456789ABCDEF0123456789ABCDEF01234567 \
-        --runtime-version 0.5-WIP \
-        --cli-version 0.5-WIP \
-        --deployment-bucket-name lambdasharp-bucket-name \
-        --deployment-notifications-topic-arn  arn:aws:sns:us-east-1:123456789012:LambdaSharp-DeploymentNotificationTopic \
-        --no-dependency-validation \
-        $1.yml
-}
-
 if [ -z "$1" ]; then
 
     # run everything
@@ -32,62 +14,77 @@ if [ -z "$1" ]; then
     if [ $? -ne 0 ]; then
         exit $?
     fi
-    lash Empty
-    lash Empty-NoLambdaSharpDependencies
-    lash Empty-NoModuleRegistration
-    lash Function
-    lash Function-NoLambdaSharpDependencies
-    lash Function-NoModuleRegistration
-    lash Function-NoFunctionRegistration
-    lash Fn-Base64
-    lash Fn-Cidr
-    lash Fn-GetAtt
-    lash Fn-GetAZs
-    lash Fn-ImportValue
-    lash Fn-Join
-    lash Fn-Ref
-    lash Fn-Select
-    lash Fn-Split
-    lash Fn-Sub
-    lash Fn-Transform
-    lash Source-Topic
-    lash Source-Timer
-    lash Source-Api-SlackCommand
-    lash Source-Api-RequestResponse
-    lash Source-S3
-    lash Source-Sqs
-    lash Source-Alexa
-    lash Variables
-    lash Source-DynamoDB
-    lash Source-Kinesis
-    lash Parameter-String
-    lash Parameter-Resource
-    lash Parameter-ConditionalResource
-    lash Parameter-Secret
-    lash Import-String
-    lash Import-Resource
-    lash Import-Secret
-    lash Output-LiteralValue
-    lash Output-Variable
-    lash Output-Resource
-    lash Output-Function
-    lash Output-CustomResource
-    lash Output-Macro
-    lash Package
-    lash NestedModule
-    lash Variable-Secret
-    lash Function-Finalizer
-    lash Condition-Resource
-    lash Condition-Function
-    lash Condition-Condition
+
+    rm Results/*.json > /dev/null 2>&1
+    dotnet $LAMBDASHARP/src/MindTouch.LambdaSharp.Tool/bin/Debug/netcoreapp2.1/MindTouch.LambdaSharp.Tool.dll deploy \
+        --verbose:exceptions \
+        --tier Test \
+        --cfn-output Results/ \
+        --dryrun:cloudformation \
+        --aws-account-id 123456789012 \
+        --aws-region us-east-1 \
+        --gitsha 0123456789ABCDEF0123456789ABCDEF01234567 \
+        --runtime-version 0.5-WIP \
+        --cli-version 0.5-WIP \
+        --deployment-bucket-name lambdasharp-bucket-name \
+        --deployment-notifications-topic-arn  arn:aws:sns:us-east-1:123456789012:LambdaSharp-DeploymentNotificationTopic \
+        --no-dependency-validation \
+        Empty.yml \
+        Empty-NoLambdaSharpDependencies.yml \
+        Empty-NoModuleRegistration.yml \
+        Function.yml \
+        Function-NoLambdaSharpDependencies.yml \
+        Function-NoModuleRegistration.yml \
+        Function-NoFunctionRegistration.yml \
+        Fn-Base64.yml \
+        Fn-Cidr.yml \
+        Fn-GetAtt.yml \
+        Fn-GetAZs.yml \
+        Fn-ImportValue.yml \
+        Fn-Join.yml \
+        Fn-Ref.yml \
+        Fn-Select.yml \
+        Fn-Split.yml \
+        Fn-Sub.yml \
+        Fn-Transform.yml \
+        Source-Topic.yml \
+        Source-Timer.yml \
+        Source-Api-SlackCommand.yml \
+        Source-Api-RequestResponse.yml \
+        Source-S3.yml \
+        Source-Sqs.yml \
+        Source-Alexa.yml \
+        Variables.yml \
+        Source-DynamoDB.yml \
+        Source-Kinesis.yml \
+        Parameter-String.yml \
+        Parameter-Resource.yml \
+        Parameter-ConditionalResource.yml \
+        Parameter-Secret.yml \
+        Import-String.yml \
+        Import-Resource.yml \
+        Import-Secret.yml \
+        Output-LiteralValue.yml \
+        Output-Variable.yml \
+        Output-Resource.yml \
+        Output-Function.yml \
+        Output-CustomResource.yml \
+        Output-Macro.yml \
+        Package.yml \
+        NestedModule.yml \
+        Variable-Secret.yml \
+        Function-Finalizer.yml \
+        Condition-Resource.yml \
+        Condition-Function.yml \
+        Condition-Condition.yml
 else
 
     # run requested test
-    rm Results/$1-CF.json > /dev/null 2>&1
+    rm Results/$1.json > /dev/null 2>&1
     dotnet run -p $LAMBDASHARP/src/MindTouch.LambdaSharp.Tool/MindTouch.LambdaSharp.Tool.csproj -- deploy \
         --verbose:exceptions \
         --tier Test \
-        --cf-output Results/$1-CF.json \
+        --cfn-output Results/$1-CF.json \
         --dryrun:cloudformation \
         --aws-account-id 123456789012 \
         --aws-region us-east-1 \

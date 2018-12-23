@@ -64,7 +64,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             => cmd.Option("--selector <NAME>", "(optional) Selector for resolving conditional compilation choices in module", CommandOptionType.SingleValue);
 
         public static CommandOption AddCloudFormationOutputOption(CommandLineApplication cmd)
-            => cmd.Option("--cf-output <FILE>", "(optional) Name of generated CloudFormation template file (default: bin/cloudformation.json)", CommandOptionType.SingleValue);
+            => cmd.Option("--cfn-output <PATH>", "(optional) Output location for generated CloudFormation template file (default: bin/cloudformation.json)", CommandOptionType.SingleValue);
 
         public static CommandOption AddDryRunOption(CommandLineApplication cmd)
             => cmd.Option("--dryrun:<LEVEL>", "(optional) Generate output assets without deploying (0=everything, 1=cloudformation)", CommandOptionType.SingleOrNoValue);
@@ -158,7 +158,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 var gitShaOption = AddGitShaOption(cmd);
                 var outputDirectoryOption = AddOutputPathOption(cmd);
                 var selectorOption = AddSelectorOption(cmd);
-                var outputCloudFormationFilePathOption = AddCloudFormationOutputOption(cmd);
+                var outputCloudFormationPathOption = AddCloudFormationOutputOption(cmd);
 
                 // misc options
                 var dryRunOption = AddDryRunOption(cmd);
@@ -204,7 +204,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         settings.SkipDependencyValidation = skipDependencyValidationOption.HasValue();
                         if(!await BuildStepAsync(
                             settings,
-                            outputCloudFormationFilePathOption.Value() ?? Path.Combine(settings.OutputDirectory, "cloudformation.json"),
+                            GetOutputFilePath(),
                             skipAssemblyValidationOption.HasValue(),
                             dryRun == DryRunLevel.CloudFormation,
                             gitShaOption.Value() ?? GetGitShaValue(settings.WorkingDirectory),
@@ -213,6 +213,18 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                             moduleSource
                         )) {
                             break;
+                        }
+
+                        // local functions
+                        string GetOutputFilePath() {
+                            if(outputCloudFormationPathOption.HasValue()) {
+                                var outputPath = Path.GetFullPath(outputCloudFormationPathOption.Value());
+                                if(Directory.Exists(outputPath)) {
+                                    return Path.Combine(outputPath, Path.GetFileNameWithoutExtension(moduleSource) + ".json");
+                                }
+                                return outputCloudFormationPathOption.Value();
+                            }
+                            return Path.Combine(settings.OutputDirectory, "cloudformation.json");
                         }
                     }
                 });
@@ -234,7 +246,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 var gitShaOption = AddGitShaOption(cmd);
                 var outputDirectoryOption = AddOutputPathOption(cmd);
                 var selectorOption = AddSelectorOption(cmd);
-                var outputCloudFormationFilePathOption = AddCloudFormationOutputOption(cmd);
+                var outputCloudFormationPathOption = AddCloudFormationOutputOption(cmd);
 
                 // misc options
                 var dryRunOption = AddDryRunOption(cmd);
@@ -292,7 +304,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                             settings.SkipDependencyValidation = skipDependencyValidationOption.HasValue();
                             if(!await BuildStepAsync(
                                 settings,
-                                outputCloudFormationFilePathOption.Value() ?? Path.Combine(settings.OutputDirectory, "cloudformation.json"),
+                                GetOutputFilePath(),
                                 skipAssemblyValidationOption.HasValue(),
                                 dryRun == DryRunLevel.CloudFormation,
                                 gitShaOption.Value() ?? GetGitShaValue(settings.WorkingDirectory),
@@ -307,6 +319,18 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                             if(await PublishStepAsync(settings, forcePublishOption.HasValue()) == null) {
                                 break;
                             }
+                        }
+
+                        // local functions
+                        string GetOutputFilePath() {
+                            if(outputCloudFormationPathOption.HasValue()) {
+                                var outputPath = Path.GetFullPath(outputCloudFormationPathOption.Value());
+                                if(Directory.Exists(outputPath)) {
+                                    return Path.Combine(outputPath, Path.GetFileNameWithoutExtension(moduleSource) + ".json");
+                                }
+                                return outputCloudFormationPathOption.Value();
+                            }
+                            return Path.Combine(settings.OutputDirectory, "cloudformation.json");
                         }
                     }
                 });
@@ -339,7 +363,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
                 // misc options
                 var dryRunOption = AddDryRunOption(cmd);
-                var outputCloudFormationFilePathOption = AddCloudFormationOutputOption(cmd);
+                var outputCloudFormationPathOption = AddCloudFormationOutputOption(cmd);
                 var initSettingsCallback = CreateSettingsInitializer(cmd);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
@@ -413,7 +437,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                             settings.SkipDependencyValidation = skipDependencyValidationOption.HasValue();
                             if(!await BuildStepAsync(
                                 settings,
-                                outputCloudFormationFilePathOption.Value() ?? Path.Combine(settings.OutputDirectory, "cloudformation.json"),
+                                GetOutputFilePath(),
                                 skipAssemblyValidationOption.HasValue(),
                                 dryRun == DryRunLevel.CloudFormation,
                                 gitShaOption.Value() ?? GetGitShaValue(settings.WorkingDirectory),
@@ -443,6 +467,18 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                             )) {
                                 break;
                             }
+                        }
+
+                        // local functions
+                        string GetOutputFilePath() {
+                            if(outputCloudFormationPathOption.HasValue()) {
+                                var outputPath = Path.GetFullPath(outputCloudFormationPathOption.Value());
+                                if(Directory.Exists(outputPath)) {
+                                    return Path.Combine(outputPath, Path.GetFileNameWithoutExtension(moduleSource) + ".json");
+                                }
+                                return outputCloudFormationPathOption.Value();
+                            }
+                            return Path.Combine(settings.OutputDirectory, "cloudformation.json");
                         }
                     }
                 });
