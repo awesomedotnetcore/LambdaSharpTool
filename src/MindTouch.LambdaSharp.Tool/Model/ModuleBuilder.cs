@@ -179,7 +179,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 AddError($"module {moduleName} version range is empty (v{dependency.MinVersion}..v{dependency.MaxVersion})");
                 return;
             }
-            if(!Settings.SkipDependencyValidation) {
+            if(!Settings.NoDependencyValidation) {
                 var loader = new ModelManifestLoader(Settings, moduleName);
                 var location = loader.LocateAsync(moduleName, minVersion, maxVersion, bucketName).Result;
                 if(location == null) {

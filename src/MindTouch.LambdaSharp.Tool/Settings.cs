@@ -115,6 +115,6 @@ namespace MindTouch.LambdaSharp.Tool {
         public IAmazonS3 S3Client { get; set; }
         public string WorkingDirectory { get; set; }
         public string OutputDirectory { get; set; }
-        public bool SkipDependencyValidation { get; set; }
+        public bool NoDependencyValidation { get; set; }
     }
 }

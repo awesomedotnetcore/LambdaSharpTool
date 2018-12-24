@@ -118,9 +118,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             }
             File.WriteAllText(outputCloudFormationFilePath, template);
             Console.WriteLine("=> Module compilation done");
-
-            // TODO (2018-12-21, bjorg): use CfnClient to validate template
-
             return true;
         }
     }

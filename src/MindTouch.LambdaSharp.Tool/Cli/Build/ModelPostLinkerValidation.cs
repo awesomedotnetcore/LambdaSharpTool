@@ -37,15 +37,35 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
         //--- Methods ---
         public void Validate(ModuleBuilder builder) {
             _builder = builder;
-            foreach(var entry in builder.Entries) {
-                AtLocation(entry.FullName, () => {
-                    switch(entry) {
-                    case FunctionEntry functionEntry:
-                        ValidateFunction(functionEntry);
+            AtLocation("Entries", () => {
+                foreach(var entry in builder.Entries) {
+                    AtLocation(entry.FullName, () => {
+                        switch(entry) {
+                        case FunctionEntry functionEntry:
+                            ValidateFunction(functionEntry);
+                            break;
+                        case ResourceEntry resourceEntry:
+                            switch(resourceEntry.Resource) {
+                            case Humidifier.CloudFormation.Macro macro:
+                                ValidateFunction((object)macro.FunctionName);
+                                break;
+                            }
+                            break;
+                        }
+                    });
+                }
+            });
+            AtLocation("Outputs", () => {
+                foreach(var output in builder.Outputs) {
+                    switch(output) {
+                    case CustomResourceHandlerOutput customResourceHandlerOutput:
+                        AtLocation(customResourceHandlerOutput.CustomResourceType, () => {
+                            ValidateHandler(customResourceHandlerOutput.Handler);
+                        });
                         break;
                     }
-                });
-            }
+                }
+            });
         }
 
         public void ValidateFunction(FunctionEntry function) {
@@ -85,15 +105,45 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
         private void ValidateSourceParameter(object value, string awsType) {
             if(value is string literalValue) {
-                ValidateSourceParameter(literalValue, awsType);
+                ValidateSourceParameter(literalValue);
             } else if(TryGetFnRef(value, out string refKey)) {
-                ValidateSourceParameter(refKey, awsType);
+                ValidateSourceParameter(refKey);
+            } else {
+                AddError("invalid expression");
+            }
+
+            // local functions
+            void ValidateSourceParameter(string fullName) {
+                if(!_builder.TryGetEntry(fullName, out AModuleEntry entry)) {
+                    AddError($"could not find function source {fullName}");
+                    return;
+                }
+                switch(entry) {
+                case VariableEntry _:
+                case InputEntry _:
+                case PackageEntry _:
+                case ResourceEntry _:
+                case FunctionEntry _:
+                    if(awsType != entry.Type) {
+                        AddError($"function source '{fullName}' must be {awsType}, but was {entry.Type}");
+                    }
+                    break;
+                case ConditionEntry _:
+                    AddError($"function source '{fullName}' cannot be a condition '{entry.FullName}'");
+                    break;
+                default:
+                    throw new ApplicationException($"unexpected entry type: {entry.GetType()}");
+                }
             }
         }
 
-        private void ValidateSourceParameter(string fullName, string awsType) {
+        private void ValidateHandler(object handler) {
+            if(!(handler is string fullName) && !TryGetFnRef(handler, out fullName)) {
+                AddError("invalid expression");
+                return;
+            }
             if(!_builder.TryGetEntry(fullName, out AModuleEntry entry)) {
-                AddError($"could not find function source {fullName}");
+                AddError($"could not find handler entry {fullName}");
                 return;
             }
             switch(entry) {
@@ -102,16 +152,43 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             case PackageEntry _:
             case ResourceEntry _:
             case FunctionEntry _:
-                if(awsType != entry.Type) {
-                    AddError($"function source '{fullName}' must be {awsType}, but was {entry.Type}");
+                if((entry.Type != "AWS::Lambda::Function") && (entry.Type != "AWS::SNS::Topic")) {
+                    AddError($"handler reference '{fullName}' must be either be AWS::SNS::Topic or AWS::Lambda::Function, but was {entry.Type}");
                 }
                 break;
             case ConditionEntry _:
-                AddError($"function source '{fullName}' cannot reference condition '{entry.FullName}'");
+                AddError($"handler reference '{fullName}' cannot be a condition '{entry.FullName}'");
                 break;
             default:
                 throw new ApplicationException($"unexpected entry type: {entry.GetType()}");
             }
         }
-   }
+
+        private void ValidateFunction(object functionName) {
+            if(!(functionName is string fullName) && !TryGetFnRef(functionName, out fullName)) {
+                AddError("invalid expression");
+                return;
+            }
+            if(!_builder.TryGetEntry(fullName, out AModuleEntry entry)) {
+                AddError($"could not find function entry {fullName}");
+                return;
+            }
+            switch(entry) {
+            case VariableEntry _:
+            case InputEntry _:
+            case PackageEntry _:
+            case ResourceEntry _:
+            case FunctionEntry _:
+                if(entry.Type != "AWS::Lambda::Function") {
+                    AddError($"function reference '{fullName}' must be be AWS::Lambda::Function, but was {entry.Type}");
+                }
+                break;
+            case ConditionEntry _:
+                AddError($"handler reference '{fullName}' cannot be a condition '{entry.FullName}'");
+                break;
+            default:
+                throw new ApplicationException($"unexpected entry type: {entry.GetType()}");
+            }
+        }
+    }
 }

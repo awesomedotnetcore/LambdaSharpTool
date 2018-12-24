@@ -113,12 +113,27 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         if(!VersionInfo.TryParse(dependency.Version, out VersionInfo version)) {
                             AddError("invalid value");
                         } else {
-
-                            // TODO (2018-12-07, bjorg): add support for min-max version
                             minVersion = version;
                             maxVersion = version;
                         }
                     });
+                } else {
+                    if(dependency.MinVersion != null) {
+                        AtLocation("MinVersion", () => {
+
+                        });
+                        if(!VersionInfo.TryParse(dependency.MinVersion, out minVersion)) {
+                            AddError("invalid value");
+                        }
+                    }
+                    if(dependency.MaxVersion != null) {
+                        AtLocation("MaxVersion", () => {
+
+                        });
+                        if(!VersionInfo.TryParse(dependency.MaxVersion, out maxVersion)) {
+                            AddError("invalid value");
+                        }
+                    }
                 }
                 if(dependency.MinVersion != null) {
                     AtLocation("MinVersion", () => {
@@ -519,9 +534,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 break;
             case "CustomResource":
                 Validate(node.Handler != null, "missing Handler attribute");
-
-                // TODO (2018-09-20, bjorg): confirm that `Handler` is set to an SNS topic or lambda function
-
                 AtLocation(node.CustomResource, () => {
                     ModuleManifestCustomResource properties = null;
                     if(node.Properties != null) {
@@ -544,8 +556,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 break;
             case "Macro":
                 Validate(node.Handler != null, "missing Handler attribute");
-
-                // TODO (2018-10-30, bjorg): confirm that `Handler` is set to a lambda function
                 AtLocation(node.Macro, () => _builder.AddMacro(node.Macro, node.Description, node.Handler));
                 break;
             }

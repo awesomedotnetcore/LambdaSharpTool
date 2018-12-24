@@ -201,7 +201,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         settings.OutputDirectory = outputDirectoryOption.HasValue()
                             ? Path.GetFullPath(outputDirectoryOption.Value())
                             : Path.Combine(settings.WorkingDirectory, "bin");
-                        settings.SkipDependencyValidation = skipDependencyValidationOption.HasValue();
+                        settings.NoDependencyValidation = skipDependencyValidationOption.HasValue();
                         if(!await BuildStepAsync(
                             settings,
                             GetOutputFilePath(),
@@ -301,7 +301,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                             settings.OutputDirectory = outputDirectoryOption.HasValue()
                                 ? Path.GetFullPath(outputDirectoryOption.Value())
                                 : Path.Combine(settings.WorkingDirectory, "bin");
-                            settings.SkipDependencyValidation = skipDependencyValidationOption.HasValue();
+                            settings.NoDependencyValidation = skipDependencyValidationOption.HasValue();
                             if(!await BuildStepAsync(
                                 settings,
                                 GetOutputFilePath(),
@@ -434,7 +434,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                             settings.OutputDirectory = outputDirectoryOption.HasValue()
                                 ? Path.GetFullPath(outputDirectoryOption.Value())
                                 : Path.Combine(settings.WorkingDirectory, "bin");
-                            settings.SkipDependencyValidation = skipDependencyValidationOption.HasValue();
+                            settings.NoDependencyValidation = skipDependencyValidationOption.HasValue();
                             if(!await BuildStepAsync(
                                 settings,
                                 GetOutputFilePath(),
