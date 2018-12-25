@@ -88,6 +88,7 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
                 "Description",
                 "Type",
                 "Scope",
+                "Allow",
                 "Value",
                 "EncryptionContext",
                 "Entries"
@@ -98,7 +99,6 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
                 "Type",
                 "Scope",
                 "Allow",
-                "Value",
                 "Properties",
                 "DependsOn",
                 "DefaultAttribute",
@@ -184,6 +184,7 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
          * Description: string
          * Type: string
          * Scope: string -or- list<string>
+         * Allow: string or list<string>
          * Value: any
          * EncryptionContext: map
          * Entries: list<Entry>
@@ -205,7 +206,6 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
          * Type: string
          * Scope: string -or- list<string>
          * Allow: string or list<string>
-         * Value: any
          * DependsOn: string -or- list<string>
          * Properties: map
          * DefaultAttribute: string

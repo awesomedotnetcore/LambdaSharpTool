@@ -1,0 +1,383 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "LambdaSharp Runtime (v0.5-WIP)",
+  "Parameters": {
+    "DeadLetterQueueArn": {
+      "Type": "String",
+      "Description": "Dead letter queue for functions (leave blank to create a new queue)",
+      "Default": ""
+    },
+    "LoggingStreamArn": {
+      "Type": "String",
+      "Description": "Logging kinesis stream for functions (leave blank to create a new stream)",
+      "Default": ""
+    },
+    "LoggingStreamRetentionPeriod": {
+      "Type": "String",
+      "Description": "How long logging stream entries are kept before they are lost",
+      "Default": "24"
+    },
+    "DefaultSecretKeyArn": {
+      "Type": "String",
+      "Description": "Default secret key for functions (leave blank to create a new key)",
+      "Default": ""
+    },
+    "DefaultSecretKeyRotationEnabled": {
+      "Type": "String",
+      "Description": "Rotate KMS key automatically every 365 days",
+      "Default": "false"
+    },
+    "Secrets": {
+      "Type": "String",
+      "Description": "Comma-separated list of optional secret keys",
+      "Default": ""
+    },
+    "DeploymentBucketName": {
+      "Type": "String",
+      "Description": "Source deployment S3 bucket name"
+    },
+    "DeploymentPrefix": {
+      "Type": "String",
+      "Description": "Module deployment prefix"
+    },
+    "DeploymentPrefixLowercase": {
+      "Type": "String",
+      "Description": "Module deployment prefix (lowercase)"
+    },
+    "DeploymentParent": {
+      "Type": "String",
+      "Description": "Parent stack name for nested deployments, blank otherwise",
+      "Default": ""
+    },
+    "DeploymentChecksum": {
+      "Type": "String",
+      "Description": "CloudFormation template MD5 checksum",
+      "Default": "C7E49D6EA23E29D2D09C870B2EFB419B"
+    }
+  },
+  "Resources": {
+    "DeadLetterQueueArnResource": {
+      "Type": "AWS::SQS::Queue",
+      "Condition": "DeadLetterQueueArnIsCreated",
+      "Properties": {}
+    },
+    "LoggingStreamArnResource": {
+      "Type": "AWS::Kinesis::Stream",
+      "Condition": "LoggingStreamArnIsCreated",
+      "Properties": {
+        "RetentionPeriodHours": {
+          "Ref": "LoggingStreamRetentionPeriod"
+        },
+        "ShardCount": "1"
+      }
+    },
+    "DefaultSecretKeyArnResource": {
+      "Type": "AWS::KMS::Key",
+      "Condition": "DefaultSecretKeyArnIsCreated",
+      "Properties": {
+        "Description": "Default encryption/decryption key for LambdaSharp modules",
+        "EnableKeyRotation": {
+          "Ref": "DefaultSecretKeyRotationEnabled"
+        },
+        "KeyPolicy": {
+          "Version": "2012-10-17",
+          "Id": {
+            "Fn::Sub": "${AWS::StackName}ModuleDefaultSecretKeyPolicy"
+          },
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:root"
+                }
+              },
+              "Action": [
+                "kms:*"
+              ],
+              "Resource": "*"
+            }
+          ]
+        }
+      }
+    },
+    "LoggingStreamRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "CloudWatchLogsPrincipal",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": {
+                  "Fn::Sub": "logs.${AWS::Region}.amazonaws.com"
+                }
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": {
+              "Fn::Sub": "${AWS::StackName}CloudWatchLogsKinesisPolicy"
+            },
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Sid": "CloudWatchLogsKinesisPermissions",
+                  "Effect": "Allow",
+                  "Action": "kinesis:PutRecord",
+                  "Resource": {
+                    "Fn::If": [
+                      "LoggingStreamArnIsCreated",
+                      {
+                        "Fn::GetAtt": [
+                          "LoggingStreamArnResource",
+                          "Arn"
+                        ]
+                      },
+                      {
+                        "Ref": "LoggingStreamArn"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "DefaultSecretKeyAlias": {
+      "Type": "AWS::KMS::Alias",
+      "Properties": {
+        "AliasName": {
+          "Fn::Sub": "alias/${DeploymentPrefix}LambdaSharpDefaultSecretKey"
+        },
+        "TargetKeyId": {
+          "Fn::If": [
+            "DefaultSecretKeyArnIsCreated",
+            {
+              "Fn::GetAtt": [
+                "DefaultSecretKeyArnResource",
+                "Arn"
+              ]
+            },
+            {
+              "Ref": "DefaultSecretKeyArn"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "ModuleName": {
+      "Value": "LambdaSharp"
+    },
+    "ModuleVersion": {
+      "Value": "0.5-WIP"
+    },
+    "DeadLetterQueueArn": {
+      "Value": {
+        "Fn::If": [
+          "DeadLetterQueueArnIsCreated",
+          {
+            "Fn::GetAtt": [
+              "DeadLetterQueueArnResource",
+              "Arn"
+            ]
+          },
+          {
+            "Ref": "DeadLetterQueueArn"
+          }
+        ]
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}::DeadLetterQueueArn"
+        }
+      },
+      "Description": "LambdaSharp Dead Letter Queue"
+    },
+    "LoggingStreamArn": {
+      "Value": {
+        "Fn::If": [
+          "LoggingStreamArnIsCreated",
+          {
+            "Fn::GetAtt": [
+              "LoggingStreamArnResource",
+              "Arn"
+            ]
+          },
+          {
+            "Ref": "LoggingStreamArn"
+          }
+        ]
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}::LoggingStreamArn"
+        }
+      },
+      "Description": "LambdaSharp Logging Stream"
+    },
+    "LoggingStreamRoleArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "LoggingStreamRole",
+          "Arn"
+        ]
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}::LoggingStreamRoleArn"
+        }
+      },
+      "Description": "LambdaSharp Logging Stream Role"
+    },
+    "DefaultSecretKeyArn": {
+      "Value": {
+        "Fn::If": [
+          "DefaultSecretKeyArnIsCreated",
+          {
+            "Fn::GetAtt": [
+              "DefaultSecretKeyArnResource",
+              "Arn"
+            ]
+          },
+          {
+            "Ref": "DefaultSecretKeyArn"
+          }
+        ]
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}::DefaultSecretKeyArn"
+        }
+      },
+      "Description": "LambdaSharp Default Secrets Key"
+    }
+  },
+  "Conditions": {
+    "DeadLetterQueueArnIsCreated": {
+      "Fn::Equals": [
+        {
+          "Ref": "DeadLetterQueueArn"
+        },
+        ""
+      ]
+    },
+    "LoggingStreamArnIsCreated": {
+      "Fn::Equals": [
+        {
+          "Ref": "LoggingStreamArn"
+        },
+        ""
+      ]
+    },
+    "DefaultSecretKeyArnIsCreated": {
+      "Fn::Equals": [
+        {
+          "Ref": "DefaultSecretKeyArn"
+        },
+        ""
+      ]
+    }
+  },
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterLabels": {
+        "DeadLetterQueueArn": {
+          "default": "Dead Letter Queue (ARN)"
+        },
+        "LoggingStreamArn": {
+          "default": "Logging Stream (ARN)"
+        },
+        "LoggingStreamRetentionPeriod": {
+          "default": "Retention period (hours)"
+        },
+        "DefaultSecretKeyArn": {
+          "default": "Default Secret Key (ARN)"
+        },
+        "DefaultSecretKeyRotationEnabled": {
+          "default": "Enable key rotation"
+        },
+        "Secrets": {
+          "default": "Secret Keys (ARNs)"
+        },
+        "DeploymentBucketName": {
+          "default": "Deployment S3 Bucket"
+        },
+        "DeploymentPrefix": {
+          "default": "Deployment Prefix"
+        },
+        "DeploymentPrefixLowercase": {
+          "default": "Deployment Prefix (lowercase)"
+        },
+        "DeploymentParent": {
+          "default": "Parent Stack Name"
+        },
+        "DeploymentChecksum": {
+          "default": "Deployment Checksum"
+        }
+      },
+      "ParameterGroups": [
+        {
+          "Label": {
+            "default": "LambdaSharp Tier Settings"
+          },
+          "Parameters": [
+            "DeadLetterQueueArn",
+            "LoggingStreamArn",
+            "LoggingStreamRetentionPeriod",
+            "DefaultSecretKeyArn",
+            "DefaultSecretKeyRotationEnabled"
+          ]
+        },
+        {
+          "Label": {
+            "default": "LambdaSharp Module Options"
+          },
+          "Parameters": [
+            "Secrets"
+          ]
+        },
+        {
+          "Label": {
+            "default": "LambdaSharp Deployment Settings (DO NOT MODIFY)"
+          },
+          "Parameters": [
+            "DeploymentBucketName",
+            "DeploymentPrefix",
+            "DeploymentPrefixLowercase",
+            "DeploymentParent",
+            "DeploymentChecksum"
+          ]
+        }
+      ]
+    },
+    "LambdaSharp::Manifest": {
+      "Version": "2018-12-17",
+      "ModuleName": "LambdaSharp",
+      "ModuleVersion": "0.5-WIP",
+      "RuntimeCheck": false,
+      "Hash": "C7E49D6EA23E29D2D09C870B2EFB419B",
+      "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
+      "Assets": [],
+      "Dependencies": [],
+      "CustomResourceTypes": {},
+      "MacroNames": [],
+      "ResourceNameMappings": {
+        "DeadLetterQueueArnResource": "DeadLetterQueueArn::Resource",
+        "LoggingStreamArnResource": "LoggingStreamArn::Resource",
+        "DefaultSecretKeyArnResource": "DefaultSecretKeyArn::Resource"
+      },
+      "CustomResourceNameMappings": {}
+    }
+  }
+}

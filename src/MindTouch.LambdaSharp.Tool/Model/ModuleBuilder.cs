@@ -343,7 +343,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                     name: "Resource",
                     description: null,
                     scope: null,
-                    value: null,
                     type: type,
                     allow: null,
                     properties: properties,
@@ -377,6 +376,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 type: "String",
                 scope: null,
                 value: "",
+                allow: null,
                 encryptionContext: null
             );
             return result;
@@ -420,6 +420,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                     type: "String",
                     scope: null,
                     value: "",
+                    allow: null,
                     encryptionContext: null
                 );
             }
@@ -452,6 +453,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             string type,
             IList<string> scope,
             object value,
+            object allow,
             IDictionary<string, string> encryptionContext
         ) {
             if(value == null) {
@@ -461,14 +463,13 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
             // the format for secrets with encryption keys is: SECRET|KEY1=VALUE1|KEY2=VALUE2
             if(encryptionContext != null) {
+                Validate(type == "Secret", "type must be 'Secret' to use 'EncryptionContext'");
                 result.Reference = FnJoin(
                     "|",
                     new object[] {
                         value
                     }.Union(
-                        encryptionContext
-                            ?.Select(kv => $"{kv.Key}={kv.Value}")
-                            ?? new string[0]
+                        encryptionContext.Select(kv => $"{kv.Key}={kv.Value}")
                     ).ToArray()
                 );
             } else {
@@ -476,6 +477,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                     ? FnJoin(",", values)
                     : value;
             }
+
+            // check if value must be decrypted
             if(result.HasSecretType) {
                 var decoder = AddResource(
                     parent: result,
@@ -490,6 +493,11 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 );
                 decoder.Reference = FnGetAtt(decoder.ResourceName, "Plaintext");
                 decoder.DiscardIfNotReachable = true;
+            }
+
+            // add optional grants
+            if(allow != null) {
+                AddGrant(result.LogicalId, type, value, allow);
             }
             return result;
         }
@@ -525,7 +533,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             string description,
             string type,
             IList<string> scope,
-            object value,
             object allow,
             IDictionary<string, object> properties,
             IList<string> dependsOn,
@@ -534,50 +541,28 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             IList<object> pragmas
         ) {
 
-            // check if a referenced or managed resource should be created
-            AModuleEntry result;
-            if(value != null) {
+            // create resource entry
+            var customResource = RegisterCustomResourceNameMapping(new Humidifier.CustomResource(type, properties));
+            var result = AddResource(
+                parent: parent,
+                name: name,
+                description: description,
+                scope: scope,
+                resource: customResource,
+                resourceArnAttribute: arnAttribute,
+                dependsOn: dependsOn,
+                condition: condition,
+                pragmas: pragmas
+            );
 
-                // add variable to hold the referenced resource
-                result = AddVariable(
-                    parent: parent,
-                    name: name,
-                    description: description,
-                    type: type,
-                    scope: scope,
-                    value: value,
-                    encryptionContext: null
-                );
+            // validate resource properties
+            if(result.HasTypeValidation) {
+                ValidateProperties(type, customResource);
+            }
 
-                // add optional grants
-                if(allow != null) {
-                    AddGrant(result.LogicalId, type, value, allow);
-                }
-            } else {
-
-                // create resource entry
-                var customResource = RegisterCustomResourceNameMapping(new Humidifier.CustomResource(type, properties));
-                result = AddResource(
-                    parent: parent,
-                    name: name,
-                    description: description,
-                    scope: scope,
-                    resource: customResource,
-                    resourceArnAttribute: arnAttribute,
-                    dependsOn: dependsOn,
-                    condition: condition,
-                    pragmas: pragmas
-                );
-
-                // validate resource properties
-                if(result.HasTypeValidation) {
-                    ValidateProperties(type, customResource);
-                }
-
-                // add optional grants
-                if(allow != null) {
-                    AddGrant(result.LogicalId, type, result.GetExportReference(), allow);
-                }
+            // add optional grants
+            if(allow != null) {
+                AddGrant(result.LogicalId, type, result.GetExportReference(), allow);
             }
             return result;
         }
@@ -673,6 +658,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 type: "String",
                 scope: null,
                 value: $"{package.LogicalId}-DRYRUN.zip",
+                allow: null,
                 encryptionContext: null
             );
 
@@ -750,6 +736,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 type: "String",
                 scope: null,
                 value: $"{function.LogicalId}-DRYRUN.zip",
+                allow: null,
                 encryptionContext: null
             );
             function.Function.Code.S3Key = FnSub($"Modules/${{Module::Name}}/Assets/${{{packageName.FullName}}}");

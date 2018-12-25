@@ -111,11 +111,11 @@ Entries:
       - no
 
   # Resources
-  - Resource: LoggingStreamReference
+  - Variable: LoggingStreamReference
     Description: Reference to the Kinesis stream used to ingest the function logs
-    Value: !Ref Module::LoggingStreamArn
     Type: AWS::Kinesis::Stream
     Allow: Subscribe
+    Value: !Ref Module::LoggingStreamArn
 
   - Resource: RegistrationTopic
     Description: Custom resource topic for registering LambdaSharp modules

@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "LambdaSharp CloudFormation Test (v1.0)",
+  "Description": "A sample module integrating with API Gateway (v1.0)",
   "Parameters": {
     "Secrets": {
       "Type": "String",
@@ -55,32 +55,18 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "3FA9B639D8E5EF1C9F716E9E1F2244C0"
+      "Default": "4F8F9C2C106F19EB4E67E7F7CE218DFC"
     }
   },
   "Resources": {
-    "SourceResourceParameter": {
-      "Type": "AWS::SNS::Topic",
-      "Properties": {}
-    },
-    "SourceParameterCollectionSecondSourceResourceParameter": {
-      "Type": "AWS::SNS::Topic",
-      "Properties": {
-        "DisplayName": "This is a literal value"
-      }
-    },
-    "SampleParameterCollectionFourthNestedParameter": {
-      "Type": "AWS::SNS::Topic",
-      "Properties": {}
-    },
-    "Function": {
+    "MyFunction": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
         "Code": {
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "Modules/TestModule/Assets/Function-DRYRUN.zip"
+          "S3Key": "Modules/ApiSample/Assets/MyFunction-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -114,15 +100,15 @@
             ]
           }
         },
-        "Description": "My function (v1.0)",
+        "Description": "This function is invoked by API Gateway (v1.0)",
         "Environment": {
           "Variables": {
-            "MODULE_NAME": "TestModule",
+            "MODULE_NAME": "ApiSample",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
             "MODULE_VERSION": "1.0",
-            "LAMBDA_NAME": "Function",
+            "LAMBDA_NAME": "MyFunction",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
               "Fn::If": [
@@ -183,93 +169,10 @@
                   "Ref": "LambdaSharpDefaultSecretKeyArn"
                 }
               ]
-            },
-            "STR_SOURCEVALUEPARAMETER": "This is a literal value",
-            "STR_SOURCEEXPRESSIONPARAMETER": "This is a literal value",
-            "STR_SOURCERESOURCEPARAMETER": {
-              "Ref": "SourceResourceParameter"
-            },
-            "STR_SOURCEVALUELISTPARAMETER": "first,second,third",
-            "STR_SOURCEEXPRESSIONLISTPARAMETER": {
-              "Fn::Join": [
-                ",",
-                [
-                  "This is a literal value",
-                  "This is a literal value",
-                  {
-                    "Ref": "SourceResourceParameter"
-                  },
-                  "literal value"
-                ]
-              ]
-            },
-            "STR_SOURCEPARAMETERCOLLECTION": "",
-            "STR_SOURCEPARAMETERCOLLECTION_FIRSTSOURCEVALUEPARAMETER": "A nested literal source value",
-            "STR_SOURCEPARAMETERCOLLECTION_SECONDSOURCERESOURCEPARAMETER": {
-              "Ref": "SourceParameterCollectionSecondSourceResourceParameter"
-            },
-            "STR_SAMPLEPARAMETERCOLLECTION": "",
-            "STR_SAMPLEPARAMETERCOLLECTION_FIRSTNESTEDPARAMETER": "A literal value",
-            "STR_SAMPLEPARAMETERCOLLECTION_SECONDNESTEDPARAMETER": "one,two,three",
-            "STR_SAMPLEPARAMETERCOLLECTION_THIRDNESTEDPARAMETER": "arn:aws:sns:us-east-1:123456789012:SampleTopic",
-            "STR_SAMPLEPARAMETERCOLLECTION_FOURTHNESTEDPARAMETER": {
-              "Ref": "SampleParameterCollectionFourthNestedParameter"
-            },
-            "SEC_SAMPLEPARAMETERCOLLECTION_FIFTHNESTEDPARAMETER": "AQICAHjeGw7GlEczkZKnuQaQHVYq...+CXNRhA/rkOSNUThq4ikMnVU2g==",
-            "SEC_SAMPLEPARAMETERCOLLECTION_SIXTHNESTEDPARAMETER": "AQICAHjeGw7GlEczkZKnuQaQHVYq...+CXNRhA/rkOSNUThq4ikMnVU2g==|Purpose=Security",
-            "STR_SAMPLEPARAMETERCOLLECTION_SEVENTHPARAMETER": "arn:aws:sns:*:*:*",
-            "STR_OTHERPARAMETERCOLLECTION": "This collection has a value",
-            "STR_OTHERPARAMETERCOLLECTION_FIRSTNESTEDPARAMETER": "Another literal value",
-            "STR_SINGLERESOURCEVARIABLE": "arn:aws:sns:*:*:*",
-            "STR_MULTIRESOURCEVARIABLE": "arn:aws:sns:*:*:*,arn:aws:sns:*:*:*:*",
-            "STR_SOURCESUBEXPRESSIONS": {
-              "Fn::Join": [
-                ",",
-                [
-                  "This is a literal value",
-                  "This is a literal value",
-                  {
-                    "Fn::Sub": "${SourceResourceParameter}"
-                  },
-                  "first,second,third",
-                  {
-                    "Fn::Sub": [
-                      "${P0}",
-                      {
-                        "P0": {
-                          "Fn::Join": [
-                            ",",
-                            [
-                              "This is a literal value",
-                              "This is a literal value",
-                              {
-                                "Ref": "SourceResourceParameter"
-                              },
-                              "literal value"
-                            ]
-                          ]
-                        }
-                      }
-                    ]
-                  },
-                  "A nested literal source value",
-                  {
-                    "Fn::Sub": "${SourceParameterCollectionSecondSourceResourceParameter}"
-                  },
-                  {
-                    "Fn::Sub": "${SourceParameterCollectionSecondSourceResourceParameter.TopicName}"
-                  }
-                ]
-              ]
-            },
-            "STR_MYMODULENAME": "TestModule",
-            "STR_MYMODULEID": {
-              "Ref": "AWS::StackName"
-            },
-            "STR_MYMODULEVERSION": "1.0"
+            }
           }
         },
-        "Handler": "Function::MindTouch.LambdaSharpTestModule.Function.Function::FunctionHandlerAsync",
+        "Handler": "MyFunction::ApiSample.MyFunction.Function::FunctionHandlerAsync",
         "MemorySize": "128",
         "Role": {
           "Fn::GetAtt": [
@@ -281,11 +184,11 @@
         "Timeout": "30"
       }
     },
-    "FunctionLogGroup": {
+    "MyFunctionLogGroup": {
       "Type": "AWS::Logs::LogGroup",
       "Properties": {
         "LogGroupName": {
-          "Fn::Sub": "/aws/lambda/${Function}"
+          "Fn::Sub": "/aws/lambda/${MyFunction}"
         },
         "RetentionInDays": 30
       }
@@ -311,73 +214,6 @@
             "PolicyDocument": {
               "Version": "2012-10-17",
               "Statement": [
-                {
-                  "Sid": "SourceResourceParameter",
-                  "Effect": "Allow",
-                  "Action": [
-                    "sns:Publish"
-                  ],
-                  "Resource": {
-                    "Ref": "SourceResourceParameter"
-                  }
-                },
-                {
-                  "Sid": "SourceParameterCollectionSecondSourceResourceParameter",
-                  "Effect": "Allow",
-                  "Action": [
-                    "sns:Publish"
-                  ],
-                  "Resource": {
-                    "Ref": "SourceParameterCollectionSecondSourceResourceParameter"
-                  }
-                },
-                {
-                  "Sid": "SampleParameterCollectionThirdNestedParameter",
-                  "Effect": "Allow",
-                  "Action": [
-                    "sns:Publish"
-                  ],
-                  "Resource": "arn:aws:sns:us-east-1:123456789012:SampleTopic"
-                },
-                {
-                  "Sid": "SampleParameterCollectionFourthNestedParameter",
-                  "Effect": "Allow",
-                  "Action": [
-                    "sns:Subscribe"
-                  ],
-                  "Resource": {
-                    "Ref": "SampleParameterCollectionFourthNestedParameter"
-                  }
-                },
-                {
-                  "Sid": "SingleResourceVariable",
-                  "Effect": "Allow",
-                  "Action": [
-                    "sns:Publish"
-                  ],
-                  "Resource": "arn:aws:sns:*:*:*"
-                },
-                {
-                  "Sid": "MultiResourceVariable",
-                  "Effect": "Allow",
-                  "Action": [
-                    "sns:Publish"
-                  ],
-                  "Resource": [
-                    "arn:aws:sns:*:*:*",
-                    "arn:aws:sns:*:*:*:*"
-                  ]
-                },
-                {
-                  "Sid": "RekognitionService",
-                  "Effect": "Allow",
-                  "Action": [
-                    "rekognition:DetectFaces",
-                    "rekognition:IndexFaces",
-                    "rekognition:SearchFacesByImage"
-                  ],
-                  "Resource": "*"
-                },
                 {
                   "Sid": "ModuleDeadLetterQueueLogging",
                   "Effect": "Allow",
@@ -534,11 +370,11 @@
         "ModuleId": {
           "Ref": "AWS::StackName"
         },
-        "ModuleName": "TestModule",
+        "ModuleName": "ApiSample",
         "ModuleVersion": "1.0"
       }
     },
-    "FunctionRegistration": {
+    "MyFunctionRegistration": {
       "Type": "Custom::LambdaSharpRegisterFunction",
       "Properties": {
         "ServiceToken": {
@@ -550,11 +386,11 @@
           "Ref": "AWS::StackName"
         },
         "FunctionId": {
-          "Ref": "Function"
+          "Ref": "MyFunction"
         },
-        "FunctionName": "Function",
+        "FunctionName": "MyFunction",
         "FunctionLogGroupName": {
-          "Fn::Sub": "/aws/lambda/${Function}"
+          "Fn::Sub": "/aws/lambda/${MyFunction}"
         },
         "FunctionPlatform": "AWS Lambda",
         "FunctionFramework": "dotnetcore2.1",
@@ -566,7 +402,7 @@
         "ModuleRegistration"
       ]
     },
-    "FunctionLogGroupSubscription": {
+    "MyFunctionLogGroupSubscription": {
       "Type": "AWS::Logs::SubscriptionFilter",
       "Properties": {
         "DestinationArn": {
@@ -601,7 +437,7 @@
         },
         "FilterPattern": "-\"*** \"",
         "LogGroupName": {
-          "Ref": "FunctionLogGroup"
+          "Ref": "MyFunctionLogGroup"
         },
         "RoleArn": {
           "Fn::If": [
@@ -634,11 +470,287 @@
           ]
         }
       }
+    },
+    "ModuleRestApi": {
+      "Type": "AWS::ApiGateway::RestApi",
+      "Properties": {
+        "Description": "${Module::Name} API (v${Module::Version})",
+        "FailOnWarnings": true,
+        "Name": {
+          "Fn::Sub": "${AWS::StackName} Module API"
+        }
+      }
+    },
+    "ModuleRestApiItemsResource": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "ParentId": {
+          "Fn::GetAtt": [
+            "ModuleRestApi",
+            "RootResourceId"
+          ]
+        },
+        "PathPart": "items",
+        "RestApiId": {
+          "Ref": "ModuleRestApi"
+        }
+      }
+    },
+    "ModuleRestApiItemsResourceGET": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "GET",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MyFunction.Arn}/invocations"
+          }
+        },
+        "ResourceId": {
+          "Ref": "ModuleRestApiItemsResource"
+        },
+        "RestApiId": {
+          "Ref": "ModuleRestApi"
+        }
+      }
+    },
+    "ModuleRestApiItemsResourceGETPermission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "MyFunction",
+            "Arn"
+          ]
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleRestApi}/LATEST/GET/items"
+        }
+      }
+    },
+    "ModuleRestApiItemsResourcePOST": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "POST",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MyFunction.Arn}/invocations"
+          }
+        },
+        "ResourceId": {
+          "Ref": "ModuleRestApiItemsResource"
+        },
+        "RestApiId": {
+          "Ref": "ModuleRestApi"
+        }
+      }
+    },
+    "ModuleRestApiItemsResourcePOSTPermission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "MyFunction",
+            "Arn"
+          ]
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleRestApi}/LATEST/POST/items"
+        }
+      }
+    },
+    "ModuleRestApiItemsResourceIdResource": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "ParentId": {
+          "Ref": "ModuleRestApiItemsResource"
+        },
+        "PathPart": "{id}",
+        "RestApiId": {
+          "Ref": "ModuleRestApi"
+        }
+      }
+    },
+    "ModuleRestApiItemsResourceIdResourceGET": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "GET",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MyFunction.Arn}/invocations"
+          }
+        },
+        "ResourceId": {
+          "Ref": "ModuleRestApiItemsResourceIdResource"
+        },
+        "RestApiId": {
+          "Ref": "ModuleRestApi"
+        }
+      }
+    },
+    "ModuleRestApiItemsResourceIdResourceGETPermission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "MyFunction",
+            "Arn"
+          ]
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleRestApi}/LATEST/GET/items/{id}"
+        }
+      }
+    },
+    "ModuleRestApiItemsResourceIdResourceDELETE": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "DELETE",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MyFunction.Arn}/invocations"
+          }
+        },
+        "ResourceId": {
+          "Ref": "ModuleRestApiItemsResourceIdResource"
+        },
+        "RestApiId": {
+          "Ref": "ModuleRestApi"
+        }
+      }
+    },
+    "ModuleRestApiItemsResourceIdResourceDELETEPermission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "MyFunction",
+            "Arn"
+          ]
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleRestApi}/LATEST/DELETE/items/{id}"
+        }
+      }
+    },
+    "ModuleRestApiRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "ModuleRestApiPrincipal",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "apigateway.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Sid": "ModuleRestApiLogging",
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogGroup",
+                    "logs:CreateLogStream",
+                    "logs:DescribeLogGroups",
+                    "logs:DescribeLogStreams",
+                    "logs:PutLogEvents",
+                    "logs:GetLogEvents",
+                    "logs:FilterLogEvents"
+                  ],
+                  "Resource": "arn:aws:logs:*:*:*"
+                }
+              ]
+            },
+            "PolicyName": {
+              "Fn::Sub": "${AWS::StackName}ModuleRestApiPolicy"
+            }
+          }
+        ]
+      }
+    },
+    "ModuleRestApiAccount": {
+      "Type": "AWS::ApiGateway::Account",
+      "Properties": {
+        "CloudWatchRoleArn": {
+          "Fn::GetAtt": [
+            "ModuleRestApiRole",
+            "Arn"
+          ]
+        }
+      }
+    },
+    "ModuleRestApiDeployment1F13AFB4FCA3814C0FB431E2469F3AEB": {
+      "Type": "AWS::ApiGateway::Deployment",
+      "Properties": {
+        "Description": {
+          "Fn::Sub": "${AWS::StackName} API [1F13AFB4FCA3814C0FB431E2469F3AEB]"
+        },
+        "RestApiId": {
+          "Ref": "ModuleRestApi"
+        }
+      },
+      "DependsOn": [
+        "ModuleRestApiItemsResourceGET",
+        "ModuleRestApiItemsResourcePOST",
+        "ModuleRestApiItemsResourceIdResourceGET",
+        "ModuleRestApiItemsResourceIdResourceDELETE"
+      ]
+    },
+    "ModuleRestApiStage": {
+      "Type": "AWS::ApiGateway::Stage",
+      "Properties": {
+        "DeploymentId": {
+          "Ref": "ModuleRestApiDeployment1F13AFB4FCA3814C0FB431E2469F3AEB"
+        },
+        "MethodSettings": [
+          {
+            "DataTraceEnabled": true,
+            "HttpMethod": "*",
+            "LoggingLevel": "INFO",
+            "ResourcePath": "/*"
+          }
+        ],
+        "RestApiId": {
+          "Ref": "ModuleRestApi"
+        },
+        "StageName": "LATEST"
+      },
+      "DependsOn": [
+        "ModuleRestApiAccount"
+      ]
     }
   },
   "Outputs": {
     "ModuleName": {
-      "Value": "TestModule"
+      "Value": "ApiSample"
     },
     "ModuleVersion": {
       "Value": "1.0"
@@ -860,10 +972,10 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2018-12-17",
-      "ModuleName": "TestModule",
+      "ModuleName": "ApiSample",
       "ModuleVersion": "1.0",
       "RuntimeCheck": true,
-      "Hash": "3FA9B639D8E5EF1C9F716E9E1F2244C0",
+      "Hash": "4F8F9C2C106F19EB4E67E7F7CE218DFC",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [
@@ -875,16 +987,28 @@
       "CustomResourceTypes": {},
       "MacroNames": [],
       "ResourceNameMappings": {
-        "SourceParameterCollectionSecondSourceResourceParameter": "SourceParameterCollection::SecondSourceResourceParameter",
-        "SampleParameterCollectionFourthNestedParameter": "SampleParameterCollection::FourthNestedParameter",
-        "FunctionLogGroup": "Function::LogGroup",
+        "MyFunctionLogGroup": "MyFunction::LogGroup",
         "ModuleRole": "Module::Role",
         "ModuleRegistration": "Module::Registration",
-        "FunctionRegistration": "Function::Registration",
-        "FunctionLogGroupSubscription": "Function::LogGroupSubscription"
+        "MyFunctionRegistration": "MyFunction::Registration",
+        "MyFunctionLogGroupSubscription": "MyFunction::LogGroupSubscription",
+        "ModuleRestApi": "Module::RestApi",
+        "ModuleRestApiItemsResource": "Module::RestApi::ItemsResource",
+        "ModuleRestApiItemsResourceGET": "Module::RestApi::ItemsResource::GET",
+        "ModuleRestApiItemsResourceGETPermission": "Module::RestApi::ItemsResource::GET::Permission",
+        "ModuleRestApiItemsResourcePOST": "Module::RestApi::ItemsResource::POST",
+        "ModuleRestApiItemsResourcePOSTPermission": "Module::RestApi::ItemsResource::POST::Permission",
+        "ModuleRestApiItemsResourceIdResource": "Module::RestApi::ItemsResource::IdResource",
+        "ModuleRestApiItemsResourceIdResourceGET": "Module::RestApi::ItemsResource::IdResource::GET",
+        "ModuleRestApiItemsResourceIdResourceGETPermission": "Module::RestApi::ItemsResource::IdResource::GET::Permission",
+        "ModuleRestApiItemsResourceIdResourceDELETE": "Module::RestApi::ItemsResource::IdResource::DELETE",
+        "ModuleRestApiItemsResourceIdResourceDELETEPermission": "Module::RestApi::ItemsResource::IdResource::DELETE::Permission",
+        "ModuleRestApiRole": "Module::RestApi::Role",
+        "ModuleRestApiAccount": "Module::RestApi::Account",
+        "ModuleRestApiDeployment1F13AFB4FCA3814C0FB431E2469F3AEB": "Module::RestApi::Deployment1F13AFB4FCA3814C0FB431E2469F3AEB",
+        "ModuleRestApiStage": "Module::RestApi::Stage"
       },
       "CustomResourceNameMappings": {
-        "Custom::ModuleDecryptSecret": "Module::DecryptSecret",
         "Custom::LambdaSharpRegisterModule": "LambdaSharp::Register::Module",
         "Custom::LambdaSharpRegisterFunction": "LambdaSharp::Register::Function"
       }

@@ -39,13 +39,13 @@ Outputs:
 
 Entries:
 
-  - Resource: S3BucketPermissions
+  - Variable: S3BucketPermissions
     Description: LambdaSharpS3Subscriber requires notification configuration access to all S3 buckets
-    Value: !Sub "arn:aws:s3:::${DeploymentPrefixLowercase}*"
     Type: AWS::S3::Bucket
     Allow:
       - "s3:GetBucketNotification"
       - "s3:PutBucketNotification"
+    Value: !Sub "arn:aws:s3:::${DeploymentPrefixLowercase}*"
 
   - Resource: CustomResourceTopic
     Description: Custom resource topic for subscribing Lambda functions to S3 buckets

@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "LambdaSharp CloudFormation Test (v1.0)",
+  "Description": "LambdaSharp S3 Package Loader (v0.5-WIP)",
   "Parameters": {
     "Secrets": {
       "Type": "String",
@@ -55,32 +55,26 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "3FA9B639D8E5EF1C9F716E9E1F2244C0"
+      "Default": "3DBB3A1C89FCBB91ED781BB422AB5168"
     }
   },
   "Resources": {
-    "SourceResourceParameter": {
+    "CustomResourceTopic": {
       "Type": "AWS::SNS::Topic",
       "Properties": {}
     },
-    "SourceParameterCollectionSecondSourceResourceParameter": {
-      "Type": "AWS::SNS::Topic",
-      "Properties": {
-        "DisplayName": "This is a literal value"
-      }
-    },
-    "SampleParameterCollectionFourthNestedParameter": {
-      "Type": "AWS::SNS::Topic",
+    "ManifestBucket": {
+      "Type": "AWS::S3::Bucket",
       "Properties": {}
     },
-    "Function": {
+    "ResourceHandler": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
         "Code": {
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "Modules/TestModule/Assets/Function-DRYRUN.zip"
+          "S3Key": "Modules/LambdaSharpS3PackageLoader/Assets/ResourceHandler-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -114,15 +108,15 @@
             ]
           }
         },
-        "Description": "My function (v1.0)",
+        "Description": "LambdaSharp S3 Package Loader handler (v0.5-WIP)",
         "Environment": {
           "Variables": {
-            "MODULE_NAME": "TestModule",
+            "MODULE_NAME": "LambdaSharpS3PackageLoader",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_VERSION": "1.0",
-            "LAMBDA_NAME": "Function",
+            "MODULE_VERSION": "0.5-WIP",
+            "LAMBDA_NAME": "ResourceHandler",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
               "Fn::If": [
@@ -184,92 +178,15 @@
                 }
               ]
             },
-            "STR_SOURCEVALUEPARAMETER": "This is a literal value",
-            "STR_SOURCEEXPRESSIONPARAMETER": "This is a literal value",
-            "STR_SOURCERESOURCEPARAMETER": {
-              "Ref": "SourceResourceParameter"
-            },
-            "STR_SOURCEVALUELISTPARAMETER": "first,second,third",
-            "STR_SOURCEEXPRESSIONLISTPARAMETER": {
-              "Fn::Join": [
-                ",",
-                [
-                  "This is a literal value",
-                  "This is a literal value",
-                  {
-                    "Ref": "SourceResourceParameter"
-                  },
-                  "literal value"
-                ]
+            "STR_MANIFESTBUCKET": {
+              "Fn::GetAtt": [
+                "ManifestBucket",
+                "Arn"
               ]
-            },
-            "STR_SOURCEPARAMETERCOLLECTION": "",
-            "STR_SOURCEPARAMETERCOLLECTION_FIRSTSOURCEVALUEPARAMETER": "A nested literal source value",
-            "STR_SOURCEPARAMETERCOLLECTION_SECONDSOURCERESOURCEPARAMETER": {
-              "Ref": "SourceParameterCollectionSecondSourceResourceParameter"
-            },
-            "STR_SAMPLEPARAMETERCOLLECTION": "",
-            "STR_SAMPLEPARAMETERCOLLECTION_FIRSTNESTEDPARAMETER": "A literal value",
-            "STR_SAMPLEPARAMETERCOLLECTION_SECONDNESTEDPARAMETER": "one,two,three",
-            "STR_SAMPLEPARAMETERCOLLECTION_THIRDNESTEDPARAMETER": "arn:aws:sns:us-east-1:123456789012:SampleTopic",
-            "STR_SAMPLEPARAMETERCOLLECTION_FOURTHNESTEDPARAMETER": {
-              "Ref": "SampleParameterCollectionFourthNestedParameter"
-            },
-            "SEC_SAMPLEPARAMETERCOLLECTION_FIFTHNESTEDPARAMETER": "AQICAHjeGw7GlEczkZKnuQaQHVYq...+CXNRhA/rkOSNUThq4ikMnVU2g==",
-            "SEC_SAMPLEPARAMETERCOLLECTION_SIXTHNESTEDPARAMETER": "AQICAHjeGw7GlEczkZKnuQaQHVYq...+CXNRhA/rkOSNUThq4ikMnVU2g==|Purpose=Security",
-            "STR_SAMPLEPARAMETERCOLLECTION_SEVENTHPARAMETER": "arn:aws:sns:*:*:*",
-            "STR_OTHERPARAMETERCOLLECTION": "This collection has a value",
-            "STR_OTHERPARAMETERCOLLECTION_FIRSTNESTEDPARAMETER": "Another literal value",
-            "STR_SINGLERESOURCEVARIABLE": "arn:aws:sns:*:*:*",
-            "STR_MULTIRESOURCEVARIABLE": "arn:aws:sns:*:*:*,arn:aws:sns:*:*:*:*",
-            "STR_SOURCESUBEXPRESSIONS": {
-              "Fn::Join": [
-                ",",
-                [
-                  "This is a literal value",
-                  "This is a literal value",
-                  {
-                    "Fn::Sub": "${SourceResourceParameter}"
-                  },
-                  "first,second,third",
-                  {
-                    "Fn::Sub": [
-                      "${P0}",
-                      {
-                        "P0": {
-                          "Fn::Join": [
-                            ",",
-                            [
-                              "This is a literal value",
-                              "This is a literal value",
-                              {
-                                "Ref": "SourceResourceParameter"
-                              },
-                              "literal value"
-                            ]
-                          ]
-                        }
-                      }
-                    ]
-                  },
-                  "A nested literal source value",
-                  {
-                    "Fn::Sub": "${SourceParameterCollectionSecondSourceResourceParameter}"
-                  },
-                  {
-                    "Fn::Sub": "${SourceParameterCollectionSecondSourceResourceParameter.TopicName}"
-                  }
-                ]
-              ]
-            },
-            "STR_MYMODULENAME": "TestModule",
-            "STR_MYMODULEID": {
-              "Ref": "AWS::StackName"
-            },
-            "STR_MYMODULEVERSION": "1.0"
+            }
           }
         },
-        "Handler": "Function::MindTouch.LambdaSharpTestModule.Function.Function::FunctionHandlerAsync",
+        "Handler": "ResourceHandler::MindTouch.LambdaSharpS3PackageLoader.ResourceHandler.Function::FunctionHandlerAsync",
         "MemorySize": "128",
         "Role": {
           "Fn::GetAtt": [
@@ -278,14 +195,14 @@
           ]
         },
         "Runtime": "dotnetcore2.1",
-        "Timeout": "30"
+        "Timeout": "300"
       }
     },
-    "FunctionLogGroup": {
+    "ResourceHandlerLogGroup": {
       "Type": "AWS::Logs::LogGroup",
       "Properties": {
         "LogGroupName": {
-          "Fn::Sub": "/aws/lambda/${Function}"
+          "Fn::Sub": "/aws/lambda/${ResourceHandler}"
         },
         "RetentionInDays": 30
       }
@@ -312,71 +229,142 @@
               "Version": "2012-10-17",
               "Statement": [
                 {
-                  "Sid": "SourceResourceParameter",
+                  "Sid": "S3TargetBucketPermissions",
                   "Effect": "Allow",
                   "Action": [
-                    "sns:Publish"
+                    "s3:AbortMultipartUpload",
+                    "s3:CreateBucket",
+                    "s3:DeleteObject",
+                    "s3:DeleteObjectTagging",
+                    "s3:DeleteObjectVersion",
+                    "s3:DeleteObjectVersionTagging",
+                    "s3:GetBucketLocation",
+                    "s3:GetObject",
+                    "s3:GetObjectAcl",
+                    "s3:GetObjectTagging",
+                    "s3:GetObjectTorrent",
+                    "s3:GetObjectVersion",
+                    "s3:GetObjectVersionAcl",
+                    "s3:GetObjectVersionTagging",
+                    "s3:GetObjectVersionTorrent",
+                    "s3:ListBucket",
+                    "s3:ListBucketMultipartUploads",
+                    "s3:ListMultipartUploadParts",
+                    "s3:PutObject",
+                    "s3:PutObjectAcl",
+                    "s3:PutObjectTagging",
+                    "s3:PutObjectVersionAcl",
+                    "s3:PutObjectVersionTagging",
+                    "s3:RestoreObject"
                   ],
-                  "Resource": {
-                    "Ref": "SourceResourceParameter"
-                  }
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:aws:s3:::${DeploymentPrefixLowercase}*"
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          {
+                            "Fn::Sub": "arn:aws:s3:::${DeploymentPrefixLowercase}*"
+                          },
+                          "/*"
+                        ]
+                      ]
+                    }
+                  ]
                 },
                 {
-                  "Sid": "SourceParameterCollectionSecondSourceResourceParameter",
+                  "Sid": "S3DeploymentBucketPermissions",
                   "Effect": "Allow",
                   "Action": [
-                    "sns:Publish"
+                    "s3:GetObject",
+                    "s3:GetObjectAcl",
+                    "s3:GetObjectTagging",
+                    "s3:GetObjectTorrent",
+                    "s3:GetObjectVersion",
+                    "s3:GetObjectVersionAcl",
+                    "s3:GetObjectVersionTagging",
+                    "s3:GetObjectVersionTorrent"
                   ],
-                  "Resource": {
-                    "Ref": "SourceParameterCollectionSecondSourceResourceParameter"
-                  }
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}"
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          {
+                            "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}"
+                          },
+                          "/*"
+                        ]
+                      ]
+                    }
+                  ]
                 },
                 {
-                  "Sid": "SampleParameterCollectionThirdNestedParameter",
-                  "Effect": "Allow",
-                  "Action": [
-                    "sns:Publish"
-                  ],
-                  "Resource": "arn:aws:sns:us-east-1:123456789012:SampleTopic"
-                },
-                {
-                  "Sid": "SampleParameterCollectionFourthNestedParameter",
+                  "Sid": "CustomResourceTopic",
                   "Effect": "Allow",
                   "Action": [
                     "sns:Subscribe"
                   ],
                   "Resource": {
-                    "Ref": "SampleParameterCollectionFourthNestedParameter"
+                    "Ref": "CustomResourceTopic"
                   }
                 },
                 {
-                  "Sid": "SingleResourceVariable",
+                  "Sid": "ManifestBucket",
                   "Effect": "Allow",
                   "Action": [
-                    "sns:Publish"
-                  ],
-                  "Resource": "arn:aws:sns:*:*:*"
-                },
-                {
-                  "Sid": "MultiResourceVariable",
-                  "Effect": "Allow",
-                  "Action": [
-                    "sns:Publish"
+                    "s3:AbortMultipartUpload",
+                    "s3:CreateBucket",
+                    "s3:DeleteObject",
+                    "s3:DeleteObjectTagging",
+                    "s3:DeleteObjectVersion",
+                    "s3:DeleteObjectVersionTagging",
+                    "s3:GetBucketLocation",
+                    "s3:GetObject",
+                    "s3:GetObjectAcl",
+                    "s3:GetObjectTagging",
+                    "s3:GetObjectTorrent",
+                    "s3:GetObjectVersion",
+                    "s3:GetObjectVersionAcl",
+                    "s3:GetObjectVersionTagging",
+                    "s3:GetObjectVersionTorrent",
+                    "s3:ListBucket",
+                    "s3:ListBucketMultipartUploads",
+                    "s3:ListMultipartUploadParts",
+                    "s3:PutObject",
+                    "s3:PutObjectAcl",
+                    "s3:PutObjectTagging",
+                    "s3:PutObjectVersionAcl",
+                    "s3:PutObjectVersionTagging",
+                    "s3:RestoreObject"
                   ],
                   "Resource": [
-                    "arn:aws:sns:*:*:*",
-                    "arn:aws:sns:*:*:*:*"
+                    {
+                      "Fn::GetAtt": [
+                        "ManifestBucket",
+                        "Arn"
+                      ]
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          {
+                            "Fn::GetAtt": [
+                              "ManifestBucket",
+                              "Arn"
+                            ]
+                          },
+                          "/*"
+                        ]
+                      ]
+                    }
                   ]
-                },
-                {
-                  "Sid": "RekognitionService",
-                  "Effect": "Allow",
-                  "Action": [
-                    "rekognition:DetectFaces",
-                    "rekognition:IndexFaces",
-                    "rekognition:SearchFacesByImage"
-                  ],
-                  "Resource": "*"
                 },
                 {
                   "Sid": "ModuleDeadLetterQueueLogging",
@@ -534,11 +522,11 @@
         "ModuleId": {
           "Ref": "AWS::StackName"
         },
-        "ModuleName": "TestModule",
-        "ModuleVersion": "1.0"
+        "ModuleName": "LambdaSharpS3PackageLoader",
+        "ModuleVersion": "0.5-WIP"
       }
     },
-    "FunctionRegistration": {
+    "ResourceHandlerRegistration": {
       "Type": "Custom::LambdaSharpRegisterFunction",
       "Properties": {
         "ServiceToken": {
@@ -550,23 +538,23 @@
           "Ref": "AWS::StackName"
         },
         "FunctionId": {
-          "Ref": "Function"
+          "Ref": "ResourceHandler"
         },
-        "FunctionName": "Function",
+        "FunctionName": "ResourceHandler",
         "FunctionLogGroupName": {
-          "Fn::Sub": "/aws/lambda/${Function}"
+          "Fn::Sub": "/aws/lambda/${ResourceHandler}"
         },
         "FunctionPlatform": "AWS Lambda",
         "FunctionFramework": "dotnetcore2.1",
         "FunctionLanguage": "csharp",
         "FunctionMaxMemory": "128",
-        "FunctionMaxDuration": "30"
+        "FunctionMaxDuration": "300"
       },
       "DependsOn": [
         "ModuleRegistration"
       ]
     },
-    "FunctionLogGroupSubscription": {
+    "ResourceHandlerLogGroupSubscription": {
       "Type": "AWS::Logs::SubscriptionFilter",
       "Properties": {
         "DestinationArn": {
@@ -601,7 +589,7 @@
         },
         "FilterPattern": "-\"*** \"",
         "LogGroupName": {
-          "Ref": "FunctionLogGroup"
+          "Ref": "ResourceHandlerLogGroup"
         },
         "RoleArn": {
           "Fn::If": [
@@ -634,14 +622,56 @@
           ]
         }
       }
+    },
+    "ResourceHandlerSource1Subscription": {
+      "Type": "AWS::SNS::Subscription",
+      "Properties": {
+        "Endpoint": {
+          "Fn::GetAtt": [
+            "ResourceHandler",
+            "Arn"
+          ]
+        },
+        "Protocol": "lambda",
+        "TopicArn": {
+          "Ref": "CustomResourceTopic"
+        }
+      }
+    },
+    "ResourceHandlerSource1Permission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "ResourceHandler",
+            "Arn"
+          ]
+        },
+        "Principal": "sns.amazonaws.com",
+        "SourceArn": {
+          "Ref": "CustomResourceTopic"
+        }
+      }
     }
   },
   "Outputs": {
     "ModuleName": {
-      "Value": "TestModule"
+      "Value": "LambdaSharpS3PackageLoader"
     },
     "ModuleVersion": {
-      "Value": "1.0"
+      "Value": "0.5-WIP"
+    },
+    "LambdaSharpS3PackageHandler": {
+      "Value": {
+        "Ref": "CustomResourceTopic"
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::S3::Package"
+        }
+      },
+      "Description": "Custom resource for deploying packages to S3 buckets"
     }
   },
   "Conditions": {
@@ -860,10 +890,10 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2018-12-17",
-      "ModuleName": "TestModule",
-      "ModuleVersion": "1.0",
+      "ModuleName": "LambdaSharpS3PackageLoader",
+      "ModuleVersion": "0.5-WIP",
       "RuntimeCheck": true,
-      "Hash": "3FA9B639D8E5EF1C9F716E9E1F2244C0",
+      "Hash": "3DBB3A1C89FCBB91ED781BB422AB5168",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [
@@ -872,19 +902,49 @@
           "MinVersion": "0.5-WIP"
         }
       ],
-      "CustomResourceTypes": {},
+      "CustomResourceTypes": {
+        "LambdaSharp::S3::Package": {
+          "Request": [
+            {
+              "Name": "DestinationBucketName",
+              "Type": "String"
+            },
+            {
+              "Name": "DestinationBucketArn",
+              "Type": "AWS::S3::Bucket"
+            },
+            {
+              "Name": "DestinationKeyPrefix",
+              "Type": "String"
+            },
+            {
+              "Name": "SourceBucketName",
+              "Type": "String"
+            },
+            {
+              "Name": "SourcePackageKey",
+              "Type": "String"
+            }
+          ],
+          "Response": [
+            {
+              "Name": "Url",
+              "Type": "String"
+            }
+          ]
+        }
+      },
       "MacroNames": [],
       "ResourceNameMappings": {
-        "SourceParameterCollectionSecondSourceResourceParameter": "SourceParameterCollection::SecondSourceResourceParameter",
-        "SampleParameterCollectionFourthNestedParameter": "SampleParameterCollection::FourthNestedParameter",
-        "FunctionLogGroup": "Function::LogGroup",
+        "ResourceHandlerLogGroup": "ResourceHandler::LogGroup",
         "ModuleRole": "Module::Role",
         "ModuleRegistration": "Module::Registration",
-        "FunctionRegistration": "Function::Registration",
-        "FunctionLogGroupSubscription": "Function::LogGroupSubscription"
+        "ResourceHandlerRegistration": "ResourceHandler::Registration",
+        "ResourceHandlerLogGroupSubscription": "ResourceHandler::LogGroupSubscription",
+        "ResourceHandlerSource1Subscription": "ResourceHandler::Source1Subscription",
+        "ResourceHandlerSource1Permission": "ResourceHandler::Source1Permission"
       },
       "CustomResourceNameMappings": {
-        "Custom::ModuleDecryptSecret": "Module::DecryptSecret",
         "Custom::LambdaSharpRegisterModule": "LambdaSharp::Register::Module",
         "Custom::LambdaSharpRegisterFunction": "LambdaSharp::Register::Function"
       }

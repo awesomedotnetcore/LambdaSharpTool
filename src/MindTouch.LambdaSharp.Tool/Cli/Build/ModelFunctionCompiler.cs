@@ -105,6 +105,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         type: "String",
                         scope: null,
                         value: FnSub("https://${Module::RestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/LATEST/"),
+                        allow: null,
                         encryptionContext: null
                     );
 
@@ -512,7 +513,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                             description: null,
                             type: "LambdaSharp::S3::Subscription",
                             scope: null,
-                            value: null,
                             allow: null,
                             properties: new Dictionary<string, object> {
                                 ["BucketArn"] = arn,

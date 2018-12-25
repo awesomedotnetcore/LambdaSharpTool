@@ -254,7 +254,11 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             return null;
         }
 
-        private void ConvertOutput(int index, EntryNode output) => ConvertEntry(null, index, output, new[] { "Export", "CustomResource", "Macro" });
+        private void ConvertOutput(int index, EntryNode output) => ConvertEntry(null, index, output, new[] {
+            "Export",
+            "CustomResource",
+            "Macro"
+        });
 
         private void ConvertEntry(int index, EntryNode node)
             => ConvertEntry(null, index, node, new[] {
@@ -326,6 +330,17 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     // validation
                     Validate((node.EncryptionContext == null) || (node.Type == "Secret"), "entry must have Type 'Secret' to use 'EncryptionContext' section");
                     Validate((node.Type != "Secret") || !(node.Value is IList<object>), "entry with type 'Secret' cannot have a list of values");
+                    if(node.Allow != null) {
+                        var awsType = node.Type ?? "AWS";
+                        Validate((node.Allow == null) || (awsType == "AWS") || ResourceMapping.IsCloudFormationType(awsType), "'Allow' attribute can only be used with AWS resource types");
+                        if(node.Value is IList<object> values) {
+                            foreach(var arn in values) {
+                                ValidateARN(arn);
+                            }
+                        } else {
+                            ValidateARN(node.Value);
+                        }
+                    }
 
                     // create variable entry
                     var result = _builder.AddVariable(
@@ -335,6 +350,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         type: node.Type ?? "String",
                         scope: ConvertScope(node.Scope),
                         value: node.Value ?? "",
+                        allow: node.Allow,
                         encryptionContext: node.EncryptionContext
                     );
 
@@ -346,30 +362,16 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 AtLocation(node.Resource, () => {
 
                     // validation
-                    Validate((node.Value == null) || (node.Properties == null), "cannot use 'Properties' section with a reference resource");
-                    var awsType = node.Type ?? "AWS";
-                    if(node.Value != null) {
-                        Validate(node.Properties == null, "cannot use 'Properties' section with a reference resource");
-                        Validate(node.If == null, "cannot use 'Condition' attribute with a reference resource");
-                        if(node.Value is string text) {
-                            ValidateARN(text);
-                        } else if(node.Value is IList<object> values) {
-                            foreach(var arn in values) {
-                                ValidateARN(arn);
-                            }
-                        }
-                    } else {
-                        Validate((node.Allow == null) || (awsType == "AWS") || ResourceMapping.IsCloudFormationType(awsType), "'Allow' attribute can only be used with AWS resource types");
-                    }
+                    Validate(node.Type != null, "missing 'Type' attribute");
+                    Validate((node.Allow == null) || ResourceMapping.IsCloudFormationType(node.Type ?? ""), "'Allow' attribute can only be used with AWS resource types");
 
                     // create resource entry
                     var result = _builder.AddResource(
                         parent: parent,
                         name: node.Resource,
                         description: node.Description,
-                        type: awsType,
+                        type: node.Type ?? "<BAD>",
                         scope: ConvertScope(node.Scope),
-                        value: node.Value,
                         allow: node.Allow,
                         properties: node.Properties,
                         dependsOn: ConvertToStringList(node.DependsOn),

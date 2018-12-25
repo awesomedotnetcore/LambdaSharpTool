@@ -117,7 +117,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 return false;
             }
             File.WriteAllText(outputCloudFormationFilePath, template);
-            Console.WriteLine("=> Module compilation done");
+            Console.WriteLine($"=> Module compilation done: {outputCloudFormationFilePath}");
             return true;
         }
     }

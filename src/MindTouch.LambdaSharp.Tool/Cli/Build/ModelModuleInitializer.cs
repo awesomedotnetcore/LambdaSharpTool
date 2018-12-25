@@ -65,6 +65,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 type: "String",
                 scope: null,
                 value: "",
+                allow: null,
                 encryptionContext: null
             );
             _builder.AddVariable(
@@ -74,6 +75,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 type: "String",
                 scope: null,
                 value: FnRef("AWS::StackName"),
+                allow: null,
                 encryptionContext: null
             );
             _builder.AddVariable(
@@ -83,6 +85,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 type: "String",
                 scope: null,
                 value: _builder.Name,
+                allow: null,
                 encryptionContext: null
             );
             _builder.AddVariable(
@@ -92,6 +95,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 type: "String",
                 scope: null,
                 value: _builder.Version.ToString(),
+                allow: null,
                 encryptionContext: null
             );
 
@@ -251,6 +255,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     type: "String",
                     scope: null,
                     value: FnRef("LambdaSharp::DeadLetterQueueArn"),
+                    allow: null,
                     encryptionContext: null
                 );
                 _builder.AddVariable(
@@ -260,6 +265,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     type: "String",
                     scope: null,
                     value: FnRef("LambdaSharp::LoggingStreamArn"),
+                    allow: null,
                     encryptionContext: null
                 );
                 _builder.AddVariable(
@@ -269,6 +275,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     type: "String",
                     scope: null,
                     value: FnRef("LambdaSharp::LoggingStreamRoleArn"),
+                    allow: null,
                     encryptionContext: null
                 );
                 _builder.AddVariable(
@@ -278,6 +285,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     type: "String",
                     scope: null,
                     value: FnRef("LambdaSharp::DefaultSecretKeyArn"),
+                    allow: null,
                     encryptionContext: null
                 );
 
@@ -546,7 +554,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     description: null,
                     type: "LambdaSharp::Register::Module",
                     scope: null,
-                    value: null,
                     allow: null,
                     properties: new Dictionary<string, object> {
                         ["ModuleId"] = FnRef("AWS::StackName"),
@@ -576,7 +583,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                             description: null,
                             type: "LambdaSharp::Register::Function",
                             scope: null,
-                            value: null,
                             allow: null,
                             properties: new Dictionary<string, object> {
                                 ["ModuleId"] = FnRef("AWS::StackName"),

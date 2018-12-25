@@ -76,7 +76,22 @@ if [ -z "$1" ]; then
         Function-Finalizer.yml \
         Condition-Resource.yml \
         Condition-Function.yml \
-        Condition-Condition.yml
+        Condition-Condition.yml \
+        ../Runtime/LambdaSharp \
+        ../Runtime/LambdaSharpRegistrar \
+        ../Runtime/LambdaSharpS3PackageLoader \
+        ../Runtime/LambdaSharpS3Subscriber \
+        ../Samples/AlexaSample \
+        ../Samples/ApiSample \
+        ../Samples/CustomResourceSample \
+        ../Samples/DynamoDBSample \
+        ../Samples/KinesisSample \
+        ../Samples/MacroSample \
+        ../Samples/S3Sample \
+        ../Samples/ScheduleSample \
+        ../Samples/SlackCommandSample \
+        ../Samples/SnsSample \
+        ../Samples/SqsSample
 else
 
     # run requested test

@@ -71,12 +71,12 @@ Entries:
           - two
           - three
 
-      - Resource: ThirdNestedParameter
+      - Variable: ThirdNestedParameter
         Description: Third nested parameter
         Scope: "*"
-        Value: arn:aws:sns:us-east-1:123456789012:SampleTopic
         Type: AWS::SNS::Topic
         Allow: Publish
+        Value: arn:aws:sns:us-east-1:123456789012:SampleTopic
 
       - Resource: FourthNestedParameter
         Description: Fourth nested parameter
@@ -101,7 +101,7 @@ Entries:
       - Variable: SeventhParameter
         Description: Seventh nested parameter
         Scope: "*"
-        Value: !Ref SingleResourceParameter
+        Value: !Ref SingleResourceVariable
 
   - Variable: OtherParameterCollection
     Description: Description for collection parameter
@@ -114,21 +114,21 @@ Entries:
         Scope: "*"
         Value: Another literal value
 
-  - Resource: SingleResourceParameter
+  - Variable: SingleResourceVariable
     Description: Second nested parameter
-    Value: "arn:aws:sns:*:*:*"
     Scope: "*"
     Type: AWS::SNS::Topic
     Allow: Publish
+    Value: "arn:aws:sns:*:*:*"
 
-  - Resource: MultiResourceParameter
+  - Variable: MultiResourceVariable
     Description: Second nested parameter
     Scope: "*"
+    Type: AWS::SNS::Topic
+    Allow: Publish
     Value:
       - "arn:aws:sns:*:*:*"
       - "arn:aws:sns:*:*:*:*"
-    Type: AWS::SNS::Topic
-    Allow: Publish
 
   # !Ref reference use-cases
   - Variable: SourceSubExpressions
@@ -157,8 +157,8 @@ Entries:
     Scope: "*"
     Value: !Ref Module::Version
 
-  # Grant permissiont to resource-less AWS services
-  - Resource: RekognitionService
+  # Grant permission to resource-less AWS services
+  - Variable: RekognitionService
     Description: Permissions required for using AWS Rekognition
     Value: "*"
     Allow:
