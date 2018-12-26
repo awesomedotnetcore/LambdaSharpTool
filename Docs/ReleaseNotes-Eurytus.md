@@ -46,7 +46,7 @@
         ```yaml
         - Mapping: Map
           Description: A custom mapping
-          Keys:
+          Value:
             TopLevelKey:
               SecondLevelKey: 123
         ```

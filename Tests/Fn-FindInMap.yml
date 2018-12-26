@@ -6,7 +6,7 @@ Entries:
     Entries:
 
     - Mapping: RegionMap
-      Keys:
+      Value:
         us-east-1:
           HVM64: first value
         us-west-2:

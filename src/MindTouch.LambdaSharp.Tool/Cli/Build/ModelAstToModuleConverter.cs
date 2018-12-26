@@ -20,6 +20,7 @@
  */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
@@ -481,10 +482,10 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 AtLocation(node.Function, () => {
 
                     // validation
-                    Validate(node.Memory != null, "missing Memory attribute");
-                    Validate(int.TryParse(node.Memory, out _), "invalid Memory value");
-                    Validate(node.Timeout != null, "missing Name attribute");
-                    Validate(int.TryParse(node.Timeout, out _), "invalid Timeout value");
+                    Validate(node.Memory != null, "missing 'Memory' attribute");
+                    Validate(int.TryParse(node.Memory, out _), "invalid 'Memory' value");
+                    Validate(node.Timeout != null, "missing 'Timeout' attribute");
+                    Validate(int.TryParse(node.Timeout, out _), "invalid 'Timeout' value");
                     ValidateFunctionSource(node.Sources ?? new FunctionSourceNode[0]);
 
                     // initialize VPC configuration if provided
@@ -531,7 +532,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             case "Condition":
                 AtLocation(node.Condition, () => {
                     AtLocation("Value", () => {
-                        Validate(node.Value != null, "missing Value attribute");
+                        Validate(node.Value != null, "missing 'Value' attribute");
                     });
                     _builder.AddCondition(
                         parent: parent,
@@ -543,11 +544,49 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 break;
             case "Mapping":
                 AtLocation(node.Mapping, () => {
+                    IDictionary<string, IDictionary<string, string>> topLevelResults = new Dictionary<string, IDictionary<string, string>>();
+                    if(node.Value is IDictionary topLevelEntries) {
+                        AtLocation("Value", () => {
+                            Validate(topLevelEntries.Count > 0, "missing top-level mappings");
+
+                            // iterate over top-level entries
+                            foreach(DictionaryEntry topLevel in topLevelEntries) {
+                                AtLocation((string)topLevel.Key, () => {
+                                    var secondLevelResults = new Dictionary<string, string>();
+                                    topLevelResults[(string)topLevel.Key] = secondLevelResults;
+
+                                    // convert top-level entry
+                                    if(topLevel.Value is IDictionary secondLevelEntries) {
+                                        Validate(secondLevelEntries.Count > 0, "missing second-level mappings");
+
+                                        // iterate over second-level entries
+                                        foreach(DictionaryEntry secondLevel in secondLevelEntries) {
+                                            AtLocation((string)secondLevel.Key, () => {
+
+                                                // convert second-level entry
+                                                if(secondLevel.Value is string secondLevelValue) {
+                                                    secondLevelResults[(string)secondLevel.Key] = secondLevelValue;
+                                                } else {
+                                                    AddError("invalid value");
+                                                }
+                                            });
+                                        }
+                                    } else {
+                                        AddError("invalid value");
+                                    }
+                                });
+                            }
+                        });
+                    } else if(node.Value != null) {
+                        AddError("invalid value for 'Value' attribute");
+                    } else {
+                        AddError("missing 'Value' attribute");
+                    }
                     _builder.AddMapping(
                         parent: parent,
                         name: node.Mapping,
                         description: node.Description,
-                        value: node.Keys
+                        value: topLevelResults
                     );
                 });
                 break;
@@ -555,7 +594,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 AtLocation(node.Export, () => _builder.AddExport(node.Export, node.Description, node.Value));
                 break;
             case "CustomResource":
-                Validate(node.Handler != null, "missing Handler attribute");
+                Validate(node.Handler != null, "missing 'Handler' attribute");
                 AtLocation(node.CustomResource, () => {
                     ModuleManifestCustomResource properties = null;
                     if(node.Properties != null) {
@@ -577,7 +616,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 });
                 break;
             case "Macro":
-                Validate(node.Handler != null, "missing Handler attribute");
+                Validate(node.Handler != null, "missing 'Handler' attribute");
                 AtLocation(node.Macro, () => _builder.AddMacro(node.Macro, node.Description, node.Handler));
                 break;
             }

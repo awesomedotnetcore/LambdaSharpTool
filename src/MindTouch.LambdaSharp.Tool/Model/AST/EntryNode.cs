@@ -79,7 +79,7 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
             },
             ["Mapping"] = new[] {
                 "Description",
-                "Keys"
+                "Value"
             },
 
             // nodes with optional nested entries
@@ -273,10 +273,9 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         /*
          * Mapping: string
          * Description: string
-         * Keys: object
+         * Value: object
          */
          public string Mapping { get; set; }
-         public IDictionary<string, IDictionary<string, string>> Keys { get; set; }
 
         /*
          * Export: string
