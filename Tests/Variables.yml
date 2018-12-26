@@ -71,7 +71,7 @@ Entries:
           - two
           - three
 
-      - Variable: ThirdNestedParameter
+      - Resource: ThirdNestedParameter
         Description: Third nested parameter
         Scope: "*"
         Type: AWS::SNS::Topic
@@ -114,14 +114,14 @@ Entries:
         Scope: "*"
         Value: Another literal value
 
-  - Variable: SingleResourceVariable
+  - Resource: SingleResourceVariable
     Description: Second nested parameter
     Scope: "*"
     Type: AWS::SNS::Topic
     Allow: Publish
     Value: "arn:aws:sns:*:*:*"
 
-  - Variable: MultiResourceVariable
+  - Resource: MultiResourceVariable
     Description: Second nested parameter
     Scope: "*"
     Type: AWS::SNS::Topic
@@ -158,7 +158,7 @@ Entries:
     Value: !Ref Module::Version
 
   # Grant permission to resource-less AWS services
-  - Variable: RekognitionService
+  - Resource: RekognitionService
     Description: Permissions required for using AWS Rekognition
     Value: "*"
     Allow:

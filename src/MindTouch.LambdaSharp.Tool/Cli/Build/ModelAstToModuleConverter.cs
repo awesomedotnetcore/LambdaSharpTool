@@ -331,17 +331,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     // validation
                     Validate((node.EncryptionContext == null) || (node.Type == "Secret"), "entry must have Type 'Secret' to use 'EncryptionContext' section");
                     Validate((node.Type != "Secret") || !(node.Value is IList<object>), "entry with type 'Secret' cannot have a list of values");
-                    if(node.Allow != null) {
-                        var awsType = node.Type ?? "AWS";
-                        Validate((node.Allow == null) || (awsType == "AWS") || ResourceMapping.IsCloudFormationType(awsType), "'Allow' attribute can only be used with AWS resource types");
-                        if(node.Value is IList<object> values) {
-                            foreach(var arn in values) {
-                                ValidateARN(arn);
-                            }
-                        } else {
-                            ValidateARN(node.Value);
-                        }
-                    }
 
                     // create variable entry
                     var result = _builder.AddVariable(
@@ -351,7 +340,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         type: node.Type ?? "String",
                         scope: ConvertScope(node.Scope),
                         value: node.Value ?? "",
-                        allow: node.Allow,
+                        allow: null,
                         encryptionContext: node.EncryptionContext
                     );
 
@@ -363,23 +352,48 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 AtLocation(node.Resource, () => {
 
                     // validation
-                    Validate(node.Type != null, "missing 'Type' attribute");
-                    Validate((node.Allow == null) || ResourceMapping.IsCloudFormationType(node.Type ?? ""), "'Allow' attribute can only be used with AWS resource types");
+                    if(node.Value != null) {
+                        Validate((node.Allow == null) || (node.Type == null) || ResourceMapping.IsCloudFormationType(node.Type), "'Allow' attribute can only be used with AWS resource types");
+                        if(node.Value is IList<object> values) {
+                            foreach(var arn in values) {
+                                ValidateARN(arn);
+                            }
+                        } else {
+                            ValidateARN(node.Value);
+                        }
+                    } else {
+                        Validate(node.Type != null, "missing 'Type' attribute");
+                        Validate((node.Allow == null) || ResourceMapping.IsCloudFormationType(node.Type ?? ""), "'Allow' attribute can only be used with AWS resource types");
+                    }
 
                     // create resource entry
-                    var result = _builder.AddResource(
-                        parent: parent,
-                        name: node.Resource,
-                        description: node.Description,
-                        type: node.Type ?? "<BAD>",
-                        scope: ConvertScope(node.Scope),
-                        allow: node.Allow,
-                        properties: node.Properties,
-                        dependsOn: ConvertToStringList(node.DependsOn),
-                        arnAttribute: node.DefaultAttribute,
-                        condition: node.If,
-                        pragmas: node.Pragmas
-                    );
+                    AModuleEntry result;
+                    if(node.Value != null) {
+                        result = _builder.AddVariable(
+                            parent: parent,
+                            name: node.Resource,
+                            description: node.Description,
+                            type: node.Type ?? "String",
+                            scope: ConvertScope(node.Scope),
+                            value: node.Value,
+                            allow: node.Allow,
+                        encryptionContext: node.EncryptionContext
+                        );
+                    } else {
+                        result = _builder.AddResource(
+                            parent: parent,
+                            name: node.Resource,
+                            description: node.Description,
+                            type: node.Type,
+                            scope: ConvertScope(node.Scope),
+                            allow: node.Allow,
+                            properties: node.Properties,
+                            dependsOn: ConvertToStringList(node.DependsOn),
+                            arnAttribute: node.DefaultAttribute,
+                            condition: node.If,
+                            pragmas: node.Pragmas
+                        );
+                    }
 
                     // recurse
                     ConvertEntries(result);

@@ -92,7 +92,6 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
                 "Description",
                 "Type",
                 "Scope",
-                "Allow",
                 "Value",
                 "EncryptionContext",
                 "Entries"
@@ -103,6 +102,7 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
                 "Type",
                 "Scope",
                 "Allow",
+                "Value",
                 "Properties",
                 "DependsOn",
                 "DefaultAttribute",

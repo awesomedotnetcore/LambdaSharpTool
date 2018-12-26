@@ -39,7 +39,7 @@ Outputs:
 
 Entries:
 
-  - Variable: S3BucketPermissions
+  - Resource: S3BucketPermissions
     Description: LambdaSharpS3Subscriber requires notification configuration access to all S3 buckets
     Type: AWS::S3::Bucket
     Allow:

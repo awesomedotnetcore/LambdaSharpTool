@@ -111,7 +111,7 @@ Entries:
       - no
 
   # Resources
-  - Variable: LoggingStreamReference
+  - Resource: LoggingStreamReference
     Description: Reference to the Kinesis stream used to ingest the function logs
     Type: AWS::Kinesis::Stream
     Allow: Subscribe
