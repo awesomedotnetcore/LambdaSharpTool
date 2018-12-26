@@ -205,6 +205,15 @@ namespace MindTouch.LambdaSharp.Tool {
                 ["Condition"] = condition ?? throw new ArgumentNullException(nameof(condition))
             };
 
+        public static object FnFindInMap(string mapName, object topLevelKey, object secondLevelKey)
+            => new Dictionary<string, object> {
+                ["Fn::FindInMap"] = new List<object> {
+                    mapName ?? throw new ArgumentNullException(nameof(mapName)),
+                    topLevelKey ?? throw new ArgumentNullException(nameof(topLevelKey)),
+                    secondLevelKey ?? throw new ArgumentNullException(nameof(secondLevelKey))
+                }
+            };
+
         public static string ReplaceSubPattern(string subPattern, Func<string, string, string> replace)
             => Regex.Replace(subPattern, SUBVARIABLE_PATTERN, match => {
                 var matchText = match.ToString();
@@ -307,6 +316,26 @@ namespace MindTouch.LambdaSharp.Tool {
                 return true;
             }
             condition = null;
+            return false;
+        }
+
+        public static bool TryGetFnFindInMap(object value, out string mapName, out object topLevelKey, out object secondLevelKey) {
+            if(
+                (value is IDictionary<string, object> map)
+                && (map.Count == 1)
+                && map.TryGetValue("Fn::FindInMap", out object argsObject)
+                && (argsObject is IList<object> argsList)
+                && (argsList.Count == 3)
+                && (argsList[0] is string mapNameText)
+            ) {
+                mapName = mapNameText;
+                topLevelKey = argsList[1];
+                secondLevelKey = argsList[2];
+                return true;
+            }
+            mapName = null;
+            topLevelKey = null;
+            secondLevelKey = null;
             return false;
         }
     }

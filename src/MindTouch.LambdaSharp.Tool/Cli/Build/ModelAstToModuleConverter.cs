@@ -269,7 +269,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 "Module",
                 "Package",
                 "Function",
-                "Condition"
+                "Condition",
+                "Mapping"
             });
 
         private void ConvertEntry(AModuleEntry parent, int index, EntryNode node, IEnumerable<string> expectedTypes) {
@@ -528,6 +529,16 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         name: node.Condition,
                         description: node.Description,
                         value: node.Value
+                    );
+                });
+                break;
+            case "Mapping":
+                AtLocation(node.Mapping, () => {
+                    _builder.AddMapping(
+                        parent: parent,
+                        name: node.Mapping,
+                        description: node.Description,
+                        value: node.Keys
                     );
                 });
                 break;

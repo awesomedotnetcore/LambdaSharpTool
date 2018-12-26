@@ -131,6 +131,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 case ConditionEntry _:
                     AddError($"function source '{fullName}' cannot be a condition '{entry.FullName}'");
                     break;
+                case MappingEntry _:
+                    AddError($"function source '{fullName}' cannot be a mapping '{entry.FullName}'");
+                    break;
                 default:
                     throw new ApplicationException($"unexpected entry type: {entry.GetType()}");
                 }
@@ -159,6 +162,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             case ConditionEntry _:
                 AddError($"handler reference '{fullName}' cannot be a condition '{entry.FullName}'");
                 break;
+            case MappingEntry _:
+                AddError($"handler reference '{fullName}' cannot be a mapping '{entry.FullName}'");
+                break;
             default:
                 throw new ApplicationException($"unexpected entry type: {entry.GetType()}");
             }
@@ -184,7 +190,10 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 }
                 break;
             case ConditionEntry _:
-                AddError($"handler reference '{fullName}' cannot be a condition '{entry.FullName}'");
+                AddError($"function reference '{fullName}' cannot be a condition '{entry.FullName}'");
+                break;
+            case MappingEntry _:
+                AddError($"function reference '{fullName}' cannot be a mapping '{entry.FullName}'");
                 break;
             default:
                 throw new ApplicationException($"unexpected entry type: {entry.GetType()}");

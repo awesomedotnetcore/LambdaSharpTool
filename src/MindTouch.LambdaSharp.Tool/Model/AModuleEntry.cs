@@ -331,4 +331,27 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             Reference = visitor(this, Reference);
         }
     }
+
+    public class MappingEntry : AModuleEntry {
+
+        //--- Constructors ---
+        public MappingEntry(
+            AModuleEntry parent,
+            string name,
+            string description,
+            IDictionary<string, IDictionary<string, string>> value
+        ) : base(parent, name, description, type: "Mapping", scope: null, reference: value) {
+
+            // NOTE (2018-12-19, bjorg): conditionals should be deleted unless used
+            DiscardIfNotReachable = true;
+        }
+
+        //--- Methods ---
+        public override void Visit(Func<AModuleEntry, object, object> visitor) {
+            Reference = visitor(this, Reference);
+        }
+
+        //--- Properties ---
+        public IDictionary<string, IDictionary<string, string>> Mapping => (IDictionary<string, IDictionary<string, string>>)Reference;
+    }
 }

@@ -77,6 +77,10 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
                 "Sources",
                 "Pragmas"
             },
+            ["Mapping"] = new[] {
+                "Description",
+                "Keys"
+            },
 
             // nodes with optional nested entries
             ["Import"] = new[] {
@@ -268,6 +272,14 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         public FunctionVpcNode VPC { get; set; }
         public Dictionary<string, object> Environment { get; set; }
         public IList<FunctionSourceNode> Sources { get; set; }
+
+        /*
+         * Mapping: string
+         * Description: string
+         * Keys: object
+         */
+         public string Mapping { get; set; }
+         public IDictionary<string, IDictionary<string, string>> Keys { get; set; }
 
         /*
          * Export: string

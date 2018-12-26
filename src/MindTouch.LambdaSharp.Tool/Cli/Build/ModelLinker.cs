@@ -242,7 +242,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 if(_boundEntries.ContainsKey(missingName)) {
                     AddError($"circular !Ref dependency on '{missingName}'");
                 } else {
-                    AddError($"could not find !Ref '{missingName}'");
+                    AddError($"could not find '{missingName}'");
                 }
             }
         }
@@ -330,6 +330,21 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     }
                     DebugWriteLine(() => $"NOT FOUND => {condition}");
                     missing?.Invoke(condition);
+                }
+
+                // handle !FindInMap expression
+                if(TryGetFnFindInMap(value, out string mapName, out object topLevelKey, out object secondLevelKey)) {
+                    if(mapName.StartsWith("@", StringComparison.Ordinal)) {
+                        return value;
+                    }
+                    if(_freeEntries.TryGetValue(mapName, out AModuleEntry freeEntry)) {
+                        if(!(freeEntry is MappingEntry)) {
+                            AddError($"entry '{freeEntry.FullName}' must be a mapping");
+                        }
+                        return FnFindInMap(freeEntry.ResourceName, topLevelKey, secondLevelKey);
+                    }
+                    DebugWriteLine(() => $"NOT FOUND => {mapName}");
+                    missing?.Invoke(mapName);
                 }
                 return value;
             });
@@ -471,6 +486,12 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         MarkReachableEntry(entry, condition);
                         return value;
                     }
+
+                    // handle !FindInMap expression
+                    if(TryGetFnFindInMap(value, out string mapName, out object _, out object _)) {
+                        MarkReachableEntry(entry, mapName);
+                        return value;
+                    }
                     return value;
                 });
             }
@@ -523,6 +544,11 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 // handle !Condition expression
                 if(TryGetFnCondition(value, out condition) && condition.StartsWith("@", StringComparison.Ordinal)) {
                     return FnCondition(condition.Substring(1));
+                }
+
+                // handle !Condition expression
+                if(TryGetFnFindInMap(value, out string mapName, out object topLevelKey, out object secondLevelKey) && mapName.StartsWith("@", StringComparison.Ordinal)) {
+                    return FnFindInMap(mapName.Substring(1), topLevelKey, secondLevelKey);
                 }
                 return value;
             });

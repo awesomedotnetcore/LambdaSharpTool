@@ -2,11 +2,18 @@ Module: TestModule
 Description: LambdaSharp CloudFormation Test
 Entries:
 
-  - Parameter: RootDomainName
-    Default: "example.org"
+  - Variable: Maps
+    Entries:
+
+    - Mapping: RegionMap
+      Keys:
+        us-east-1:
+          HVM64: first value
+        us-west-2:
+          HVM64: second value
 
   - Resource: MyResource
     Description: A CloudFormation dummy resource
     Type: Custom::Handler
     Properties:
-      Result: !FindInMap [ RegionMap, !Ref "AWS::Region", HVM64 ]
+      Result: !FindInMap [ "Maps::RegionMap", !Ref "AWS::Region", HVM64 ]

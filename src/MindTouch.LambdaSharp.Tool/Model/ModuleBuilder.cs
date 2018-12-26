@@ -868,6 +868,20 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             ));
         }
 
+        public AModuleEntry AddMapping(
+            AModuleEntry parent,
+            string name,
+            string description,
+            IDictionary<string, IDictionary<string, string>> value
+        ) {
+            return AddEntry(new MappingEntry(
+                parent: parent,
+                name: name,
+                description: description,
+                value: value
+            ));
+        }
+
         public void AddGrant(string sid, string awsType, object reference, object allow) {
 
             // resolve shorthands and deduplicate statements

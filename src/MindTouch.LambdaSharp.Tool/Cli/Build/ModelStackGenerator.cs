@@ -178,6 +178,15 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             case ConditionEntry conditionEntry:
                 _stack.Add(conditionEntry.LogicalId, new Condition(conditionEntry.Reference));
                 break;
+            case MappingEntry mappingEntry: {
+                    new Humidifier.Mapping();
+                    var mapping = new Mapping();
+                    foreach(var level1Mapping in mappingEntry.Mapping) {
+                        mapping[level1Mapping.Key] = level1Mapping.Value.ToDictionary(kv => kv.Key, kv => kv.Value);
+                    }
+                    _stack.Add(mappingEntry.LogicalId, mapping);
+                }
+                break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(entry), entry, "unknown parameter type");
             }

@@ -38,6 +38,7 @@ if [ -z "$1" ]; then
         Function-NoFunctionRegistration.yml \
         Fn-Base64.yml \
         Fn-Cidr.yml \
+        Fn-FindInMap.yml \
         Fn-GetAtt.yml \
         Fn-GetAZs.yml \
         Fn-ImportValue.yml \
@@ -99,7 +100,7 @@ else
     dotnet run -p $LAMBDASHARP/src/MindTouch.LambdaSharp.Tool/MindTouch.LambdaSharp.Tool.csproj -- deploy \
         --verbose:exceptions \
         --tier Test \
-        --cfn-output Results/$1-CF.json \
+        --cfn-output Results/$1.json \
         --dryrun:cloudformation \
         --aws-account-id 123456789012 \
         --aws-region us-east-1 \
