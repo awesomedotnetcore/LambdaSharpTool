@@ -354,6 +354,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     // validation
                     if(node.Value != null) {
                         Validate((node.Allow == null) || (node.Type == null) || ResourceMapping.IsCloudFormationType(node.Type), "'Allow' attribute can only be used with AWS resource types");
+                        Validate(node.If == null, "'If' attribute cannot be used with a referenced resource");
                         if(node.Value is IList<object> values) {
                             foreach(var arn in values) {
                                 ValidateARN(arn);
@@ -377,7 +378,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                             scope: ConvertScope(node.Scope),
                             value: node.Value,
                             allow: node.Allow,
-                        encryptionContext: node.EncryptionContext
+                            encryptionContext: node.EncryptionContext
                         );
                     } else {
                         result = _builder.AddResource(
@@ -394,9 +395,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                             pragmas: node.Pragmas
                         );
                     }
-
-                    // recurse
-                    ConvertEntries(result);
                 });
                 break;
             case "Module":
@@ -477,9 +475,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         scope: ConvertScope(node.Scope),
                         files: files
                     );
-
-                    // recurse
-                    ConvertEntries(result);
                 });
                 break;
             case "Function":

@@ -41,18 +41,7 @@
         * allow custom condition in resources and functions
         * add support for `!Condition`
         * add tests
-    * `Resource` vs. `Variable` for referenced resources
-        ```yaml
-        - Variable: Var
-          Type: AWS::SNS::Topic
-          Value: arn:*
-          Allow: Publish
-
-        - Resource: Res
-          Types: AWS::SNS::Topic
-          Value: arn:*
-          Allow: Publish
-        ```
+    * `If` attribute for `Resource` and `Function` (can be an expression)
     * entry type `Mapping`
         ```yaml
         - Mapping: Map

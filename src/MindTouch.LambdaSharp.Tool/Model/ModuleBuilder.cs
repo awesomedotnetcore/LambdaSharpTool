@@ -408,7 +408,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             _customResourceTypes.Add(customResourceType, properties ?? new ModuleManifestCustomResource());
         }
 
-        public void AddMacro(string macroName, string description, string handler) {
+        public AModuleEntry AddMacro(string macroName, string description, string handler) {
             Validate(Regex.IsMatch(macroName, CLOUDFORMATION_ID_PATTERN), "name is not valid");
 
             // check if a root macros collection needs to be created
@@ -426,7 +426,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             }
 
             // add macro resource
-            AddResource(
+            var result = AddResource(
                 parent: macrosEntry,
                 name: macroName,
                 description: description,
@@ -444,6 +444,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 pragmas: null
             );
             _macroNames.Add(macroName);
+            return result;
         }
 
         public AModuleEntry AddVariable(
@@ -510,7 +511,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             Humidifier.Resource resource,
             string resourceArnAttribute,
             IList<string> dependsOn,
-            string condition,
+            object condition,
             IList<object> pragmas
         ) {
             var result = new ResourceEntry(
@@ -521,10 +522,24 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 resource: resource,
                 resourceArnAttribute: resourceArnAttribute,
                 dependsOn: dependsOn,
-                condition: condition,
+                condition: null,
                 pragmas: pragmas
             );
-            return AddEntry(result);
+            AddEntry(result);
+
+            // add condition
+            if(condition is string conditionName) {
+                result.Condition = conditionName;
+            } else if(condition != null) {
+                var conditionEntry = AddCondition(
+                    parent: result,
+                    name: "If",
+                    description: null,
+                    value: condition
+                );
+                result.Condition = conditionEntry.FullName;
+            }
+            return result;
         }
 
         public AModuleEntry AddResource(
@@ -537,7 +552,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             IDictionary<string, object> properties,
             IList<string> dependsOn,
             string arnAttribute,
-            string condition,
+            object condition,
             IList<object> pragmas
         ) {
 
@@ -675,7 +690,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             string language,
             IDictionary<string, object> environment,
             IList<AFunctionSource> sources,
-            string condition,
+            object condition,
             IList<object> pragmas,
             string timeout,
             string runtime,
@@ -696,7 +711,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 language: language,
                 environment: environment ?? new Dictionary<string, object>(),
                 sources: sources ?? new AFunctionSource[0],
-                condition: condition,
+                condition: null,
                 pragmas: pragmas ?? new object[0],
                 function: new Humidifier.Lambda.Function {
 
@@ -727,6 +742,19 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 }
             );
             AddEntry(function);
+
+            // add condition
+            if(condition is string conditionName) {
+                function.Condition = conditionName;
+            } else if(condition != null) {
+                var conditionEntry = AddCondition(
+                    parent: function,
+                    name: "If",
+                    description: null,
+                    value: condition
+                );
+                function.Condition = conditionEntry.FullName;
+            }
 
             // create nested variable for tracking the package-name
             var packageName = AddVariable(

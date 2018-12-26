@@ -76,6 +76,7 @@ if [ -z "$1" ]; then
         Variable-Secret.yml \
         Function-Finalizer.yml \
         Condition-Resource.yml \
+        Condition-Inline-Resource.yml \
         Condition-Function.yml \
         Condition-Condition.yml \
         ../Runtime/LambdaSharp \

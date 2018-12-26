@@ -106,14 +106,12 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
                 "Properties",
                 "DependsOn",
                 "DefaultAttribute",
-                "Pragmas",
-                "Entries"
+                "Pragmas"
             },
             ["Package"] = new[] {
                 "Description",
                 "Scope",
-                "Files",
-                "Entries"
+                "Files"
             },
 
             // output nodes
@@ -206,7 +204,7 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         /*
          * Resource: string
          * Description: string
-         * If: string
+         * If: string -or- expression
          * Type: string
          * Scope: string -or- list<string>
          * Allow: string or list<string>
@@ -214,10 +212,9 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
          * Properties: map
          * DefaultAttribute: string
          * Pragmas: list<any>
-         * Entries: list<Entry>
          */
         public string Resource { get; set; }
-        public string If { get; set; }
+        public object If { get; set; }
         public object DependsOn { get; set; }
         public string DefaultAttribute { get; set; }
 
