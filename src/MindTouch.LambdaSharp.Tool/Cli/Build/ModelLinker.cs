@@ -441,7 +441,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 }
             }
             foreach(var entry in unused.Values.OrderBy(e => e.FullName)) {
-                Console.WriteLine($"WARNING: '{entry.FullName}' is defined but never used");
+                AddWarning($"'{entry.FullName}' is defined but never used");
 
             }
 

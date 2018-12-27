@@ -42,6 +42,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
         protected static bool HasErrors => Settings.HasErrors;
 
         //--- Class Methods ---
+        protected static void AddWarning(string message)
+            => Settings.AddWarning(message);
+
         protected static void AddError(string message, Exception exception = null)
             => Settings.AddError(message, exception);
 

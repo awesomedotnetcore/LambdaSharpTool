@@ -287,13 +287,13 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 process.WaitForExit();
                 if(process.ExitCode != 0) {
                     if(showWarningOnFailure) {
-                        Console.WriteLine($"WARNING: unable to get git-sha `git rev-parse HEAD` failed with exit code = {process.ExitCode}");
+                        AddWarning($"unable to get git-sha `git rev-parse HEAD` failed with exit code = {process.ExitCode}");
                     }
                     gitsha = null;
                 }
             } catch {
                 if(showWarningOnFailure) {
-                    Console.WriteLine("WARNING: git is not installed; skipping git-sha fingerprint file");
+                    AddWarning("git is not installed; skipping git-sha fingerprint file");
                 }
             }
             return gitsha;

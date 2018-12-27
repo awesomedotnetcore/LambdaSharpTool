@@ -92,6 +92,18 @@ namespace MindTouch.LambdaSharp.Tool {
             }
         }
 
+        protected void AddWarning(string message) {
+            var text = new StringBuilder();
+            text.Append(message);
+            if(_locations.Any()) {
+                text.Append($" @ {LocationPath}");
+            }
+            if(_sourceFilename != null) {
+                text.Append($" [{_sourceFilename}]");
+            }
+            Settings.AddWarning(text.ToString());
+        }
+
         protected void AddError(string message, Exception exception = null) {
             var text = new StringBuilder();
             text.Append(message);

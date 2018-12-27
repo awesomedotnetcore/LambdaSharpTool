@@ -93,6 +93,9 @@ namespace MindTouch.LambdaSharp.Tool {
             }
         }
 
+        public static void AddWarning(string message)
+            => Console.WriteLine("WARNING: " + message);
+
         public static void AddError(string message, Exception exception = null)
             => _errors.Add((Message: message, Exception: exception));
 

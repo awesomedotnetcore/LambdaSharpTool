@@ -1071,7 +1071,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                     if(_dependencies.Values.Any(d => d.Manifest == null)) {
 
                         // NOTE (2018-12-13, bjorg): one or more manifests were not loaded; give the benefit of the doubt
-                        Console.WriteLine($"WARNING: unable to validate properties for {awsType}");
+                        AddWarning($"unable to validate properties for {awsType}");
                     } else {
                         AddError($"unrecognized resource type {awsType}");
                     }

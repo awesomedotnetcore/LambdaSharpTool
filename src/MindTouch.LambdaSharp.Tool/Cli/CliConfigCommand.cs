@@ -160,8 +160,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                             return;
                         }
                     } else if(!existingVersion.IsCompatibleWith(Version)) {
-                        Console.WriteLine();
-                        Console.WriteLine($"WARNING: LambdaSharp CLI is not compatible with v{existingVersion}; use --force-update to proceed anyway");
+                        AddError($"LambdaSharp CLI is not compatible with v{existingVersion}; use --force-update to proceed anyway");
                         return;
                     }
                 }

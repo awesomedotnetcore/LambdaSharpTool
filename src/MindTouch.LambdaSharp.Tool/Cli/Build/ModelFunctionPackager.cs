@@ -245,7 +245,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     try {
                         Directory.Delete(tempDirectory, recursive: true);
                     } catch {
-                        Console.WriteLine($"WARNING: clean-up failed for temporary directory: {tempDirectory}");
+                        AddWarning($"clean-up failed for temporary directory: {tempDirectory}");
                     }
                 }
             }
@@ -425,7 +425,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 if(Settings.VerboseLevel >= VerboseLevel.Exceptions) {
                     AddError(e);
                 } else {
-                    Console.WriteLine("WARNING: unable to validate function entry-point due to an internal error");
+                    AddWarning("unable to validate function entry-point due to an internal error");
                 }
             }
         }

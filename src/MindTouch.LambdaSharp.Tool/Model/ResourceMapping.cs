@@ -183,7 +183,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 return true;
             }
             if(!CloudformationSpec.ResourceTypes.TryGetValue(awsType, out ResourceType resource)) {
-                Console.WriteLine($"WARNING: unable to validate attribute '{attribute}' for resource {awsType}");
+                Settings.AddWarning($"unable to validate attribute '{attribute}' for resource {awsType}");
                 return true;
             }
             return resource.Attributes?.ContainsKey(attribute) == true;
