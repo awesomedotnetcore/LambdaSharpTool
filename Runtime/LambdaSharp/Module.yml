@@ -96,7 +96,9 @@ Entries:
     Description: Rotate KMS key automatically every 365 days
     Default: false
 
+  # Resource Definitions
   - Resource: LoggingStreamRole
+    Description: Role for writing CloudWatch logs to the Kinesis stream
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -117,7 +119,6 @@ Entries:
                 Action: kinesis:PutRecord
                 Resource: !Ref LoggingStreamArn
 
-  # Resource Definitions
   - Resource: DefaultSecretKeyAlias
     Description: Alias for default secrets key
     Type: AWS::KMS::Alias
