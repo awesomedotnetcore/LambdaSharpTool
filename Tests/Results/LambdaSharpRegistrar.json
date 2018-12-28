@@ -72,7 +72,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "3DA8528F317FF9CDEA3BF3C75CB2B700"
+      "Default": "D790F6D748688B65115D3E469AA42762"
     }
   },
   "Resources": {
@@ -668,9 +668,17 @@
               ]
             },
             "STR_FIREHOSE_LOGGINGBUCKET": {
-              "Fn::GetAtt": [
-                "FirehoseLoggingBucket",
-                "Arn"
+              "Fn::If": [
+                "FirehoseIsEnabled",
+                {
+                  "Fn::GetAtt": [
+                    "FirehoseLoggingBucket",
+                    "Arn"
+                  ]
+                },
+                {
+                  "Ref": "AWS::NoValue"
+                }
               ]
             }
           }
@@ -1408,7 +1416,7 @@
       "ModuleName": "LambdaSharpRegistrar",
       "ModuleVersion": "0.5-WIP",
       "RuntimeCheck": true,
-      "Hash": "3DA8528F317FF9CDEA3BF3C75CB2B700",
+      "Hash": "D790F6D748688B65115D3E469AA42762",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [],

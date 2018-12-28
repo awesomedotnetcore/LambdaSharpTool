@@ -40,22 +40,30 @@
         * issue warning if a `Parameter` is never used (but don't garbage collect it!)
     * entry type `Condition`
         * allow custom condition in resources and functions
-        * add support for `!Condition`
-        * add tests
-    * `If` attribute for `Resource` and `Function` (can be an expression)
-        ```yaml
-        - Condition: MyConditionName
-        Value: !And [ !Condition OtherCondition, !Equals [ !Ref Param, "value" ] ]
-        ```
+        * support for `!Condition`
+        * make scoped entries conditional to the resource's condition (otherwise `AWS::NoValue`)
+        * `If` attribute for `Resource` and `Function` entries
+            ```yaml
+            - Condition: MyConditionName
+              Value: !And [ !Condition OtherCondition, !Equals [ !Ref Param, "value" ] ]
+            ```
 
-        used as follows on resources
-        ```yaml
-        - Resource: MyResource
-        If: MyConditionName
-        Type: AWS::Some::Resource
-        Properties:
-            ...
-        ```
+            used as follows on resources
+            ```yaml
+            - Resource: MyResource
+              If: MyConditionName
+              Type: AWS::Some::Resource
+              Properties:
+                ...
+            ```
+        * Can also be an expression
+            ```yaml
+            - Resource: MyResource
+              If: !And [ !Condition OtherCondition, !Equals [ !Ref Param, "value" ] ]
+              Type: AWS::Some::Resource
+              Properties:
+                ...
+            ```
     * entry type `Mapping`
         ```yaml
         - Mapping: RegionMap

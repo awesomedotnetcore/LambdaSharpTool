@@ -77,6 +77,7 @@ if [ -z "$1" ]; then
         Function-Finalizer.yml \
         Condition-Resource.yml \
         Condition-Inline-Resource.yml \
+        Condition-Scoped-Resource.yml \
         Condition-Function.yml \
         Condition-Condition.yml \
         ../Runtime/LambdaSharp \

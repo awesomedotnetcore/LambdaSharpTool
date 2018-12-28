@@ -106,7 +106,13 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         foreach(var scopeEntry in builder.Entries.Where(e => e.Scope.Contains(function.FullName))) {
                             var prefix = scopeEntry.HasSecretType ? "SEC_" : "STR_";
                             var fullEnvName = prefix + scopeEntry.FullName.Replace("::", "_").ToUpperInvariant();
-                            environment[fullEnvName] = (dynamic)scopeEntry.GetExportReference();
+
+                            // check if entry has a condition associated with it
+                            environment[fullEnvName] = (dynamic)(
+                                ((scopeEntry is AResourceEntry resourceEntry) && (resourceEntry.Condition != null))
+                                ? FnIf(resourceEntry.Condition, scopeEntry.GetExportReference(), FnRef("AWS::NoValue"))
+                                : scopeEntry.GetExportReference()
+                            );
                         }
 
                         // add all explicitly listed environment variables
@@ -500,12 +506,13 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 if(fullNameOrResourceName.StartsWith("AWS::", StringComparison.Ordinal)) {
                     return;
                 }
-                var refEntry = _builder.GetEntry(fullNameOrResourceName);
-                if(!reachable.ContainsKey(refEntry.FullName)) {
-                    if(!found.ContainsKey(refEntry.FullName)) {
-                        DebugWriteLine(() => $"REACHED {entry?.FullName ?? "<null>"} -> {refEntry?.FullName ?? "<null>"}");
+                if(_builder.TryGetEntry(fullNameOrResourceName, out AModuleEntry refEntry)) {
+                    if(!reachable.ContainsKey(refEntry.FullName)) {
+                        if(!found.ContainsKey(refEntry.FullName)) {
+                            DebugWriteLine(() => $"REACHED {entry?.FullName ?? "<null>"} -> {refEntry?.FullName ?? "<null>"}");
+                        }
+                        found[refEntry.FullName] = refEntry;
                     }
-                    found[refEntry.FullName] = refEntry;
                 }
             }
         }
