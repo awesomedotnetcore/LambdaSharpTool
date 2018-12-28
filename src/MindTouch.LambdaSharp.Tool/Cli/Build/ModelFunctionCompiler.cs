@@ -408,9 +408,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                             scope: null,
                             resource: new Humidifier.Lambda.Permission {
                                 Action = "lambda:InvokeFunction",
-                                SourceArn = arn,
                                 FunctionName = FnGetAtt(function.ResourceName, "Arn"),
-                                Principal = "sns.amazonaws.com"
+                                Principal = "sns.amazonaws.com",
+                                SourceArn = arn
                             },
                             resourceArnAttribute: null,
                             dependsOn: null,
@@ -466,9 +466,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                             scope: null,
                             resource: new Humidifier.Lambda.Permission {
                                 Action = "lambda:InvokeFunction",
-                                SourceArn = FnGetAtt(schedule.ResourceName, "Arn"),
                                 FunctionName = FnGetAtt(function.ResourceName, "Arn"),
-                                Principal = "events.amazonaws.com"
+                                Principal = "events.amazonaws.com",
+                                SourceArn = FnGetAtt(schedule.ResourceName, "Arn")
                             },
                             resourceArnAttribute: null,
                             dependsOn: null,
@@ -497,10 +497,10 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                             scope: null,
                             resource: new Humidifier.Lambda.Permission {
                                 Action = "lambda:InvokeFunction",
-                                SourceAccount = FnRef("AWS::AccountId"),
-                                SourceArn = arn,
                                 FunctionName = FnGetAtt(function.ResourceName, "Arn"),
-                                Principal = "s3.amazonaws.com"
+                                Principal = "s3.amazonaws.com",
+                                SourceAccount = FnRef("AWS::AccountId"),
+                                SourceArn = arn
                             },
                             resourceArnAttribute: null,
                             dependsOn: null,
