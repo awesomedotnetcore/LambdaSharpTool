@@ -94,9 +94,10 @@
         * now has the option to set a specific bucket name
         * set bucket policy to allow serverless-repo to access the contents
         * prompt for parameters when missing (computes delta of old and new cloudformation template)
-    * BREAKING: `--skip-assembly-validation` is now `--no-assembly-validation` for consistency reasons
+    * BREAKING: changed `--skip-assembly-validation` to `--no-assembly-validation` for consistency reasons
     * `--no-dependency-validation` to disable downloading of dependencies
     * BREAKING: changed `--cf-output` to `--cfn-output`; output can now be a path, in which case the module source name is used as output json
+    * BREAKING: changed `--inputs` to `--parameters` for consistency reasons
 
 * Build Process
     * validate that function entry point exists after compiling assembly
@@ -111,6 +112,9 @@
     * use change-sets for deploying stacks
     * translate custom resource types from `Custom::LambdaSharpRegisterFunction` to `LambdaSharp::Register::Function` when showing the stack update (also resource names)
     * λ# manifest embedded in cloudformation template
+    * before deploying a module/dependency, prompt for any missing parameters
+    * option `--prompt-all` prompts for all missing parameters, including those with default values
+    * option `--prompts-as-errors` causes any prompt to be reported as an error instead
 
 * `MindTouch.LambdaSharp` assembly
     * added `ALambdaFinalizerFunction` base class

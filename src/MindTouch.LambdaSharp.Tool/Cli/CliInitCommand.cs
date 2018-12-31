@@ -62,9 +62,10 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 var versionOption = cmd.Option("--version <VERSION>", "(optional) Specify version for LambdaSharp modules (default: same as CLI version)", CommandOptionType.SingleValue);
                 var localOption = cmd.Option("--local <PATH>", "(optional) Provide a path to a local check-out of the LambdaSharp runtime modules (default: LAMBDASHARP environment variable)", CommandOptionType.SingleValue);
                 var usePublishedOption = cmd.Option("--use-published", "(optional) Force the init command to use the published LambdaSharp runtime modules", CommandOptionType.NoValue);
-                var inputsFileOption = cmd.Option("--inputs|-I <FILE>", "(optional) Specify filename to read module inputs from (default: none)", CommandOptionType.SingleValue);
-                var inputOption = cmd.Option("--input|-KV <KEY>=<VALUE>", "(optional) Specify module input key-value pair (can be used multiple times)", CommandOptionType.MultipleValue);
+                var parametersFileOption = cmd.Option("--parameters <FILE>", "(optional) Specify source filename for module parameters (default: none)", CommandOptionType.SingleValue);
                 var forcePublishOption = CliBuildPublishDeployCommand.AddForcePublishOption(cmd);
+                var promptAllParametersOption = cmd.Option("--prompt-all", "(optional) Prompt for all missing parameters values (default: only prompt for missing parameters with no default value)", CommandOptionType.NoValue);
+                var promptsAsErrorsOption = cmd.Option("--prompts-as-errors", "(optional) Missing parameters cause an error instead of a prompts (use for CI/CD to avoid unattended prompts)", CommandOptionType.NoValue);
                 var initSettingsCallback = CreateSettingsInitializer(cmd);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
@@ -75,18 +76,10 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
                     // reading module inputs
                     var inputs = new Dictionary<string, string>();
-                    if(inputsFileOption.HasValue()) {
-                        inputs = CliBuildPublishDeployCommand.ReadInputParametersFiles(settings, inputsFileOption.Value());
+                    if(parametersFileOption.HasValue()) {
+                        inputs = CliBuildPublishDeployCommand.ReadInputParametersFiles(settings, parametersFileOption.Value());
                         if(HasErrors) {
                             return;
-                        }
-                    }
-                    foreach(var inputKeyValue in inputOption.Values) {
-                        var keyValue = inputKeyValue.Split('=', 2);
-                        if(keyValue.Length != 2) {
-                            AddError($"bad format for input parameter: {inputKeyValue}");
-                        } else {
-                            inputs[keyValue[0]] = keyValue[1];
                         }
                     }
                     if(HasErrors) {
@@ -102,7 +95,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         versionOption.HasValue() ? VersionInfo.Parse(versionOption.Value()) : Version,
                         localOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP"),
                         inputs,
-                        forcePublishOption.HasValue()
+                        forcePublishOption.HasValue(),
+                        promptAllParametersOption.HasValue(),
+                        promptsAsErrorsOption.HasValue()
                     );
                 });
             });
@@ -116,7 +111,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             VersionInfo version,
             string lambdaSharpPath,
             Dictionary<string, string> inputs,
-            bool forcePublish
+            bool forcePublish,
+            bool promptAllParameters,
+            bool promptsAsErrors
         ) {
             var command = new CliBuildPublishDeployCommand();
             Console.WriteLine($"Creating new deployment tier '{settings.Tier}'");
@@ -164,7 +161,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 allowDataLoos: allowDataLoos,
                 protectStack: protectStack,
                 inputs: inputs,
-                forceDeploy: forceDeploy
+                forceDeploy: forceDeploy,
+                promptAllParameters: promptAllParameters,
+                promptsAsErrors: promptsAsErrors
             );
         }
     }

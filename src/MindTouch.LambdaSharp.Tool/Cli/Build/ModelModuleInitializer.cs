@@ -139,7 +139,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 // add LambdaSharp Module Internal resource imports
                 var lambdasharp = _builder.AddImport(
                     import: "LambdaSharp",
-                    description: "LambdaSharp Dependencies"
+                    description: "LambdaSharp Runtime Imports"
                 );
                 _builder.AddParameter(
                     parent: lambdasharp,

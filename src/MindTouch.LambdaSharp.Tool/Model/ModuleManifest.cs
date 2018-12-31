@@ -29,12 +29,13 @@ namespace MindTouch.LambdaSharp.Tool.Model {
     public class ModuleManifest {
 
         //--- Constants ---
-        public const string CurrentVersion = "2018-12-17";
+        public const string CurrentVersion = "2018-12-31";
 
         //--- Properties ---
         public string Version { get; set; } = CurrentVersion;
         public string ModuleName { get; set; }
         public string ModuleVersion { get; set; }
+        public IList<ModuleManifestParameterSection> ParameterSections { get; set; }
         public bool RuntimeCheck { get; set; }
         public string Hash { get; set; }
         public string GitSha { get; set; }
@@ -67,5 +68,22 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public VersionInfo MinVersion { get; set; }
         public VersionInfo MaxVersion { get; set; }
         public string BucketName { get; set; }
+    }
+
+    public class ModuleManifestParameterSection {
+
+        //--- Properties ---
+        public string Title { get; set; }
+        public IList<ModuleManifestParameter> Parameters { get; set; }
+    }
+
+    public class ModuleManifestParameter {
+
+        //--- Properties ---
+        public string Name { get; set; }
+        public string Type { get; set; }
+        public string Description { get; set; }
+        public string Label { get; set; }
+        public string Default { get; set; }
     }
 }

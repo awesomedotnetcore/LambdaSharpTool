@@ -26,6 +26,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Amazon.CloudFormation;
 using Amazon.CloudFormation.Model;
+using McMaster.Extensions.CommandLineUtils;
 using MindTouch.LambdaSharp.Tool.Model;
 
 namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
@@ -57,8 +58,10 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
             string instanceName,
             bool allowDataLoos,
             bool protectStack,
-            Dictionary<string, string> inputs,
-            bool forceDeploy
+            Dictionary<string, string> parameters,
+            bool forceDeploy,
+            bool promptAllParameters,
+            bool promptsAsErrors
         ) {
             Console.WriteLine($"Resolving module reference: {moduleReference}");
 
@@ -101,10 +104,23 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
                     }
                 }
 
+                // prompt for missing parameters
+                parameters = PromptModuleParameters(manifest, parameters, promptAllParameters, promptsAsErrors);
+                if(HasErrors) {
+                    return false;
+                }
+
                 // discover dependencies for deployment
                 IEnumerable<Tuple<ModuleManifest, ModuleLocation>> dependencies = Enumerable.Empty<Tuple<ModuleManifest, ModuleLocation>>();
                 if(manifest.Dependencies.Any()) {
                     dependencies = await DiscoverDependenciesAsync(manifest);
+                    if(HasErrors) {
+                        return false;
+                    }
+                    var dependenciesParameters = new Dictionary<string, Dictionary<string, string>>();
+                    foreach(var dependency in dependencies) {
+                        dependenciesParameters[dependency.Item1.ModuleName] = PromptModuleParameters(dependency.Item1, promptAll: promptAllParameters, promptsAsErrors: promptsAsErrors);
+                    }
                     if(HasErrors) {
                         return false;
                     }
@@ -115,9 +131,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
                             ToStackName(dependency.Item1.ModuleName),
                             allowDataLoos,
                             protectStack,
-
-                            // TODO (2018-12-11, bjorg): allow interactive mode to deploy dependencies with parameters
-                            new Dictionary<string, string>()
+                            dependenciesParameters[dependency.Item1.ModuleName]
                         )) {
                             return false;
                         }
@@ -129,7 +143,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
                     stackName,
                     allowDataLoos,
                     protectStack,
-                    inputs
+                    parameters
                 );
             }
             return true;
@@ -301,6 +315,46 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
 
                 // stack doesn't exist
                 return null;
+            }
+        }
+
+        private Dictionary<string, string> PromptModuleParameters(ModuleManifest manifest, Dictionary<string, string> existing = null, bool promptAll = false, bool promptsAsErrors = false) {
+            var result = (existing != null)
+                ? new Dictionary<string, string>(existing)
+                : new Dictionary<string, string>();
+
+            // check if module requires any prompts
+            if(manifest.ParameterSections.SelectMany(group => group.Parameters).Any(RequiresPrompt)) {
+                Console.WriteLine($"Configuring module {manifest.ModuleName} (v{manifest.ModuleVersion})");
+
+                // only list parameter sections that contain a parameter that requires a prompt
+                foreach(var parameterGroup in manifest.ParameterSections.Where(group => group.Parameters.Any(RequiresPrompt))) {
+                    Console.WriteLine($"* {parameterGroup.Title}");
+
+                    // only prompt for required parameters
+                    foreach(var parameter in parameterGroup.Parameters.Where(RequiresPrompt)) {
+                        var prompt = $"=> {parameter.Label ?? parameter.Name}";
+                        if(parameter.Description != null) {
+                            prompt += $": {parameter.Description}=";
+                        }
+                        var enteredValue = Prompt.GetString(prompt, parameter.Default) ?? "";
+                        result[parameter.Name] = enteredValue;
+                    }
+                }
+                Console.WriteLine();
+            }
+            return result;
+
+            // local functions
+            bool RequiresPrompt(ModuleManifestParameter parameter) {
+                if((existing?.ContainsKey(parameter.Name) == true) || (!promptAll && (parameter.Default != null))) {
+                    return false;
+                }
+                if(promptsAsErrors) {
+                    AddError($"{manifest.ModuleName} requires value for parameter '{parameter.Name}'");
+                    return false;
+                }
+                return true;
             }
         }
 

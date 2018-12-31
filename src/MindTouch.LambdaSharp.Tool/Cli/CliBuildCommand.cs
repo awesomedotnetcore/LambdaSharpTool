@@ -52,13 +52,13 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             => cmd.Option("--no-dependency-validation", "(optional) Disable validating LambdaSharp module dependencies", CommandOptionType.NoValue);
 
         public static CommandOption AddBuildConfigurationOption(CommandLineApplication cmd)
-            => cmd.Option("-c|--configuration <CONFIGURATION>", "(optional) Build configuration for function projects (default: \"Release\")", CommandOptionType.SingleValue);
+            => cmd.Option("--configuration|-c <CONFIGURATION>", "(optional) Build configuration for function projects (default: \"Release\")", CommandOptionType.SingleValue);
 
         public static CommandOption AddGitShaOption(CommandLineApplication cmd)
             => cmd.Option("--gitsha <VALUE>", "(optional) GitSha of most recent git commit (default: invoke `git rev-parse HEAD` command)", CommandOptionType.SingleValue);
 
         public static CommandOption AddOutputPathOption(CommandLineApplication cmd)
-            => cmd.Option("-o|--output <DIRECTORY>", "(optional) Path to output directory (default: bin)", CommandOptionType.SingleValue);
+            => cmd.Option("--output|-o <DIRECTORY>", "(optional) Path to output directory (default: bin)", CommandOptionType.SingleValue);
 
         public static CommandOption AddSelectorOption(CommandLineApplication cmd)
             => cmd.Option("--selector <NAME>", "(optional) Selector for resolving conditional compilation choices in module", CommandOptionType.SingleValue);
@@ -320,11 +320,12 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 // deploy options
                 var publishedModulesArgument = cmd.Argument("<NAME>", "(optional) Published module name, or path to assets folder, or module definition/folder (default: Module.yml)", multipleValues: true);
                 var alternativeNameOption = cmd.Option("--name <NAME>", "(optional) Specify an alternative module name for the deployment (default: module name)", CommandOptionType.SingleValue);
-                var inputsFileOption = cmd.Option("--inputs|-I <FILE>", "(optional) Specify filename to read module inputs from (default: none)", CommandOptionType.SingleValue);
-                var inputOption = cmd.Option("--input|-KV <KEY>=<VALUE>", "(optional) Specify module input key-value pair (can be used multiple times)", CommandOptionType.MultipleValue);
+                var parametersFileOption = cmd.Option("--parameters <FILE>", "(optional) Specify source filename for module parameters (default: none)", CommandOptionType.SingleValue);
                 var allowDataLossOption = cmd.Option("--allow-data-loss", "(optional) Allow CloudFormation resource update operations that could lead to data loss", CommandOptionType.NoValue);
                 var protectStackOption = cmd.Option("--protect", "(optional) Enable termination protection for the deployed module", CommandOptionType.NoValue);
                 var forceDeployOption = cmd.Option("--force-deploy", "(optional) Force module deployment", CommandOptionType.NoValue);
+                var promptAllParametersOption = cmd.Option("--prompt-all", "(optional) Prompt for all missing parameters values (default: only prompt for missing parameters with no default value)", CommandOptionType.NoValue);
+                var promptsAsErrorsOption = cmd.Option("--prompts-as-errors", "(optional) Missing parameters cause an error instead of a prompts (use for CI/CD to avoid unattended prompts)", CommandOptionType.NoValue);
 
                 // publish options
                 var forcePublishOption = AddForcePublishOption(cmd);
@@ -362,18 +363,10 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
                     // reading module inputs
                     var inputs = new Dictionary<string, string>();
-                    if(inputsFileOption.HasValue()) {
-                        inputs = ReadInputParametersFiles(settings, inputsFileOption.Value());
+                    if(parametersFileOption.HasValue()) {
+                        inputs = ReadInputParametersFiles(settings, parametersFileOption.Value());
                         if(HasErrors) {
                             return;
-                        }
-                    }
-                    foreach(var inputKeyValue in inputOption.Values) {
-                        var keyValue = inputKeyValue.Split('=', 2);
-                        if(keyValue.Length != 2) {
-                            AddError($"bad format for input parameter: {inputKeyValue}");
-                        } else {
-                            inputs[keyValue[0]] = keyValue[1];
                         }
                     }
                     if(HasErrors) {
@@ -439,7 +432,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                                 allowDataLossOption.HasValue(),
                                 protectStackOption.HasValue(),
                                 inputs,
-                                forceDeployOption.HasValue()
+                                forceDeployOption.HasValue(),
+                                promptAllParametersOption.HasValue(),
+                                promptsAsErrorsOption.HasValue()
                             )) {
                                 break;
                             }
@@ -495,7 +490,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             bool allowDataLoos,
             bool protectStack,
             Dictionary<string, string> inputs,
-            bool forceDeploy
+            bool forceDeploy,
+            bool promptAllParameters,
+            bool promptsAsErrors
         ) {
             try {
                 await PopulateToolSettingsAsync(settings);
@@ -513,7 +510,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     allowDataLoos,
                     protectStack,
                     inputs,
-                    forceDeploy
+                    forceDeploy,
+                    promptAllParameters,
+                    promptsAsErrors
                 );
             } catch(Exception e) {
                 AddError(e);

@@ -93,6 +93,19 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             _stack.AddTemplateMetadata("LambdaSharp::Manifest", new ModuleManifest {
                 ModuleName = module.Name,
                 ModuleVersion = module.Version.ToString(),
+                ParameterSections = inputParameters
+                    .GroupBy(input => input.Section)
+                    .Where(group => group.Key != "LambdaSharp Deployment Settings (DO NOT MODIFY)")
+                    .Select(group => new ModuleManifestParameterSection {
+                        Title = group.Key,
+                        Parameters = group.Select(input => new ModuleManifestParameter {
+                            Name = input.Name,
+                            Type = input.Type,
+                            Description = input.Description,
+                            Label = input.Label,
+                            Default = input.Parameter.Default
+                        }).ToList()
+                    }).ToList(),
                 RuntimeCheck = module.HasRuntimeCheck,
                 Hash = templateHash,
                 GitSha = gitSha ?? "",
