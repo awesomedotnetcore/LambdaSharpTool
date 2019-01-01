@@ -64,7 +64,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
             string stackName,
             bool allowDataLoss,
             bool protectStack,
-            Dictionary<string, string> inputs
+            List<CloudFormationParameter> parameters
         ) {
             var now = DateTime.UtcNow;
 
@@ -76,28 +76,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
             var notificationArns =  new List<string>();
             if(Settings.DeploymentNotificationsTopicArn != null) {
                 notificationArns.Add(Settings.DeploymentNotificationsTopicArn);
-            }
-
-            // initialize template parameters
-            var parameters = new List<CloudFormationParameter> {
-                new CloudFormationParameter {
-                    ParameterKey = "DeploymentPrefix",
-                    ParameterValue = string.IsNullOrEmpty(Settings.Tier) ? "" : Settings.Tier + "-"
-                },
-                new CloudFormationParameter {
-                    ParameterKey = "DeploymentPrefixLowercase",
-                    ParameterValue = string.IsNullOrEmpty(Settings.Tier) ? "" : Settings.Tier.ToLowerInvariant() + "-"
-                },
-                new CloudFormationParameter {
-                    ParameterKey = "DeploymentBucketName",
-                    ParameterValue = location.BucketName ?? ""
-                }
-            };
-            foreach(var input in inputs) {
-                parameters.Add(new CloudFormationParameter {
-                    ParameterKey = input.Key,
-                    ParameterValue = input.Value
-                });
             }
 
             // validate template
@@ -120,7 +98,20 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
                 ChangeSetType = (mostRecentStackEventId != null) ? ChangeSetType.UPDATE : ChangeSetType.CREATE,
                 Description = $"Stack {updateOrCreate} {location.ModuleName} (v{location.ModuleVersion})",
                 NotificationARNs = notificationArns,
-                Parameters = parameters,
+                Parameters = new List<CloudFormationParameter>(parameters) {
+                    new CloudFormationParameter {
+                        ParameterKey = "DeploymentPrefix",
+                        ParameterValue = string.IsNullOrEmpty(Settings.Tier) ? "" : Settings.Tier + "-"
+                    },
+                    new CloudFormationParameter {
+                        ParameterKey = "DeploymentPrefixLowercase",
+                        ParameterValue = string.IsNullOrEmpty(Settings.Tier) ? "" : Settings.Tier.ToLowerInvariant() + "-"
+                    },
+                    new CloudFormationParameter {
+                        ParameterKey = "DeploymentBucketName",
+                        ParameterValue = location.BucketName ?? ""
+                    }
+                },
                 StackName = stackName,
                 TemplateURL = templateUrl
             });

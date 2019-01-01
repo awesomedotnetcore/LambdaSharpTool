@@ -30,6 +30,8 @@ using McMaster.Extensions.CommandLineUtils;
 using MindTouch.LambdaSharp.Tool.Model;
 
 namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
+    using CloudFormationStack = Amazon.CloudFormation.Model.Stack;
+    using CloudFormationParameter = Amazon.CloudFormation.Model.Parameter;
 
     public class DeployStep : AModelProcessor {
 
@@ -97,103 +99,114 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
                 var stackName = ToStackName(manifest.ModuleName, instanceName);
 
                 // check version of previously deployed module
+                CloudFormationStack existing = null;
                 if(!forceDeploy) {
                     Console.WriteLine($"=> Validating module for deployment tier");
-                    if(!await IsValidModuleUpdateAsync(stackName, manifest)) {
+                    var updateValidation = await IsValidModuleUpdateAsync(stackName, manifest);
+                    if(!updateValidation.Success) {
                         return false;
                     }
+                    existing = updateValidation.ExistingStack;
                 }
 
                 // prompt for missing parameters
-                parameters = PromptModuleParameters(manifest, parameters, promptAllParameters, promptsAsErrors);
+                var deployParameters = PromptModuleParameters(manifest, existing, parameters, promptAllParameters, promptsAsErrors);
                 if(HasErrors) {
                     return false;
                 }
 
-                // discover dependencies for deployment
-                IEnumerable<Tuple<ModuleManifest, ModuleLocation>> dependencies = Enumerable.Empty<Tuple<ModuleManifest, ModuleLocation>>();
-                if(manifest.Dependencies.Any()) {
-                    dependencies = await DiscoverDependenciesAsync(manifest);
-                    if(HasErrors) {
+                // discover and deploy module dependencies
+                var dependencies = await DiscoverDependenciesAsync(manifest);
+                if(HasErrors) {
+                    return false;
+                }
+                var dependenciesParameters = dependencies
+                    .Select(dependency => new {
+                        ModuleName = dependency.Manifest.ModuleName,
+                        Parameters = PromptModuleParameters(
+                            dependency.Manifest,
+                            promptAll: promptAllParameters,
+                            promptsAsErrors: promptsAsErrors
+                        )
+                    })
+                    .ToDictionary(t => t.ModuleName, t => t.Parameters);
+                if(HasErrors) {
+                    return false;
+                }
+                foreach(var dependency in dependencies) {
+                    if(!await new ModelUpdater(Settings, dependency.Location.ToModuleReference()).DeployChangeSetAsync(
+                        dependency.Manifest,
+                        dependency.Location,
+                        ToStackName(dependency.Manifest.ModuleName),
+                        allowDataLoos,
+                        protectStack,
+                        dependenciesParameters[dependency.Manifest.ModuleName]
+                    )) {
                         return false;
-                    }
-                    var dependenciesParameters = new Dictionary<string, Dictionary<string, string>>();
-                    foreach(var dependency in dependencies) {
-                        dependenciesParameters[dependency.Item1.ModuleName] = PromptModuleParameters(dependency.Item1, promptAll: promptAllParameters, promptsAsErrors: promptsAsErrors);
-                    }
-                    if(HasErrors) {
-                        return false;
-                    }
-                    foreach(var dependency in dependencies) {
-                        if(!await new ModelUpdater(Settings, dependency.Item2.ToModuleReference()).DeployChangeSetAsync(
-                            dependency.Item1,
-                            dependency.Item2,
-                            ToStackName(dependency.Item1.ModuleName),
-                            allowDataLoos,
-                            protectStack,
-                            dependenciesParameters[dependency.Item1.ModuleName]
-                        )) {
-                            return false;
-                        }
                     }
                 }
+
+                // deploy module
                 return await new ModelUpdater(Settings, moduleReference).DeployChangeSetAsync(
                     manifest,
                     location,
                     stackName,
                     allowDataLoos,
                     protectStack,
-                    parameters
+                    deployParameters
                 );
             }
             return true;
         }
 
-        private async Task<bool> IsValidModuleUpdateAsync(string stackName, ModuleManifest manifest) {
+        private async Task<(bool Success, CloudFormationStack ExistingStack)> IsValidModuleUpdateAsync(string stackName, ModuleManifest manifest) {
             try {
+
+                // check if the module was already deployed
                 var describe = await Settings.CfnClient.DescribeStacksAsync(new DescribeStacksRequest {
                     StackName = stackName
                 });
-
-                // TODO (2018-12-22, bjorg): prompt for missing module parameters
-
-                var deployedOutputs = describe.Stacks.FirstOrDefault()?.Outputs;
+                var existing = describe.Stacks.FirstOrDefault();
+                var deployedOutputs = existing?.Outputs;
                 var deployedName = deployedOutputs?.FirstOrDefault(output => output.OutputKey == "ModuleName")?.OutputValue;
                 var deployedVersionText = deployedOutputs?.FirstOrDefault(output => output.OutputKey == "ModuleVersion")?.OutputValue;
+
+                // validate existing module deployment
                 if(deployedName == null) {
                     AddError("unable to determine the name of the deployed module; use --force-deploy to proceed anyway");
-                    return false;
+                    return (false, existing);
                 }
                 if(deployedName != manifest.ModuleName) {
                     AddError($"deployed module name ({deployedName}) does not match {manifest.ModuleName}; use --force-deploy to proceed anyway");
-                    return false;
+                    return (false, existing);
                 }
                 if(
                     (deployedVersionText == null)
                     || !VersionInfo.TryParse(deployedVersionText, out VersionInfo deployedVersion)
                 ) {
                     AddError("unable to determine the version of the deployed module; use --force-deploy to proceed anyway");
-                    return false;
+                    return (false, existing);
                 }
                 if(deployedVersion > VersionInfo.Parse(manifest.ModuleVersion)) {
                     AddError($"deployed module version (v{deployedVersionText}) is newer than v{manifest.ModuleVersion}; use --force-deploy to proceed anyway");
-                    return false;
+                    return (false, existing);
                 }
+                return (true, existing);
             } catch(AmazonCloudFormationException) {
 
                 // stack doesn't exist
             }
-            return true;
+            return (true, null);
         }
 
-        private async Task<IEnumerable<Tuple<ModuleManifest, ModuleLocation>>> DiscoverDependenciesAsync(ModuleManifest manifest) {
+        private async Task<IEnumerable<(ModuleManifest Manifest, ModuleLocation Location)>> DiscoverDependenciesAsync(ModuleManifest manifest) {
             var deployments = new List<DependencyRecord>();
             var existing = new List<DependencyRecord>();
             var inProgress = new List<DependencyRecord>();
 
             // create a topological sort of dependencies
             await Recurse(manifest);
-            return deployments.Select(tuple => Tuple.Create(tuple.Manifest, tuple.Location)).ToList();
+            return deployments.Select(tuple => (tuple.Manifest, tuple.Location)).ToList();
 
             // local functions
             async Task Recurse(ModuleManifest current) {
@@ -318,13 +331,40 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
             }
         }
 
-        private Dictionary<string, string> PromptModuleParameters(ModuleManifest manifest, Dictionary<string, string> existing = null, bool promptAll = false, bool promptsAsErrors = false) {
-            var result = (existing != null)
-                ? new Dictionary<string, string>(existing)
-                : new Dictionary<string, string>();
+        private List<CloudFormationParameter> PromptModuleParameters(
+            ModuleManifest manifest,
+            CloudFormationStack existing = null,
+            Dictionary<string, string> parameters = null,
+            bool promptAll = false,
+            bool promptsAsErrors = false
+        ) {
+            var stackParameters = new Dictionary<string, CloudFormationParameter>();
+
+            // tentatively indicate to reuse previous parameter values
+            if(existing != null) {
+                foreach(var parameter in manifest.ParameterSections
+                    .SelectMany(section => section.Parameters)
+                    .Where(moduleParameter => existing.Parameters.Any(existingParameter => existingParameter.ParameterKey == moduleParameter.Name))
+                ) {
+                    stackParameters[parameter.Name] = new CloudFormationParameter {
+                        ParameterKey = parameter.Name,
+                        UsePreviousValue = true
+                    };
+                }
+            }
+
+            // add all provided parameters
+            if(parameters != null) {
+                foreach(var parameter in parameters) {
+                    stackParameters[parameter.Key] = new CloudFormationParameter {
+                        ParameterKey = parameter.Key,
+                        ParameterValue = parameter.Value
+                    };
+                }
+            }
 
             // check if module requires any prompts
-            if(manifest.ParameterSections.SelectMany(group => group.Parameters).Any(RequiresPrompt)) {
+            if(manifest.ParameterSections.SelectMany(section => section.Parameters).Any(RequiresPrompt)) {
                 Console.WriteLine($"Configuring module {manifest.ModuleName} (v{manifest.ModuleVersion})");
 
                 // only list parameter sections that contain a parameter that requires a prompt
@@ -338,17 +378,34 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
                             prompt += $": {parameter.Description}=";
                         }
                         var enteredValue = Prompt.GetString(prompt, parameter.Default) ?? "";
-                        result[parameter.Name] = enteredValue;
+                        stackParameters[parameter.Name] = new CloudFormationParameter {
+                            ParameterKey = parameter.Name,
+                            ParameterValue = enteredValue
+                        };
                     }
                 }
                 Console.WriteLine();
             }
-            return result;
+            return stackParameters.Values.ToList();
 
             // local functions
             bool RequiresPrompt(ModuleManifestParameter parameter) {
-                if((existing?.ContainsKey(parameter.Name) == true) || (!promptAll && (parameter.Default != null))) {
+                if(parameters?.ContainsKey(parameter.Name) == true) {
+
+                    // no prompt since parameter is provided explicitly
                     return false;
+                }
+                if(!promptAll) {
+                    if(existing?.Parameters.Any(p => p.ParameterKey == parameter.Name) == true) {
+
+                        // no prompt since we can reuse the previous parameter value
+                        return false;
+                    }
+                    if(parameter.Default != null) {
+
+                        // no prompt since parameter has a default value
+                        return false;
+                    }
                 }
                 if(promptsAsErrors) {
                     AddError($"{manifest.ModuleName} requires value for parameter '{parameter.Name}'");
