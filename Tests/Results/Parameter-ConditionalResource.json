@@ -59,7 +59,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "446CFC31D61C709356EC80E378B85698"
+      "Default": "A95051432C48CCE553480A8E452AE76B"
     }
   },
   "Resources": {
@@ -728,7 +728,7 @@
         },
         {
           "Label": {
-            "default": "LambdaSharp Dependencies"
+            "default": "LambdaSharp Runtime Imports"
           },
           "Parameters": [
             "LambdaSharpDeadLetterQueueArn",
@@ -752,11 +752,69 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2018-12-17",
+      "Version": "2018-12-31",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
+      "ParameterSections": [
+        {
+          "Title": "Resource Input Parameters",
+          "Parameters": [
+            {
+              "Name": "ConditionalResourceInputParameterOrCreate",
+              "Type": "AWS::SNS::Topic",
+              "Label": "Conditional Resource Input Parameter Or Create",
+              "Default": ""
+            }
+          ]
+        },
+        {
+          "Title": "LambdaSharp Module Options",
+          "Parameters": [
+            {
+              "Name": "Secrets",
+              "Type": "String",
+              "Description": "Comma-separated list of optional secret keys",
+              "Label": "Secret Keys (ARNs)",
+              "Default": ""
+            }
+          ]
+        },
+        {
+          "Title": "LambdaSharp Runtime Imports",
+          "Parameters": [
+            {
+              "Name": "DeadLetterQueueArn",
+              "Type": "String",
+              "Description": "Dead letter queue for functions",
+              "Label": "Dead Letter Queue (ARN)",
+              "Default": "$LambdaSharp::DeadLetterQueueArn"
+            },
+            {
+              "Name": "LoggingStreamArn",
+              "Type": "String",
+              "Description": "Logging kinesis stream for functions",
+              "Label": "Logging Stream (ARN)",
+              "Default": "$LambdaSharp::LoggingStreamArn"
+            },
+            {
+              "Name": "LoggingStreamRoleArn",
+              "Type": "String",
+              "Description": "Role for logging to kinesis stream for functions",
+              "Label": "Logging Stream Role (ARN)",
+              "Default": "$LambdaSharp::LoggingStreamRoleArn"
+            },
+            {
+              "Name": "DefaultSecretKeyArn",
+              "Type": "String",
+              "Description": "Default secret key for functions",
+              "Label": "Secret Key (ARN)",
+              "Default": "$LambdaSharp::DefaultSecretKeyArn"
+            }
+          ]
+        }
+      ],
       "RuntimeCheck": true,
-      "Hash": "446CFC31D61C709356EC80E378B85698",
+      "Hash": "A95051432C48CCE553480A8E452AE76B",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [

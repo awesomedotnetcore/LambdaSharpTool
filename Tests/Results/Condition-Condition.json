@@ -30,7 +30,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "1367A2EFFBE6B9B41AE9A15D8E3503BD"
+      "Default": "DBA72DA3DF9B54655173F1056E34B4A7"
     }
   },
   "Resources": {
@@ -148,11 +148,35 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2018-12-17",
+      "Version": "2018-12-31",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
+      "ParameterSections": [
+        {
+          "Title": "Module Settings",
+          "Parameters": [
+            {
+              "Name": "MyParameter",
+              "Type": "String",
+              "Label": "My Parameter"
+            }
+          ]
+        },
+        {
+          "Title": "LambdaSharp Module Options",
+          "Parameters": [
+            {
+              "Name": "Secrets",
+              "Type": "String",
+              "Description": "Comma-separated list of optional secret keys",
+              "Label": "Secret Keys (ARNs)",
+              "Default": ""
+            }
+          ]
+        }
+      ],
       "RuntimeCheck": true,
-      "Hash": "1367A2EFFBE6B9B41AE9A15D8E3503BD",
+      "Hash": "DBA72DA3DF9B54655173F1056E34B4A7",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [

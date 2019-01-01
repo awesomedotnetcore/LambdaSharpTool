@@ -52,7 +52,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "C7E49D6EA23E29D2D09C870B2EFB419B"
+      "Default": "31A892D44BF593DDB97A5285E836B235"
     }
   },
   "Resources": {
@@ -362,11 +362,65 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2018-12-17",
+      "Version": "2018-12-31",
       "ModuleName": "LambdaSharp",
       "ModuleVersion": "0.5-WIP",
+      "ParameterSections": [
+        {
+          "Title": "LambdaSharp Tier Settings",
+          "Parameters": [
+            {
+              "Name": "DeadLetterQueueArn",
+              "Type": "AWS::SQS::Queue",
+              "Description": "Dead letter queue for functions (leave blank to create a new queue)",
+              "Label": "Dead Letter Queue (ARN)",
+              "Default": ""
+            },
+            {
+              "Name": "LoggingStreamArn",
+              "Type": "AWS::Kinesis::Stream",
+              "Description": "Logging kinesis stream for functions (leave blank to create a new stream)",
+              "Label": "Logging Stream (ARN)",
+              "Default": ""
+            },
+            {
+              "Name": "LoggingStreamRetentionPeriod",
+              "Type": "String",
+              "Description": "How long logging stream entries are kept before they are lost",
+              "Label": "Retention period (hours)",
+              "Default": "24"
+            },
+            {
+              "Name": "DefaultSecretKeyArn",
+              "Type": "AWS::KMS::Key",
+              "Description": "Default secret key for functions (leave blank to create a new key)",
+              "Label": "Default Secret Key (ARN)",
+              "Default": ""
+            },
+            {
+              "Name": "DefaultSecretKeyRotationEnabled",
+              "Type": "String",
+              "Description": "Rotate KMS key automatically every 365 days",
+              "Label": "Enable key rotation",
+              "Default": "false"
+            }
+          ]
+        },
+        {
+          "Title": "LambdaSharp Module Options",
+          "Parameters": [
+            {
+              "Name": "Secrets",
+              "Type": "String",
+              "Description": "Comma-separated list of optional secret keys",
+              "Label": "Secret Keys (ARNs)",
+              "Default": ""
+            }
+          ]
+        }
+      ],
       "RuntimeCheck": false,
-      "Hash": "C7E49D6EA23E29D2D09C870B2EFB419B",
+      "Hash": "31A892D44BF593DDB97A5285E836B235",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [],

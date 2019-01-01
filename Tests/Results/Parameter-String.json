@@ -64,7 +64,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "7A9AEC810941BDE79533987EDC70A4F4"
+      "Default": "ACC56456DAF6379E4A2705EC3E1E9AC9"
     }
   },
   "Resources": {
@@ -701,7 +701,7 @@
         },
         {
           "Label": {
-            "default": "LambdaSharp Dependencies"
+            "default": "LambdaSharp Runtime Imports"
           },
           "Parameters": [
             "LambdaSharpDeadLetterQueueArn",
@@ -725,11 +725,76 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2018-12-17",
+      "Version": "2018-12-31",
       "ModuleName": "TestModule",
       "ModuleVersion": "1.0",
+      "ParameterSections": [
+        {
+          "Title": "Plain Input Parameters",
+          "Parameters": [
+            {
+              "Name": "InputParameter",
+              "Type": "String",
+              "Description": "required input parameter",
+              "Label": "Input Parameter"
+            },
+            {
+              "Name": "InputParameterWithDefault",
+              "Type": "String",
+              "Description": "input parameter with a default value",
+              "Label": "Input Parameter With Default",
+              "Default": "a default value"
+            }
+          ]
+        },
+        {
+          "Title": "LambdaSharp Module Options",
+          "Parameters": [
+            {
+              "Name": "Secrets",
+              "Type": "String",
+              "Description": "Comma-separated list of optional secret keys",
+              "Label": "Secret Keys (ARNs)",
+              "Default": ""
+            }
+          ]
+        },
+        {
+          "Title": "LambdaSharp Runtime Imports",
+          "Parameters": [
+            {
+              "Name": "DeadLetterQueueArn",
+              "Type": "String",
+              "Description": "Dead letter queue for functions",
+              "Label": "Dead Letter Queue (ARN)",
+              "Default": "$LambdaSharp::DeadLetterQueueArn"
+            },
+            {
+              "Name": "LoggingStreamArn",
+              "Type": "String",
+              "Description": "Logging kinesis stream for functions",
+              "Label": "Logging Stream (ARN)",
+              "Default": "$LambdaSharp::LoggingStreamArn"
+            },
+            {
+              "Name": "LoggingStreamRoleArn",
+              "Type": "String",
+              "Description": "Role for logging to kinesis stream for functions",
+              "Label": "Logging Stream Role (ARN)",
+              "Default": "$LambdaSharp::LoggingStreamRoleArn"
+            },
+            {
+              "Name": "DefaultSecretKeyArn",
+              "Type": "String",
+              "Description": "Default secret key for functions",
+              "Label": "Secret Key (ARN)",
+              "Default": "$LambdaSharp::DefaultSecretKeyArn"
+            }
+          ]
+        }
+      ],
       "RuntimeCheck": true,
-      "Hash": "7A9AEC810941BDE79533987EDC70A4F4",
+      "Hash": "ACC56456DAF6379E4A2705EC3E1E9AC9",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [
