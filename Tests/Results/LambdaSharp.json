@@ -2,12 +2,12 @@
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "LambdaSharp Runtime (v0.5-WIP)",
   "Parameters": {
-    "ExistingDeadLetterQueueArn": {
+    "DeadLetterQueue": {
       "Type": "String",
       "Description": "Dead letter queue for functions (leave blank to create a new queue)",
       "Default": ""
     },
-    "ExistingLoggingStreamArn": {
+    "LoggingStream": {
       "Type": "String",
       "Description": "Logging kinesis stream for functions (leave blank to create a new stream)",
       "Default": ""
@@ -17,7 +17,7 @@
       "Description": "How long logging stream entries are kept before they are lost",
       "Default": "24"
     },
-    "ExistingDefaultSecretKeyArn": {
+    "DefaultSecretKey": {
       "Type": "String",
       "Description": "Default secret key for functions (leave blank to create a new key)",
       "Default": ""
@@ -76,18 +76,18 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "B577D020B3B8D7C9734FBC25FD8672F4"
+      "Default": "199343E8E6E19C4993CD81DAB2D7838B"
     }
   },
   "Resources": {
-    "ExistingDeadLetterQueueArnResource": {
+    "DeadLetterQueueResource": {
       "Type": "AWS::SQS::Queue",
-      "Condition": "ExistingDeadLetterQueueArnIsCreated",
+      "Condition": "DeadLetterQueueIsCreated",
       "Properties": {}
     },
-    "ExistingLoggingStreamArnResource": {
+    "LoggingStreamResource": {
       "Type": "AWS::Kinesis::Stream",
-      "Condition": "ExistingLoggingStreamArnIsCreated",
+      "Condition": "LoggingStreamIsCreated",
       "Properties": {
         "RetentionPeriodHours": {
           "Ref": "LoggingStreamRetentionPeriod"
@@ -95,9 +95,9 @@
         "ShardCount": "1"
       }
     },
-    "ExistingDefaultSecretKeyArnResource": {
+    "DefaultSecretKeyResource": {
       "Type": "AWS::KMS::Key",
-      "Condition": "ExistingDefaultSecretKeyArnIsCreated",
+      "Condition": "DefaultSecretKeyIsCreated",
       "Properties": {
         "Description": "Default encryption/decryption key for LambdaSharp modules",
         "EnableKeyRotation": {
@@ -157,15 +157,15 @@
                   "Action": "kinesis:PutRecord",
                   "Resource": {
                     "Fn::If": [
-                      "ExistingLoggingStreamArnIsCreated",
+                      "LoggingStreamIsCreated",
                       {
                         "Fn::GetAtt": [
-                          "ExistingLoggingStreamArnResource",
+                          "LoggingStreamResource",
                           "Arn"
                         ]
                       },
                       {
-                        "Ref": "ExistingLoggingStreamArn"
+                        "Ref": "LoggingStream"
                       }
                     ]
                   }
@@ -184,15 +184,15 @@
         },
         "TargetKeyId": {
           "Fn::If": [
-            "ExistingDefaultSecretKeyArnIsCreated",
+            "DefaultSecretKeyIsCreated",
             {
               "Fn::GetAtt": [
-                "ExistingDefaultSecretKeyArnResource",
+                "DefaultSecretKeyResource",
                 "Arn"
               ]
             },
             {
-              "Ref": "ExistingDefaultSecretKeyArn"
+              "Ref": "DefaultSecretKey"
             }
           ]
         }
@@ -362,15 +362,15 @@
         "KinesisStreamSourceConfiguration": {
           "KinesisStreamARN": {
             "Fn::If": [
-              "ExistingLoggingStreamArnIsCreated",
+              "LoggingStreamIsCreated",
               {
                 "Fn::GetAtt": [
-                  "ExistingLoggingStreamArnResource",
+                  "LoggingStreamResource",
                   "Arn"
                 ]
               },
               {
-                "Ref": "ExistingLoggingStreamArn"
+                "Ref": "LoggingStream"
               }
             ]
           },
@@ -484,15 +484,15 @@
                   ],
                   "Resource": {
                     "Fn::If": [
-                      "ExistingLoggingStreamArnIsCreated",
+                      "LoggingStreamIsCreated",
                       {
                         "Fn::GetAtt": [
-                          "ExistingLoggingStreamArnResource",
+                          "LoggingStreamResource",
                           "Arn"
                         ]
                       },
                       {
-                        "Ref": "ExistingLoggingStreamArn"
+                        "Ref": "LoggingStream"
                       }
                     ]
                   }
@@ -587,17 +587,17 @@
         "ModuleVersion": "0.5-WIP"
       },
       "DependsOn": [
+        "DeadLetterQueueResource",
         "DefaultSecretKeyAlias",
+        "DefaultSecretKeyResource",
         "ErrorReportTopic",
-        "ExistingDeadLetterQueueArnResource",
-        "ExistingDefaultSecretKeyArnResource",
-        "ExistingLoggingStreamArnResource",
         "Finalizer",
         "FirehoseCloudWatchGroup",
         "FirehoseCloudWatchStream",
         "FirehoseLoggingBucket",
         "FirehoseLoggingRole",
         "FirehoseLoggingStream",
+        "LoggingStreamResource",
         "LoggingStreamRole",
         "ModuleRole",
         "ProcessLogEvents",
@@ -634,7 +634,7 @@
               "Version": "2012-10-17",
               "Statement": [
                 {
-                  "Sid": "ExistingLoggingStreamArnResource",
+                  "Sid": "LoggingStreamResource",
                   "Effect": "Allow",
                   "Action": [
                     "kinesis:DescribeStream",
@@ -643,15 +643,15 @@
                   ],
                   "Resource": {
                     "Fn::If": [
-                      "ExistingLoggingStreamArnIsCreated",
+                      "LoggingStreamIsCreated",
                       {
                         "Fn::GetAtt": [
-                          "ExistingLoggingStreamArnResource",
+                          "LoggingStreamResource",
                           "Arn"
                         ]
                       },
                       {
-                        "Ref": "ExistingLoggingStreamArn"
+                        "Ref": "LoggingStream"
                       }
                     ]
                   }
@@ -841,15 +841,15 @@
         "Enabled": true,
         "EventSourceArn": {
           "Fn::If": [
-            "ExistingLoggingStreamArnIsCreated",
+            "LoggingStreamIsCreated",
             {
               "Fn::GetAtt": [
-                "ExistingLoggingStreamArnResource",
+                "LoggingStreamResource",
                 "Arn"
               ]
             },
             {
-              "Ref": "ExistingLoggingStreamArn"
+              "Ref": "LoggingStream"
             }
           ]
         },
@@ -898,51 +898,73 @@
     "ModuleVersion": {
       "Value": "0.5-WIP"
     },
-    "DeadLetterQueueArn": {
+    "DeadLetterQueue": {
       "Value": {
         "Fn::If": [
-          "ExistingDeadLetterQueueArnIsCreated",
+          "DeadLetterQueueIsCreated",
           {
             "Fn::GetAtt": [
-              "ExistingDeadLetterQueueArnResource",
+              "DeadLetterQueueResource",
               "Arn"
             ]
           },
           {
-            "Ref": "ExistingDeadLetterQueueArn"
+            "Ref": "DeadLetterQueue"
           }
         ]
       },
       "Export": {
         "Name": {
-          "Fn::Sub": "${AWS::StackName}::DeadLetterQueueArn"
+          "Fn::Sub": "${AWS::StackName}::DeadLetterQueue"
         }
       },
-      "Description": "LambdaSharp Dead Letter Queue"
+      "Description": "Dead Letter Queue (ARN)"
     },
-    "LoggingStreamArn": {
+    "LoggingStream": {
       "Value": {
         "Fn::If": [
-          "ExistingLoggingStreamArnIsCreated",
+          "LoggingStreamIsCreated",
           {
             "Fn::GetAtt": [
-              "ExistingLoggingStreamArnResource",
+              "LoggingStreamResource",
               "Arn"
             ]
           },
           {
-            "Ref": "ExistingLoggingStreamArn"
+            "Ref": "LoggingStream"
           }
         ]
       },
       "Export": {
         "Name": {
-          "Fn::Sub": "${AWS::StackName}::LoggingStreamArn"
+          "Fn::Sub": "${AWS::StackName}::LoggingStream"
         }
       },
-      "Description": "LambdaSharp Logging Stream"
+      "Description": "Logging Stream (ARN)"
     },
-    "LoggingStreamRoleArn": {
+    "DefaultSecretKey": {
+      "Value": {
+        "Fn::If": [
+          "DefaultSecretKeyIsCreated",
+          {
+            "Fn::GetAtt": [
+              "DefaultSecretKeyResource",
+              "Arn"
+            ]
+          },
+          {
+            "Ref": "DefaultSecretKey"
+          }
+        ]
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}::DefaultSecretKey"
+        }
+      },
+      "Description": "Default Secret Key (ARN)"
+    },
+    "LoggingStreamRole": {
       "Value": {
         "Fn::GetAtt": [
           "LoggingStreamRole",
@@ -951,32 +973,10 @@
       },
       "Export": {
         "Name": {
-          "Fn::Sub": "${AWS::StackName}::LoggingStreamRoleArn"
+          "Fn::Sub": "${AWS::StackName}::LoggingStreamRole"
         }
       },
-      "Description": "LambdaSharp Logging Stream Role"
-    },
-    "DefaultSecretKeyArn": {
-      "Value": {
-        "Fn::If": [
-          "ExistingDefaultSecretKeyArnIsCreated",
-          {
-            "Fn::GetAtt": [
-              "ExistingDefaultSecretKeyArnResource",
-              "Arn"
-            ]
-          },
-          {
-            "Ref": "ExistingDefaultSecretKeyArn"
-          }
-        ]
-      },
-      "Export": {
-        "Name": {
-          "Fn::Sub": "${AWS::StackName}::DefaultSecretKeyArn"
-        }
-      },
-      "Description": "LambdaSharp Default Secrets Key"
+      "Description": "Role for writing CloudWatch logs to the Kinesis stream"
     },
     "LambdaSharpRegisterModule": {
       "Value": {
@@ -999,51 +999,29 @@
         }
       },
       "Description": "Custom resources for registering LambdaSharp functions"
-    },
-    "ErrorReportTopicArn": {
-      "Value": {
-        "Ref": "ErrorReportTopic"
-      },
-      "Export": {
-        "Name": {
-          "Fn::Sub": "${AWS::StackName}::ErrorReportTopicArn"
-        }
-      },
-      "Description": "SNS topic for LambdaSharp module errors"
-    },
-    "UsageReportTopicArn": {
-      "Value": {
-        "Ref": "UsageReportTopic"
-      },
-      "Export": {
-        "Name": {
-          "Fn::Sub": "${AWS::StackName}::UsageReportTopicArn"
-        }
-      },
-      "Description": "SNS topic for LambdaSharp function usage reports"
     }
   },
   "Conditions": {
-    "ExistingDeadLetterQueueArnIsCreated": {
+    "DeadLetterQueueIsCreated": {
       "Fn::Equals": [
         {
-          "Ref": "ExistingDeadLetterQueueArn"
+          "Ref": "DeadLetterQueue"
         },
         ""
       ]
     },
-    "ExistingLoggingStreamArnIsCreated": {
+    "LoggingStreamIsCreated": {
       "Fn::Equals": [
         {
-          "Ref": "ExistingLoggingStreamArn"
+          "Ref": "LoggingStream"
         },
         ""
       ]
     },
-    "ExistingDefaultSecretKeyArnIsCreated": {
+    "DefaultSecretKeyIsCreated": {
       "Fn::Equals": [
         {
-          "Ref": "ExistingDefaultSecretKeyArn"
+          "Ref": "DefaultSecretKey"
         },
         ""
       ]
@@ -1068,16 +1046,16 @@
   "Metadata": {
     "AWS::CloudFormation::Interface": {
       "ParameterLabels": {
-        "ExistingDeadLetterQueueArn": {
+        "DeadLetterQueue": {
           "default": "Dead Letter Queue (ARN)"
         },
-        "ExistingLoggingStreamArn": {
+        "LoggingStream": {
           "default": "Logging Stream (ARN)"
         },
         "LoggingStreamRetentionPeriod": {
           "default": "Retention period (hours)"
         },
-        "ExistingDefaultSecretKeyArn": {
+        "DefaultSecretKey": {
           "default": "Default Secret Key (ARN)"
         },
         "DefaultSecretKeyRotationEnabled": {
@@ -1120,10 +1098,10 @@
             "default": "LambdaSharp Tier Settings"
           },
           "Parameters": [
-            "ExistingDeadLetterQueueArn",
-            "ExistingLoggingStreamArn",
+            "DeadLetterQueue",
+            "LoggingStream",
             "LoggingStreamRetentionPeriod",
-            "ExistingDefaultSecretKeyArn",
+            "DefaultSecretKey",
             "DefaultSecretKeyRotationEnabled"
           ]
         },
@@ -1176,14 +1154,14 @@
           "Title": "LambdaSharp Tier Settings",
           "Parameters": [
             {
-              "Name": "ExistingDeadLetterQueueArn",
+              "Name": "DeadLetterQueue",
               "Type": "AWS::SQS::Queue",
               "Description": "Dead letter queue for functions (leave blank to create a new queue)",
               "Label": "Dead Letter Queue (ARN)",
               "Default": ""
             },
             {
-              "Name": "ExistingLoggingStreamArn",
+              "Name": "LoggingStream",
               "Type": "AWS::Kinesis::Stream",
               "Description": "Logging kinesis stream for functions (leave blank to create a new stream)",
               "Label": "Logging Stream (ARN)",
@@ -1197,7 +1175,7 @@
               "Default": "24"
             },
             {
-              "Name": "ExistingDefaultSecretKeyArn",
+              "Name": "DefaultSecretKey",
               "Type": "AWS::KMS::Key",
               "Description": "Default secret key for functions (leave blank to create a new key)",
               "Label": "Default Secret Key (ARN)",
@@ -1264,7 +1242,7 @@
         }
       ],
       "RuntimeCheck": false,
-      "Hash": "B577D020B3B8D7C9734FBC25FD8672F4",
+      "Hash": "199343E8E6E19C4993CD81DAB2D7838B",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [],
@@ -1340,9 +1318,9 @@
       },
       "MacroNames": [],
       "ResourceNameMappings": {
-        "ExistingDeadLetterQueueArnResource": "ExistingDeadLetterQueueArn::Resource",
-        "ExistingLoggingStreamArnResource": "ExistingLoggingStreamArn::Resource",
-        "ExistingDefaultSecretKeyArnResource": "ExistingDefaultSecretKeyArn::Resource",
+        "DeadLetterQueueResource": "DeadLetterQueue::Resource",
+        "LoggingStreamResource": "LoggingStream::Resource",
+        "DefaultSecretKeyResource": "DefaultSecretKey::Resource",
         "ProcessLogEventsLogGroup": "ProcessLogEvents::LogGroup",
         "RegisterLogGroup": "Register::LogGroup",
         "FirehoseLoggingBucket": "Firehose::LoggingBucket",

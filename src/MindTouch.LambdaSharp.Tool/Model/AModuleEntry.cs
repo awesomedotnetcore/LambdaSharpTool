@@ -69,16 +69,17 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public bool DiscardIfNotReachable { get; set; }
         public bool HasSecretType => Type == "Secret";
         public bool HasAwsType => ResourceMapping.IsCloudFormationType(Type);
+        public bool HasTypeValidation => !HasPragma("no-type-validation");
+        public bool IsExported => Scope.Contains("export");
 
-        //--- Abstract Methods ---
-        public abstract void Visit(Func<AModuleEntry, object, object> visitor);
 
         //--- Methods ---
         public virtual object GetExportReference() => Reference;
         public virtual bool HasAttribute(string attribute) => false;
         public virtual bool HasPragma(string pragma) => false;
-        public bool HasTypeValidation => !HasPragma("no-type-validation");
-        public bool IsExported => Scope.Contains("export");
+        public virtual void Visit(Func<AModuleEntry, object, object> visitor) {
+            Reference = visitor(this, Reference);
+        }
     }
 
     public class VariableEntry : AModuleEntry {
@@ -92,11 +93,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             IList<string> scope,
             object reference
         ) : base(parent, name, description, type, scope, reference) { }
-
-        //--- Methods ---
-        public override void Visit(Func<AModuleEntry, object, object> visitor) {
-            Reference = visitor(this, Reference);
-        }
     }
 
     public class PackageEntry : AModuleEntry {
@@ -114,9 +110,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         //--- Properties ---
         public IList<KeyValuePair<string, string>> Files { get; }
-
-        //--- Methods ---
-        public override void Visit(Func<AModuleEntry, object, object> visitor) { }
     }
 
     public class InputEntry : AModuleEntry {
@@ -142,9 +135,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public string Section { get; }
         public string Label { get; }
         public Humidifier.Parameter Parameter { get; }
-
-        //--- Methods ---
-        public override void Visit(Func<AModuleEntry, object, object> visitor) { }
     }
 
     public abstract class AResourceEntry : AModuleEntry {
@@ -173,6 +163,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         //--- Methods ---
         public override void Visit(Func<AModuleEntry, object, object> visitor) {
+            base.Visit(visitor);
 
             // TODO (2018-11-29, bjorg): we need to make sure that only other resources are referenced (no literal entries, or itself, no loops either)
             if(Condition != null) {
@@ -328,11 +319,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             // NOTE (2018-12-19, bjorg): conditionals should be deleted unless used
             DiscardIfNotReachable = true;
         }
-
-        //--- Methods ---
-        public override void Visit(Func<AModuleEntry, object, object> visitor) {
-            Reference = visitor(this, Reference);
-        }
     }
 
     public class MappingEntry : AModuleEntry {
@@ -347,11 +333,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
             // NOTE (2018-12-19, bjorg): conditionals should be deleted unless used
             DiscardIfNotReachable = true;
-        }
-
-        //--- Methods ---
-        public override void Visit(Func<AModuleEntry, object, object> visitor) {
-            Reference = visitor(this, Reference);
         }
 
         //--- Properties ---
@@ -376,6 +357,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         //--- Methods ---
         public override void Visit(Func<AModuleEntry, object, object> visitor) {
+            base.Visit(visitor);
             Handler = visitor(this, Handler);
         }
     }
