@@ -76,7 +76,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         }
 
                         // verify that all defined scope values are valid
-                        foreach(var unknownScope in entry.Scope.Where(scope => !functionNames.Contains(scope))) {
+                        foreach(var unknownScope in entry.Scope.Where(scope => (scope != "export") && !functionNames.Contains(scope))) {
                             AddError($"unknown referenced function '{unknownScope}' in scope definition");
                         }
                     });
@@ -375,7 +375,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     found[entry.FullName] = entry;
                     entry.Visit(FindReachable);
                 }
-                foreach(var output in _builder.Entries.OfType<AOutputEntry>()) {
+                foreach(var output in _builder.Entries.Where(entry => entry.IsExported)) {
                     output.Visit(FindReachable);
                 }
                 foreach(var statement in _builder.ResourceStatements) {

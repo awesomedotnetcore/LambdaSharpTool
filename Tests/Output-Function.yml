@@ -2,10 +2,8 @@ Module: TestModule
 Description: LambdaSharp CloudFormation Test
 Declarations:
 
-  - Export: MyFunction
-    Value: !Ref Function
-
   - Function: Function
+    Scope: export
     Description: My function
     Memory: 128
     Timeout: 30

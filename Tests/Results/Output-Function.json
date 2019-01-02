@@ -55,7 +55,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "46D742D2A6FC105D9ED87E9FFEA1CB78"
+      "Default": "A4AF2FEB0057266361BDEFFB058E027F"
     }
   },
   "Resources": {
@@ -479,15 +479,19 @@
     "ModuleVersion": {
       "Value": "1.0"
     },
-    "MyFunction": {
+    "Function": {
       "Value": {
-        "Ref": "Function"
+        "Fn::GetAtt": [
+          "Function",
+          "Arn"
+        ]
       },
       "Export": {
         "Name": {
-          "Fn::Sub": "${AWS::StackName}::MyFunction"
+          "Fn::Sub": "${AWS::StackName}::Function"
         }
-      }
+      },
+      "Description": "My function"
     }
   },
   "Conditions": {
@@ -756,7 +760,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "46D742D2A6FC105D9ED87E9FFEA1CB78",
+      "Hash": "A4AF2FEB0057266361BDEFFB058E027F",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [

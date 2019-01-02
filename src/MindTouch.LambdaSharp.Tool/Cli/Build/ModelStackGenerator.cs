@@ -138,8 +138,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             switch(entry) {
             case VariableEntry _:
             case PackageEntry _:
-
-                // nothing to do
+                if(entry.IsExported) {
+                    AddExport(entry);
+                }
                 break;
             case ResourceEntry resourceEntry:
                 _stack.Add(
@@ -148,9 +149,15 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     resourceEntry.Condition,
                     dependsOn: resourceEntry.DependsOn.ToArray()
                 );
+                if(entry.IsExported) {
+                    AddExport(entry);
+                }
                 break;
             case InputEntry inputEntry:
                 _stack.Add(logicalId, inputEntry.Parameter);
+                if(entry.IsExported) {
+                    AddExport(entry, inputEntry.Label);
+                }
                 break;
             case FunctionEntry functionEntry:
                 _stack.Add(
@@ -159,39 +166,46 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     functionEntry.Condition,
                     dependsOn: functionEntry.DependsOn.ToArray()
                 );
+                if(entry.IsExported) {
+                    AddExport(entry);
+                }
                 break;
             case ConditionEntry conditionEntry:
                 _stack.Add(conditionEntry.LogicalId, new Condition(conditionEntry.Reference));
                 break;
             case MappingEntry mappingEntry: {
-                    new Humidifier.Mapping();
                     var mapping = new Mapping();
                     foreach(var level1Mapping in mappingEntry.Mapping) {
-                        mapping[level1Mapping.Key] = level1Mapping.Value.ToDictionary(kv => kv.Key, kv => kv.Value);
+                        mapping[level1Mapping.Key] = level1Mapping.Value.ToDictionary(
+                            level2Mapping => level2Mapping.Key,
+                            level2Mapping => level2Mapping.Value
+                        );
                     }
                     _stack.Add(mappingEntry.LogicalId, mapping);
                 }
                 break;
-            case ExportEntry exportOutput:
-                _stack.Add(exportOutput.LogicalId, new Humidifier.Output {
-                    Description = exportOutput.Description,
-                    Value = exportOutput.Value,
+            case ResourceTypeEntry resourceTypeEntry:
+                _stack.Add(resourceTypeEntry.LogicalId, new Humidifier.Output {
+                    Description = resourceTypeEntry.Description,
+                    Value = resourceTypeEntry.Handler,
                     Export = new Dictionary<string, dynamic> {
-                        ["Name"] = Fn.Sub($"${{AWS::StackName}}::{exportOutput.Name}")
-                    }
-                });
-                break;
-            case CustomResourceHandlerOutputEntry customResourceHandlerOutput:
-                _stack.Add(customResourceHandlerOutput.LogicalId, new Humidifier.Output {
-                    Description = customResourceHandlerOutput.Description,
-                    Value = customResourceHandlerOutput.Handler,
-                    Export = new Dictionary<string, dynamic> {
-                        ["Name"] = Fn.Sub($"${{DeploymentPrefix}}CustomResource-{customResourceHandlerOutput.CustomResourceType}")
+                        ["Name"] = Fn.Sub($"${{DeploymentPrefix}}CustomResource-{resourceTypeEntry.CustomResourceType}")
                     }
                 });
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(entry), entry, "unknown parameter type");
+            }
+
+            // local functions
+            void AddExport(AModuleEntry exportEntry, string description = null) {
+                _stack.Add(exportEntry.LogicalId, new Humidifier.Output {
+                    Description = description ?? exportEntry.Description,
+                    Value = exportEntry.GetExportReference(),
+                    Export = new Dictionary<string, dynamic> {
+                        ["Name"] = Fn.Sub($"${{AWS::StackName}}::{exportEntry.FullName}")
+                    }
+                });
             }
         }
 

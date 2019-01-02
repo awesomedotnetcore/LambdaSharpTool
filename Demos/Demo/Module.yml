@@ -1,12 +1,6 @@
 Module: Demo
 Description: LambdaSharp Demo
-Outputs:
-
-  - Export: NotifyRecorderTopic
-    Description: The topic that the lambda function subscribes to record messages
-    Value: !Ref SnsTopic
-
-Entries:
+Declarations:
 
   - Parameter: SlackToken
     Description: Slack verification token
@@ -28,6 +22,11 @@ Entries:
       ProvisionedThroughput:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
+
+  - Variable: NotifyRecorderTopic
+    Scope: export
+    Description: The topic that the lambda function subscribes to record messages
+    Value: !Ref SnsTopic
 
   - Resource: SnsTopic
     Description: The topic that the lambda function subscribes to record messages

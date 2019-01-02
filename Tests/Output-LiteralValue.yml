@@ -3,6 +3,7 @@ Description: LambdaSharp CloudFormation Test
 Declarations:
 
   # Module Outputs
-  - Export: LiteralValue
+  - Variable: LiteralValue
+    Scope: export
     Description: An exported literal value
     Value: 123

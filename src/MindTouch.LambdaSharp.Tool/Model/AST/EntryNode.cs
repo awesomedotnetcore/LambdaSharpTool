@@ -73,6 +73,7 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
                 "Project",
                 "ReservedConcurrency",
                 "Runtime",
+                "Scope",
                 "Sources",
                 "Timeout",
                 "VPC"
@@ -104,10 +105,6 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
                 "Description",
                 "Files",
                 "Scope"
-            },
-            ["Export"] = new[] {
-                "Description",
-                "Value"
             },
             ["ResourceType"] = new[] {
                 "Description",
@@ -253,6 +250,7 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         /*
          * Function: string
          * Description: string
+         * Scope: string -or- list<string>
          * If: string
          * Memory: int
          * Timeout: int
@@ -285,13 +283,6 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
          * Value: object
          */
          public string Mapping { get; set; }
-
-        /*
-         * Export: string
-         * Description: string
-         * Value: object
-         */
-        public string Export { get; set; }
 
         /*
          * ResourceType: string

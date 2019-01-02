@@ -379,18 +379,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             return result;
         }
 
-        public void AddExport(string name, string description, object value) {
-            Validate(Regex.IsMatch(name, CLOUDFORMATION_ID_PATTERN), "name is not valid");
-            AddEntry(new ExportEntry(
-                name,
-                description,
-                (value is IList<object> values)
-                    ? FnJoin(",", values)
-                    : value
-            ));
-        }
-
-        public void AddCustomResource(
+        public void AddResourceType(
             string customResourceType,
             string description,
             string handler,
@@ -398,7 +387,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         ) {
 
             // TODO (2018-09-20, bjorg): add custom resource name validation
-            AddEntry(new CustomResourceHandlerOutputEntry(customResourceType, description, FnRef(handler)));
+            AddEntry(new ResourceTypeEntry(customResourceType, description, FnRef(handler)));
             _customResourceTypes.Add(customResourceType, properties ?? new ModuleManifestCustomResource());
         }
 
@@ -680,6 +669,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             AModuleEntry parent,
             string name,
             string description,
+            IList<string> scope,
             string project,
             string language,
             IDictionary<string, object> environment,
@@ -700,7 +690,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 parent: parent,
                 name: name,
                 description: description,
-                scope: new string[0],
+                scope: scope,
                 project: project,
                 language: language,
                 environment: environment ?? new Dictionary<string, object>(),

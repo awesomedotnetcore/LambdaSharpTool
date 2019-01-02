@@ -531,6 +531,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         parent: parent,
                         name: node.Function,
                         description: node.Description,
+                        scope: ConvertScope(node.Scope),
                         project: project,
                         language: language,
                         environment: node.Environment,
@@ -608,10 +609,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     );
                 });
                 break;
-            case "Export":
-                Validate(node.Value != null, "missing `Value` attribute");
-                AtLocation(node.Export, () => _builder.AddExport(node.Export, node.Description, node.Value));
-                break;
             case "ResourceType":
                 Validate(node.Handler != null, "missing 'Handler' attribute");
                 AtLocation(node.ResourceType, () => {
@@ -631,7 +628,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     } else {
                         AddError("missing 'Properties' section");
                     }
-                    _builder.AddCustomResource(node.ResourceType, node.Description, node.Handler, properties);
+                    _builder.AddResourceType(node.ResourceType, node.Description, node.Handler, properties);
                 });
                 break;
             case "Macro":

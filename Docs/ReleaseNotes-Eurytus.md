@@ -7,12 +7,16 @@
 > TODO
 
 * Module
-    * generalized input/variable/function/output node types using `Entries:` section
     * **BREAKING CHANGE:** new module entries notation
+        * generalized input/variable/function node types using `Declarations:` section
+        * output/export values are now handled with `Scope: export`
+        * `Function` declarations can now also have the `Scope` attribute
         * `Resource`: AWS and custom resources
         * `Variable`: hold arbitrary literal or intermediate values
         * `Package`: file package only (**BREAKING CHANGE:** files are no longer always deployed to S3)
         * `Module`: create nested module resource
+        * renamed `CustomResource` to `ResourceType`
+        * use `Namespace` as keyword for nested declarations
     * allow any AWS type as parameter type and map to `String` when AWS type is not natively supported
     * new `Import` notation
     * module `Requires` section

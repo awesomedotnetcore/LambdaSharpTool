@@ -1,9 +1,6 @@
 Module: DemoS3Bucket
-Outputs:
-
-  - Export: Bucket
-
-Entries:
+Declarations:
 
   - Resource: Bucket
+    Scope: export
     Type: AWS::S3::Bucket

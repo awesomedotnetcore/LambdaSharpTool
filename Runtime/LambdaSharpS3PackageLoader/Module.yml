@@ -20,9 +20,9 @@
 Module: LambdaSharpS3PackageLoader
 Version: 0.5-WIP
 Description: LambdaSharp S3 Package Loader
-Outputs:
+Declarations:
 
-  - CustomResource: LambdaSharp::S3::Package
+  - ResourceType: LambdaSharp::S3::Package
     Description: Custom resource for deploying packages to S3 buckets
     Handler: CustomResourceTopic
     Properties:
@@ -41,7 +41,6 @@ Outputs:
         - Name: Url
           Type: String
 
-Entries:
 
   - Resource: S3TargetBucketPermissions
     Description: LambdaSharpS3PackageLoader requires read-write access to all S3 buckets

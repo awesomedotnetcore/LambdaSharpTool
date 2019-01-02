@@ -76,9 +76,9 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         //--- Methods ---
         public virtual object GetExportReference() => Reference;
         public virtual bool HasAttribute(string attribute) => false;
-
         public virtual bool HasPragma(string pragma) => false;
         public bool HasTypeValidation => !HasPragma("no-type-validation");
+        public bool IsExported => Scope.Contains("export");
     }
 
     public class VariableEntry : AModuleEntry {
@@ -252,6 +252,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             Environment = environment;
             Sources = sources ?? new AFunctionSource[0];
             Function = function ?? throw new ArgumentNullException(nameof(function));
+            ExportReference = FnGetAtt(FullName, "Arn");
         }
 
         //--- Properties ---
@@ -260,6 +261,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public IDictionary<string, object> Environment { get; set; }
         public IList<AFunctionSource> Sources { get; set; }
         public Humidifier.Lambda.Function Function { get; set; }
+        public object ExportReference { get; set; }
         public bool HasFunctionRegistration => !HasPragma("no-function-registration");
         public bool HasDeadLetterQueue => !HasPragma("no-dead-letter-queue");
         public bool HasAssemblyValidation => !HasPragma("no-assembly-validation");
@@ -270,6 +272,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             base.Visit(visitor);
             Environment = (IDictionary<string, object>)visitor(this, Environment);
             Function = (Humidifier.Lambda.Function)visitor(this, Function);
+            ExportReference = visitor(this, ExportReference);
 
             // update function sources
             foreach(var source in Sources) {
@@ -308,7 +311,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             }
         }
 
-        public override object GetExportReference() => FnGetAtt(ResourceName, "Arn");
+        public override object GetExportReference() => ExportReference;
         public override bool HasPragma(string pragma) => Pragmas.Contains(pragma);
     }
 
@@ -355,43 +358,14 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public IDictionary<string, IDictionary<string, string>> Mapping => (IDictionary<string, IDictionary<string, string>>)Reference;
     }
 
-    public abstract class AOutputEntry : AModuleEntry {
+    public class ResourceTypeEntry : AModuleEntry {
 
         //--- Constructors ---
-        public AOutputEntry(
-            string name,
-            string description
-        ) : base(parent: null, name, description, "String", scope: null, reference: null) { }
-    }
-
-    public class ExportEntry : AOutputEntry {
-
-        //--- Constructors ---
-        public ExportEntry(
-            string name,
-            string description,
-            object value
-        ) : base(name, description) {
-            Value = value;
-        }
-
-        //--- Properties ---
-        public object Value { get; set; }
-
-        //--- Methods ---
-        public override void Visit(Func<AModuleEntry, object, object> visitor) {
-            Value = visitor(this, Value);
-        }
-    }
-
-    public class CustomResourceHandlerOutputEntry : AOutputEntry {
-
-        //--- Constructors ---
-        public CustomResourceHandlerOutputEntry(
+        public ResourceTypeEntry(
             string customResourceType,
             string description,
             object handler
-        ) : base(customResourceType.ToIdentifier(), description) {
+        ) : base(parent: null, customResourceType.ToIdentifier(), description, "String", scope: null, reference: null) {
             CustomResourceType = customResourceType;
             Handler = handler;
         }

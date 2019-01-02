@@ -51,9 +51,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                                 break;
                             }
                             break;
-                        case CustomResourceHandlerOutputEntry customResourceHandlerOutput:
-                            AtLocation(customResourceHandlerOutput.CustomResourceType, () => {
-                                ValidateHandler(customResourceHandlerOutput.Handler);
+                        case ResourceTypeEntry resourceTypeEntry:
+                            AtLocation(resourceTypeEntry.CustomResourceType, () => {
+                                ValidateHandler(resourceTypeEntry.Handler);
                             });
                             break;
                         }
@@ -128,10 +128,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 case MappingEntry _:
                     AddError($"function source '{fullName}' cannot be a mapping '{entry.FullName}'");
                     break;
-                case ExportEntry _:
-                    AddError($"function source '{fullName}' cannot be an export entry '{entry.FullName}'");
-                    break;
-                case CustomResourceHandlerOutputEntry _:
+                case ResourceTypeEntry _:
                     AddError($"function source '{fullName}' cannot be a custom resource '{entry.FullName}'");
                     break;
                 default:
@@ -165,10 +162,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             case MappingEntry _:
                 AddError($"handler reference '{fullName}' cannot be a mapping '{entry.FullName}'");
                 break;
-            case ExportEntry _:
-                AddError($"handler reference '{fullName}' cannot be an export entry '{entry.FullName}'");
-                break;
-            case CustomResourceHandlerOutputEntry _:
+            case ResourceTypeEntry _:
                 AddError($"handler reference '{fullName}' cannot be a custom resource '{entry.FullName}'");
                 break;
             default:
@@ -201,10 +195,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             case MappingEntry _:
                 AddError($"function reference '{fullName}' cannot be a mapping '{entry.FullName}'");
                 break;
-            case ExportEntry _:
-                AddError($"function reference '{fullName}' cannot be an export entry '{entry.FullName}'");
-                break;
-            case CustomResourceHandlerOutputEntry _:
+            case ResourceTypeEntry _:
                 AddError($"function reference '{fullName}' cannot be a custom resource '{entry.FullName}'");
                 break;
             default:
