@@ -55,7 +55,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "BFD451E7E2B4A92CBA95B3C2F85C6F29"
+      "Default": "23213A6F2511EF618813F23BB65879B1"
     }
   },
   "Resources": {
@@ -203,12 +203,10 @@
                 ]
               ]
             },
-            "STR_SOURCEPARAMETERCOLLECTION": "",
             "STR_SOURCEPARAMETERCOLLECTION_FIRSTSOURCEVALUEPARAMETER": "A nested literal source value",
             "STR_SOURCEPARAMETERCOLLECTION_SECONDSOURCERESOURCEPARAMETER": {
               "Ref": "SourceParameterCollectionSecondSourceResourceParameter"
             },
-            "STR_SAMPLEPARAMETERCOLLECTION": "",
             "STR_SAMPLEPARAMETERCOLLECTION_FIRSTNESTEDPARAMETER": "A literal value",
             "STR_SAMPLEPARAMETERCOLLECTION_SECONDNESTEDPARAMETER": "one,two,three",
             "STR_SAMPLEPARAMETERCOLLECTION_THIRDNESTEDPARAMETER": "arn:aws:sns:us-east-1:123456789012:SampleTopic",
@@ -218,7 +216,6 @@
             "SEC_SAMPLEPARAMETERCOLLECTION_FIFTHNESTEDPARAMETER": "AQICAHjeGw7GlEczkZKnuQaQHVYq...+CXNRhA/rkOSNUThq4ikMnVU2g==",
             "SEC_SAMPLEPARAMETERCOLLECTION_SIXTHNESTEDPARAMETER": "AQICAHjeGw7GlEczkZKnuQaQHVYq...+CXNRhA/rkOSNUThq4ikMnVU2g==|Purpose=Security",
             "STR_SAMPLEPARAMETERCOLLECTION_SEVENTHPARAMETER": "arn:aws:sns:*:*:*",
-            "STR_OTHERPARAMETERCOLLECTION": "This collection has a value",
             "STR_OTHERPARAMETERCOLLECTION_FIRSTNESTEDPARAMETER": "Another literal value",
             "STR_SINGLERESOURCEVARIABLE": "arn:aws:sns:*:*:*",
             "STR_MULTIRESOURCEVARIABLE": "arn:aws:sns:*:*:*,arn:aws:sns:*:*:*:*",
@@ -910,7 +907,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "BFD451E7E2B4A92CBA95B3C2F85C6F29",
+      "Hash": "23213A6F2511EF618813F23BB65879B1",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [

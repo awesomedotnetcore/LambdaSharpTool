@@ -1,6 +1,6 @@
 Module: TestModule
 Description: LambdaSharp CloudFormation Test
-Entries:
+Declarations:
 
   - Resource: MyTopic
     Description: Sample resource that is created before finalizer is invoked

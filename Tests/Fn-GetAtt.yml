@@ -1,6 +1,6 @@
 Module: TestModule
 Description: LambdaSharp CloudFormation Test
-Entries:
+Declarations:
 
   - Resource: MyResource
     Description: A CloudFormation dummy resource

@@ -11,15 +11,13 @@ Creating a function that is invoked by a CloudFormation macro is straightforward
 ```yaml
 Module: MacroSample
 Description: A sample module defining CloudFormation macros
-Outputs:
+Entries:
 
   - Macro: StringToUpper
     Handler: MyFunction
 
   - Macro: StringToLower
     Handler: MyFunction
-
-Entries:
 
   - Function: MyFunction
     Description: This function is invoked by a CloudFormation macros

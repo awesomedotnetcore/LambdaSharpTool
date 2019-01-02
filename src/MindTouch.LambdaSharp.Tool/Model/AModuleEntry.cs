@@ -354,4 +354,55 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         //--- Properties ---
         public IDictionary<string, IDictionary<string, string>> Mapping => (IDictionary<string, IDictionary<string, string>>)Reference;
     }
+
+    public abstract class AOutputEntry : AModuleEntry {
+
+        //--- Constructors ---
+        public AOutputEntry(
+            string name,
+            string description
+        ) : base(parent: null, name, description, "String", scope: null, reference: null) { }
+    }
+
+    public class ExportEntry : AOutputEntry {
+
+        //--- Constructors ---
+        public ExportEntry(
+            string name,
+            string description,
+            object value
+        ) : base(name, description) {
+            Value = value;
+        }
+
+        //--- Properties ---
+        public object Value { get; set; }
+
+        //--- Methods ---
+        public override void Visit(Func<AModuleEntry, object, object> visitor) {
+            Value = visitor(this, Value);
+        }
+    }
+
+    public class CustomResourceHandlerOutputEntry : AOutputEntry {
+
+        //--- Constructors ---
+        public CustomResourceHandlerOutputEntry(
+            string customResourceType,
+            string description,
+            object handler
+        ) : base(customResourceType.ToIdentifier(), description) {
+            CustomResourceType = customResourceType;
+            Handler = handler;
+        }
+
+        //--- Properties ---
+        public string CustomResourceType { get; set; }
+        public object Handler { get; set; }
+
+        //--- Methods ---
+        public override void Visit(Func<AModuleEntry, object, object> visitor) {
+            Handler = visitor(this, Handler);
+        }
+    }
 }

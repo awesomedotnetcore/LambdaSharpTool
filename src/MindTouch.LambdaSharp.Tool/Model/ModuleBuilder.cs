@@ -43,7 +43,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         private IList<object> _secrets;
         private Dictionary<string, AModuleEntry> _entriesByFullName;
         private List<AModuleEntry> _entries;
-        private IList<AOutput> _outputs;
         private IList<Humidifier.Statement> _resourceStatements = new List<Humidifier.Statement>();
         private IList<string> _assets;
         private IDictionary<string, ModuleDependency> _dependencies;
@@ -60,7 +59,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             _secrets = new List<object>(module.Secrets ?? new object[0]);
             _entries = new List<AModuleEntry>(module.Entries ?? new AModuleEntry[0]);
             _entriesByFullName = _entries.ToDictionary(entry => entry.FullName);
-            _outputs = new List<AOutput>(module.Outputs ?? new AOutput[0]);
             _assets = new List<string>(module.Assets ?? new string[0]);
             _dependencies = (module.Dependencies != null)
                 ? new Dictionary<string, ModuleDependency>(module.Dependencies)
@@ -86,7 +84,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public VersionInfo Version => _version;
         public IEnumerable<object> Secrets => _secrets;
         public IEnumerable<AModuleEntry> Entries => _entries;
-        public IEnumerable<AOutput> Outputs => _outputs;
         public IEnumerable<Humidifier.Statement> ResourceStatements => _resourceStatements;
         public bool HasPragma(string pragma) => _pragmas.Contains(pragma);
         public bool HasModuleRegistration => !HasPragma("no-module-registration");
@@ -384,11 +381,13 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         public void AddExport(string name, string description, object value) {
             Validate(Regex.IsMatch(name, CLOUDFORMATION_ID_PATTERN), "name is not valid");
-            _outputs.Add(new ExportOutput {
-                Name = name,
-                Description = description,
-                Value = value
-            });
+            AddEntry(new ExportEntry(
+                name,
+                description,
+                (value is IList<object> values)
+                    ? FnJoin(",", values)
+                    : value
+            ));
         }
 
         public void AddCustomResource(
@@ -399,12 +398,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         ) {
 
             // TODO (2018-09-20, bjorg): add custom resource name validation
-
-            _outputs.Add(new CustomResourceHandlerOutput {
-                CustomResourceType = customResourceType,
-                Description = description,
-                Handler = FnRef(handler)
-            });
+            AddEntry(new CustomResourceHandlerOutputEntry(customResourceType, description, FnRef(handler)));
             _customResourceTypes.Add(customResourceType, properties ?? new ModuleManifestCustomResource());
         }
 
@@ -968,26 +962,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             });
 
             // resolve references in output values
-            AtLocation("Outputs", () => {
-                foreach(var output in _outputs) {
-                    switch(output) {
-                    case ExportOutput exportOutput:
-                        AtLocation(exportOutput.Name, () => {
-                            output.Visit(visitor);
-                        });
-                        break;
-                    case CustomResourceHandlerOutput customResourceHandlerOutput:
-                        AtLocation(customResourceHandlerOutput.CustomResourceType, () => {
-                            output.Visit(visitor);
-                        });
-                        break;
-                    default:
-                        throw new InvalidOperationException($"cannot resolve references for this type: {output?.GetType()}");
-                    }
-                }
-            });
-
-            // resolve references in output values
             AtLocation("ResourceStatements", () => {
 
                 // TODO: pass in 'Module::Role' entry?
@@ -1032,7 +1006,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 Description = _description,
                 Pragmas = _pragmas,
                 Secrets = _secrets,
-                Outputs = _outputs,
                 Entries = _entries,
                 Assets = _assets.OrderBy(value => value).ToList(),
                 Dependencies = _dependencies.OrderBy(kv => kv.Key).ToList(),

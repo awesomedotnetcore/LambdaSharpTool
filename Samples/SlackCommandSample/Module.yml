@@ -1,6 +1,6 @@
 Module: SlackCommandSample
 Description: A sample module integrating with Slack
-Entries:
+Declarations:
 
   - Parameter: SlackToken
     Description: Slack verification token

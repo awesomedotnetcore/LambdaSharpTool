@@ -1,6 +1,6 @@
 Module: ScheduleSample
 Description: A sample module using schedule events
-Entries:
+Declarations:
 
   - Function: MyFunction
     Description: This function is invoked by a scheduled event

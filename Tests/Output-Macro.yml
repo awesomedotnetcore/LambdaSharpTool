@@ -1,12 +1,10 @@
 Module: TestModule
 Description: LambdaSharp CloudFormation Test
-Outputs:
+Declarations:
 
   - Macro: MyMacro
     Description: My test macro
     Handler: Function
-
-Entries:
 
   - Function: Function
     Description: My function

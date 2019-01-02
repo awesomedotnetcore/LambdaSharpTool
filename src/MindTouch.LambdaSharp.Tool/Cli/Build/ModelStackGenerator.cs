@@ -55,11 +55,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     : null
             };
 
-            // add entries
-            foreach(var entry in _module.Entries) {
-                AddEntry(entry);
-            }
-
             // add outputs
             _stack.Add("ModuleName", new Humidifier.Output {
                 Value = _module.Name
@@ -67,8 +62,10 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             _stack.Add("ModuleVersion", new Humidifier.Output {
                 Value = _module.Version.ToString()
             });
-            foreach(var output in module.Outputs) {
-                AddOutput(output);
+
+            // add entries
+            foreach(var entry in _module.Entries) {
+                AddEntry(entry);
             }
 
             // add interface for presenting inputs
@@ -136,31 +133,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             return new JsonStackSerializer().Serialize(_stack);
         }
 
-        private void AddOutput(AOutput output) {
-            switch(output) {
-            case ExportOutput exportOutput:
-                _stack.Add(exportOutput.Name, new Humidifier.Output {
-                    Description = exportOutput.Description,
-                    Value = exportOutput.Value,
-                    Export = new Dictionary<string, dynamic> {
-                        ["Name"] = Fn.Sub($"${{AWS::StackName}}::{exportOutput.Name}")
-                    }
-                });
-                break;
-            case CustomResourceHandlerOutput customResourceHandlerOutput:
-                _stack.Add($"{customResourceHandlerOutput.CustomResourceType.ToIdentifier()}Handler", new Humidifier.Output {
-                    Description = customResourceHandlerOutput.Description,
-                    Value = customResourceHandlerOutput.Handler,
-                    Export = new Dictionary<string, dynamic> {
-                        ["Name"] = Fn.Sub($"${{DeploymentPrefix}}CustomResource-{customResourceHandlerOutput.CustomResourceType}")
-                    }
-                });
-                break;
-            default:
-                throw new InvalidOperationException($"cannot generate output for this type: {output?.GetType()}");
-            }
-        }
-
         private void AddEntry(AModuleEntry entry) {
             var logicalId = entry.LogicalId;
             switch(entry) {
@@ -199,6 +171,24 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     }
                     _stack.Add(mappingEntry.LogicalId, mapping);
                 }
+                break;
+            case ExportEntry exportOutput:
+                _stack.Add(exportOutput.LogicalId, new Humidifier.Output {
+                    Description = exportOutput.Description,
+                    Value = exportOutput.Value,
+                    Export = new Dictionary<string, dynamic> {
+                        ["Name"] = Fn.Sub($"${{AWS::StackName}}::{exportOutput.Name}")
+                    }
+                });
+                break;
+            case CustomResourceHandlerOutputEntry customResourceHandlerOutput:
+                _stack.Add(customResourceHandlerOutput.LogicalId, new Humidifier.Output {
+                    Description = customResourceHandlerOutput.Description,
+                    Value = customResourceHandlerOutput.Handler,
+                    Export = new Dictionary<string, dynamic> {
+                        ["Name"] = Fn.Sub($"${{DeploymentPrefix}}CustomResource-{customResourceHandlerOutput.CustomResourceType}")
+                    }
+                });
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(entry), entry, "unknown parameter type");

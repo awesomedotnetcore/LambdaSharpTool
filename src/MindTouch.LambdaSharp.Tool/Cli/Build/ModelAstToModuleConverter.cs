@@ -73,8 +73,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 ForEach("Pragmas", module.Pragmas, ConvertPragma);
                 ForEach("Secrets", module.Secrets, ConvertSecret);
                 ForEach("Requires", module.Requires, ConvertDependency);
-                ForEach("Outputs", module.Outputs, ConvertOutput);
-                ForEach("Entries", module.Entries, ConvertEntry);
+                ForEach("Entries", module.Declarations, ConvertEntry);
                 return _builder;
             } catch(Exception e) {
                 AddError(e);
@@ -255,23 +254,21 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             return null;
         }
 
-        private void ConvertOutput(int index, EntryNode output) => ConvertEntry(null, index, output, new[] {
-            "Export",
-            "CustomResource",
-            "Macro"
-        });
-
         private void ConvertEntry(int index, EntryNode node)
             => ConvertEntry(null, index, node, new[] {
-                "Parameter",
-                "Import",
-                "Variable",
-                "Resource",
-                "Module",
-                "Package",
-                "Function",
                 "Condition",
-                "Mapping"
+                "Export",
+                "Function",
+                "Import",
+                "Macro",
+                "Mapping",
+                "Module",
+                "Namespace",
+                "Package",
+                "Parameter",
+                "Resource",
+                "ResourceType",
+                "Variable"
             });
 
         private void ConvertEntry(AModuleEntry parent, int index, EntryNode node, IEnumerable<string> expectedTypes) {
@@ -330,6 +327,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 AtLocation(node.Variable, () => {
 
                     // validation
+                    Validate(node.Value != null, "missing `Value` attribute");
                     Validate((node.EncryptionContext == null) || (node.Type == "Secret"), "entry must have Type 'Secret' to use 'EncryptionContext' section");
                     Validate((node.Type != "Secret") || !(node.Value is IList<object>), "entry with type 'Secret' cannot have a list of values");
 
@@ -349,13 +347,33 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     ConvertEntries(result);
                 });
                 break;
+            case "Namespace":
+                AtLocation(node.Namespace, () => {
+
+                    // create namespace entry
+                    var result = _builder.AddVariable(
+                        parent: parent,
+                        name: node.Namespace,
+                        description: node.Description,
+                        type: "String",
+                        scope: null,
+                        value: "",
+                        allow: null,
+                        encryptionContext: null
+                    );
+
+                    // recurse
+                    ConvertEntries(result);
+                });
+                break;
             case "Resource":
                 AtLocation(node.Resource, () => {
-
-                    // validation
                     if(node.Value != null) {
+
+                        // validation
                         Validate((node.Allow == null) || (node.Type == null) || ResourceMapping.IsCloudFormationType(node.Type), "'Allow' attribute can only be used with AWS resource types");
                         Validate(node.If == null, "'If' attribute cannot be used with a referenced resource");
+                        Validate(node.Properties == null, "'Properties' section cannot be used with a referenced resource");
                         if(node.Value is IList<object> values) {
                             foreach(var arn in values) {
                                 ValidateARN(arn);
@@ -363,15 +381,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         } else {
                             ValidateARN(node.Value);
                         }
-                    } else {
-                        Validate(node.Type != null, "missing 'Type' attribute");
-                        Validate((node.Allow == null) || ResourceMapping.IsCloudFormationType(node.Type ?? ""), "'Allow' attribute can only be used with AWS resource types");
-                    }
 
-                    // create resource entry
-                    AModuleEntry result;
-                    if(node.Value != null) {
-                        result = _builder.AddVariable(
+                        // create variable entry
+                        _builder.AddVariable(
                             parent: parent,
                             name: node.Resource,
                             description: node.Description,
@@ -382,7 +394,13 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                             encryptionContext: node.EncryptionContext
                         );
                     } else {
-                        result = _builder.AddResource(
+
+                        // validation
+                        Validate(node.Type != null, "missing 'Type' attribute");
+                        Validate((node.Allow == null) || ResourceMapping.IsCloudFormationType(node.Type ?? ""), "'Allow' attribute can only be used with AWS resource types");
+
+                        // create resource entry
+                        _builder.AddResource(
                             parent: parent,
                             name: node.Resource,
                             description: node.Description,
@@ -591,11 +609,12 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 });
                 break;
             case "Export":
+                Validate(node.Value != null, "missing `Value` attribute");
                 AtLocation(node.Export, () => _builder.AddExport(node.Export, node.Description, node.Value));
                 break;
-            case "CustomResource":
+            case "ResourceType":
                 Validate(node.Handler != null, "missing 'Handler' attribute");
-                AtLocation(node.CustomResource, () => {
+                AtLocation(node.ResourceType, () => {
                     ModuleManifestCustomResource properties = null;
                     if(node.Properties != null) {
                         AtLocation("Properties", () => {
@@ -612,7 +631,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     } else {
                         AddError("missing 'Properties' section");
                     }
-                    _builder.AddCustomResource(node.CustomResource, node.Description, node.Handler, properties);
+                    _builder.AddCustomResource(node.ResourceType, node.Description, node.Handler, properties);
                 });
                 break;
             case "Macro":
@@ -623,7 +642,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
             // local functions
             void ConvertEntries(AModuleEntry result, IEnumerable<string> nestedExpectedTypes = null) {
-                ForEach("Entries", node.Entries, (i, p) => ConvertEntry(result, i, p, nestedExpectedTypes ?? expectedTypes));
+                ForEach("Entries", node.Declarations, (i, p) => ConvertEntry(result, i, p, nestedExpectedTypes ?? expectedTypes));
             }
 
             void ValidateARN(object resourceArn) {

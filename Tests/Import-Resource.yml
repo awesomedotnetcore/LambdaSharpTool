@@ -1,10 +1,10 @@
 Module: TestModule
 Description: LambdaSharp CloudFormation Test
-Entries:
+Declarations:
 
   - Import: OtherModule
     Description: Cross-Module References
-    Entries:
+    Declarations:
 
       - Parameter: Resource
         Scope: "*"

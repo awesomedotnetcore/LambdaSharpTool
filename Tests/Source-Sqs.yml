@@ -1,6 +1,6 @@
 Module: TestModule
 Description: LambdaSharp CloudFormation Test
-Entries:
+Declarations:
 
   - Parameter: InputSqs
     Description: Description for SQS input resource

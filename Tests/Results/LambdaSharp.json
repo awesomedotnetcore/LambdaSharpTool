@@ -2,12 +2,12 @@
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "LambdaSharp Runtime (v0.5-WIP)",
   "Parameters": {
-    "DeadLetterQueueArn": {
+    "ExistingDeadLetterQueueArn": {
       "Type": "String",
       "Description": "Dead letter queue for functions (leave blank to create a new queue)",
       "Default": ""
     },
-    "LoggingStreamArn": {
+    "ExistingLoggingStreamArn": {
       "Type": "String",
       "Description": "Logging kinesis stream for functions (leave blank to create a new stream)",
       "Default": ""
@@ -17,7 +17,7 @@
       "Description": "How long logging stream entries are kept before they are lost",
       "Default": "24"
     },
-    "DefaultSecretKeyArn": {
+    "ExistingDefaultSecretKeyArn": {
       "Type": "String",
       "Description": "Default secret key for functions (leave blank to create a new key)",
       "Default": ""
@@ -26,6 +26,30 @@
       "Type": "String",
       "Description": "Rotate KMS key automatically every 365 days",
       "Default": "false"
+    },
+    "RollbarReadAccessToken": {
+      "Type": "String",
+      "Description": "Account-level token for read operations",
+      "Default": ""
+    },
+    "RollbarWriteAccessToken": {
+      "Type": "String",
+      "Description": "Account-level token for write operations",
+      "Default": ""
+    },
+    "RollbarProjectPrefix": {
+      "Type": "String",
+      "Description": "Optional prefix when creating Rollbar projects",
+      "Default": ""
+    },
+    "EnableFirehose": {
+      "Type": "String",
+      "Description": "Enable Kinesis Firehose logging to S3 Bucket",
+      "AllowedValues": [
+        "yes",
+        "no"
+      ],
+      "Default": "no"
     },
     "Secrets": {
       "Type": "String",
@@ -52,18 +76,18 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "31A892D44BF593DDB97A5285E836B235"
+      "Default": "B577D020B3B8D7C9734FBC25FD8672F4"
     }
   },
   "Resources": {
-    "DeadLetterQueueArnResource": {
+    "ExistingDeadLetterQueueArnResource": {
       "Type": "AWS::SQS::Queue",
-      "Condition": "DeadLetterQueueArnIsCreated",
+      "Condition": "ExistingDeadLetterQueueArnIsCreated",
       "Properties": {}
     },
-    "LoggingStreamArnResource": {
+    "ExistingLoggingStreamArnResource": {
       "Type": "AWS::Kinesis::Stream",
-      "Condition": "LoggingStreamArnIsCreated",
+      "Condition": "ExistingLoggingStreamArnIsCreated",
       "Properties": {
         "RetentionPeriodHours": {
           "Ref": "LoggingStreamRetentionPeriod"
@@ -71,9 +95,9 @@
         "ShardCount": "1"
       }
     },
-    "DefaultSecretKeyArnResource": {
+    "ExistingDefaultSecretKeyArnResource": {
       "Type": "AWS::KMS::Key",
-      "Condition": "DefaultSecretKeyArnIsCreated",
+      "Condition": "ExistingDefaultSecretKeyArnIsCreated",
       "Properties": {
         "Description": "Default encryption/decryption key for LambdaSharp modules",
         "EnableKeyRotation": {
@@ -133,15 +157,15 @@
                   "Action": "kinesis:PutRecord",
                   "Resource": {
                     "Fn::If": [
-                      "LoggingStreamArnIsCreated",
+                      "ExistingLoggingStreamArnIsCreated",
                       {
                         "Fn::GetAtt": [
-                          "LoggingStreamArnResource",
+                          "ExistingLoggingStreamArnResource",
                           "Arn"
                         ]
                       },
                       {
-                        "Ref": "LoggingStreamArn"
+                        "Ref": "ExistingLoggingStreamArn"
                       }
                     ]
                   }
@@ -160,17 +184,709 @@
         },
         "TargetKeyId": {
           "Fn::If": [
-            "DefaultSecretKeyArnIsCreated",
+            "ExistingDefaultSecretKeyArnIsCreated",
             {
               "Fn::GetAtt": [
-                "DefaultSecretKeyArnResource",
+                "ExistingDefaultSecretKeyArnResource",
                 "Arn"
               ]
             },
             {
-              "Ref": "DefaultSecretKeyArn"
+              "Ref": "ExistingDefaultSecretKeyArn"
             }
           ]
+        }
+      }
+    },
+    "ProcessLogEvents": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DeploymentBucketName"
+          },
+          "S3Key": "Modules/LambdaSharp/Assets/ProcessLogEvents-DRYRUN.zip"
+        },
+        "Description": "Process log events from all LambdaSharp module functions (v0.5-WIP)",
+        "Environment": {
+          "Variables": {
+            "MODULE_NAME": "LambdaSharp",
+            "MODULE_ID": {
+              "Ref": "AWS::StackName"
+            },
+            "MODULE_VERSION": "0.5-WIP",
+            "LAMBDA_NAME": "ProcessLogEvents",
+            "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "STR_ERRORREPORTTOPIC": {
+              "Ref": "ErrorReportTopic"
+            },
+            "STR_USAGEREPORTTOPIC": {
+              "Ref": "UsageReportTopic"
+            },
+            "STR_REGISTRATIONTABLE": {
+              "Fn::GetAtt": [
+                "RegistrationTable",
+                "Arn"
+              ]
+            }
+          }
+        },
+        "Handler": "ProcessLogEvents::MindTouch.LambdaSharpRegistrar.ProcessLogEvents.Function::FunctionHandlerAsync",
+        "MemorySize": "128",
+        "Role": {
+          "Fn::GetAtt": [
+            "ModuleRole",
+            "Arn"
+          ]
+        },
+        "Runtime": "dotnetcore2.1",
+        "Timeout": "30"
+      }
+    },
+    "ProcessLogEventsLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Sub": "/aws/lambda/${ProcessLogEvents}"
+        },
+        "RetentionInDays": 30
+      }
+    },
+    "RegistrationTopic": {
+      "Type": "AWS::SNS::Topic",
+      "Properties": {}
+    },
+    "ErrorReportTopic": {
+      "Type": "AWS::SNS::Topic",
+      "Properties": {}
+    },
+    "UsageReportTopic": {
+      "Type": "AWS::SNS::Topic",
+      "Properties": {}
+    },
+    "RegistrationTable": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "BillingMode": "PAY_PER_REQUEST",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "Id",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "Id",
+            "KeyType": "HASH"
+          }
+        ]
+      }
+    },
+    "Register": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DeploymentBucketName"
+          },
+          "S3Key": "Modules/LambdaSharp/Assets/Register-DRYRUN.zip"
+        },
+        "Description": "Register LambdaSharp modules and functions (v0.5-WIP)",
+        "Environment": {
+          "Variables": {
+            "MODULE_NAME": "LambdaSharp",
+            "MODULE_ID": {
+              "Ref": "AWS::StackName"
+            },
+            "MODULE_VERSION": "0.5-WIP",
+            "LAMBDA_NAME": "Register",
+            "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "SEC_ROLLBARREADACCESSTOKEN": {
+              "Ref": "RollbarReadAccessToken"
+            },
+            "SEC_ROLLBARWRITEACCESSTOKEN": {
+              "Ref": "RollbarWriteAccessToken"
+            },
+            "STR_ROLLBARPROJECTPREFIX": {
+              "Ref": "RollbarProjectPrefix"
+            },
+            "STR_REGISTRATIONTABLE": {
+              "Fn::GetAtt": [
+                "RegistrationTable",
+                "Arn"
+              ]
+            }
+          }
+        },
+        "Handler": "Register::MindTouch.LambdaSharpRegistrar.Register.Function::FunctionHandlerAsync",
+        "MemorySize": "128",
+        "Role": {
+          "Fn::GetAtt": [
+            "ModuleRole",
+            "Arn"
+          ]
+        },
+        "Runtime": "dotnetcore2.1",
+        "Timeout": "30"
+      }
+    },
+    "RegisterLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Sub": "/aws/lambda/${Register}"
+        },
+        "RetentionInDays": 30
+      }
+    },
+    "FirehoseLoggingBucket": {
+      "Type": "AWS::S3::Bucket",
+      "Condition": "FirehoseIsEnabled",
+      "Properties": {
+        "LifecycleConfiguration": {
+          "Rules": [
+            {
+              "Id": "LogDeletion",
+              "ExpirationInDays": "90",
+              "Status": "Enabled"
+            }
+          ]
+        }
+      }
+    },
+    "FirehoseLoggingStream": {
+      "Type": "AWS::KinesisFirehose::DeliveryStream",
+      "Condition": "FirehoseIsEnabled",
+      "Properties": {
+        "DeliveryStreamType": "KinesisStreamAsSource",
+        "KinesisStreamSourceConfiguration": {
+          "KinesisStreamARN": {
+            "Fn::If": [
+              "ExistingLoggingStreamArnIsCreated",
+              {
+                "Fn::GetAtt": [
+                  "ExistingLoggingStreamArnResource",
+                  "Arn"
+                ]
+              },
+              {
+                "Ref": "ExistingLoggingStreamArn"
+              }
+            ]
+          },
+          "RoleARN": {
+            "Fn::GetAtt": [
+              "FirehoseLoggingRole",
+              "Arn"
+            ]
+          }
+        },
+        "S3DestinationConfiguration": {
+          "BucketARN": {
+            "Fn::GetAtt": [
+              "FirehoseLoggingBucket",
+              "Arn"
+            ]
+          },
+          "CloudWatchLoggingOptions": {
+            "Enabled": "true",
+            "LogGroupName": {
+              "Ref": "FirehoseCloudWatchGroup"
+            },
+            "LogStreamName": {
+              "Ref": "FirehoseCloudWatchStream"
+            }
+          },
+          "Prefix": "firehose/",
+          "BufferingHints": {
+            "IntervalInSeconds": "60",
+            "SizeInMBs": "100"
+          },
+          "CompressionFormat": "GZIP",
+          "EncryptionConfiguration": {
+            "NoEncryptionConfig": "NoEncryption"
+          },
+          "RoleARN": {
+            "Fn::GetAtt": [
+              "FirehoseLoggingRole",
+              "Arn"
+            ]
+          }
+        }
+      }
+    },
+    "FirehoseCloudWatchGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Condition": "FirehoseIsEnabled",
+      "Properties": {
+        "RetentionInDays": "30"
+      }
+    },
+    "FirehoseCloudWatchStream": {
+      "Type": "AWS::Logs::LogStream",
+      "Condition": "FirehoseIsEnabled",
+      "Properties": {
+        "LogGroupName": {
+          "Ref": "FirehoseCloudWatchGroup"
+        }
+      }
+    },
+    "FirehoseLoggingRole": {
+      "Type": "AWS::IAM::Role",
+      "Condition": "FirehoseIsEnabled",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": {
+            "Sid": "FirehoseLoggingPrincipal",
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "firehose.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+          }
+        },
+        "Policies": [
+          {
+            "PolicyName": {
+              "Fn::Sub": "${AWS::StackName}FirehoseLoggingPolicy"
+            },
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Sid": "FirehoseLoggingDestinationS3Access",
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:AbortMultipartUpload",
+                    "s3:GetBucketLocation",
+                    "s3:GetObject",
+                    "s3:ListBucket",
+                    "s3:ListBucketMultipartUploads",
+                    "s3:PutObject"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "${FirehoseLoggingBucket.Arn}"
+                    },
+                    {
+                      "Fn::Sub": "${FirehoseLoggingBucket.Arn}/*"
+                    }
+                  ]
+                },
+                {
+                  "Sid": "FirehoseLoggingSourceStreamAccess",
+                  "Effect": "Allow",
+                  "Action": [
+                    "kinesis:DescribeStream",
+                    "kinesis:GetShardIterator",
+                    "kinesis:GetRecords"
+                  ],
+                  "Resource": {
+                    "Fn::If": [
+                      "ExistingLoggingStreamArnIsCreated",
+                      {
+                        "Fn::GetAtt": [
+                          "ExistingLoggingStreamArnResource",
+                          "Arn"
+                        ]
+                      },
+                      {
+                        "Ref": "ExistingLoggingStreamArn"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "Sid": "FirehoseLoggingCloudWatchLogsAccess",
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogGroup",
+                    "logs:CreateLogStream",
+                    "logs:DescribeLogGroups",
+                    "logs:DescribeLogStreams",
+                    "logs:PutLogEvents",
+                    "logs:GetLogEvents",
+                    "logs:FilterLogEvents"
+                  ],
+                  "Resource": "arn:aws:logs:*:*:*"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "Finalizer": {
+      "Type": "AWS::Lambda::Function",
+      "Condition": "FirehoseIsEnabled",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DeploymentBucketName"
+          },
+          "S3Key": "Modules/LambdaSharp/Assets/Finalizer-DRYRUN.zip"
+        },
+        "Description": "Clean-up on deletion (v0.5-WIP)",
+        "Environment": {
+          "Variables": {
+            "MODULE_NAME": "LambdaSharp",
+            "MODULE_ID": {
+              "Ref": "AWS::StackName"
+            },
+            "MODULE_VERSION": "0.5-WIP",
+            "LAMBDA_NAME": "Finalizer",
+            "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "STR_REGISTRATIONTABLE": {
+              "Fn::GetAtt": [
+                "RegistrationTable",
+                "Arn"
+              ]
+            },
+            "STR_FIREHOSE_LOGGINGBUCKET": {
+              "Fn::If": [
+                "FirehoseIsEnabled",
+                {
+                  "Fn::GetAtt": [
+                    "FirehoseLoggingBucket",
+                    "Arn"
+                  ]
+                },
+                {
+                  "Ref": "AWS::NoValue"
+                }
+              ]
+            }
+          }
+        },
+        "Handler": "Finalizer::MindTouch.LambdaSharpRegistrar.Finalizer.Function::FunctionHandlerAsync",
+        "MemorySize": "256",
+        "Role": {
+          "Fn::GetAtt": [
+            "ModuleRole",
+            "Arn"
+          ]
+        },
+        "Runtime": "dotnetcore2.1",
+        "Timeout": 900
+      }
+    },
+    "FinalizerInvocation": {
+      "Type": "Custom::ModuleFinalizer",
+      "Condition": "FirehoseIsEnabled",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "Finalizer",
+            "Arn"
+          ]
+        },
+        "DeploymentChecksum": {
+          "Ref": "DeploymentChecksum"
+        },
+        "ModuleVersion": "0.5-WIP"
+      },
+      "DependsOn": [
+        "DefaultSecretKeyAlias",
+        "ErrorReportTopic",
+        "ExistingDeadLetterQueueArnResource",
+        "ExistingDefaultSecretKeyArnResource",
+        "ExistingLoggingStreamArnResource",
+        "Finalizer",
+        "FirehoseCloudWatchGroup",
+        "FirehoseCloudWatchStream",
+        "FirehoseLoggingBucket",
+        "FirehoseLoggingRole",
+        "FirehoseLoggingStream",
+        "LoggingStreamRole",
+        "ModuleRole",
+        "ProcessLogEvents",
+        "ProcessLogEventsLogGroup",
+        "ProcessLogEventsSource1EventMapping",
+        "Register",
+        "RegisterLogGroup",
+        "RegisterSource1Permission",
+        "RegisterSource1Subscription",
+        "RegistrationTable",
+        "RegistrationTopic",
+        "UsageReportTopic"
+      ]
+    },
+    "ModuleRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "ModuleLambdaPrincipal",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Sid": "ExistingLoggingStreamArnResource",
+                  "Effect": "Allow",
+                  "Action": [
+                    "kinesis:DescribeStream",
+                    "kinesis:GetRecords",
+                    "kinesis:GetShardIterator"
+                  ],
+                  "Resource": {
+                    "Fn::If": [
+                      "ExistingLoggingStreamArnIsCreated",
+                      {
+                        "Fn::GetAtt": [
+                          "ExistingLoggingStreamArnResource",
+                          "Arn"
+                        ]
+                      },
+                      {
+                        "Ref": "ExistingLoggingStreamArn"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "Sid": "RegistrationTopic",
+                  "Effect": "Allow",
+                  "Action": [
+                    "sns:Subscribe"
+                  ],
+                  "Resource": {
+                    "Ref": "RegistrationTopic"
+                  }
+                },
+                {
+                  "Sid": "ErrorReportTopic",
+                  "Effect": "Allow",
+                  "Action": [
+                    "sns:Publish"
+                  ],
+                  "Resource": {
+                    "Ref": "ErrorReportTopic"
+                  }
+                },
+                {
+                  "Sid": "UsageReportTopic",
+                  "Effect": "Allow",
+                  "Action": [
+                    "sns:Publish"
+                  ],
+                  "Resource": {
+                    "Ref": "UsageReportTopic"
+                  }
+                },
+                {
+                  "Sid": "RegistrationTable",
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:BatchGetItem",
+                    "dynamodb:BatchWriteItem",
+                    "dynamodb:DeleteItem",
+                    "dynamodb:DescribeStream",
+                    "dynamodb:DescribeTable",
+                    "dynamodb:GetItem",
+                    "dynamodb:GetRecords",
+                    "dynamodb:GetShardIterator",
+                    "dynamodb:PutItem",
+                    "dynamodb:Query",
+                    "dynamodb:Scan",
+                    "dynamodb:UpdateItem"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::GetAtt": [
+                        "RegistrationTable",
+                        "Arn"
+                      ]
+                    },
+                    {
+                      "Fn::Join": [
+                        "/",
+                        [
+                          {
+                            "Fn::GetAtt": [
+                              "RegistrationTable",
+                              "Arn"
+                            ]
+                          },
+                          "stream/*"
+                        ]
+                      ]
+                    },
+                    {
+                      "Fn::Join": [
+                        "/",
+                        [
+                          {
+                            "Fn::GetAtt": [
+                              "RegistrationTable",
+                              "Arn"
+                            ]
+                          },
+                          "index/*"
+                        ]
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "Sid": "FirehoseLoggingBucket",
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:AbortMultipartUpload",
+                    "s3:CreateBucket",
+                    "s3:DeleteObject",
+                    "s3:DeleteObjectTagging",
+                    "s3:DeleteObjectVersion",
+                    "s3:DeleteObjectVersionTagging",
+                    "s3:GetBucketLocation",
+                    "s3:GetObject",
+                    "s3:GetObjectAcl",
+                    "s3:GetObjectTagging",
+                    "s3:GetObjectTorrent",
+                    "s3:GetObjectVersion",
+                    "s3:GetObjectVersionAcl",
+                    "s3:GetObjectVersionTagging",
+                    "s3:GetObjectVersionTorrent",
+                    "s3:ListBucket",
+                    "s3:ListBucketMultipartUploads",
+                    "s3:ListMultipartUploadParts",
+                    "s3:PutObject",
+                    "s3:PutObjectAcl",
+                    "s3:PutObjectTagging",
+                    "s3:PutObjectVersionAcl",
+                    "s3:PutObjectVersionTagging",
+                    "s3:RestoreObject"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::GetAtt": [
+                        "FirehoseLoggingBucket",
+                        "Arn"
+                      ]
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          {
+                            "Fn::GetAtt": [
+                              "FirehoseLoggingBucket",
+                              "Arn"
+                            ]
+                          },
+                          "/*"
+                        ]
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "Sid": "SecretsDecryption",
+                  "Effect": "Allow",
+                  "Action": [
+                    "kms:Decrypt",
+                    "kms:Encrypt",
+                    "kms:GenerateDataKey",
+                    "kms:GenerateDataKeyWithoutPlaintext"
+                  ],
+                  "Resource": {
+                    "Fn::If": [
+                      "SecretsIsEmpty",
+                      "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/12345678-1234-1234-1234-123456789012",
+                      {
+                        "Fn::Split": [
+                          ",",
+                          {
+                            "Ref": "Secrets"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                },
+                {
+                  "Sid": "ModuleLogStreamAccess",
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": "arn:aws:logs:*:*:*"
+                }
+              ]
+            },
+            "PolicyName": {
+              "Fn::Sub": "${AWS::StackName}ModulePolicy"
+            }
+          }
+        ]
+      }
+    },
+    "ProcessLogEventsSource1EventMapping": {
+      "Type": "AWS::Lambda::EventSourceMapping",
+      "Properties": {
+        "BatchSize": 100,
+        "Enabled": true,
+        "EventSourceArn": {
+          "Fn::If": [
+            "ExistingLoggingStreamArnIsCreated",
+            {
+              "Fn::GetAtt": [
+                "ExistingLoggingStreamArnResource",
+                "Arn"
+              ]
+            },
+            {
+              "Ref": "ExistingLoggingStreamArn"
+            }
+          ]
+        },
+        "FunctionName": {
+          "Ref": "ProcessLogEvents"
+        },
+        "StartingPosition": "LATEST"
+      }
+    },
+    "RegisterSource1Subscription": {
+      "Type": "AWS::SNS::Subscription",
+      "Properties": {
+        "Endpoint": {
+          "Fn::GetAtt": [
+            "Register",
+            "Arn"
+          ]
+        },
+        "Protocol": "lambda",
+        "TopicArn": {
+          "Ref": "RegistrationTopic"
+        }
+      }
+    },
+    "RegisterSource1Permission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "Register",
+            "Arn"
+          ]
+        },
+        "Principal": "sns.amazonaws.com",
+        "SourceArn": {
+          "Ref": "RegistrationTopic"
         }
       }
     }
@@ -185,15 +901,15 @@
     "DeadLetterQueueArn": {
       "Value": {
         "Fn::If": [
-          "DeadLetterQueueArnIsCreated",
+          "ExistingDeadLetterQueueArnIsCreated",
           {
             "Fn::GetAtt": [
-              "DeadLetterQueueArnResource",
+              "ExistingDeadLetterQueueArnResource",
               "Arn"
             ]
           },
           {
-            "Ref": "DeadLetterQueueArn"
+            "Ref": "ExistingDeadLetterQueueArn"
           }
         ]
       },
@@ -207,15 +923,15 @@
     "LoggingStreamArn": {
       "Value": {
         "Fn::If": [
-          "LoggingStreamArnIsCreated",
+          "ExistingLoggingStreamArnIsCreated",
           {
             "Fn::GetAtt": [
-              "LoggingStreamArnResource",
+              "ExistingLoggingStreamArnResource",
               "Arn"
             ]
           },
           {
-            "Ref": "LoggingStreamArn"
+            "Ref": "ExistingLoggingStreamArn"
           }
         ]
       },
@@ -243,15 +959,15 @@
     "DefaultSecretKeyArn": {
       "Value": {
         "Fn::If": [
-          "DefaultSecretKeyArnIsCreated",
+          "ExistingDefaultSecretKeyArnIsCreated",
           {
             "Fn::GetAtt": [
-              "DefaultSecretKeyArnResource",
+              "ExistingDefaultSecretKeyArnResource",
               "Arn"
             ]
           },
           {
-            "Ref": "DefaultSecretKeyArn"
+            "Ref": "ExistingDefaultSecretKeyArn"
           }
         ]
       },
@@ -261,29 +977,89 @@
         }
       },
       "Description": "LambdaSharp Default Secrets Key"
+    },
+    "LambdaSharpRegisterModule": {
+      "Value": {
+        "Ref": "RegistrationTopic"
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::Register::Module"
+        }
+      },
+      "Description": "Custom resources for registering LambdaSharp modules"
+    },
+    "LambdaSharpRegisterFunction": {
+      "Value": {
+        "Ref": "RegistrationTopic"
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::Register::Function"
+        }
+      },
+      "Description": "Custom resources for registering LambdaSharp functions"
+    },
+    "ErrorReportTopicArn": {
+      "Value": {
+        "Ref": "ErrorReportTopic"
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}::ErrorReportTopicArn"
+        }
+      },
+      "Description": "SNS topic for LambdaSharp module errors"
+    },
+    "UsageReportTopicArn": {
+      "Value": {
+        "Ref": "UsageReportTopic"
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}::UsageReportTopicArn"
+        }
+      },
+      "Description": "SNS topic for LambdaSharp function usage reports"
     }
   },
   "Conditions": {
-    "DeadLetterQueueArnIsCreated": {
+    "ExistingDeadLetterQueueArnIsCreated": {
       "Fn::Equals": [
         {
-          "Ref": "DeadLetterQueueArn"
+          "Ref": "ExistingDeadLetterQueueArn"
         },
         ""
       ]
     },
-    "LoggingStreamArnIsCreated": {
+    "ExistingLoggingStreamArnIsCreated": {
       "Fn::Equals": [
         {
-          "Ref": "LoggingStreamArn"
+          "Ref": "ExistingLoggingStreamArn"
         },
         ""
       ]
     },
-    "DefaultSecretKeyArnIsCreated": {
+    "ExistingDefaultSecretKeyArnIsCreated": {
       "Fn::Equals": [
         {
-          "Ref": "DefaultSecretKeyArn"
+          "Ref": "ExistingDefaultSecretKeyArn"
+        },
+        ""
+      ]
+    },
+    "FirehoseIsEnabled": {
+      "Fn::Equals": [
+        {
+          "Ref": "EnableFirehose"
+        },
+        "yes"
+      ]
+    },
+    "SecretsIsEmpty": {
+      "Fn::Equals": [
+        {
+          "Ref": "Secrets"
         },
         ""
       ]
@@ -292,20 +1068,32 @@
   "Metadata": {
     "AWS::CloudFormation::Interface": {
       "ParameterLabels": {
-        "DeadLetterQueueArn": {
+        "ExistingDeadLetterQueueArn": {
           "default": "Dead Letter Queue (ARN)"
         },
-        "LoggingStreamArn": {
+        "ExistingLoggingStreamArn": {
           "default": "Logging Stream (ARN)"
         },
         "LoggingStreamRetentionPeriod": {
           "default": "Retention period (hours)"
         },
-        "DefaultSecretKeyArn": {
+        "ExistingDefaultSecretKeyArn": {
           "default": "Default Secret Key (ARN)"
         },
         "DefaultSecretKeyRotationEnabled": {
           "default": "Enable key rotation"
+        },
+        "RollbarReadAccessToken": {
+          "default": "Read Access Token"
+        },
+        "RollbarWriteAccessToken": {
+          "default": "Write Access Token"
+        },
+        "RollbarProjectPrefix": {
+          "default": "Project Prefix"
+        },
+        "EnableFirehose": {
+          "default": "Enable Firehose"
         },
         "Secrets": {
           "default": "Secret Keys (ARNs)"
@@ -332,11 +1120,29 @@
             "default": "LambdaSharp Tier Settings"
           },
           "Parameters": [
-            "DeadLetterQueueArn",
-            "LoggingStreamArn",
+            "ExistingDeadLetterQueueArn",
+            "ExistingLoggingStreamArn",
             "LoggingStreamRetentionPeriod",
-            "DefaultSecretKeyArn",
+            "ExistingDefaultSecretKeyArn",
             "DefaultSecretKeyRotationEnabled"
+          ]
+        },
+        {
+          "Label": {
+            "default": "Rollbar Settings"
+          },
+          "Parameters": [
+            "RollbarReadAccessToken",
+            "RollbarWriteAccessToken",
+            "RollbarProjectPrefix"
+          ]
+        },
+        {
+          "Label": {
+            "default": "Firehose Settings (Experimental)"
+          },
+          "Parameters": [
+            "EnableFirehose"
           ]
         },
         {
@@ -370,14 +1176,14 @@
           "Title": "LambdaSharp Tier Settings",
           "Parameters": [
             {
-              "Name": "DeadLetterQueueArn",
+              "Name": "ExistingDeadLetterQueueArn",
               "Type": "AWS::SQS::Queue",
               "Description": "Dead letter queue for functions (leave blank to create a new queue)",
               "Label": "Dead Letter Queue (ARN)",
               "Default": ""
             },
             {
-              "Name": "LoggingStreamArn",
+              "Name": "ExistingLoggingStreamArn",
               "Type": "AWS::Kinesis::Stream",
               "Description": "Logging kinesis stream for functions (leave blank to create a new stream)",
               "Label": "Logging Stream (ARN)",
@@ -391,7 +1197,7 @@
               "Default": "24"
             },
             {
-              "Name": "DefaultSecretKeyArn",
+              "Name": "ExistingDefaultSecretKeyArn",
               "Type": "AWS::KMS::Key",
               "Description": "Default secret key for functions (leave blank to create a new key)",
               "Label": "Default Secret Key (ARN)",
@@ -403,6 +1209,44 @@
               "Description": "Rotate KMS key automatically every 365 days",
               "Label": "Enable key rotation",
               "Default": "false"
+            }
+          ]
+        },
+        {
+          "Title": "Rollbar Settings",
+          "Parameters": [
+            {
+              "Name": "RollbarReadAccessToken",
+              "Type": "Secret",
+              "Description": "Account-level token for read operations",
+              "Label": "Read Access Token",
+              "Default": ""
+            },
+            {
+              "Name": "RollbarWriteAccessToken",
+              "Type": "Secret",
+              "Description": "Account-level token for write operations",
+              "Label": "Write Access Token",
+              "Default": ""
+            },
+            {
+              "Name": "RollbarProjectPrefix",
+              "Type": "String",
+              "Description": "Optional prefix when creating Rollbar projects",
+              "Label": "Project Prefix",
+              "Default": ""
+            }
+          ]
+        },
+        {
+          "Title": "Firehose Settings (Experimental)",
+          "Parameters": [
+            {
+              "Name": "EnableFirehose",
+              "Type": "String",
+              "Description": "Enable Kinesis Firehose logging to S3 Bucket",
+              "Label": "Enable Firehose",
+              "Default": "no"
             }
           ]
         },
@@ -420,18 +1264,102 @@
         }
       ],
       "RuntimeCheck": false,
-      "Hash": "31A892D44BF593DDB97A5285E836B235",
+      "Hash": "B577D020B3B8D7C9734FBC25FD8672F4",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [],
-      "CustomResourceTypes": {},
+      "CustomResourceTypes": {
+        "LambdaSharp::Register::Function": {
+          "Request": [
+            {
+              "Name": "ModuleId",
+              "Type": "String"
+            },
+            {
+              "Name": "FunctionId",
+              "Type": "String"
+            },
+            {
+              "Name": "FunctionName",
+              "Type": "String"
+            },
+            {
+              "Name": "FunctionLogGroupName",
+              "Type": "String"
+            },
+            {
+              "Name": "FunctionMaxMemory",
+              "Type": "String"
+            },
+            {
+              "Name": "FunctionMaxDuration",
+              "Type": "String"
+            },
+            {
+              "Name": "FunctionPlatform",
+              "Type": "String"
+            },
+            {
+              "Name": "FunctionFramework",
+              "Type": "String"
+            },
+            {
+              "Name": "FunctionLanguage",
+              "Type": "String"
+            }
+          ],
+          "Response": [
+            {
+              "Name": "Registration",
+              "Type": "String"
+            }
+          ]
+        },
+        "LambdaSharp::Register::Module": {
+          "Request": [
+            {
+              "Name": "ModuleId",
+              "Type": "String"
+            },
+            {
+              "Name": "ModuleName",
+              "Type": "String"
+            },
+            {
+              "Name": "ModuleVersion",
+              "Type": "String"
+            }
+          ],
+          "Response": [
+            {
+              "Name": "Registration",
+              "Type": "String"
+            }
+          ]
+        }
+      },
       "MacroNames": [],
       "ResourceNameMappings": {
-        "DeadLetterQueueArnResource": "DeadLetterQueueArn::Resource",
-        "LoggingStreamArnResource": "LoggingStreamArn::Resource",
-        "DefaultSecretKeyArnResource": "DefaultSecretKeyArn::Resource"
+        "ExistingDeadLetterQueueArnResource": "ExistingDeadLetterQueueArn::Resource",
+        "ExistingLoggingStreamArnResource": "ExistingLoggingStreamArn::Resource",
+        "ExistingDefaultSecretKeyArnResource": "ExistingDefaultSecretKeyArn::Resource",
+        "ProcessLogEventsLogGroup": "ProcessLogEvents::LogGroup",
+        "RegisterLogGroup": "Register::LogGroup",
+        "FirehoseLoggingBucket": "Firehose::LoggingBucket",
+        "FirehoseLoggingStream": "Firehose::LoggingStream",
+        "FirehoseCloudWatchGroup": "Firehose::CloudWatchGroup",
+        "FirehoseCloudWatchStream": "Firehose::CloudWatchStream",
+        "FirehoseLoggingRole": "Firehose::LoggingRole",
+        "FinalizerInvocation": "Finalizer::Invocation",
+        "ModuleRole": "Module::Role",
+        "ProcessLogEventsSource1EventMapping": "ProcessLogEvents::Source1EventMapping",
+        "RegisterSource1Subscription": "Register::Source1Subscription",
+        "RegisterSource1Permission": "Register::Source1Permission"
       },
-      "CustomResourceNameMappings": {}
+      "CustomResourceNameMappings": {
+        "Custom::ModuleDecryptSecret": "Module::DecryptSecret",
+        "Custom::ModuleFinalizer": "Module::Finalizer"
+      }
     }
   }
 }

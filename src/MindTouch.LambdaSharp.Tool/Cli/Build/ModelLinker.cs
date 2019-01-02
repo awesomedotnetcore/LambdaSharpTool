@@ -84,7 +84,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             });
 
             // compute function environments
-            AtLocation("Functions", () => {
+            AtLocation("Declarations", () => {
                 foreach(var function in builder.Entries.OfType<FunctionEntry>()) {
                     AtLocation(function.FullName, () => {
                         var environment = function.Function.Environment.Variables;
@@ -121,32 +121,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                             // add explicit environment variable as string value
                             var fullEnvName = "STR_" + kv.Key.Replace("::", "_").ToUpperInvariant();
                             environment[fullEnvName] = (dynamic)kv.Value;
-                        }
-                    });
-                }
-            });
-
-            // compute exports
-            AtLocation("Outputs", () => {
-                foreach(var output in builder.Outputs.OfType<ExportOutput>()) {
-                    AtLocation(output.Name, () => {
-                        if(output.Value == null) {
-
-                            // NOTE (2018-12-11, bjorg): if no value is provided, we expect the export name to correspond to an
-                            //  entry name; if it does, we export the ARN value of that parameter; in addition, we copy its
-                            // description if none is provided.
-
-                            if(!builder.TryGetEntry(output.Name, out AModuleEntry entry)) {
-                                AddError("could not find matching entry");
-                                output.Value = "<BAD>";
-                            } else {
-                                output.Value = entry.GetExportReference();
-
-                                // only set the description if the value was not set
-                                if(output.Description == null) {
-                                    output.Description = entry.Description;
-                                }
-                            }
                         }
                     });
                 }
@@ -401,7 +375,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     found[entry.FullName] = entry;
                     entry.Visit(FindReachable);
                 }
-                foreach(var output in _builder.Outputs) {
+                foreach(var output in _builder.Entries.OfType<AOutputEntry>()) {
                     output.Visit(FindReachable);
                 }
                 foreach(var statement in _builder.ResourceStatements) {

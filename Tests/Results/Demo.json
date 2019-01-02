@@ -1,30 +1,11 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "LambdaSharp Modules and Functions Registrar (v0.5-WIP)",
+  "Description": "LambdaSharp Demo (v1.0)",
   "Parameters": {
-    "RollbarReadAccessToken": {
+    "SlackToken": {
       "Type": "String",
-      "Description": "Account-level token for read operations",
+      "Description": "Slack verification token",
       "Default": ""
-    },
-    "RollbarWriteAccessToken": {
-      "Type": "String",
-      "Description": "Account-level token for write operations",
-      "Default": ""
-    },
-    "RollbarProjectPrefix": {
-      "Type": "String",
-      "Description": "Optional prefix when creating Rollbar projects",
-      "Default": ""
-    },
-    "EnableFirehose": {
-      "Type": "String",
-      "Description": "Enable Kinesis Firehose logging to S3 Bucket",
-      "AllowedValues": [
-        "yes",
-        "no"
-      ],
-      "Default": "no"
     },
     "Secrets": {
       "Type": "String",
@@ -44,6 +25,13 @@
       "AllowedPattern": "^.+$",
       "ConstraintDescription": "must either be a cross-module import reference or a non-empty value",
       "Default": "$LambdaSharp::LoggingStreamArn"
+    },
+    "LambdaSharpLoggingStreamRoleArn": {
+      "Type": "String",
+      "Description": "Role for logging to kinesis stream for functions",
+      "AllowedPattern": "^.+$",
+      "ConstraintDescription": "must either be a cross-module import reference or a non-empty value",
+      "Default": "$LambdaSharp::LoggingStreamRoleArn"
     },
     "LambdaSharpDefaultSecretKeyArn": {
       "Type": "String",
@@ -72,258 +60,64 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "48AD934C28143975B941EF8174616CCE"
+      "Default": "92D37E16F9B6ACCF8981C586D5FFB5CD"
     }
   },
   "Resources": {
-    "RegistrationTopic": {
-      "Type": "AWS::SNS::Topic",
-      "Properties": {}
-    },
-    "ErrorReportTopic": {
-      "Type": "AWS::SNS::Topic",
-      "Properties": {}
-    },
-    "UsageReportTopic": {
-      "Type": "AWS::SNS::Topic",
-      "Properties": {}
-    },
-    "RegistrationTable": {
+    "MessageTable": {
       "Type": "AWS::DynamoDB::Table",
       "Properties": {
-        "BillingMode": "PAY_PER_REQUEST",
         "AttributeDefinitions": [
           {
-            "AttributeName": "Id",
+            "AttributeName": "MessageId",
             "AttributeType": "S"
           }
         ],
         "KeySchema": [
           {
-            "AttributeName": "Id",
+            "AttributeName": "MessageId",
             "KeyType": "HASH"
           }
-        ]
-      }
-    },
-    "FirehoseLoggingBucket": {
-      "Type": "AWS::S3::Bucket",
-      "Condition": "FirehoseIsEnabled",
-      "Properties": {
-        "LifecycleConfiguration": {
-          "Rules": [
-            {
-              "Id": "LogDeletion",
-              "ExpirationInDays": "90",
-              "Status": "Enabled"
-            }
-          ]
+        ],
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits": "1",
+          "WriteCapacityUnits": "1"
         }
       }
     },
-    "FirehoseLoggingStream": {
-      "Type": "AWS::KinesisFirehose::DeliveryStream",
-      "Condition": "FirehoseIsEnabled",
-      "Properties": {
-        "DeliveryStreamType": "KinesisStreamAsSource",
-        "KinesisStreamSourceConfiguration": {
-          "KinesisStreamARN": {
-            "Fn::If": [
-              "LambdaSharpLoggingStreamArnIsImported",
-              {
-                "Fn::ImportValue": {
-                  "Fn::Sub": [
-                    "${DeploymentPrefix}${Import}",
-                    {
-                      "Import": {
-                        "Fn::Select": [
-                          "1",
-                          {
-                            "Fn::Split": [
-                              "$",
-                              {
-                                "Ref": "LambdaSharpLoggingStreamArn"
-                              }
-                            ]
-                          }
-                        ]
-                      }
-                    }
-                  ]
-                }
-              },
-              {
-                "Ref": "LambdaSharpLoggingStreamArn"
-              }
-            ]
-          },
-          "RoleARN": {
-            "Fn::GetAtt": [
-              "FirehoseLoggingRole",
-              "Arn"
-            ]
-          }
-        },
-        "S3DestinationConfiguration": {
-          "BucketARN": {
-            "Fn::GetAtt": [
-              "FirehoseLoggingBucket",
-              "Arn"
-            ]
-          },
-          "CloudWatchLoggingOptions": {
-            "Enabled": "true",
-            "LogGroupName": {
-              "Ref": "FirehoseCloudWatchGroup"
-            },
-            "LogStreamName": {
-              "Ref": "FirehoseCloudWatchStream"
-            }
-          },
-          "Prefix": "firehose/",
-          "BufferingHints": {
-            "IntervalInSeconds": "60",
-            "SizeInMBs": "100"
-          },
-          "CompressionFormat": "GZIP",
-          "EncryptionConfiguration": {
-            "NoEncryptionConfig": "NoEncryption"
-          },
-          "RoleARN": {
-            "Fn::GetAtt": [
-              "FirehoseLoggingRole",
-              "Arn"
-            ]
-          }
-        }
-      }
+    "SnsTopic": {
+      "Type": "AWS::SNS::Topic",
+      "Properties": {}
     },
-    "FirehoseCloudWatchGroup": {
-      "Type": "AWS::Logs::LogGroup",
-      "Condition": "FirehoseIsEnabled",
+    "UsagePlan": {
+      "Type": "AWS::ApiGateway::UsagePlan",
       "Properties": {
-        "RetentionInDays": "30"
-      }
-    },
-    "FirehoseCloudWatchStream": {
-      "Type": "AWS::Logs::LogStream",
-      "Condition": "FirehoseIsEnabled",
-      "Properties": {
-        "LogGroupName": {
-          "Ref": "FirehoseCloudWatchGroup"
-        }
-      }
-    },
-    "FirehoseLoggingRole": {
-      "Type": "AWS::IAM::Role",
-      "Condition": "FirehoseIsEnabled",
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Version": "2012-10-17",
-          "Statement": {
-            "Sid": "FirehoseLoggingPrincipal",
-            "Effect": "Allow",
-            "Principal": {
-              "Service": "firehose.amazonaws.com"
-            },
-            "Action": "sts:AssumeRole"
-          }
-        },
-        "Policies": [
+        "UsagePlanName": "DemoUsagePlan",
+        "ApiStages": [
           {
-            "PolicyName": {
-              "Fn::Sub": "${AWS::StackName}FirehoseLoggingPolicy"
+            "ApiId": {
+              "Ref": "ModuleRestApi"
             },
-            "PolicyDocument": {
-              "Version": "2012-10-17",
-              "Statement": [
-                {
-                  "Sid": "FirehoseLoggingDestinationS3Access",
-                  "Effect": "Allow",
-                  "Action": [
-                    "s3:AbortMultipartUpload",
-                    "s3:GetBucketLocation",
-                    "s3:GetObject",
-                    "s3:ListBucket",
-                    "s3:ListBucketMultipartUploads",
-                    "s3:PutObject"
-                  ],
-                  "Resource": [
-                    {
-                      "Fn::Sub": "${FirehoseLoggingBucket.Arn}"
-                    },
-                    {
-                      "Fn::Sub": "${FirehoseLoggingBucket.Arn}/*"
-                    }
-                  ]
-                },
-                {
-                  "Sid": "FirehoseLoggingSourceStreamAccess",
-                  "Effect": "Allow",
-                  "Action": [
-                    "kinesis:DescribeStream",
-                    "kinesis:GetShardIterator",
-                    "kinesis:GetRecords"
-                  ],
-                  "Resource": {
-                    "Fn::If": [
-                      "LambdaSharpLoggingStreamArnIsImported",
-                      {
-                        "Fn::ImportValue": {
-                          "Fn::Sub": [
-                            "${DeploymentPrefix}${Import}",
-                            {
-                              "Import": {
-                                "Fn::Select": [
-                                  "1",
-                                  {
-                                    "Fn::Split": [
-                                      "$",
-                                      {
-                                        "Ref": "LambdaSharpLoggingStreamArn"
-                                      }
-                                    ]
-                                  }
-                                ]
-                              }
-                            }
-                          ]
-                        }
-                      },
-                      {
-                        "Ref": "LambdaSharpLoggingStreamArn"
-                      }
-                    ]
-                  }
-                },
-                {
-                  "Sid": "FirehoseLoggingCloudWatchLogsAccess",
-                  "Effect": "Allow",
-                  "Action": [
-                    "logs:CreateLogGroup",
-                    "logs:CreateLogStream",
-                    "logs:DescribeLogGroups",
-                    "logs:DescribeLogStreams",
-                    "logs:PutLogEvents",
-                    "logs:GetLogEvents",
-                    "logs:FilterLogEvents"
-                  ],
-                  "Resource": "arn:aws:logs:*:*:*"
-                }
-              ]
+            "Stage": {
+              "Ref": "ModuleRestApiStage"
             }
           }
-        ]
+        ],
+        "Description": "Sample usage plan for REST API",
+        "Quota": {
+          "Limit": "500",
+          "Period": "MONTH"
+        }
       }
     },
-    "ProcessLogEvents": {
+    "RecordMessage": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
         "Code": {
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "Modules/LambdaSharpRegistrar/Assets/ProcessLogEvents-DRYRUN.zip"
+          "S3Key": "Modules/Demo/Assets/RecordMessage-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -357,15 +151,15 @@
             ]
           }
         },
-        "Description": "Process log events from all LambdaSharp module functions (v0.5-WIP)",
+        "Description": "Record message in a DynamoDB table (v1.0)",
         "Environment": {
           "Variables": {
-            "MODULE_NAME": "LambdaSharpRegistrar",
+            "MODULE_NAME": "Demo",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_VERSION": "0.5-WIP",
-            "LAMBDA_NAME": "ProcessLogEvents",
+            "MODULE_VERSION": "1.0",
+            "LAMBDA_NAME": "RecordMessage",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
               "Fn::If": [
@@ -427,21 +221,15 @@
                 }
               ]
             },
-            "STR_ERRORREPORTTOPIC": {
-              "Ref": "ErrorReportTopic"
-            },
-            "STR_USAGEREPORTTOPIC": {
-              "Ref": "UsageReportTopic"
-            },
-            "STR_REGISTRATIONTABLE": {
+            "STR_MESSAGETABLE": {
               "Fn::GetAtt": [
-                "RegistrationTable",
+                "MessageTable",
                 "Arn"
               ]
             }
           }
         },
-        "Handler": "ProcessLogEvents::MindTouch.LambdaSharpRegistrar.ProcessLogEvents.Function::FunctionHandlerAsync",
+        "Handler": "RecordMessage::MindTouch.LambdaSharpDemo.RecordEvents.Function::FunctionHandlerAsync",
         "MemorySize": "128",
         "Role": {
           "Fn::GetAtt": [
@@ -453,23 +241,23 @@
         "Timeout": "30"
       }
     },
-    "ProcessLogEventsLogGroup": {
+    "RecordMessageLogGroup": {
       "Type": "AWS::Logs::LogGroup",
       "Properties": {
         "LogGroupName": {
-          "Fn::Sub": "/aws/lambda/${ProcessLogEvents}"
+          "Fn::Sub": "/aws/lambda/${RecordMessage}"
         },
         "RetentionInDays": 30
       }
     },
-    "Register": {
+    "SlackCommand": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
         "Code": {
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "Modules/LambdaSharpRegistrar/Assets/Register-DRYRUN.zip"
+          "S3Key": "Modules/Demo/Assets/SlackCommand-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -503,15 +291,15 @@
             ]
           }
         },
-        "Description": "Register LambdaSharp modules and functions (v0.5-WIP)",
+        "Description": "Respond to slack commands (v1.0)",
         "Environment": {
           "Variables": {
-            "MODULE_NAME": "LambdaSharpRegistrar",
+            "MODULE_NAME": "Demo",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_VERSION": "0.5-WIP",
-            "LAMBDA_NAME": "Register",
+            "MODULE_VERSION": "1.0",
+            "LAMBDA_NAME": "SlackCommand",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
               "Fn::If": [
@@ -573,24 +361,18 @@
                 }
               ]
             },
-            "SEC_ROLLBARREADACCESSTOKEN": {
-              "Ref": "RollbarReadAccessToken"
+            "STR_SLACKTOKEN": {
+              "Ref": "SlackToken"
             },
-            "SEC_ROLLBARWRITEACCESSTOKEN": {
-              "Ref": "RollbarWriteAccessToken"
-            },
-            "STR_ROLLBARPROJECTPREFIX": {
-              "Ref": "RollbarProjectPrefix"
-            },
-            "STR_REGISTRATIONTABLE": {
+            "STR_MESSAGETABLE": {
               "Fn::GetAtt": [
-                "RegistrationTable",
+                "MessageTable",
                 "Arn"
               ]
             }
           }
         },
-        "Handler": "Register::MindTouch.LambdaSharpRegistrar.Register.Function::FunctionHandlerAsync",
+        "Handler": "SlackCommand::MindTouch.LambdaSharpDemo.SlackCommand.Function::FunctionHandlerAsync",
         "MemorySize": "128",
         "Role": {
           "Fn::GetAtt": [
@@ -602,134 +384,14 @@
         "Timeout": "30"
       }
     },
-    "RegisterLogGroup": {
+    "SlackCommandLogGroup": {
       "Type": "AWS::Logs::LogGroup",
       "Properties": {
         "LogGroupName": {
-          "Fn::Sub": "/aws/lambda/${Register}"
+          "Fn::Sub": "/aws/lambda/${SlackCommand}"
         },
         "RetentionInDays": 30
       }
-    },
-    "Finalizer": {
-      "Type": "AWS::Lambda::Function",
-      "Condition": "FirehoseIsEnabled",
-      "Properties": {
-        "Code": {
-          "S3Bucket": {
-            "Ref": "DeploymentBucketName"
-          },
-          "S3Key": "Modules/LambdaSharpRegistrar/Assets/Finalizer-DRYRUN.zip"
-        },
-        "Description": "Clean-up on deletion (v0.5-WIP)",
-        "Environment": {
-          "Variables": {
-            "MODULE_NAME": "LambdaSharpRegistrar",
-            "MODULE_ID": {
-              "Ref": "AWS::StackName"
-            },
-            "MODULE_VERSION": "0.5-WIP",
-            "LAMBDA_NAME": "Finalizer",
-            "LAMBDA_RUNTIME": "dotnetcore2.1",
-            "DEFAULTSECRETKEY": {
-              "Fn::If": [
-                "LambdaSharpDefaultSecretKeyArnIsImported",
-                {
-                  "Fn::ImportValue": {
-                    "Fn::Sub": [
-                      "${DeploymentPrefix}${Import}",
-                      {
-                        "Import": {
-                          "Fn::Select": [
-                            "1",
-                            {
-                              "Fn::Split": [
-                                "$",
-                                {
-                                  "Ref": "LambdaSharpDefaultSecretKeyArn"
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      }
-                    ]
-                  }
-                },
-                {
-                  "Ref": "LambdaSharpDefaultSecretKeyArn"
-                }
-              ]
-            },
-            "STR_REGISTRATIONTABLE": {
-              "Fn::GetAtt": [
-                "RegistrationTable",
-                "Arn"
-              ]
-            },
-            "STR_FIREHOSE_LOGGINGBUCKET": {
-              "Fn::If": [
-                "FirehoseIsEnabled",
-                {
-                  "Fn::GetAtt": [
-                    "FirehoseLoggingBucket",
-                    "Arn"
-                  ]
-                },
-                {
-                  "Ref": "AWS::NoValue"
-                }
-              ]
-            }
-          }
-        },
-        "Handler": "Finalizer::MindTouch.LambdaSharpRegistrar.Finalizer.Function::FunctionHandlerAsync",
-        "MemorySize": "256",
-        "Role": {
-          "Fn::GetAtt": [
-            "ModuleRole",
-            "Arn"
-          ]
-        },
-        "Runtime": "dotnetcore2.1",
-        "Timeout": 900
-      }
-    },
-    "FinalizerInvocation": {
-      "Type": "Custom::ModuleFinalizer",
-      "Condition": "FirehoseIsEnabled",
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "Finalizer",
-            "Arn"
-          ]
-        },
-        "DeploymentChecksum": {
-          "Ref": "DeploymentChecksum"
-        },
-        "ModuleVersion": "0.5-WIP"
-      },
-      "DependsOn": [
-        "ErrorReportTopic",
-        "Finalizer",
-        "FirehoseCloudWatchGroup",
-        "FirehoseCloudWatchStream",
-        "FirehoseLoggingBucket",
-        "FirehoseLoggingRole",
-        "FirehoseLoggingStream",
-        "ModuleRole",
-        "ProcessLogEvents",
-        "ProcessLogEventsLogGroup",
-        "ProcessLogEventsSource1EventMapping",
-        "Register",
-        "RegisterLogGroup",
-        "RegisterSource1Permission",
-        "RegisterSource1Subscription",
-        "RegistrationTable",
-        "RegistrationTopic",
-        "UsageReportTopic"
-      ]
     },
     "ModuleRole": {
       "Type": "AWS::IAM::Role",
@@ -753,76 +415,7 @@
               "Version": "2012-10-17",
               "Statement": [
                 {
-                  "Sid": "LoggingStreamReference",
-                  "Effect": "Allow",
-                  "Action": [
-                    "kinesis:DescribeStream",
-                    "kinesis:GetRecords",
-                    "kinesis:GetShardIterator"
-                  ],
-                  "Resource": {
-                    "Fn::If": [
-                      "LambdaSharpLoggingStreamArnIsImported",
-                      {
-                        "Fn::ImportValue": {
-                          "Fn::Sub": [
-                            "${DeploymentPrefix}${Import}",
-                            {
-                              "Import": {
-                                "Fn::Select": [
-                                  "1",
-                                  {
-                                    "Fn::Split": [
-                                      "$",
-                                      {
-                                        "Ref": "LambdaSharpLoggingStreamArn"
-                                      }
-                                    ]
-                                  }
-                                ]
-                              }
-                            }
-                          ]
-                        }
-                      },
-                      {
-                        "Ref": "LambdaSharpLoggingStreamArn"
-                      }
-                    ]
-                  }
-                },
-                {
-                  "Sid": "RegistrationTopic",
-                  "Effect": "Allow",
-                  "Action": [
-                    "sns:Subscribe"
-                  ],
-                  "Resource": {
-                    "Ref": "RegistrationTopic"
-                  }
-                },
-                {
-                  "Sid": "ErrorReportTopic",
-                  "Effect": "Allow",
-                  "Action": [
-                    "sns:Publish"
-                  ],
-                  "Resource": {
-                    "Ref": "ErrorReportTopic"
-                  }
-                },
-                {
-                  "Sid": "UsageReportTopic",
-                  "Effect": "Allow",
-                  "Action": [
-                    "sns:Publish"
-                  ],
-                  "Resource": {
-                    "Ref": "UsageReportTopic"
-                  }
-                },
-                {
-                  "Sid": "RegistrationTable",
+                  "Sid": "MessageTable",
                   "Effect": "Allow",
                   "Action": [
                     "dynamodb:BatchGetItem",
@@ -841,7 +434,7 @@
                   "Resource": [
                     {
                       "Fn::GetAtt": [
-                        "RegistrationTable",
+                        "MessageTable",
                         "Arn"
                       ]
                     },
@@ -851,7 +444,7 @@
                         [
                           {
                             "Fn::GetAtt": [
-                              "RegistrationTable",
+                              "MessageTable",
                               "Arn"
                             ]
                           },
@@ -865,7 +458,7 @@
                         [
                           {
                             "Fn::GetAtt": [
-                              "RegistrationTable",
+                              "MessageTable",
                               "Arn"
                             ]
                           },
@@ -876,56 +469,14 @@
                   ]
                 },
                 {
-                  "Sid": "FirehoseLoggingBucket",
+                  "Sid": "SnsTopic",
                   "Effect": "Allow",
                   "Action": [
-                    "s3:AbortMultipartUpload",
-                    "s3:CreateBucket",
-                    "s3:DeleteObject",
-                    "s3:DeleteObjectTagging",
-                    "s3:DeleteObjectVersion",
-                    "s3:DeleteObjectVersionTagging",
-                    "s3:GetBucketLocation",
-                    "s3:GetObject",
-                    "s3:GetObjectAcl",
-                    "s3:GetObjectTagging",
-                    "s3:GetObjectTorrent",
-                    "s3:GetObjectVersion",
-                    "s3:GetObjectVersionAcl",
-                    "s3:GetObjectVersionTagging",
-                    "s3:GetObjectVersionTorrent",
-                    "s3:ListBucket",
-                    "s3:ListBucketMultipartUploads",
-                    "s3:ListMultipartUploadParts",
-                    "s3:PutObject",
-                    "s3:PutObjectAcl",
-                    "s3:PutObjectTagging",
-                    "s3:PutObjectVersionAcl",
-                    "s3:PutObjectVersionTagging",
-                    "s3:RestoreObject"
+                    "sns:Subscribe"
                   ],
-                  "Resource": [
-                    {
-                      "Fn::GetAtt": [
-                        "FirehoseLoggingBucket",
-                        "Arn"
-                      ]
-                    },
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          {
-                            "Fn::GetAtt": [
-                              "FirehoseLoggingBucket",
-                              "Arn"
-                            ]
-                          },
-                          "/*"
-                        ]
-                      ]
-                    }
-                  ]
+                  "Resource": {
+                    "Ref": "SnsTopic"
+                  }
                 },
                 {
                   "Sid": "ModuleDeadLetterQueueLogging",
@@ -1072,12 +623,53 @@
         ]
       }
     },
-    "ProcessLogEventsSource1EventMapping": {
-      "Type": "AWS::Lambda::EventSourceMapping",
+    "ModuleRegistration": {
+      "Type": "Custom::LambdaSharpRegisterModule",
       "Properties": {
-        "BatchSize": 100,
-        "Enabled": true,
-        "EventSourceArn": {
+        "ServiceToken": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::Register::Module"
+          }
+        },
+        "ModuleId": {
+          "Ref": "AWS::StackName"
+        },
+        "ModuleName": "Demo",
+        "ModuleVersion": "1.0"
+      }
+    },
+    "RecordMessageRegistration": {
+      "Type": "Custom::LambdaSharpRegisterFunction",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::Register::Function"
+          }
+        },
+        "ModuleId": {
+          "Ref": "AWS::StackName"
+        },
+        "FunctionId": {
+          "Ref": "RecordMessage"
+        },
+        "FunctionName": "RecordMessage",
+        "FunctionLogGroupName": {
+          "Fn::Sub": "/aws/lambda/${RecordMessage}"
+        },
+        "FunctionPlatform": "AWS Lambda",
+        "FunctionFramework": "dotnetcore2.1",
+        "FunctionLanguage": "csharp",
+        "FunctionMaxMemory": "128",
+        "FunctionMaxDuration": "30"
+      },
+      "DependsOn": [
+        "ModuleRegistration"
+      ]
+    },
+    "RecordMessageLogGroupSubscription": {
+      "Type": "AWS::Logs::SubscriptionFilter",
+      "Properties": {
+        "DestinationArn": {
           "Fn::If": [
             "LambdaSharpLoggingStreamArnIsImported",
             {
@@ -1107,105 +699,366 @@
             }
           ]
         },
-        "FunctionName": {
-          "Ref": "ProcessLogEvents"
+        "FilterPattern": "-\"*** \"",
+        "LogGroupName": {
+          "Ref": "RecordMessageLogGroup"
         },
-        "StartingPosition": "LATEST"
+        "RoleArn": {
+          "Fn::If": [
+            "LambdaSharpLoggingStreamRoleArnIsImported",
+            {
+              "Fn::ImportValue": {
+                "Fn::Sub": [
+                  "${DeploymentPrefix}${Import}",
+                  {
+                    "Import": {
+                      "Fn::Select": [
+                        "1",
+                        {
+                          "Fn::Split": [
+                            "$",
+                            {
+                              "Ref": "LambdaSharpLoggingStreamRoleArn"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "Ref": "LambdaSharpLoggingStreamRoleArn"
+            }
+          ]
+        }
       }
     },
-    "RegisterSource1Subscription": {
+    "SlackCommandRegistration": {
+      "Type": "Custom::LambdaSharpRegisterFunction",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::Register::Function"
+          }
+        },
+        "ModuleId": {
+          "Ref": "AWS::StackName"
+        },
+        "FunctionId": {
+          "Ref": "SlackCommand"
+        },
+        "FunctionName": "SlackCommand",
+        "FunctionLogGroupName": {
+          "Fn::Sub": "/aws/lambda/${SlackCommand}"
+        },
+        "FunctionPlatform": "AWS Lambda",
+        "FunctionFramework": "dotnetcore2.1",
+        "FunctionLanguage": "csharp",
+        "FunctionMaxMemory": "128",
+        "FunctionMaxDuration": "30"
+      },
+      "DependsOn": [
+        "ModuleRegistration"
+      ]
+    },
+    "SlackCommandLogGroupSubscription": {
+      "Type": "AWS::Logs::SubscriptionFilter",
+      "Properties": {
+        "DestinationArn": {
+          "Fn::If": [
+            "LambdaSharpLoggingStreamArnIsImported",
+            {
+              "Fn::ImportValue": {
+                "Fn::Sub": [
+                  "${DeploymentPrefix}${Import}",
+                  {
+                    "Import": {
+                      "Fn::Select": [
+                        "1",
+                        {
+                          "Fn::Split": [
+                            "$",
+                            {
+                              "Ref": "LambdaSharpLoggingStreamArn"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "Ref": "LambdaSharpLoggingStreamArn"
+            }
+          ]
+        },
+        "FilterPattern": "-\"*** \"",
+        "LogGroupName": {
+          "Ref": "SlackCommandLogGroup"
+        },
+        "RoleArn": {
+          "Fn::If": [
+            "LambdaSharpLoggingStreamRoleArnIsImported",
+            {
+              "Fn::ImportValue": {
+                "Fn::Sub": [
+                  "${DeploymentPrefix}${Import}",
+                  {
+                    "Import": {
+                      "Fn::Select": [
+                        "1",
+                        {
+                          "Fn::Split": [
+                            "$",
+                            {
+                              "Ref": "LambdaSharpLoggingStreamRoleArn"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "Ref": "LambdaSharpLoggingStreamRoleArn"
+            }
+          ]
+        }
+      }
+    },
+    "RecordMessageSource1Subscription": {
       "Type": "AWS::SNS::Subscription",
       "Properties": {
         "Endpoint": {
           "Fn::GetAtt": [
-            "Register",
+            "RecordMessage",
             "Arn"
           ]
         },
         "Protocol": "lambda",
         "TopicArn": {
-          "Ref": "RegistrationTopic"
+          "Ref": "SnsTopic"
         }
       }
     },
-    "RegisterSource1Permission": {
+    "RecordMessageSource1Permission": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
           "Fn::GetAtt": [
-            "Register",
+            "RecordMessage",
             "Arn"
           ]
         },
         "Principal": "sns.amazonaws.com",
         "SourceArn": {
-          "Ref": "RegistrationTopic"
+          "Ref": "SnsTopic"
         }
       }
+    },
+    "ModuleRestApi": {
+      "Type": "AWS::ApiGateway::RestApi",
+      "Properties": {
+        "Description": "${Module::Name} API (v${Module::Version})",
+        "FailOnWarnings": true,
+        "Name": {
+          "Fn::Sub": "${AWS::StackName} Module API"
+        }
+      }
+    },
+    "ModuleRestApiSlackResource": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "ParentId": {
+          "Fn::GetAtt": [
+            "ModuleRestApi",
+            "RootResourceId"
+          ]
+        },
+        "PathPart": "slack",
+        "RestApiId": {
+          "Ref": "ModuleRestApi"
+        }
+      }
+    },
+    "ModuleRestApiSlackResourcePOST": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "POST",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "IntegrationResponses": [
+            {
+              "ResponseTemplates": {
+                "application/json": "{\r\n\"response_type\": \"in_channel\",\r\n\"text\": \"\"\r\n}"
+              },
+              "StatusCode": 200
+            }
+          ],
+          "RequestParameters": {
+            "integration.request.header.X-Amz-Invocation-Type": "'Event'"
+          },
+          "RequestTemplates": {
+            "application/x-www-form-urlencoded": "{\r\n#foreach($token in $input.path('$').split('&'))\r\n    #set($keyVal = $token.split('='))\r\n    #set($keyValSize = $keyVal.size())\r\n    #if($keyValSize == 2)\r\n        #set($key = $util.escapeJavaScript($util.urlDecode($keyVal[0])))\r\n        #set($val = $util.escapeJavaScript($util.urlDecode($keyVal[1])))\r\n        \"$key\": \"$val\"#if($foreach.hasNext),#end\r\n    #end\r\n#end\r\n}"
+          },
+          "Type": "AWS",
+          "Uri": {
+            "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SlackCommand.Arn}/invocations"
+          }
+        },
+        "MethodResponses": [
+          {
+            "ResponseModels": {
+              "application/json": "Empty"
+            },
+            "StatusCode": 200
+          }
+        ],
+        "ResourceId": {
+          "Ref": "ModuleRestApiSlackResource"
+        },
+        "RestApiId": {
+          "Ref": "ModuleRestApi"
+        }
+      }
+    },
+    "ModuleRestApiSlackResourcePOSTPermission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "SlackCommand",
+            "Arn"
+          ]
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleRestApi}/LATEST/POST/slack"
+        }
+      }
+    },
+    "ModuleRestApiRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "ModuleRestApiPrincipal",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "apigateway.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Sid": "ModuleRestApiLogging",
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogGroup",
+                    "logs:CreateLogStream",
+                    "logs:DescribeLogGroups",
+                    "logs:DescribeLogStreams",
+                    "logs:PutLogEvents",
+                    "logs:GetLogEvents",
+                    "logs:FilterLogEvents"
+                  ],
+                  "Resource": "arn:aws:logs:*:*:*"
+                }
+              ]
+            },
+            "PolicyName": {
+              "Fn::Sub": "${AWS::StackName}ModuleRestApiPolicy"
+            }
+          }
+        ]
+      }
+    },
+    "ModuleRestApiAccount": {
+      "Type": "AWS::ApiGateway::Account",
+      "Properties": {
+        "CloudWatchRoleArn": {
+          "Fn::GetAtt": [
+            "ModuleRestApiRole",
+            "Arn"
+          ]
+        }
+      }
+    },
+    "ModuleRestApiDeploymentC39F09B8FD3EB1236787A152F8B12288": {
+      "Type": "AWS::ApiGateway::Deployment",
+      "Properties": {
+        "Description": {
+          "Fn::Sub": "${AWS::StackName} API [C39F09B8FD3EB1236787A152F8B12288]"
+        },
+        "RestApiId": {
+          "Ref": "ModuleRestApi"
+        }
+      },
+      "DependsOn": [
+        "ModuleRestApiSlackResourcePOST"
+      ]
+    },
+    "ModuleRestApiStage": {
+      "Type": "AWS::ApiGateway::Stage",
+      "Properties": {
+        "DeploymentId": {
+          "Ref": "ModuleRestApiDeploymentC39F09B8FD3EB1236787A152F8B12288"
+        },
+        "MethodSettings": [
+          {
+            "DataTraceEnabled": true,
+            "HttpMethod": "*",
+            "LoggingLevel": "INFO",
+            "ResourcePath": "/*"
+          }
+        ],
+        "RestApiId": {
+          "Ref": "ModuleRestApi"
+        },
+        "StageName": "LATEST"
+      },
+      "DependsOn": [
+        "ModuleRestApiAccount"
+      ]
     }
   },
   "Outputs": {
     "ModuleName": {
-      "Value": "LambdaSharpRegistrar"
+      "Value": "Demo"
     },
     "ModuleVersion": {
-      "Value": "0.5-WIP"
+      "Value": "1.0"
     },
-    "LambdaSharpRegisterModuleHandler": {
+    "NotifyRecorderTopic": {
       "Value": {
-        "Ref": "RegistrationTopic"
+        "Ref": "SnsTopic"
       },
       "Export": {
         "Name": {
-          "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::Register::Module"
+          "Fn::Sub": "${AWS::StackName}::NotifyRecorderTopic"
         }
       },
-      "Description": "Custom resources for registering LambdaSharp modules"
-    },
-    "LambdaSharpRegisterFunctionHandler": {
-      "Value": {
-        "Ref": "RegistrationTopic"
-      },
-      "Export": {
-        "Name": {
-          "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::Register::Function"
-        }
-      },
-      "Description": "Custom resources for registering LambdaSharp functions"
-    },
-    "ErrorReportTopic": {
-      "Value": {
-        "Ref": "ErrorReportTopic"
-      },
-      "Export": {
-        "Name": {
-          "Fn::Sub": "${AWS::StackName}::ErrorReportTopic"
-        }
-      },
-      "Description": "SNS topic for LambdaSharp module errors"
-    },
-    "UsageReportTopic": {
-      "Value": {
-        "Ref": "UsageReportTopic"
-      },
-      "Export": {
-        "Name": {
-          "Fn::Sub": "${AWS::StackName}::UsageReportTopic"
-        }
-      },
-      "Description": "SNS topic for LambdaSharp function usage reports"
+      "Description": "The topic that the lambda function subscribes to record messages"
     }
   },
   "Conditions": {
-    "FirehoseIsEnabled": {
-      "Fn::Equals": [
-        {
-          "Ref": "EnableFirehose"
-        },
-        "yes"
-      ]
-    },
     "SecretsIsEmpty": {
       "Fn::Equals": [
         {
@@ -1282,6 +1135,40 @@
         }
       ]
     },
+    "LambdaSharpLoggingStreamRoleArnIsImported": {
+      "Fn::And": [
+        {
+          "Fn::Not": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "LambdaSharpLoggingStreamRoleArn"
+                },
+                ""
+              ]
+            }
+          ]
+        },
+        {
+          "Fn::Equals": [
+            {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "$",
+                    {
+                      "Ref": "LambdaSharpLoggingStreamRoleArn"
+                    }
+                  ]
+                }
+              ]
+            },
+            ""
+          ]
+        }
+      ]
+    },
     "LambdaSharpDefaultSecretKeyArnIsImported": {
       "Fn::And": [
         {
@@ -1320,17 +1207,8 @@
   "Metadata": {
     "AWS::CloudFormation::Interface": {
       "ParameterLabels": {
-        "RollbarReadAccessToken": {
-          "default": "Read Access Token"
-        },
-        "RollbarWriteAccessToken": {
-          "default": "Write Access Token"
-        },
-        "RollbarProjectPrefix": {
-          "default": "Project Prefix"
-        },
-        "EnableFirehose": {
-          "default": "Enable Firehose"
+        "SlackToken": {
+          "default": "Slack Token"
         },
         "Secrets": {
           "default": "Secret Keys (ARNs)"
@@ -1340,6 +1218,9 @@
         },
         "LambdaSharpLoggingStreamArn": {
           "default": "Logging Stream (ARN)"
+        },
+        "LambdaSharpLoggingStreamRoleArn": {
+          "default": "Logging Stream Role (ARN)"
         },
         "LambdaSharpDefaultSecretKeyArn": {
           "default": "Secret Key (ARN)"
@@ -1363,20 +1244,10 @@
       "ParameterGroups": [
         {
           "Label": {
-            "default": "Rollbar Settings"
+            "default": "Module Settings"
           },
           "Parameters": [
-            "RollbarReadAccessToken",
-            "RollbarWriteAccessToken",
-            "RollbarProjectPrefix"
-          ]
-        },
-        {
-          "Label": {
-            "default": "Firehose Settings"
-          },
-          "Parameters": [
-            "EnableFirehose"
+            "SlackToken"
           ]
         },
         {
@@ -1394,6 +1265,7 @@
           "Parameters": [
             "LambdaSharpDeadLetterQueueArn",
             "LambdaSharpLoggingStreamArn",
+            "LambdaSharpLoggingStreamRoleArn",
             "LambdaSharpDefaultSecretKeyArn"
           ]
         },
@@ -1413,44 +1285,18 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2018-12-31",
-      "ModuleName": "LambdaSharpRegistrar",
-      "ModuleVersion": "0.5-WIP",
+      "ModuleName": "Demo",
+      "ModuleVersion": "1.0",
       "ParameterSections": [
         {
-          "Title": "Rollbar Settings",
+          "Title": "Module Settings",
           "Parameters": [
             {
-              "Name": "RollbarReadAccessToken",
-              "Type": "Secret",
-              "Description": "Account-level token for read operations",
-              "Label": "Read Access Token",
-              "Default": ""
-            },
-            {
-              "Name": "RollbarWriteAccessToken",
-              "Type": "Secret",
-              "Description": "Account-level token for write operations",
-              "Label": "Write Access Token",
-              "Default": ""
-            },
-            {
-              "Name": "RollbarProjectPrefix",
+              "Name": "SlackToken",
               "Type": "String",
-              "Description": "Optional prefix when creating Rollbar projects",
-              "Label": "Project Prefix",
+              "Description": "Slack verification token",
+              "Label": "Slack Token",
               "Default": ""
-            }
-          ]
-        },
-        {
-          "Title": "Firehose Settings",
-          "Parameters": [
-            {
-              "Name": "EnableFirehose",
-              "Type": "String",
-              "Description": "Enable Kinesis Firehose logging to S3 Bucket",
-              "Label": "Enable Firehose",
-              "Default": "no"
             }
           ]
         },
@@ -1484,6 +1330,13 @@
               "Default": "$LambdaSharp::LoggingStreamArn"
             },
             {
+              "Name": "LoggingStreamRoleArn",
+              "Type": "String",
+              "Description": "Role for logging to kinesis stream for functions",
+              "Label": "Logging Stream Role (ARN)",
+              "Default": "$LambdaSharp::LoggingStreamRoleArn"
+            },
+            {
               "Name": "DefaultSecretKeyArn",
               "Type": "String",
               "Description": "Default secret key for functions",
@@ -1494,98 +1347,40 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "48AD934C28143975B941EF8174616CCE",
+      "Hash": "92D37E16F9B6ACCF8981C586D5FFB5CD",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
-      "Dependencies": [],
-      "CustomResourceTypes": {
-        "LambdaSharp::Register::Function": {
-          "Request": [
-            {
-              "Name": "ModuleId",
-              "Type": "String"
-            },
-            {
-              "Name": "FunctionId",
-              "Type": "String"
-            },
-            {
-              "Name": "FunctionName",
-              "Type": "String"
-            },
-            {
-              "Name": "FunctionLogGroupName",
-              "Type": "String"
-            },
-            {
-              "Name": "FunctionMaxMemory",
-              "Type": "String"
-            },
-            {
-              "Name": "FunctionMaxDuration",
-              "Type": "String"
-            },
-            {
-              "Name": "FunctionPlatform",
-              "Type": "String"
-            },
-            {
-              "Name": "FunctionFramework",
-              "Type": "String"
-            },
-            {
-              "Name": "FunctionLanguage",
-              "Type": "String"
-            }
-          ],
-          "Response": [
-            {
-              "Name": "Registration",
-              "Type": "String"
-            }
-          ]
-        },
-        "LambdaSharp::Register::Module": {
-          "Request": [
-            {
-              "Name": "ModuleId",
-              "Type": "String"
-            },
-            {
-              "Name": "ModuleName",
-              "Type": "String"
-            },
-            {
-              "Name": "ModuleVersion",
-              "Type": "String"
-            }
-          ],
-          "Response": [
-            {
-              "Name": "Registration",
-              "Type": "String"
-            }
-          ]
+      "Dependencies": [
+        {
+          "ModuleName": "LambdaSharpRegistrar",
+          "MinVersion": "0.5-WIP"
         }
-      },
+      ],
+      "CustomResourceTypes": {},
       "MacroNames": [],
       "ResourceNameMappings": {
-        "FirehoseLoggingBucket": "Firehose::LoggingBucket",
-        "FirehoseLoggingStream": "Firehose::LoggingStream",
-        "FirehoseCloudWatchGroup": "Firehose::CloudWatchGroup",
-        "FirehoseCloudWatchStream": "Firehose::CloudWatchStream",
-        "FirehoseLoggingRole": "Firehose::LoggingRole",
-        "ProcessLogEventsLogGroup": "ProcessLogEvents::LogGroup",
-        "RegisterLogGroup": "Register::LogGroup",
-        "FinalizerInvocation": "Finalizer::Invocation",
+        "RecordMessageLogGroup": "RecordMessage::LogGroup",
+        "SlackCommandLogGroup": "SlackCommand::LogGroup",
         "ModuleRole": "Module::Role",
-        "ProcessLogEventsSource1EventMapping": "ProcessLogEvents::Source1EventMapping",
-        "RegisterSource1Subscription": "Register::Source1Subscription",
-        "RegisterSource1Permission": "Register::Source1Permission"
+        "ModuleRegistration": "Module::Registration",
+        "RecordMessageRegistration": "RecordMessage::Registration",
+        "RecordMessageLogGroupSubscription": "RecordMessage::LogGroupSubscription",
+        "SlackCommandRegistration": "SlackCommand::Registration",
+        "SlackCommandLogGroupSubscription": "SlackCommand::LogGroupSubscription",
+        "RecordMessageSource1Subscription": "RecordMessage::Source1Subscription",
+        "RecordMessageSource1Permission": "RecordMessage::Source1Permission",
+        "ModuleRestApi": "Module::RestApi",
+        "ModuleRestApiSlackResource": "Module::RestApi::SlackResource",
+        "ModuleRestApiSlackResourcePOST": "Module::RestApi::SlackResource::POST",
+        "ModuleRestApiSlackResourcePOSTPermission": "Module::RestApi::SlackResource::POST::Permission",
+        "ModuleRestApiRole": "Module::RestApi::Role",
+        "ModuleRestApiAccount": "Module::RestApi::Account",
+        "ModuleRestApiDeploymentC39F09B8FD3EB1236787A152F8B12288": "Module::RestApi::DeploymentC39F09B8FD3EB1236787A152F8B12288",
+        "ModuleRestApiStage": "Module::RestApi::Stage"
       },
       "CustomResourceNameMappings": {
-        "Custom::ModuleDecryptSecret": "Module::DecryptSecret",
-        "Custom::ModuleFinalizer": "Module::Finalizer"
+        "Custom::LambdaSharpRegisterModule": "LambdaSharp::Register::Module",
+        "Custom::LambdaSharpRegisterFunction": "LambdaSharp::Register::Function"
       }
     }
   }

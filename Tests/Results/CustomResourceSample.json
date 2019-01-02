@@ -55,7 +55,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "53D299504A4A6E8EC5924E1F8EE7D50B"
+      "Default": "E7863CCF6D09E7C5F1EB679BD2A2B7A8"
     }
   },
   "Resources": {
@@ -479,7 +479,7 @@
     "ModuleVersion": {
       "Value": "1.0"
     },
-    "MyNamespaceMyResourceHandler": {
+    "MyNamespaceMyResource": {
       "Value": {
         "Ref": "ResourceHandler"
       },
@@ -757,7 +757,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "53D299504A4A6E8EC5924E1F8EE7D50B",
+      "Hash": "E7863CCF6D09E7C5F1EB679BD2A2B7A8",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [

@@ -1,6 +1,6 @@
 Module: TestModule
 Description: LambdaSharp CloudFormation Test
-Outputs:
+Declarations:
 
   # Module Outputs
   - Export: LiteralValue

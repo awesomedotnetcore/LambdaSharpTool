@@ -32,94 +32,84 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
 
             // leaf nodes
             ["Parameter"] = new[] {
-                "Section",
-                "Label",
-                "Description",
-                "Type",
-                "Scope",
-                "NoEcho",
-                "Default",
-                "ConstraintDescription",
+                "Allow",
                 "AllowedPattern",
                 "AllowedValues",
+                "ConstraintDescription",
+                "Default",
+                "DefaultAttribute",
+                "Description",
+                "EncryptionContext",
+                "Label",
                 "MaxLength",
                 "MaxValue",
                 "MinLength",
                 "MinValue",
-                "Allow",
+                "NoEcho",
+                "Pragmas",
                 "Properties",
-                "DefaultAttribute",
-                "EncryptionContext",
-                "Pragmas"
+                "Scope",
+                "Section",
+                "Type"
             },
             ["Condition"] = new[] {
                 "Description",
                 "Value"
             },
             ["Module"] = new[] {
-                "Description",
                 "DependsOn",
-                "Properties",
-                "Parameters"
+                "Description",
+                "Parameters",
+                "Properties"
             },
             ["Function"] = new[] {
                 "Description",
-                "If",
-                "Memory",
-                "Timeout",
-                "Project",
-                "Runtime",
-                "Language",
-                "Handler",
-                "ReservedConcurrency",
-                "VPC",
                 "Environment",
+                "Handler",
+                "If",
+                "Language",
+                "Memory",
+                "Pragmas",
+                "Project",
+                "ReservedConcurrency",
+                "Runtime",
                 "Sources",
-                "Pragmas"
+                "Timeout",
+                "VPC"
             },
             ["Mapping"] = new[] {
                 "Description",
                 "Value"
             },
-
-            // nodes with optional nested entries
-            ["Import"] = new[] {
-                "Description",
-                "Entries"
-            },
             ["Variable"] = new[] {
-                "Variable",
                 "Description",
-                "Type",
-                "Scope",
-                "Value",
                 "EncryptionContext",
-                "Entries"
+                "Scope",
+                "Type",
+                "Value"
             },
             ["Resource"] = new[] {
+                "Allow",
+                "DefaultAttribute",
+                "DependsOn",
                 "Description",
                 "If",
-                "Type",
-                "Scope",
-                "Allow",
-                "Value",
+                "Pragmas",
                 "Properties",
-                "DependsOn",
-                "DefaultAttribute",
-                "Pragmas"
+                "Scope",
+                "Type",
+                "Value"
             },
             ["Package"] = new[] {
                 "Description",
-                "Scope",
-                "Files"
+                "Files",
+                "Scope"
             },
-
-            // output nodes
             ["Export"] = new[] {
                 "Description",
                 "Value"
             },
-            ["CustomResource"] = new[] {
+            ["ResourceType"] = new[] {
                 "Description",
                 "Handler",
                 "Properties"
@@ -127,6 +117,20 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
             ["Macro"] = new[] {
                 "Description",
                 "Handler"
+            },
+
+            // nodes with optional nested entries
+            ["Import"] = new[] {
+
+                // TODO
+                "Declarations",
+                "Description"
+            },
+            ["Namespace"] = new[] {
+
+                // TODO
+                "Declarations",
+                "Description"
             }
         };
 
@@ -176,23 +180,28 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         /*
          * Import: string
          * Description: string
-         * Entries: list<Parameter>
+         * Declarations: list<Parameter>
          */
         public string Import { get; set; }
-        public IList<EntryNode> Entries { get; set; }
+        public IList<EntryNode> Declarations { get; set; }
 
         /*
          * Variable: string
          * Description: string
          * Type: string
          * Scope: string -or- list<string>
-         * Allow: string or list<string>
          * Value: any
          * EncryptionContext: map
-         * Entries: list<Entry>
          */
         public string Variable { get; set; }
         public object Value { get; set; }
+
+        /*
+         * Namespace: string
+         * Description: string
+         * Declarations: list<Parameter>
+         */
+        public string Namespace { get; set; }
 
         /*
          * Condition: string
@@ -208,6 +217,7 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
          * Type: string
          * Scope: string -or- list<string>
          * Allow: string or list<string>
+         * Value: any
          * DependsOn: string -or- list<string>
          * Properties: map
          * DefaultAttribute: string
@@ -262,7 +272,6 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         public string Memory { get; set; }
         public string Timeout { get; set; }
         public string Project { get; set; }
-        // public string Handler { get; set; }
         public string Runtime { get; set; }
         public string Language { get; set; }
         public string ReservedConcurrency { get; set; }
@@ -285,12 +294,12 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         public string Export { get; set; }
 
         /*
-         * CustomResource: string
+         * ResourceType: string
          * Description: string
          * Handler: string
          * Properties: map
          */
-        public string CustomResource { get; set; }
+        public string ResourceType { get; set; }
         public string Handler { get; set; }
 
         /*

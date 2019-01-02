@@ -1,9 +1,9 @@
 Module: TestModule
 Description: LambdaSharp CloudFormation Test
-Outputs:
+Declarations:
 
   # Custom Resources
-  - CustomResource: TestModule::MyCustomSnsResource
+  - ResourceType: TestModule::MyCustomSnsResource
     Description: A custom resource handler using an SNS topic
     Handler: ResourceValue
     Properties:
@@ -14,7 +14,7 @@ Outputs:
         - Name: Bar
           Type: String
 
-  - CustomResource: TestModule::MyCustomLambdaResource
+  - ResourceType: TestModule::MyCustomLambdaResource
     Description: A custom resource handler using a Lambda Function
     Handler: Function
     Properties:
@@ -24,8 +24,6 @@ Outputs:
       Response:
         - Name: Bar
           Type: String
-
-Entries:
 
   - Resource: ResourceValue
     Description: ResourceValue description

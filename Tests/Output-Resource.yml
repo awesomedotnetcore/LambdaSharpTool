@@ -1,12 +1,12 @@
 Module: TestModule
 Description: LambdaSharp CloudFormation Test
-Outputs:
+Declarations:
 
   # Module Outputs
   - Export: ResourceValue
+    Description: ResourceValue description
+    Value: !Ref MyResource
 
-Entries:
-
-  - Resource: ResourceValue
+  - Resource: MyResource
     Description: ResourceValue description
     Type: AWS::SNS::Topic

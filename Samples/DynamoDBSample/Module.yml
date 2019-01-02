@@ -1,6 +1,6 @@
 Module: DynamoDBSample
 Description: A sample module using Kinesis streams
-Entries:
+Declarations:
 
   - Resource: Table
     Scope: "*"

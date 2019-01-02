@@ -81,7 +81,6 @@ if [ -z "$1" ]; then
         Condition-Function.yml \
         Condition-Condition.yml \
         ../Runtime/LambdaSharp \
-        ../Runtime/LambdaSharpRegistrar \
         ../Runtime/LambdaSharpS3PackageLoader \
         ../Runtime/LambdaSharpS3Subscriber \
         ../Samples/AlexaSample \
@@ -94,7 +93,11 @@ if [ -z "$1" ]; then
         ../Samples/ScheduleSample \
         ../Samples/SlackCommandSample \
         ../Samples/SnsSample \
-        ../Samples/SqsSample
+        ../Samples/SqsSample \
+        ../Demos/Demo \
+        ../Demos/DemoS3BucketSupscription/DemoS3Bucket \
+        ../Demos/DemoS3BucketSupscription/DemoS3Subscriber \
+        ../Demos/BadModule
 else
 
     # run requested test

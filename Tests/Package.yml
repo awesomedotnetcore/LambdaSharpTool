@@ -1,6 +1,6 @@
 Module: TestModule
 Description: LambdaSharp CloudFormation Test
-Entries:
+Declarations:
 
   - Resource: MyBucket
     Type: AWS::S3::Bucket

@@ -33,7 +33,6 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         public IList<object> Pragmas { get; set; } = new List<object>();
         public IList<string> Secrets { get; set; } = new List<string>();
         public IList<ModuleDependencyNode> Requires { get; set; } = new List<ModuleDependencyNode>();
-        public IList<EntryNode> Outputs { get; set; } = new List<EntryNode>();
-        public IList<EntryNode> Entries { get; set; } = new List<EntryNode>();
+        public IList<EntryNode> Declarations { get; set; } = new List<EntryNode>();
     }
 }

@@ -1,6 +1,6 @@
 Module: TestModule
 Description: LambdaSharp CloudFormation Test
-Entries:
+Declarations:
 
   - Variable: SourceValueParameter
     Description: Literal value
@@ -35,10 +35,9 @@ Entries:
       - !Ref SourceResourceParameter
       - literal value
 
-  - Variable: SourceParameterCollection
+  - Namespace: SourceParameterCollection
     Description: Description for collection parameter
-    Scope: "*"
-    Entries:
+    Declarations:
 
       - Variable: FirstSourceValueParameter
         Description: Nested parameter with a literal value
@@ -53,10 +52,9 @@ Entries:
         Properties:
           DisplayName: !Ref SourceValueParameter
 
-  - Variable: SampleParameterCollection
+  - Namespace: SampleParameterCollection
     Description: Description for collection parameter
-    Scope: "*"
-    Entries:
+    Declarations:
 
       - Variable: FirstNestedParameter
         Description: First nested parameter
@@ -103,11 +101,9 @@ Entries:
         Scope: "*"
         Value: !Ref SingleResourceVariable
 
-  - Variable: OtherParameterCollection
+  - Namespace: OtherParameterCollection
     Description: Description for collection parameter
-    Scope: "*"
-    Value: This collection has a value
-    Entries:
+    Declarations:
 
       - Variable: FirstNestedParameter
         Description: Same name as first nested parameter in sample parameter collection

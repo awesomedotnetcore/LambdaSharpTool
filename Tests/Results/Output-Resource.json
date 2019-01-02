@@ -27,11 +27,11 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "8BCA9A2B426E244487976107B35882B8"
+      "Default": "C9A2E93FA3373405D4C74B0F7E433D60"
     }
   },
   "Resources": {
-    "ResourceValue": {
+    "MyResource": {
       "Type": "AWS::SNS::Topic",
       "Properties": {}
     },
@@ -60,7 +60,7 @@
     },
     "ResourceValue": {
       "Value": {
-        "Ref": "ResourceValue"
+        "Ref": "MyResource"
       },
       "Export": {
         "Name": {
@@ -134,7 +134,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "8BCA9A2B426E244487976107B35882B8",
+      "Hash": "C9A2E93FA3373405D4C74B0F7E433D60",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [

@@ -55,7 +55,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "DB8D435509E9FDD2D15606D7C6644BEE"
+      "Default": "E820E0639C2F317E5EAF8378538A2413"
     }
   },
   "Resources": {
@@ -514,7 +514,7 @@
     "ModuleVersion": {
       "Value": "1.0"
     },
-    "TestModuleMyCustomSnsResourceHandler": {
+    "TestModuleMyCustomSnsResource": {
       "Value": {
         "Ref": "ResourceValue"
       },
@@ -525,7 +525,7 @@
       },
       "Description": "A custom resource handler using an SNS topic"
     },
-    "TestModuleMyCustomLambdaResourceHandler": {
+    "TestModuleMyCustomLambdaResource": {
       "Value": {
         "Ref": "Function"
       },
@@ -803,7 +803,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "DB8D435509E9FDD2D15606D7C6644BEE",
+      "Hash": "E820E0639C2F317E5EAF8378538A2413",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [

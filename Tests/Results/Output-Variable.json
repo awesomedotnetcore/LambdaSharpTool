@@ -27,7 +27,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "04FA92D04943044AE9110C4C19D16BE9"
+      "Default": "D5908EA66524BB916E36AE3F3B090B77"
     }
   },
   "Resources": {
@@ -73,7 +73,7 @@
       "Description": "ManyValues description"
     },
     "OutputExpressionValue": {
-      "Value": "this is a value with extra stuff",
+      "Value": "this is another value with extra stuff",
       "Export": {
         "Name": {
           "Fn::Sub": "${AWS::StackName}::OutputExpressionValue"
@@ -145,7 +145,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "04FA92D04943044AE9110C4C19D16BE9",
+      "Hash": "D5908EA66524BB916E36AE3F3B090B77",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [

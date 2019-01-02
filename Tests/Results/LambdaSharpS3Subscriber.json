@@ -55,7 +55,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "F37B6B9D310421BFF7AD0915F3A94CF8"
+      "Default": "C6DDAB3EB97071F3A163A6C6ABD382D5"
     }
   },
   "Resources": {
@@ -549,7 +549,7 @@
     "ModuleVersion": {
       "Value": "0.5-WIP"
     },
-    "LambdaSharpS3SubscriptionHandler": {
+    "LambdaSharpS3Subscription": {
       "Value": {
         "Ref": "CustomResourceTopic"
       },
@@ -827,7 +827,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "F37B6B9D310421BFF7AD0915F3A94CF8",
+      "Hash": "C6DDAB3EB97071F3A163A6C6ABD382D5",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [

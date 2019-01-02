@@ -1,6 +1,6 @@
 Module: S3Sample
 Description: A sample module integrating with S3 Bucket events
-Entries:
+Declarations:
 
   - Resource: MyFirstBucket
     Description: The S3 Bucket the function is listening to

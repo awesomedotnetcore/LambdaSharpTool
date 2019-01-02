@@ -1,11 +1,9 @@
 Module: TestModule
 Description: LambdaSharp CloudFormation Test
-Outputs:
+Declarations:
 
   - Export: MyFunction
     Value: !Ref Function
-
-Entries:
 
   - Function: Function
     Description: My function

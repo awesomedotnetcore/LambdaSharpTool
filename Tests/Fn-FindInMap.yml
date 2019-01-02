@@ -1,9 +1,9 @@
 Module: TestModule
 Description: LambdaSharp CloudFormation Test
-Entries:
+Declarations:
 
-  - Variable: Maps
-    Entries:
+  - Namespace: Maps
+    Declarations:
 
     - Mapping: RegionMap
       Value:

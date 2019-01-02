@@ -12,9 +12,9 @@ A [CloudFormation Custom Resource](https://docs.aws.amazon.com/AWSCloudFormation
 ```yaml
 Module: CustomResourceSample
 Description: A sample module for defining a custom resource
-Outputs:
+Entries:
 
-  - CustomResource: MyNamespace::MyResource
+  - ResourceType: MyNamespace::MyResource
     Description: Handler for MyNamespace::MyResource custom resource
     Handler: ResourceHandler
     Properties:
@@ -22,8 +22,6 @@ Outputs:
         - Name: SampleInput
       Response:
         - Name: SampleOutput
-
-Entries:
 
   - Function: ResourceHandler
     Description: This function is invoked by CloudFormation
