@@ -37,7 +37,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
         //--- Methods ---
         public void Validate(ModuleBuilder builder) {
             _builder = builder;
-            AtLocation("Entries", () => {
+            AtLocation("Items", () => {
                 foreach(var entry in builder.Entries) {
                     AtLocation(entry.FullName, () => {
                         switch(entry) {

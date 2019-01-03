@@ -1,6 +1,6 @@
 Module: TestModule
 Description: LambdaSharp CloudFormation Test
-Declarations:
+Items:
 
   # Custom Resources
   - ResourceType: TestModule::MyCustomSnsResource

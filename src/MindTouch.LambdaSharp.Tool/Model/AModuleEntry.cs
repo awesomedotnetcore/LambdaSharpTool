@@ -70,7 +70,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public bool HasSecretType => Type == "Secret";
         public bool HasAwsType => ResourceMapping.IsCloudFormationType(Type);
         public bool HasTypeValidation => !HasPragma("no-type-validation");
-        public bool IsExported => Scope.Contains("export");
+        public bool IsPublic => Scope.Contains("public");
 
 
         //--- Methods ---

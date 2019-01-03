@@ -1,9 +1,9 @@
 Module: TestModule
 Description: LambdaSharp CloudFormation Test
-Declarations:
+Items:
 
   # Module Outputs
   - Variable: LiteralValue
-    Scope: export
+    Scope: public
     Description: An exported literal value
     Value: 123

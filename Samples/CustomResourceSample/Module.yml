@@ -1,6 +1,6 @@
 Module: CustomResourceSample
 Description: A sample module for defining a custom resource
-Declarations:
+Items:
 
   - ResourceType: MyNamespace::MyResource
     Description: Handler for MyNamespace::MyResource custom resource

@@ -20,7 +20,7 @@
 Module: LambdaSharpS3PackageLoader
 Version: 0.5-WIP
 Description: LambdaSharp S3 Package Loader
-Declarations:
+Items:
 
   - ResourceType: LambdaSharp::S3::Package
     Description: Custom resource for deploying packages to S3 buckets

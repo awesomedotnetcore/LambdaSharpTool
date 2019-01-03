@@ -1,6 +1,6 @@
 Module: AlexaSample
 Description: A sample module using an Alexa skill
-Declarations:
+Items:
 
   - Parameter: AlexaSkillID
     Description: Alexa Skill ID

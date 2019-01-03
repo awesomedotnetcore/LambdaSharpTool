@@ -1,6 +1,6 @@
 Module: TestModule
 Description: LambdaSharp CloudFormation Test
-Declarations:
+Items:
 
   - Function: Function
     Description: My function

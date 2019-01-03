@@ -1,6 +1,6 @@
 Module: KinesisSample
 Description: A sample module using Kinesis streams
-Declarations:
+Items:
 
   - Resource: Stream
     Description: Description for Kinesis stream

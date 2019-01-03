@@ -1,6 +1,6 @@
 Module: TestModule
 Description: LambdaSharp CloudFormation Test
-Declarations:
+Items:
 
   - Parameter: InputBucket
     Description: Description for Bucket resource

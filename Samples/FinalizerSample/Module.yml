@@ -1,6 +1,6 @@
 Module: FinalizerSample
 Description: A sample module with a finalizer function
-Declarations:
+Items:
 
   - Resource: MyBucket
     Description: A sample resource being created before the finalizer is invoked

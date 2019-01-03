@@ -138,7 +138,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             switch(entry) {
             case VariableEntry _:
             case PackageEntry _:
-                if(entry.IsExported) {
+                if(entry.IsPublic) {
                     AddExport(entry);
                 }
                 break;
@@ -149,13 +149,13 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     resourceEntry.Condition,
                     dependsOn: resourceEntry.DependsOn.ToArray()
                 );
-                if(entry.IsExported) {
+                if(entry.IsPublic) {
                     AddExport(entry);
                 }
                 break;
             case InputEntry inputEntry:
                 _stack.Add(logicalId, inputEntry.Parameter);
-                if(entry.IsExported) {
+                if(entry.IsPublic) {
                     AddExport(entry, inputEntry.Label);
                 }
                 break;
@@ -166,7 +166,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     functionEntry.Condition,
                     dependsOn: functionEntry.DependsOn.ToArray()
                 );
-                if(entry.IsExported) {
+                if(entry.IsPublic) {
                     AddExport(entry);
                 }
                 break;

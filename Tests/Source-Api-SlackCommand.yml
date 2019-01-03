@@ -1,6 +1,6 @@
 Module: TestModule
 Description: LambdaSharp CloudFormation Test
-Declarations:
+Items:
 
   - Parameter: SlackToken
     Description: Slack verification token

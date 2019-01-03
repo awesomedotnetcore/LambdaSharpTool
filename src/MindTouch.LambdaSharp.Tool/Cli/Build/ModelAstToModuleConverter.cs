@@ -73,7 +73,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 ForEach("Pragmas", module.Pragmas, ConvertPragma);
                 ForEach("Secrets", module.Secrets, ConvertSecret);
                 ForEach("Requires", module.Requires, ConvertDependency);
-                ForEach("Entries", module.Declarations, ConvertEntry);
+                ForEach("Items", module.Items, ConvertEntry);
                 return _builder;
             } catch(Exception e) {
                 AddError(e);
@@ -259,7 +259,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 "Condition",
                 "Export",
                 "Function",
-                "Import",
                 "Macro",
                 "Mapping",
                 "Module",
@@ -268,6 +267,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 "Parameter",
                 "Resource",
                 "ResourceType",
+                "Using",
                 "Variable"
             });
 
@@ -310,12 +310,12 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     );
                 });
                 break;
-            case "Import":
-                AtLocation(node.Import, () => {
+            case "Using":
+                AtLocation(node.Using, () => {
 
                     // create import/cross-module reference entry
-                    var result = _builder.AddImport(
-                        import: node.Import,
+                    var result = _builder.AddUsing(
+                        import: node.Using,
                         description: node.Description
                     );
 
@@ -639,7 +639,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
             // local functions
             void ConvertEntries(AModuleEntry result, IEnumerable<string> nestedExpectedTypes = null) {
-                ForEach("Entries", node.Declarations, (i, p) => ConvertEntry(result, i, p, nestedExpectedTypes ?? expectedTypes));
+                ForEach("Declarations", node.Items, (i, p) => ConvertEntry(result, i, p, nestedExpectedTypes ?? expectedTypes));
             }
 
             void ValidateARN(object resourceArn) {

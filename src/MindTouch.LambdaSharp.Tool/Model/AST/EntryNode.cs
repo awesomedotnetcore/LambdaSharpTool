@@ -117,16 +117,14 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
             },
 
             // nodes with optional nested entries
-            ["Import"] = new[] {
-
-                // TODO
-                "Declarations",
-                "Description"
+            ["Using"] = new[] {
+                "Description",
+                "Items"
             },
             ["Namespace"] = new[] {
 
                 // TODO
-                "Declarations",
+                "Items",
                 "Description"
             }
         };
@@ -175,12 +173,12 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         public IList<object> Pragmas { get; set; }
 
         /*
-         * Import: string
+         * Using: string
          * Description: string
-         * Declarations: list<Parameter>
+         * Imports: list<Parameter>
          */
-        public string Import { get; set; }
-        public IList<EntryNode> Declarations { get; set; }
+        public string Using { get; set; }
+        public IList<EntryNode> Items { get; set; }
 
         /*
          * Variable: string
@@ -196,7 +194,7 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         /*
          * Namespace: string
          * Description: string
-         * Declarations: list<Parameter>
+         * Items: list<Declaration>
          */
         public string Namespace { get; set; }
 

@@ -1,7 +1,7 @@
 Module: BadModule
 Version: 1.0
 Description: Module for generating errors
-Declarations:
+Items:
 
   - Function: NearTimeout
     Description: Gets within 1 second of a timeout

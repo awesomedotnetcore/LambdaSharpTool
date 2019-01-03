@@ -1,21 +1,21 @@
 Module: TestModule
 Description: LambdaSharp CloudFormation Test
-Declarations:
+Items:
 
   - Variable: SimpleValue
-    Scope: export
+    Scope: public
     Description: SimpleValue description
     Value: this is a value
 
   - Variable: ManyValues
-    Scope: export
+    Scope: public
     Description: ManyValues description
     Value:
       - first value
       - second value
 
   - Variable: OutputExpressionValue
-    Scope: export
+    Scope: public
     Value: !Sub "${Value} with extra stuff"
 
   - Variable: Value

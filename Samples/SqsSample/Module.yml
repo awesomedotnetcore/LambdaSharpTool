@@ -1,6 +1,6 @@
 Module: SqsSample
 Description: A sample module using SQS queues
-Declarations:
+Items:
 
   - Resource: MyFirstQueue
     Description: A sample SQS queue

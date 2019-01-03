@@ -1,6 +1,6 @@
 Module: DemoS3Bucket
-Declarations:
+Items:
 
   - Resource: Bucket
-    Scope: export
+    Scope: public
     Type: AWS::S3::Bucket

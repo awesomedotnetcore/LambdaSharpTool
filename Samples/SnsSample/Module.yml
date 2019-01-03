@@ -1,6 +1,6 @@
 Module: SnsSample
 Description: A sample module using an SNS topic
-Declarations:
+Items:
 
   - Resource: MyTopic
     Description: An SNS topic used to invoke the function.

@@ -1,6 +1,6 @@
 Module: MacroSample
 Description: A sample module defining CloudFormation macros
-Declarations:
+Items:
 
   - Macro: StringToUpper
     Handler: MyFunction

@@ -60,7 +60,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             _boundEntries.Clear();
 
             // compute scopes
-            AtLocation("Entries", () => {
+            AtLocation("Items", () => {
                 var functionNames = builder.Entries.OfType<FunctionEntry>()
                     .Select(function => function.FullName)
                     .ToList();
@@ -76,7 +76,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         }
 
                         // verify that all defined scope values are valid
-                        foreach(var unknownScope in entry.Scope.Where(scope => (scope != "export") && !functionNames.Contains(scope))) {
+                        foreach(var unknownScope in entry.Scope.Where(scope => (scope != "public") && !functionNames.Contains(scope))) {
                             AddError($"unknown referenced function '{unknownScope}' in scope definition");
                         }
                     });
@@ -127,7 +127,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             });
 
             // resolve all inter-entry references
-            AtLocation("Entries", () => {
+            AtLocation("Items", () => {
                 DiscoverEntries();
                 ResolveEntries();
                 ReportUnresolvedEntries();
@@ -375,7 +375,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     found[entry.FullName] = entry;
                     entry.Visit(FindReachable);
                 }
-                foreach(var output in _builder.Entries.Where(entry => entry.IsExported)) {
+                foreach(var output in _builder.Entries.Where(entry => entry.IsPublic)) {
                     output.Visit(FindReachable);
                 }
                 foreach(var statement in _builder.ResourceStatements) {

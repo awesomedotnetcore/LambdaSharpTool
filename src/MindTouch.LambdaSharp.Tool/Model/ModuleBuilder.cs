@@ -362,7 +362,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             return result;
         }
 
-        public AModuleEntry AddImport(
+        public AModuleEntry AddUsing(
             string import,
             string description
         ) {
@@ -943,7 +943,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             });
 
             // resolve references in entries
-            AtLocation("Entries", () => {
+            AtLocation("Items", () => {
                 foreach(var entry in _entries) {
                     AtLocation(entry.FullName, () => {
                         entry.Visit(visitor);

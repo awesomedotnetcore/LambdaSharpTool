@@ -29,11 +29,11 @@ Pragmas:
       Module::LoggingStream: !Ref LoggingStream
       Module::LoggingStreamRole: !GetAtt LoggingStreamRole.Arn
 
-Declarations:
+Items:
 
   # LambdaSharp Tier
   - Parameter: DeadLetterQueue
-    Scope: export
+    Scope: public
     Section: LambdaSharp Tier Settings
     Label: Dead Letter Queue (ARN)
     Description: Dead letter queue for functions (leave blank to create a new queue)
@@ -41,7 +41,7 @@ Declarations:
     Default: ""
 
   - Parameter: LoggingStream
-    Scope: export
+    Scope: public
     Section: LambdaSharp Tier Settings
     Label: Logging Stream (ARN)
     Description: Logging kinesis stream for functions (leave blank to create a new stream)
@@ -59,7 +59,7 @@ Declarations:
     Default: 24
 
   - Parameter: DefaultSecretKey
-    Scope: export
+    Scope: public
     Section: LambdaSharp Tier Settings
     Label: Default Secret Key (ARN)
     Description: Default secret key for functions (leave blank to create a new key)
@@ -86,7 +86,7 @@ Declarations:
     Default: false
 
   - Resource: LoggingStreamRole
-    Scope: export
+    Scope: public
     Description: Role for writing CloudWatch logs to the Kinesis stream
     Type: AWS::IAM::Role
     Properties:
@@ -154,14 +154,14 @@ Declarations:
     Allow: Subscribe
 
   - Resource: ErrorReportTopic
-    Scope: export
+    Scope: public
     Description: SNS topic for LambdaSharp module errors
     Scope: ProcessLogEvents
     Type: AWS::SNS::Topic
     Allow: Publish
 
   - Resource: UsageReportTopic
-    Scope: export
+    Scope: public
     Description: SNS topic for LambdaSharp function usage reports
     Scope: ProcessLogEvents
     Type: AWS::SNS::Topic
@@ -240,7 +240,7 @@ Declarations:
       - no
 
   - Namespace: Firehose
-    Declarations:
+    Items:
 
     - Condition: IsEnabled
       Value: !Equals [ !Ref EnableFirehose, "yes" ]

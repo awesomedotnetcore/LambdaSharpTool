@@ -1,8 +1,8 @@
 Module: DemoS3Subscriber
-Declarations:
+Items:
 
-  - Import: DemoS3Bucket
-    Declarations:
+  - Using: DemoS3Bucket
+    Imports:
 
       - Parameter: Bucket
         Type: AWS::S3::Bucket
