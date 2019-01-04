@@ -342,7 +342,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 condition: null,
                 pragmas: new[] {
                     "no-function-registration",
-                    "no-dead-letter-queue"
+                    "no-dead-letter-queue",
+                    "no-wildcard-scoped-variables"
                 },
                 timeout: "30",
                 reservedConcurrency: null,

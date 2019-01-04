@@ -34,6 +34,7 @@
             * `no-handler-validation`: don't validate if the lambda function handler can be found in the compiled assembly
             * `no-function-registration`: don't register function with λ# registrar
             * `no-dead-letter-queue`: don't add the DLQ to the function
+            * `no-wildcard-scoped-variables`: don't include function for `*` scopes
         * Modules
             * `no-runtime-version-check`: don't check if the λ# runtime and CLI versions match
             * `no-module-registration`: don't register module with λ# registrar

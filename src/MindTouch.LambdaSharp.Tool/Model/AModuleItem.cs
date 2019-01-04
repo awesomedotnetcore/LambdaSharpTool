@@ -257,6 +257,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public bool HasDeadLetterQueue => !HasPragma("no-dead-letter-queue");
         public bool HasAssemblyValidation => !HasPragma("no-assembly-validation");
         public bool HasHandlerValidation => !HasPragma("no-handler-validation");
+        public bool HasWildcardScopedVariables => !HasPragma("no-wildcard-scoped-variables");
 
         //--- Methods ---
         public override void Visit(Func<AModuleItem, object, object> visitor) {

@@ -62,6 +62,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             // compute scopes
             AtLocation("Items", () => {
                 var functionNames = builder.Items.OfType<FunctionItem>()
+                    .Where(function => function.HasWildcardScopedVariables)
                     .Select(function => function.FullName)
                     .ToList();
                 foreach(var item in builder.Items) {
