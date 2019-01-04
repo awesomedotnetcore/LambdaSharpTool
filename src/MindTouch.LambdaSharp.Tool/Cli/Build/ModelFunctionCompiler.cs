@@ -40,7 +40,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             public string Method { get; set; }
             public string[] Path { get; set; }
             public ApiGatewaySourceIntegration Integration { get; set; }
-            public FunctionEntry Function { get; set; }
+            public FunctionItem Function { get; set; }
             public string OperationName { get; set; }
             public bool? ApiKeyRequired { get; set; }
         }
@@ -57,7 +57,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             _builder = builder;
 
             // create module IAM role used by all functions
-            var functions = _builder.Entries.OfType<FunctionEntry>().ToList();
+            var functions = _builder.Items.OfType<FunctionItem>().ToList();
             if(functions.Any()) {
 
                 // add functions
@@ -67,11 +67,11 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
                 // check if an API gateway needs to be created
                 if(_apiGatewayRoutes.Any()) {
-                    var moduleEntry = _builder.GetEntry("Module");
+                    var moduleItem = _builder.GetItem("Module");
 
                     // create a RestApi
-                    var restApiEntry = _builder.AddResource(
-                        parent: moduleEntry,
+                    var restApiItem = _builder.AddResource(
+                        parent: moduleItem,
                         name: "RestApi",
                         description: "Module REST API",
                         scope: null,
@@ -88,7 +88,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
                     // recursively create resources as needed
                     var apiMethods = new List<KeyValuePair<string, object>>();
-                    AddApiResource(restApiEntry, FnRef(restApiEntry.ResourceName), FnGetAtt(restApiEntry.ResourceName, "RootResourceId"), 0, _apiGatewayRoutes, apiMethods);
+                    AddApiResource(restApiItem, FnRef(restApiItem.ResourceName), FnGetAtt(restApiItem.ResourceName, "RootResourceId"), 0, _apiGatewayRoutes, apiMethods);
 
                     // RestApi deployment depends on all methods and their hash (to force redeployment in case of change)
                     var methodSignature = string.Join("\n", apiMethods
@@ -99,7 +99,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
                     // add RestApi url
                     _builder.AddVariable(
-                        parent: restApiEntry,
+                        parent: restApiItem,
                         name: "Url",
                         description: "Module REST API URL",
                         type: "String",
@@ -111,7 +111,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
                     // create a RestApi role that can write logs
                     _builder.AddResource(
-                        parent: restApiEntry,
+                        parent: restApiItem,
                         name: "Role",
                         description: "Module REST API Role",
                         scope: null,
@@ -162,7 +162,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
                     // create a RestApi account which uses the RestApi role
                     _builder.AddResource(
-                        parent: restApiEntry,
+                        parent: restApiItem,
                         name: "Account",
                         description: "Module REST API Account",
                         scope: null,
@@ -178,7 +178,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     // NOTE (2018-06-21, bjorg): the RestApi deployment resource depends on ALL methods resources having been created;
                     //  a new name is used for the deployment to force the stage to be updated
                     var deployment = _builder.AddResource(
-                        parent: restApiEntry,
+                        parent: restApiItem,
                         name: "Deployment" + methodsHash,
                         description: "Module REST API Deployment",
                         scope: null,
@@ -196,7 +196,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     // NOTE (2018-06-21, bjorg): the stage resource depends on the account resource having been granted
                     //  the necessary permissions for logging
                     _builder.AddResource(
-                        parent: restApiEntry,
+                        parent: restApiItem,
                         name: "Stage",
                         description: "Module REST API Stage",
                         scope: null,
@@ -222,7 +222,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             }
         }
 
-        private void AddApiResource(AModuleEntry parent, object restApiId, object parentId, int level, IEnumerable<ApiRoute> routes, List<KeyValuePair<string, object>> apiMethods) {
+        private void AddApiResource(AModuleItem parent, object restApiId, object parentId, int level, IEnumerable<ApiRoute> routes, List<KeyValuePair<string, object>> apiMethods) {
 
             // create methods at this route level to parent id
             var methods = routes.Where(route => route.Path.Length == level).ToArray();
@@ -240,8 +240,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     continue;
                 }
 
-                // add API method entry
-                var methodEntry = _builder.AddResource(
+                // add API method item
+                var methodItem = _builder.AddResource(
                     parent: parent,
                     name: method.Method,
                     description: null,
@@ -257,7 +257,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
                 // add permission to API method to invoke lambda
                 _builder.AddResource(
-                    parent: methodEntry,
+                    parent: methodItem,
                     name: "Permission",
                     description: null,
                     scope: null,
@@ -272,7 +272,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     condition: method.Function.Condition,
                     pragmas: null
                 );
-                apiMethods.Add(new KeyValuePair<string, object>(methodEntry.ResourceName, apiMethod));
+                apiMethods.Add(new KeyValuePair<string, object>(methodItem.ResourceName, apiMethod));
             }
 
             // find sub-routes and group common sub-route prefix
@@ -378,7 +378,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             }
         }
 
-        private void AddFunction(FunctionEntry function) {
+        private void AddFunction(FunctionItem function) {
 
             // add function sources
             for(var sourceIndex = 0; sourceIndex < function.Sources.Count; ++sourceIndex) {
@@ -579,8 +579,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         } else if(
                             (eventSourceToken != null)
                             && TryGetFnRef(eventSourceToken, out string refKey)
-                            && _builder.TryGetEntry(refKey, out AModuleEntry entry)
-                            && entry is InputEntry
+                            && _builder.TryGetItem(refKey, out AModuleItem item)
+                            && item is InputItem
                         ) {
 
                             // create conditional expression to allow "*" values
@@ -633,7 +633,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                             condition: function.Condition,
                             pragmas: null
                         );
-                    }, entry => FnGetAtt(entry.ResourceName, "StreamArn"));
+                    }, item => FnGetAtt(item.ResourceName, "StreamArn"));
                     break;
                 case KinesisSource kinesisSource:
                     Enumerate(kinesisSource.Kinesis, (suffix, arn) => {
@@ -662,15 +662,15 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             }
         }
 
-        private void Enumerate(object value, Action<string, object> action, Func<AResourceEntry, object> getReference = null) {
+        private void Enumerate(object value, Action<string, object> action, Func<AResourceItem, object> getReference = null) {
             if(value is string fullName) {
-                if(!_builder.TryGetEntry(fullName, out AModuleEntry entry)) {
+                if(!_builder.TryGetItem(fullName, out AModuleItem item)) {
                     AddError($"could not find function source: '{fullName}'");
                     return;
                 }
-                if(entry is AResourceEntry resource) {
-                    action("", getReference?.Invoke(resource) ?? entry.GetExportReference());
-                } else if(entry.Reference is IList list) {
+                if(item is AResourceItem resource) {
+                    action("", getReference?.Invoke(resource) ?? item.GetExportReference());
+                } else if(item.Reference is IList list) {
                     switch(list.Count) {
                     case 0:
                         break;
@@ -684,7 +684,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         break;
                     }
                 } else {
-                    action("", entry.GetExportReference());
+                    action("", item.GetExportReference());
                 }
             } else {
                 action("", value);

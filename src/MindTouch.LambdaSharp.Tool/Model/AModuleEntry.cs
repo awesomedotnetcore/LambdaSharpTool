@@ -30,11 +30,11 @@ using Newtonsoft.Json;
 namespace MindTouch.LambdaSharp.Tool.Model {
     using static ModelFunctions;
 
-    public abstract class AModuleEntry {
+    public abstract class AModuleItem {
 
         //--- Constructors ---
-        public AModuleEntry(
-            AModuleEntry parent,
+        public AModuleItem(
+            AModuleItem parent,
             string name,
             string description,
             string type,
@@ -77,16 +77,16 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public virtual object GetExportReference() => Reference;
         public virtual bool HasAttribute(string attribute) => false;
         public virtual bool HasPragma(string pragma) => false;
-        public virtual void Visit(Func<AModuleEntry, object, object> visitor) {
+        public virtual void Visit(Func<AModuleItem, object, object> visitor) {
             Reference = visitor(this, Reference);
         }
     }
 
-    public class VariableEntry : AModuleEntry {
+    public class VariableItem : AModuleItem {
 
         //--- Constructors ---
-        public VariableEntry(
-            AModuleEntry parent,
+        public VariableItem(
+            AModuleItem parent,
             string name,
             string description,
             string type,
@@ -95,11 +95,11 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         ) : base(parent, name, description, type, scope, reference) { }
     }
 
-    public class PackageEntry : AModuleEntry {
+    public class PackageItem : AModuleItem {
 
         //--- Constructors ---
-        public PackageEntry(
-            AModuleEntry parent,
+        public PackageItem(
+            AModuleItem parent,
             string name,
             string description,
             IList<string> scope,
@@ -112,11 +112,11 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public IList<KeyValuePair<string, string>> Files { get; }
     }
 
-    public class InputEntry : AModuleEntry {
+    public class InputItem : AModuleItem {
 
         //--- Constructors ---
-        public InputEntry(
-            AModuleEntry parent,
+        public InputItem(
+            AModuleItem parent,
             string name,
             string section,
             string label,
@@ -137,11 +137,11 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public Humidifier.Parameter Parameter { get; }
     }
 
-    public abstract class AResourceEntry : AModuleEntry {
+    public abstract class AResourceItem : AModuleItem {
 
         //--- Constructors ---
-        public AResourceEntry(
-            AModuleEntry parent,
+        public AResourceItem(
+            AModuleItem parent,
             string name,
             string description,
             string type,
@@ -162,16 +162,16 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public IList<object> Pragmas { get; set; }
 
         //--- Methods ---
-        public override void Visit(Func<AModuleEntry, object, object> visitor) {
+        public override void Visit(Func<AModuleItem, object, object> visitor) {
             base.Visit(visitor);
 
-            // TODO (2018-11-29, bjorg): we need to make sure that only other resources are referenced (no literal entries, or itself, no loops either)
+            // TODO (2018-11-29, bjorg): we need to make sure that only other resources are referenced (no literal items, or itself, no loops either)
             if(Condition != null) {
                 TryGetFnCondition(visitor(this, FnCondition(Condition)), out string result);
                 Condition = result ?? throw new InvalidOperationException($"invalid expression returned (condition)");
             }
 
-            // TODO (2018-11-29, bjorg): we need to make sure that only other resources are referenced (no literal entries, or itself, no loops either)
+            // TODO (2018-11-29, bjorg): we need to make sure that only other resources are referenced (no literal items, or itself, no loops either)
             for(var i = 0; i < DependsOn.Count; ++i) {
                 var dependency = DependsOn[i];
                 TryGetFnRef(visitor(this, FnRef(dependency)), out string result);
@@ -183,11 +183,11 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public override bool HasPragma(string pragma) => Pragmas.Contains(pragma);
     }
 
-    public class ResourceEntry : AResourceEntry {
+    public class ResourceItem : AResourceItem {
 
         //--- Constructors ---
-        public ResourceEntry(
-            AModuleEntry parent,
+        public ResourceItem(
+            AModuleItem parent,
             string name,
             string description,
             IList<string> scope,
@@ -206,7 +206,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public string ResourceArnAttribute { get; set; }
 
         //--- Methods ---
-        public override void Visit(Func<AModuleEntry, object, object> visitor) {
+        public override void Visit(Func<AModuleItem, object, object> visitor) {
             base.Visit(visitor);
             Resource = (Humidifier.Resource)visitor(this, Resource);
         }
@@ -219,11 +219,11 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 : FnRef(FullName);
     }
 
-    public class FunctionEntry : AResourceEntry {
+    public class FunctionItem : AResourceItem {
 
         //--- Constructors ---
-        public FunctionEntry(
-            AModuleEntry parent,
+        public FunctionItem(
+            AModuleItem parent,
             string name,
             string description,
             IList<string> scope,
@@ -259,7 +259,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public bool HasHandlerValidation => !HasPragma("no-handler-validation");
 
         //--- Methods ---
-        public override void Visit(Func<AModuleEntry, object, object> visitor) {
+        public override void Visit(Func<AModuleItem, object, object> visitor) {
             base.Visit(visitor);
             Environment = (IDictionary<string, object>)visitor(this, Environment);
             Function = (Humidifier.Lambda.Function)visitor(this, Function);
@@ -306,11 +306,11 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public override bool HasPragma(string pragma) => Pragmas.Contains(pragma);
     }
 
-    public class ConditionEntry : AModuleEntry {
+    public class ConditionItem : AModuleItem {
 
         //--- Constructors ---
-        public ConditionEntry(
-            AModuleEntry parent,
+        public ConditionItem(
+            AModuleItem parent,
             string name,
             string description,
             object value
@@ -321,11 +321,11 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         }
     }
 
-    public class MappingEntry : AModuleEntry {
+    public class MappingItem : AModuleItem {
 
         //--- Constructors ---
-        public MappingEntry(
-            AModuleEntry parent,
+        public MappingItem(
+            AModuleItem parent,
             string name,
             string description,
             IDictionary<string, IDictionary<string, string>> value
@@ -339,10 +339,10 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public IDictionary<string, IDictionary<string, string>> Mapping => (IDictionary<string, IDictionary<string, string>>)Reference;
     }
 
-    public class ResourceTypeEntry : AModuleEntry {
+    public class ResourceTypeItem : AModuleItem {
 
         //--- Constructors ---
-        public ResourceTypeEntry(
+        public ResourceTypeItem(
             string customResourceType,
             string description,
             object handler
@@ -356,7 +356,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public object Handler { get; set; }
 
         //--- Methods ---
-        public override void Visit(Func<AModuleEntry, object, object> visitor) {
+        public override void Visit(Func<AModuleItem, object, object> visitor) {
             base.Visit(visitor);
             Handler = visitor(this, Handler);
         }

@@ -47,8 +47,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
         //--- Fields ---
         private ModuleBuilder _builder;
-        private Dictionary<string, AModuleEntry> _freeEntries = new Dictionary<string, AModuleEntry>();
-        private Dictionary<string, AModuleEntry> _boundEntries = new Dictionary<string, AModuleEntry>();
+        private Dictionary<string, AModuleItem> _freeItems = new Dictionary<string, AModuleItem>();
+        private Dictionary<string, AModuleItem> _boundItems = new Dictionary<string, AModuleItem>();
 
         //--- Constructors ---
         public ModelLinker(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
@@ -56,27 +56,27 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
         //--- Methods ---
         public void Process(ModuleBuilder builder) {
             _builder = builder;
-            _freeEntries.Clear();
-            _boundEntries.Clear();
+            _freeItems.Clear();
+            _boundItems.Clear();
 
             // compute scopes
             AtLocation("Items", () => {
-                var functionNames = builder.Entries.OfType<FunctionEntry>()
+                var functionNames = builder.Items.OfType<FunctionItem>()
                     .Select(function => function.FullName)
                     .ToList();
-                foreach(var entry in builder.Entries) {
-                    AtLocation(entry.FullName, () => {
-                        if(entry.Scope.Contains("*")) {
-                            entry.Scope = entry.Scope
+                foreach(var item in builder.Items) {
+                    AtLocation(item.FullName, () => {
+                        if(item.Scope.Contains("*")) {
+                            item.Scope = item.Scope
                                 .Where(scope => scope != "*")
                                 .Union(functionNames)
                                 .Distinct()
-                                .OrderBy(item => item)
+                                .OrderBy(scope => scope)
                                 .ToList();
                         }
 
                         // verify that all defined scope values are valid
-                        foreach(var unknownScope in entry.Scope.Where(scope => (scope != "public") && !functionNames.Contains(scope))) {
+                        foreach(var unknownScope in item.Scope.Where(scope => (scope != "public") && !functionNames.Contains(scope))) {
                             AddError($"unknown referenced function '{unknownScope}' in scope definition");
                         }
                     });
@@ -85,7 +85,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
             // compute function environments
             AtLocation("Declarations", () => {
-                foreach(var function in builder.Entries.OfType<FunctionEntry>()) {
+                foreach(var function in builder.Items.OfType<FunctionItem>()) {
                     AtLocation(function.FullName, () => {
                         var environment = function.Function.Environment.Variables;
 
@@ -102,16 +102,16 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                             environment["DEFAULTSECRETKEY"] = FnRef("Module::DefaultSecretKeyArn");
                         }
 
-                        // add all entries scoped to this function
-                        foreach(var scopeEntry in builder.Entries.Where(e => e.Scope.Contains(function.FullName))) {
-                            var prefix = scopeEntry.HasSecretType ? "SEC_" : "STR_";
-                            var fullEnvName = prefix + scopeEntry.FullName.Replace("::", "_").ToUpperInvariant();
+                        // add all items scoped to this function
+                        foreach(var scopeItem in builder.Items.Where(e => e.Scope.Contains(function.FullName))) {
+                            var prefix = scopeItem.HasSecretType ? "SEC_" : "STR_";
+                            var fullEnvName = prefix + scopeItem.FullName.Replace("::", "_").ToUpperInvariant();
 
-                            // check if entry has a condition associated with it
+                            // check if item has a condition associated with it
                             environment[fullEnvName] = (dynamic)(
-                                ((scopeEntry is AResourceEntry resourceEntry) && (resourceEntry.Condition != null))
-                                ? FnIf(resourceEntry.Condition, scopeEntry.GetExportReference(), FnRef("AWS::NoValue"))
-                                : scopeEntry.GetExportReference()
+                                ((scopeItem is AResourceItem resourceItem) && (resourceItem.Condition != null))
+                                ? FnIf(resourceItem.Condition, scopeItem.GetExportReference(), FnRef("AWS::NoValue"))
+                                : scopeItem.GetExportReference()
                             );
                         }
 
@@ -126,100 +126,100 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 }
             });
 
-            // resolve all inter-entry references
+            // resolve all inter-item references
             AtLocation("Items", () => {
-                DiscoverEntries();
-                ResolveEntries();
-                ReportUnresolvedEntries();
+                DiscoverItems();
+                ResolveItems();
+                ReportUnresolvedItems();
             });
             if(Settings.HasErrors) {
                 return;
             }
 
             // resolve all references
-            builder.VisitAll((entry, item) => Substitute(entry, item, ReportMissingReference));
+            builder.VisitAll((item, value) => Substitute(item, value, ReportMissingReference));
 
-            // remove any optional entries that are unreachable
-            DiscardUnreachableEntries();
+            // remove any optional items that are unreachable
+            DiscardUnreachableItems();
 
             // replace all references with their logical IDs
             builder.VisitAll(Finalize);
 
             // local functions
-            void DiscoverEntries() {
-                foreach(var entry in builder.Entries) {
-                    AtLocation(entry.FullName, () => {
-                        switch(entry.Reference) {
+            void DiscoverItems() {
+                foreach(var item in builder.Items) {
+                    AtLocation(item.FullName, () => {
+                        switch(item.Reference) {
                         case null:
-                            throw new ApplicationException($"entry reference cannot be null: {entry.FullName}");
+                            throw new ApplicationException($"item reference cannot be null: {item.FullName}");
                         case string _:
-                            _freeEntries[entry.FullName] = entry;
-                            DebugWriteLine(() => $"FREE => {entry.FullName}");
+                            _freeItems[item.FullName] = item;
+                            DebugWriteLine(() => $"FREE => {item.FullName}");
                             break;
                         case IList<object> list:
                             if(list.All(value => value is string)) {
-                                _freeEntries[entry.FullName] = entry;
-                                DebugWriteLine(() => $"FREE => {entry.FullName}");
+                                _freeItems[item.FullName] = item;
+                                DebugWriteLine(() => $"FREE => {item.FullName}");
                             } else {
-                                _boundEntries[entry.FullName] = entry;
-                                DebugWriteLine(() => $"BOUND => {entry.FullName}");
+                                _boundItems[item.FullName] = item;
+                                DebugWriteLine(() => $"BOUND => {item.FullName}");
                             }
                             break;
                         default:
-                            _boundEntries[entry.FullName] = entry;
-                            DebugWriteLine(() => $"BOUND => {entry.FullName}");
+                            _boundItems[item.FullName] = item;
+                            DebugWriteLine(() => $"BOUND => {item.FullName}");
                             break;
                         }
                     });
                 }
             }
 
-            void ResolveEntries() {
+            void ResolveItems() {
                 bool progress;
                 do {
                     progress = false;
-                    foreach(var entry in _boundEntries.Values.ToList()) {
-                        AtLocation(entry.FullName, () => {
+                    foreach(var item in _boundItems.Values.ToList()) {
+                        AtLocation(item.FullName, () => {
 
-                            // NOTE (2018-10-04, bjorg): each iteration, we loop over a bound entry;
-                            //  in the iteration, we attempt to substitute all references with free entries;
-                            //  if we do, the entry can be added to the pool of free entries;
-                            //  if we iterate over all bound entries without making progress, then we must have
+                            // NOTE (2018-10-04, bjorg): each iteration, we loop over a bound item;
+                            //  in the iteration, we attempt to substitute all references with free items;
+                            //  if we do, the item can be added to the pool of free items;
+                            //  if we iterate over all bound items without making progress, then we must have
                             //  a circular dependency and we stop.
 
-                            var doesNotContainBoundEntries = true;
+                            var doesNotContainBoundItems = true;
                             AtLocation("Reference", () => {
-                                entry.Reference = Substitute(entry, entry.Reference, (string missingName) => {
-                                    doesNotContainBoundEntries = doesNotContainBoundEntries && !_boundEntries.ContainsKey(missingName);
+                                item.Reference = Substitute(item, item.Reference, (string missingName) => {
+                                    doesNotContainBoundItems = doesNotContainBoundItems && !_boundItems.ContainsKey(missingName);
                                 });
                             });
-                            if(doesNotContainBoundEntries) {
+                            if(doesNotContainBoundItems) {
 
-                                // capture that progress towards resolving all bound entries has been made;
+                                // capture that progress towards resolving all bound items has been made;
                                 // if ever an iteration does not produces progress, we need to stop; otherwise
                                 // we will loop forever
                                 progress = true;
 
-                                // promote bound entry to free entry
-                                _freeEntries[entry.FullName] = entry;
-                                _boundEntries.Remove(entry.FullName);
-                                DebugWriteLine(() => $"RESOLVED => {entry.FullName} = {Newtonsoft.Json.JsonConvert.SerializeObject(entry.Reference)}");
+                                // promote bound item to free item
+                                _freeItems[item.FullName] = item;
+                                _boundItems.Remove(item.FullName);
+                                DebugWriteLine(() => $"RESOLVED => {item.FullName} = {Newtonsoft.Json.JsonConvert.SerializeObject(item.Reference)}");
                             }
                         });
                     }
                 } while(progress);
             }
 
-            void ReportUnresolvedEntries() {
-                foreach(var entry in builder.Entries) {
-                    AtLocation(entry.FullName, () => {
-                        Substitute(entry, entry.Reference, ReportMissingReference);
+            void ReportUnresolvedItems() {
+                foreach(var item in builder.Items) {
+                    AtLocation(item.FullName, () => {
+                        Substitute(item, item.Reference, ReportMissingReference);
                     });
                 }
             }
 
             void ReportMissingReference(string missingName) {
-                if(_boundEntries.ContainsKey(missingName)) {
+                if(_boundItems.ContainsKey(missingName)) {
                     AddError($"circular !Ref dependency on '{missingName}'");
                 } else {
                     AddError($"could not find '{missingName}'");
@@ -227,7 +227,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             }
         }
 
-        private object Substitute(AModuleEntry entry, object root, Action<string> missing = null) {
+        private object Substitute(AModuleItem item, object root, Action<string> missing = null) {
             return Visit(root, value => {
 
                 // handle !Ref expression
@@ -287,11 +287,11 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     if(condition.StartsWith("@", StringComparison.Ordinal)) {
                         return value;
                     }
-                    if(_freeEntries.TryGetValue(condition, out AModuleEntry freeEntry)) {
-                        if(!(freeEntry is ConditionEntry)) {
-                            AddError($"entry '{freeEntry.FullName}' must be a condition");
+                    if(_freeItems.TryGetValue(condition, out AModuleItem freeItem)) {
+                        if(!(freeItem is ConditionItem)) {
+                            AddError($"item '{freeItem.FullName}' must be a condition");
                         }
-                        return FnIf(freeEntry.ResourceName, ifTrue, ifFalse);
+                        return FnIf(freeItem.ResourceName, ifTrue, ifFalse);
                     }
                     DebugWriteLine(() => $"NOT FOUND => {condition}");
                     missing?.Invoke(condition);
@@ -302,11 +302,11 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     if(condition.StartsWith("@", StringComparison.Ordinal)) {
                         return value;
                     }
-                    if(_freeEntries.TryGetValue(condition, out AModuleEntry freeEntry)) {
-                        if(!(freeEntry is ConditionEntry)) {
-                            AddError($"entry '{freeEntry.FullName}' must be a condition");
+                    if(_freeItems.TryGetValue(condition, out AModuleItem freeItem)) {
+                        if(!(freeItem is ConditionItem)) {
+                            AddError($"item '{freeItem.FullName}' must be a condition");
                         }
-                        return FnCondition(freeEntry.ResourceName);
+                        return FnCondition(freeItem.ResourceName);
                     }
                     DebugWriteLine(() => $"NOT FOUND => {condition}");
                     missing?.Invoke(condition);
@@ -317,11 +317,11 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     if(mapName.StartsWith("@", StringComparison.Ordinal)) {
                         return value;
                     }
-                    if(_freeEntries.TryGetValue(mapName, out AModuleEntry freeEntry)) {
-                        if(!(freeEntry is MappingEntry)) {
-                            AddError($"entry '{freeEntry.FullName}' must be a mapping");
+                    if(_freeItems.TryGetValue(mapName, out AModuleItem freeItem)) {
+                        if(!(freeItem is MappingItem)) {
+                            AddError($"item '{freeItem.FullName}' must be a mapping");
                         }
-                        return FnFindInMap(freeEntry.ResourceName, topLevelKey, secondLevelKey);
+                        return FnFindInMap(freeItem.ResourceName, topLevelKey, secondLevelKey);
                     }
                     DebugWriteLine(() => $"NOT FOUND => {mapName}");
                     missing?.Invoke(mapName);
@@ -342,19 +342,19 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     return true;
                 }
 
-                // check if the requested key can be resolved using a free entry
-                if(_freeEntries.TryGetValue(key, out AModuleEntry freeEntry)) {
-                    if(freeEntry is ConditionEntry) {
-                        AddError($"condition '{freeEntry.FullName}' cannot be used here");
+                // check if the requested key can be resolved using a free item
+                if(_freeItems.TryGetValue(key, out AModuleItem freeItem)) {
+                    if(freeItem is ConditionItem) {
+                        AddError($"condition '{freeItem.FullName}' cannot be used here");
                     } else if(attribute != null) {
-                        if(freeEntry.HasTypeValidation && !_builder.HasAttribute(freeEntry, attribute)) {
-                            AddError($"entry '{freeEntry.FullName}' of type '{freeEntry.Type}' does not have attribute '{attribute}'");
+                        if(freeItem.HasTypeValidation && !_builder.HasAttribute(freeItem, attribute)) {
+                            AddError($"item '{freeItem.FullName}' of type '{freeItem.Type}' does not have attribute '{attribute}'");
                         }
 
                         // attributes can be used with managed resources/functions
-                        found = FnGetAtt(freeEntry.ResourceName, attribute);
+                        found = FnGetAtt(freeItem.ResourceName, attribute);
                     } else {
-                        found = freeEntry.Reference;
+                        found = freeItem.Reference;
                     }
                     return true;
                 }
@@ -362,20 +362,20 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             }
         }
 
-        private void DiscardUnreachableEntries() {
-            var reachable = new Dictionary<string, AModuleEntry>();
-            var found = new Dictionary<string, AModuleEntry>();
-            var unused = new Dictionary<string, AModuleEntry>();
-            var foundEntriesToRemove = true;
-            while(foundEntriesToRemove) {
-                foundEntriesToRemove = false;
+        private void DiscardUnreachableItems() {
+            var reachable = new Dictionary<string, AModuleItem>();
+            var found = new Dictionary<string, AModuleItem>();
+            var unused = new Dictionary<string, AModuleItem>();
+            var foundItemsToRemove = true;
+            while(foundItemsToRemove) {
+                foundItemsToRemove = false;
                 reachable.Clear();
                 found.Clear();
-                foreach(var entry in _builder.Entries.OfType<AResourceEntry>().Where(res => !res.DiscardIfNotReachable)) {
-                    found[entry.FullName] = entry;
-                    entry.Visit(FindReachable);
+                foreach(var item in _builder.Items.OfType<AResourceItem>().Where(res => !res.DiscardIfNotReachable)) {
+                    found[item.FullName] = item;
+                    item.Visit(FindReachable);
                 }
-                foreach(var output in _builder.Entries.Where(entry => entry.IsPublic)) {
+                foreach(var output in _builder.Items.Where(item => item.IsPublic)) {
                     output.Visit(FindReachable);
                 }
                 foreach(var statement in _builder.ResourceStatements) {
@@ -388,21 +388,21 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         reachable[kv.Key] = kv.Value;
                     }
 
-                    // detect what is reachable from found entries entry
+                    // detect what is reachable from found item
                     var current = found;
-                    found = new Dictionary<string, AModuleEntry>();
+                    found = new Dictionary<string, AModuleItem>();
                     foreach(var kv in current) {
                         kv.Value.Visit(FindReachable);
                     }
                 }
-                foreach(var entry in _builder.Entries.ToList()) {
-                    if(!reachable.ContainsKey(entry.FullName)) {
-                        if(entry.DiscardIfNotReachable) {
-                            foundEntriesToRemove = true;
-                            DebugWriteLine(() => $"DISCARD '{entry.FullName}'");
-                            _builder.RemoveEntry(entry.FullName);
-                        } else if(entry is InputEntry) {
-                            switch(entry.FullName) {
+                foreach(var item in _builder.Items.ToList()) {
+                    if(!reachable.ContainsKey(item.FullName)) {
+                        if(item.DiscardIfNotReachable) {
+                            foundItemsToRemove = true;
+                            DebugWriteLine(() => $"DISCARD '{item.FullName}'");
+                            _builder.RemoveItem(item.FullName);
+                        } else if(item is InputItem) {
+                            switch(item.FullName) {
                             case "Secrets":
                             case "DeploymentBucketName":
                             case "DeploymentPrefix":
@@ -413,31 +413,31 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                                 // these are built-in parameters; don't report them
                                 break;
                             default:
-                                unused[entry.FullName] = entry;
+                                unused[item.FullName] = item;
                                 break;
                             }
                         }
                     }
                 }
             }
-            foreach(var entry in unused.Values.OrderBy(e => e.FullName)) {
-                AddWarning($"'{entry.FullName}' is defined but never used");
+            foreach(var item in unused.Values.OrderBy(e => e.FullName)) {
+                AddWarning($"'{item.FullName}' is defined but never used");
 
             }
 
             // local functions
-            object FindReachable(AModuleEntry entry, object root) {
+            object FindReachable(AModuleItem item, object root) {
                 return Visit(root, value => {
 
                     // handle !Ref expression
                     if(TryGetFnRef(value, out string refKey)) {
-                        MarkReachableEntry(entry, refKey);
+                        MarkReachableItem(item, refKey);
                         return value;
                     }
 
                     // handle !GetAtt expression
                     if(TryGetFnGetAtt(value, out string getAttKey, out string getAttAttribute)) {
-                        MarkReachableEntry(entry, getAttKey);
+                        MarkReachableItem(item, getAttKey);
                         return value;
                     }
 
@@ -447,7 +447,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         // replace as many ${VAR} occurrences as possible
                         subPattern = ReplaceSubPattern(subPattern, (subRefKey, suffix) => {
                             if(!subArgs.ContainsKey(subRefKey)) {
-                                MarkReachableEntry(entry, subRefKey);
+                                MarkReachableItem(item, subRefKey);
                                 return "${" + subRefKey.Substring(1) + suffix + "}";
                             }
                             return null;
@@ -457,41 +457,41 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
                     // handle !If expression
                     if(TryGetFnIf(value, out string condition, out object _, out object _)) {
-                        MarkReachableEntry(entry, condition);
+                        MarkReachableItem(item, condition);
                         return value;
                     }
 
                     // handle !Condition expression
                     if(TryGetFnCondition(value, out condition)) {
-                        MarkReachableEntry(entry, condition);
+                        MarkReachableItem(item, condition);
                         return value;
                     }
 
                     // handle !FindInMap expression
                     if(TryGetFnFindInMap(value, out string mapName, out object _, out object _)) {
-                        MarkReachableEntry(entry, mapName);
+                        MarkReachableItem(item, mapName);
                         return value;
                     }
                     return value;
                 });
             }
 
-            void MarkReachableEntry(AModuleEntry entry, string fullNameOrResourceName) {
+            void MarkReachableItem(AModuleItem item, string fullNameOrResourceName) {
                 if(fullNameOrResourceName.StartsWith("AWS::", StringComparison.Ordinal)) {
                     return;
                 }
-                if(_builder.TryGetEntry(fullNameOrResourceName, out AModuleEntry refEntry)) {
-                    if(!reachable.ContainsKey(refEntry.FullName)) {
-                        if(!found.ContainsKey(refEntry.FullName)) {
-                            DebugWriteLine(() => $"REACHED {entry?.FullName ?? "<null>"} -> {refEntry?.FullName ?? "<null>"}");
+                if(_builder.TryGetItem(fullNameOrResourceName, out AModuleItem refItem)) {
+                    if(!reachable.ContainsKey(refItem.FullName)) {
+                        if(!found.ContainsKey(refItem.FullName)) {
+                            DebugWriteLine(() => $"REACHED {item?.FullName ?? "<null>"} -> {refItem?.FullName ?? "<null>"}");
                         }
-                        found[refEntry.FullName] = refEntry;
+                        found[refItem.FullName] = refItem;
                     }
                 }
             }
         }
 
-        private object Finalize(AModuleEntry entry, object root) {
+        private object Finalize(AModuleItem item, object root) {
             return Visit(root, value => {
 
                 // handle !Ref expression
@@ -552,8 +552,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     }
 
                     // update existing instance in-place
-                    foreach(var entry in map) {
-                        dictionary[entry.Key] = entry.Value;
+                    foreach(var kv in map) {
+                        dictionary[kv.Key] = kv.Value;
                     }
                     return value;
                 }

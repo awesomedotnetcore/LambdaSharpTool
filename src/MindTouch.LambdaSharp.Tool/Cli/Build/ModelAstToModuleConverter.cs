@@ -73,7 +73,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 ForEach("Pragmas", module.Pragmas, ConvertPragma);
                 ForEach("Secrets", module.Secrets, ConvertSecret);
                 ForEach("Requires", module.Requires, ConvertDependency);
-                ForEach("Items", module.Items, ConvertEntry);
+                ForEach("Items", module.Items, ConvertItem);
                 return _builder;
             } catch(Exception e) {
                 AddError(e);
@@ -158,7 +158,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             });
         }
 
-        private AFunctionSource ConvertFunctionSource(EntryNode function, int index, FunctionSourceNode source) {
+        private AFunctionSource ConvertFunctionSource(ModuleItemNode function, int index, FunctionSourceNode source) {
             var type = DeterminNodeType("source", index, source, FunctionSourceNode.FieldCombinations, new[] {
                 "Api",
                 "Schedule",
@@ -254,8 +254,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             return null;
         }
 
-        private void ConvertEntry(int index, EntryNode node)
-            => ConvertEntry(null, index, node, new[] {
+        private void ConvertItem(int index, ModuleItemNode node)
+            => ConvertItem(null, index, node, new[] {
                 "Condition",
                 "Export",
                 "Function",
@@ -271,8 +271,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 "Variable"
             });
 
-        private void ConvertEntry(AModuleEntry parent, int index, EntryNode node, IEnumerable<string> expectedTypes) {
-            var type = DeterminNodeType("entry", index, node, EntryNode.FieldCombinations, expectedTypes);
+        private void ConvertItem(AModuleItem parent, int index, ModuleItemNode node, IEnumerable<string> expectedTypes) {
+            var type = DeterminNodeType("item", index, node, ModuleItemNode.FieldCombinations, expectedTypes);
             switch(type) {
             case "Parameter":
                 AtLocation(node.Parameter, () => {
@@ -284,7 +284,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     }
                     Validate((node.Allow == null) || (node.Type == "AWS") || ResourceMapping.IsCloudFormationType(node.Type), "'Allow' attribute can only be used with AWS resource types");
 
-                    // create input parameter entry
+                    // create input parameter item
                     _builder.AddParameter(
                         parent: parent,
                         name: node.Parameter,
@@ -313,14 +313,14 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             case "Using":
                 AtLocation(node.Using, () => {
 
-                    // create import/cross-module reference entry
+                    // create import/cross-module reference item
                     var result = _builder.AddUsing(
                         import: node.Using,
                         description: node.Description
                     );
 
                     // recurse, but only allow 'Parameter' nodes
-                    ConvertEntries(result, new[] { "Parameter" });
+                    ConvertItems(result, new[] { "Parameter" });
                 });
                 break;
             case "Variable":
@@ -328,10 +328,10 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
                     // validation
                     Validate(node.Value != null, "missing `Value` attribute");
-                    Validate((node.EncryptionContext == null) || (node.Type == "Secret"), "entry must have Type 'Secret' to use 'EncryptionContext' section");
-                    Validate((node.Type != "Secret") || !(node.Value is IList<object>), "entry with type 'Secret' cannot have a list of values");
+                    Validate((node.EncryptionContext == null) || (node.Type == "Secret"), "item must have Type 'Secret' to use 'EncryptionContext' section");
+                    Validate((node.Type != "Secret") || !(node.Value is IList<object>), "item with type 'Secret' cannot have a list of values");
 
-                    // create variable entry
+                    // create variable item
                     var result = _builder.AddVariable(
                         parent: parent,
                         name: node.Variable,
@@ -344,13 +344,13 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     );
 
                     // recurse
-                    ConvertEntries(result);
+                    ConvertItems(result);
                 });
                 break;
             case "Namespace":
                 AtLocation(node.Namespace, () => {
 
-                    // create namespace entry
+                    // create namespace item
                     var result = _builder.AddVariable(
                         parent: parent,
                         name: node.Namespace,
@@ -363,7 +363,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     );
 
                     // recurse
-                    ConvertEntries(result);
+                    ConvertItems(result);
                 });
                 break;
             case "Resource":
@@ -382,7 +382,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                             ValidateARN(node.Value);
                         }
 
-                        // create variable entry
+                        // create variable item
                         _builder.AddVariable(
                             parent: parent,
                             name: node.Resource,
@@ -399,7 +399,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         Validate(node.Type != null, "missing 'Type' attribute");
                         Validate((node.Allow == null) || ResourceMapping.IsCloudFormationType(node.Type ?? ""), "'Allow' attribute can only be used with AWS resource types");
 
-                        // create resource entry
+                        // create resource item
                         _builder.AddResource(
                             parent: parent,
                             name: node.Resource,
@@ -438,7 +438,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         });
                     }
 
-                    // create module entry
+                    // create module item
                     var result = _builder.AddModule(
                         parent: parent,
                         name: node.Module,
@@ -475,8 +475,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         }
                         if(Directory.Exists(folder)) {
                             foreach(var filePath in Directory.GetFiles(folder, filePattern, searchOption)) {
-                                var entryName = Path.GetRelativePath(folder, filePath);
-                                files.Add(new KeyValuePair<string, string>(entryName, filePath));
+                                var relativeFilePathName = Path.GetRelativePath(folder, filePath);
+                                files.Add(new KeyValuePair<string, string>(relativeFilePathName, filePath));
                             }
                             files = files.OrderBy(file => file.Key).ToList();
                         } else {
@@ -486,7 +486,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         AddError("missing 'Files' attribute");
                     }
 
-                    // create package resource entry
+                    // create package resource item
                     var result = _builder.AddPackage(
                         parent: parent,
                         name: node.Package,
@@ -521,7 +521,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     var handler = node.Handler;
                     DetermineFunctionType(node.Function, ref project, ref language, ref runtime, ref handler);
 
-                    // create function entry
+                    // create function item
                     var sources = AtLocation("Sources", () => node.Sources
                         ?.Select((source, eventIndex) => ConvertFunctionSource(node, eventIndex, source))
                         .Where(evt => evt != null)
@@ -564,22 +564,22 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             case "Mapping":
                 AtLocation(node.Mapping, () => {
                     IDictionary<string, IDictionary<string, string>> topLevelResults = new Dictionary<string, IDictionary<string, string>>();
-                    if(node.Value is IDictionary topLevelEntries) {
+                    if(node.Value is IDictionary topLevelDictionary) {
                         AtLocation("Value", () => {
-                            Validate(topLevelEntries.Count > 0, "missing top-level mappings");
+                            Validate(topLevelDictionary.Count > 0, "missing top-level mappings");
 
-                            // iterate over top-level entries
-                            foreach(DictionaryEntry topLevel in topLevelEntries) {
+                            // iterate over top-level dictionary
+                            foreach(DictionaryEntry topLevel in topLevelDictionary) {
                                 AtLocation((string)topLevel.Key, () => {
                                     var secondLevelResults = new Dictionary<string, string>();
                                     topLevelResults[(string)topLevel.Key] = secondLevelResults;
 
                                     // convert top-level entry
-                                    if(topLevel.Value is IDictionary secondLevelEntries) {
-                                        Validate(secondLevelEntries.Count > 0, "missing second-level mappings");
+                                    if(topLevel.Value is IDictionary secondLevelDictionary) {
+                                        Validate(secondLevelDictionary.Count > 0, "missing second-level mappings");
 
-                                        // iterate over second-level entries
-                                        foreach(DictionaryEntry secondLevel in secondLevelEntries) {
+                                        // iterate over second-level dictionary
+                                        foreach(DictionaryEntry secondLevel in secondLevelDictionary) {
                                             AtLocation((string)secondLevel.Key, () => {
 
                                                 // convert second-level entry
@@ -638,8 +638,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             }
 
             // local functions
-            void ConvertEntries(AModuleEntry result, IEnumerable<string> nestedExpectedTypes = null) {
-                ForEach("Declarations", node.Items, (i, p) => ConvertEntry(result, i, p, nestedExpectedTypes ?? expectedTypes));
+            void ConvertItems(AModuleItem result, IEnumerable<string> nestedExpectedTypes = null) {
+                ForEach("Declarations", node.Items, (i, p) => ConvertItem(result, i, p, nestedExpectedTypes ?? expectedTypes));
             }
 
             void ValidateARN(object resourceArn) {
@@ -726,7 +726,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
         }
 
         private string DeterminNodeType(
-            string entryName,
+            string itemName,
             int index,
             object instance,
             Dictionary<string, IEnumerable<string>> typeChecks,
@@ -741,20 +741,20 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     .OrderBy(kv => kv.Key)
                     .Where(kv => IsFieldSet(kv.Key))
                     .Select(kv => new {
-                        EntryType = kv.Key,
+                        ItemType = kv.Key,
                         ValidFields = kv.Value
                     })
                     .ToArray();
                 switch(matches.Length) {
                 case 0:
-                    AddError($"unknown {entryName} type");
+                    AddError($"unknown {itemName} type");
                     return null;
                 case 1:
 
                     // good to go
                     break;
                 default:
-                    AddError($"ambiguous {entryName} type: {string.Join(", ", matches.Select(kv => kv.EntryType))}");
+                    AddError($"ambiguous {itemName} type: {string.Join(", ", matches.Select(kv => kv.ItemType))}");
                     return null;
                 }
 
@@ -774,15 +774,15 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     .OrderBy(field => field)
                     .ToArray();
                 if(invalidFields.Any()) {
-                    AddError($"'{string.Join(", ", invalidFields)}' cannot be used with '{match.EntryType}'");
+                    AddError($"'{string.Join(", ", invalidFields)}' cannot be used with '{match.ItemType}'");
                 }
 
-                // check if the matched entry was expected
-                if(!expectedTypes.Contains(match.EntryType)) {
-                    AddError($"unexpected node type: {match.EntryType}");
+                // check if the matched item was expected
+                if(!expectedTypes.Contains(match.ItemType)) {
+                    AddError($"unexpected node type: {match.ItemType}");
                     return null;
                 }
-                return match.EntryType;
+                return match.ItemType;
             });
 
             // local functions

@@ -58,7 +58,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             _builder = builder;
 
             // add module variables
-            var moduleEntry = _builder.AddVariable(
+            var moduleItem = _builder.AddVariable(
                 parent: null,
                 name: "Module",
                 description: "Module Variables",
@@ -69,7 +69,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 encryptionContext: null
             );
             _builder.AddVariable(
-                parent: moduleEntry,
+                parent: moduleItem,
                 name: "Id",
                 description: "Module ID",
                 type: "String",
@@ -79,7 +79,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 encryptionContext: null
             );
             _builder.AddVariable(
-                parent: moduleEntry,
+                parent: moduleItem,
                 name: "Name",
                 description: "Module Name",
                 type: "String",
@@ -89,7 +89,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 encryptionContext: null
             );
             _builder.AddVariable(
-                parent: moduleEntry,
+                parent: moduleItem,
                 name: "Version",
                 description: "Module Version",
                 type: "String",
@@ -249,7 +249,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
                 // add lambdasharp imports
                 _builder.AddVariable(
-                    parent: moduleEntry,
+                    parent: moduleItem,
                     name: "DeadLetterQueueArn",
                     description: "Module Dead Letter Queue (ARN)",
                     type: "String",
@@ -259,7 +259,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     encryptionContext: null
                 );
                 _builder.AddVariable(
-                    parent: moduleEntry,
+                    parent: moduleItem,
                     name: "LoggingStreamArn",
                     description: "Module Logging Stream (ARN)",
                     type: "String",
@@ -269,7 +269,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     encryptionContext: null
                 );
                 _builder.AddVariable(
-                    parent: moduleEntry,
+                    parent: moduleItem,
                     name: "LoggingStreamRoleArn",
                     description: "Module Logging Stream Role (ARN)",
                     type: "String",
@@ -279,7 +279,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     encryptionContext: null
                 );
                 _builder.AddVariable(
-                    parent: moduleEntry,
+                    parent: moduleItem,
                     name: "DefaultSecretKeyArn",
                     description: "Module Default Secret Key (ARN)",
                     type: "String",
@@ -334,7 +334,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
             // add decryption function for secret parameters and values
             _builder.AddInlineFunction(
-                parent: moduleEntry,
+                parent: moduleItem,
                 name: "DecryptSecretFunction",
                 description: "Module secret decryption function",
                 environment: null,
@@ -472,7 +472,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
             // create module IAM role used by all functions
             _builder.AddResource(
-                parent: moduleEntry,
+                parent: moduleItem,
                 name: "Role",
                 description: null,
                 scope: null,
@@ -516,7 +516,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     "logs:PutLogEvents"
                 }
             );
-            var functions = _builder.Entries.OfType<FunctionEntry>().ToList();
+            var functions = _builder.Items.OfType<FunctionItem>().ToList();
 
             // check if lambdasharp specific resources need to be initialized
             if(_builder.HasLambdaSharpDependencies) {
@@ -549,7 +549,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
                 // create module registration
                 _builder.AddResource(
-                    parent: moduleEntry,
+                    parent: moduleItem,
                     name: "Registration",
                     description: null,
                     type: "LambdaSharp::Register::Module",
@@ -567,8 +567,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 );
 
                 // handle function registrations
-                var registeredFunctions = _builder.Entries
-                    .OfType<FunctionEntry>()
+                var registeredFunctions = _builder.Items
+                    .OfType<FunctionItem>()
                     .Where(function => function.HasFunctionRegistration)
                     .ToList();
                 if(registeredFunctions.Any()) {

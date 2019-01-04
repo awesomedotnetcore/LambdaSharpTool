@@ -52,14 +52,14 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             if(noPackageBuild) {
                 return;
             }
-            foreach(var entry in builder.Entries.OfType<PackageEntry>()) {
-                AtLocation(entry.FullName, () => {
-                    ProcessParameter(entry);
+            foreach(var item in builder.Items.OfType<PackageItem>()) {
+                AtLocation(item.FullName, () => {
+                    ProcessParameter(item);
                 });
             }
         }
 
-        private void ProcessParameter(PackageEntry parameter) {
+        private void ProcessParameter(PackageItem parameter) {
             AtLocation("Package", () => {
 
                 // compute MD5 hash for package

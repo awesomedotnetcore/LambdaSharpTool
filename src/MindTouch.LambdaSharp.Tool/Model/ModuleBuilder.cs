@@ -41,8 +41,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         private readonly string _description;
         private IList<object> _pragmas;
         private IList<object> _secrets;
-        private Dictionary<string, AModuleEntry> _entriesByFullName;
-        private List<AModuleEntry> _entries;
+        private Dictionary<string, AModuleItem> _itemsByFullName;
+        private List<AModuleItem> _items;
         private IList<Humidifier.Statement> _resourceStatements = new List<Humidifier.Statement>();
         private IList<string> _assets;
         private IDictionary<string, ModuleDependency> _dependencies;
@@ -57,8 +57,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             _description = module.Description;
             _pragmas = new List<object>(module.Pragmas ?? new object[0]);
             _secrets = new List<object>(module.Secrets ?? new object[0]);
-            _entries = new List<AModuleEntry>(module.Entries ?? new AModuleEntry[0]);
-            _entriesByFullName = _entries.ToDictionary(entry => entry.FullName);
+            _items = new List<AModuleItem>(module.Items ?? new AModuleItem[0]);
+            _itemsByFullName = _items.ToDictionary(item => item.FullName);
             _assets = new List<string>(module.Assets ?? new string[0]);
             _dependencies = (module.Dependencies != null)
                 ? new Dictionary<string, ModuleDependency>(module.Dependencies)
@@ -70,8 +70,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             _customResourceNameMappings = module.CustomResourceNameMappings ?? new Dictionary<string, string>();
 
             // extract existing resource statements when they exist
-            if(TryGetEntry("Module::Role", out AModuleEntry moduleRoleEntry)) {
-                var role = (Humidifier.IAM.Role)((ResourceEntry)moduleRoleEntry).Resource;
+            if(TryGetItem("Module::Role", out AModuleItem moduleRoleItem)) {
+                var role = (Humidifier.IAM.Role)((ResourceItem)moduleRoleItem).Resource;
                 _resourceStatements = new List<Humidifier.Statement>(role.Policies[0].PolicyDocument.Statement);
                 role.Policies[0].PolicyDocument.Statement = new List<Humidifier.Statement>();
             } else {
@@ -83,36 +83,36 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public string Name => _name;
         public VersionInfo Version => _version;
         public IEnumerable<object> Secrets => _secrets;
-        public IEnumerable<AModuleEntry> Entries => _entries;
+        public IEnumerable<AModuleItem> Items => _items;
         public IEnumerable<Humidifier.Statement> ResourceStatements => _resourceStatements;
         public bool HasPragma(string pragma) => _pragmas.Contains(pragma);
         public bool HasModuleRegistration => !HasPragma("no-module-registration");
         public bool HasLambdaSharpDependencies => !HasPragma("no-lambdasharp-dependencies");
 
         //--- Methods ---
-        public AModuleEntry GetEntry(string fullNameOrResourceName) {
+        public AModuleItem GetItem(string fullNameOrResourceName) {
             if(fullNameOrResourceName.StartsWith("@", StringComparison.Ordinal)) {
-                return _entries.FirstOrDefault(e => e.ResourceName == fullNameOrResourceName) ?? throw new KeyNotFoundException(fullNameOrResourceName);
+                return _items.FirstOrDefault(e => e.ResourceName == fullNameOrResourceName) ?? throw new KeyNotFoundException(fullNameOrResourceName);
             }
-            return _entriesByFullName[fullNameOrResourceName];
+            return _itemsByFullName[fullNameOrResourceName];
         }
 
         public void AddPragma(object pragma) => _pragmas.Add(pragma);
 
-        public bool TryGetEntry(string fullNameOrResourceName, out AModuleEntry entry) {
+        public bool TryGetItem(string fullNameOrResourceName, out AModuleItem item) {
             if(fullNameOrResourceName == null) {
-                entry = null;
+                item = null;
                 return false;
             }
             if(fullNameOrResourceName.StartsWith("@", StringComparison.Ordinal)) {
-                entry = _entries.FirstOrDefault(e => e.ResourceName == fullNameOrResourceName);
-                return entry != null;
+                item = _items.FirstOrDefault(e => e.ResourceName == fullNameOrResourceName);
+                return item != null;
             }
-            return _entriesByFullName.TryGetValue(fullNameOrResourceName, out entry);
+            return _itemsByFullName.TryGetValue(fullNameOrResourceName, out item);
         }
 
-        public void RemoveEntry(string fullName) {
-            if(TryGetEntry(fullName, out AModuleEntry entry)) {
+        public void RemoveItem(string fullName) {
+            if(TryGetItem(fullName, out AModuleItem item)) {
 
                 // check if the module role is being removed
                 if(fullName == "Module::Role") {
@@ -123,16 +123,16 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                     // remove all secrets
                     _secrets.Clear();
                 }
-                _entries.Remove(entry);
-                _entriesByFullName.Remove(entry.FullName);
+                _items.Remove(item);
+                _itemsByFullName.Remove(item.FullName);
             }
         }
 
         public void AddAsset(string fullName, string asset) {
             _assets.Add(Path.GetRelativePath(Settings.OutputDirectory, asset));
 
-            // update entry with the name of the asset
-            GetEntry(fullName).Reference = Path.GetFileName(asset);
+            // update item with the name of the asset
+            GetItem(fullName).Reference = Path.GetFileName(asset);
         }
 
         public void AddDependency(string moduleName, VersionInfo minVersion, VersionInfo maxVersion, string bucketName) {
@@ -221,8 +221,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             }
         }
 
-        public AModuleEntry AddParameter(
-            AModuleEntry parent,
+        public AModuleItem AddParameter(
+            AModuleItem parent,
             string name,
             string section,
             string label,
@@ -245,7 +245,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             IList<object> pragmas
         ) {
 
-            // create input parameter entry
+            // create input parameter item
             var parameter = new Humidifier.Parameter {
                 Type = ResourceMapping.ToCloudFormationParameterType(type),
                 Description = description,
@@ -259,7 +259,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 MinValue = minValue,
                 NoEcho = noEcho
             };
-            var result = AddEntry(new InputEntry(
+            var result = AddItem(new InputItem(
                 parent: parent,
                 name: name,
                 section: section ?? parent?.Description,
@@ -362,7 +362,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             return result;
         }
 
-        public AModuleEntry AddUsing(
+        public AModuleItem AddUsing(
             string import,
             string description
         ) {
@@ -387,16 +387,16 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         ) {
 
             // TODO (2018-09-20, bjorg): add custom resource name validation
-            AddEntry(new ResourceTypeEntry(customResourceType, description, FnRef(handler)));
+            AddItem(new ResourceTypeItem(customResourceType, description, FnRef(handler)));
             _customResourceTypes.Add(customResourceType, properties ?? new ModuleManifestCustomResource());
         }
 
-        public AModuleEntry AddMacro(string macroName, string description, string handler) {
+        public AModuleItem AddMacro(string macroName, string description, string handler) {
             Validate(Regex.IsMatch(macroName, CLOUDFORMATION_ID_PATTERN), "name is not valid");
 
             // check if a root macros collection needs to be created
-            if(!TryGetEntry("Macros", out AModuleEntry macrosEntry)) {
-                macrosEntry = AddVariable(
+            if(!TryGetItem("Macros", out AModuleItem macrosItem)) {
+                macrosItem = AddVariable(
                     parent: null,
                     name: "Macros",
                     description: "Macro definitions",
@@ -410,7 +410,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
             // add macro resource
             var result = AddResource(
-                parent: macrosEntry,
+                parent: macrosItem,
                 name: macroName,
                 description: description,
                 scope: null,
@@ -430,8 +430,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             return result;
         }
 
-        public AModuleEntry AddVariable(
-            AModuleEntry parent,
+        public AModuleItem AddVariable(
+            AModuleItem parent,
             string name,
             string description,
             string type,
@@ -443,7 +443,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             if(value == null) {
                 throw new ArgumentNullException(nameof(value));
             }
-            var result = AddEntry(new VariableEntry(parent, name, description, type, scope, reference: null));
+            var result = AddItem(new VariableItem(parent, name, description, type, scope, reference: null));
 
             // the format for secrets with encryption keys is: SECRET|KEY1=VALUE1|KEY2=VALUE2
             if(encryptionContext != null) {
@@ -486,8 +486,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             return result;
         }
 
-        public AModuleEntry AddResource(
-            AModuleEntry parent,
+        public AModuleItem AddResource(
+            AModuleItem parent,
             string name,
             string description,
             IList<string> scope,
@@ -497,7 +497,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             object condition,
             IList<object> pragmas
         ) {
-            var result = new ResourceEntry(
+            var result = new ResourceItem(
                 parent: parent,
                 name: name,
                 description: description,
@@ -508,25 +508,25 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 condition: null,
                 pragmas: pragmas
             );
-            AddEntry(result);
+            AddItem(result);
 
             // add condition
             if(condition is string conditionName) {
                 result.Condition = conditionName;
             } else if(condition != null) {
-                var conditionEntry = AddCondition(
+                var conditionItem = AddCondition(
                     parent: result,
                     name: "If",
                     description: null,
                     value: condition
                 );
-                result.Condition = conditionEntry.FullName;
+                result.Condition = conditionItem.FullName;
             }
             return result;
         }
 
-        public AModuleEntry AddResource(
-            AModuleEntry parent,
+        public AModuleItem AddResource(
+            AModuleItem parent,
             string name,
             string description,
             string type,
@@ -539,7 +539,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             IList<object> pragmas
         ) {
 
-            // create resource entry
+            // create resource item
             var customResource = RegisterCustomResourceNameMapping(new Humidifier.CustomResource(type, properties));
             var result = AddResource(
                 parent: parent,
@@ -565,8 +565,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             return result;
         }
 
-        public AModuleEntry AddModule(
-            AModuleEntry parent,
+        public AModuleItem AddModule(
+            AModuleItem parent,
             string name,
             string description,
             object module,
@@ -630,8 +630,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             }
         }
 
-        public AModuleEntry AddPackage(
-            AModuleEntry parent,
+        public AModuleItem AddPackage(
+            AModuleItem parent,
             string name,
             string description,
             IList<string> scope,
@@ -639,14 +639,14 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         ) {
 
             // create variable corresponding to the package definition
-            var package = new PackageEntry(
+            var package = new PackageItem(
                 parent: parent,
                 name: name,
                 description: description,
                 scope: scope,
                 files: files
             );
-            AddEntry(package);
+            AddItem(package);
 
             // create nested variable for tracking the package-name
             var packageName = AddVariable(
@@ -665,8 +665,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             return package;
         }
 
-        public AModuleEntry AddFunction(
-            AModuleEntry parent,
+        public AModuleItem AddFunction(
+            AModuleItem parent,
             string name,
             string description,
             IList<string> scope,
@@ -685,8 +685,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             object securityGroups
         ) {
 
-            // create function entry
-            var function = new FunctionEntry(
+            // create function item
+            var function = new FunctionItem(
                 parent: parent,
                 name: name,
                 description: description,
@@ -725,19 +725,19 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                     }
                 }
             );
-            AddEntry(function);
+            AddItem(function);
 
             // add condition
             if(condition is string conditionName) {
                 function.Condition = conditionName;
             } else if(condition != null) {
-                var conditionEntry = AddCondition(
+                var conditionItem = AddCondition(
                     parent: function,
                     name: "If",
                     description: null,
                     value: condition
                 );
-                function.Condition = conditionEntry.FullName;
+                function.Condition = conditionItem.FullName;
             }
 
             // create nested variable for tracking the package-name
@@ -806,8 +806,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             return function;
         }
 
-        public AModuleEntry AddInlineFunction(
-            AModuleEntry parent,
+        public AModuleItem AddInlineFunction(
+            AModuleItem parent,
             string name,
             string description,
             IDictionary<string, object> environment,
@@ -822,8 +822,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             string code
         ) {
 
-            // create inline function entry
-            var function = new FunctionEntry(
+            // create inline function item
+            var function = new FunctionItem(
                 parent: parent,
                 name: name,
                 description: description,
@@ -862,17 +862,17 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                     }
                 }
             );
-            AddEntry(function);
+            AddItem(function);
             return function;
         }
 
-        public AModuleEntry AddCondition(
-            AModuleEntry parent,
+        public AModuleItem AddCondition(
+            AModuleItem parent,
             string name,
             string description,
             object value
         ) {
-            return AddEntry(new ConditionEntry(
+            return AddItem(new ConditionItem(
                 parent: parent,
                 name: name,
                 description: description,
@@ -880,13 +880,13 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             ));
         }
 
-        public AModuleEntry AddMapping(
-            AModuleEntry parent,
+        public AModuleItem AddMapping(
+            AModuleItem parent,
             string name,
             string description,
             IDictionary<string, IDictionary<string, string>> value
         ) {
-            return AddEntry(new MappingEntry(
+            return AddItem(new MappingItem(
                 parent: parent,
                 name: name,
                 description: description,
@@ -932,7 +932,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             _resourceStatements.Add(statement);
         }
 
-        public void VisitAll(Func<AModuleEntry, object, object> visitor) {
+        public void VisitAll(Func<AModuleItem, object, object> visitor) {
             if(visitor == null) {
                 throw new ArgumentNullException(nameof(visitor));
             }
@@ -942,11 +942,11 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 _secrets = (IList<object>)visitor(null, _secrets);
             });
 
-            // resolve references in entries
+            // resolve references in items
             AtLocation("Items", () => {
-                foreach(var entry in _entries) {
-                    AtLocation(entry.FullName, () => {
-                        entry.Visit(visitor);
+                foreach(var item in _items) {
+                    AtLocation(item.FullName, () => {
+                        item.Visit(visitor);
                     });
                 }
             });
@@ -954,39 +954,39 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             // resolve references in output values
             AtLocation("ResourceStatements", () => {
 
-                // TODO: pass in 'Module::Role' entry?
+                // TODO: pass in 'Module::Role' item?
                 _resourceStatements = (IList<Humidifier.Statement>)visitor(null, _resourceStatements);
             });
         }
 
-        public bool HasAttribute(AModuleEntry entry, string attribute) {
-            var dependency = _dependencies.Values.FirstOrDefault(d => d.Manifest?.CustomResourceTypes.ContainsKey(entry.Type) ?? false);
+        public bool HasAttribute(AModuleItem item, string attribute) {
+            var dependency = _dependencies.Values.FirstOrDefault(d => d.Manifest?.CustomResourceTypes.ContainsKey(item.Type) ?? false);
             if(dependency != null) {
-                return dependency.Manifest.CustomResourceTypes.TryGetValue(entry.Type, out ModuleManifestCustomResource customResource)
+                return dependency.Manifest.CustomResourceTypes.TryGetValue(item.Type, out ModuleManifestCustomResource customResource)
                     && customResource.Response.Any(field => field.Name == attribute);
             }
-            return entry.HasAttribute(attribute);
+            return item.HasAttribute(attribute);
         }
 
         public Module ToModule() {
 
             // update existing resource statements when they exist
-            if(TryGetEntry("Module::Role", out AModuleEntry moduleRoleEntry)) {
-                var role = (Humidifier.IAM.Role)((ResourceEntry)moduleRoleEntry).Resource;
+            if(TryGetItem("Module::Role", out AModuleItem moduleRoleItem)) {
+                var role = (Humidifier.IAM.Role)((ResourceItem)moduleRoleItem).Resource;
                 role.Policies[0].PolicyDocument.Statement = _resourceStatements.ToList();
             }
 
-            // NOTE (2018-12-17, bjorg): at this point, we have to use `LogicalId` for entries since the module is
+            // NOTE (2018-12-17, bjorg): at this point, we have to use `LogicalId` for items since the module is
             //  generated after the linker has completed its job.
 
             // check if module contains a finalizer invocation function
-            if(TryGetEntry("Finalizer::Invocation", out AModuleEntry finalizerInvocationEntry)) {
+            if(TryGetItem("Finalizer::Invocation", out AModuleItem finalizerInvocationItem)) {
 
                 // finalizer depends on all resources having been created
-                ((ResourceEntry)finalizerInvocationEntry).DependsOn = _entries
-                    .OfType<AResourceEntry>()
-                    .Where(entry => entry.LogicalId != finalizerInvocationEntry.LogicalId)
-                    .Select(entry => entry.LogicalId)
+                ((ResourceItem)finalizerInvocationItem).DependsOn = _items
+                    .OfType<AResourceItem>()
+                    .Where(item => item.LogicalId != finalizerInvocationItem.LogicalId)
+                    .Select(item => item.LogicalId)
                     .OrderBy(logicalId => logicalId)
                     .ToList();
             }
@@ -996,7 +996,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 Description = _description,
                 Pragmas = _pragmas,
                 Secrets = _secrets,
-                Entries = _entries,
+                Items = _items,
                 Assets = _assets.OrderBy(value => value).ToList(),
                 Dependencies = _dependencies.OrderBy(kv => kv.Key).ToList(),
                 CustomResourceTypes = _customResourceTypes.OrderBy(kv => kv.Key).ToList(),
@@ -1005,21 +1005,21 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             };
         }
 
-        private AModuleEntry AddEntry(AModuleEntry entry) {
-            Validate(Regex.IsMatch(entry.Name, CLOUDFORMATION_ID_PATTERN), "name is not valid");
+        private AModuleItem AddItem(AModuleItem item) {
+            Validate(Regex.IsMatch(item.Name, CLOUDFORMATION_ID_PATTERN), "name is not valid");
 
             // set default reference
-            if(entry.Reference == null) {
-                entry.Reference = FnRef(entry.ResourceName);
+            if(item.Reference == null) {
+                item.Reference = FnRef(item.ResourceName);
             }
 
-            // add entry
-            if(_entriesByFullName.TryAdd(entry.FullName, entry)) {
-                _entries.Add(entry);
+            // add item
+            if(_itemsByFullName.TryAdd(item.FullName, item)) {
+                _items.Add(item);
             } else {
-                AddError($"duplicate name '{entry.FullName}'");
+                AddError($"duplicate name '{item.FullName}'");
             }
-            return entry;
+            return item;
         }
 
         private void ValidateProperties(
@@ -1138,10 +1138,10 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             }
         }
 
-        private Humidifier.CustomResource CreateDecryptSecretResourceFor(AModuleEntry entry)
+        private Humidifier.CustomResource CreateDecryptSecretResourceFor(AModuleItem item)
             => RegisterCustomResourceNameMapping(new Humidifier.CustomResource("Module::DecryptSecret") {
                 ["ServiceToken"] = FnGetAtt("Module::DecryptSecretFunction", "Arn"),
-                ["Ciphertext"] = FnRef(entry.FullName)
+                ["Ciphertext"] = FnRef(item.FullName)
             });
 
         private Humidifier.CustomResource RegisterCustomResourceNameMapping(Humidifier.CustomResource customResource) {

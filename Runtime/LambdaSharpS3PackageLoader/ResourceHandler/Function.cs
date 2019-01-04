@@ -94,8 +94,8 @@ namespace MindTouch.LambdaSharpS3PackageLoader.ResourceHandler {
             LogInfo($"uploading package s3://{properties.SourceBucketName}/{properties.SourcePackageKey} to S3 bucket {properties.DestinationBucketName}");
 
             // download package and copy all files to destination bucket
-            var entries = new List<string>();
-            if(!await ProcessZipFileEntriesAsync(properties.SourceBucketName, properties.SourcePackageKey, async entry => {
+            var files = new List<string>();
+            if(!await ProcessZipFileItemsAsync(properties.SourceBucketName, properties.SourcePackageKey, async entry => {
                 using(var stream = entry.Open()) {
                     var memoryStream = new MemoryStream();
                     await stream.CopyToAsync(memoryStream);
@@ -106,19 +106,19 @@ namespace MindTouch.LambdaSharpS3PackageLoader.ResourceHandler {
                         properties.DestinationBucketName,
                         destination
                     );
-                    entries.Add(entry.FullName);
+                    files.Add(entry.FullName);
                 }
             })) {
                 throw new FileNotFoundException("Unable to download source package");
             }
-            LogInfo($"uploaded {entries.Count:N0} files");
+            LogInfo($"uploaded {files.Count:N0} files");
 
             // create package manifest for future deletion
             var manifestStream = new MemoryStream();
             using(var manifest = new ZipArchive(manifestStream, ZipArchiveMode.Create, leaveOpen: true))
             using(var manifestEntryStream = manifest.CreateEntry("manifest.txt").Open())
             using(var manifestEntryWriter = new StreamWriter(manifestEntryStream)) {
-                await manifestEntryWriter.WriteAsync(string.Join("\n", entries));
+                await manifestEntryWriter.WriteAsync(string.Join("\n", files));
             }
             await _transferUtility.UploadAsync(
                 manifestStream,
@@ -138,34 +138,34 @@ namespace MindTouch.LambdaSharpS3PackageLoader.ResourceHandler {
             LogInfo($"deleting package {properties.SourcePackageKey} from S3 bucket {properties.DestinationBucketName}");
 
             // download package manifest
-            var entries = new List<string>();
+            var files = new List<string>();
             var key = $"{properties.DestinationBucketName}/{properties.SourcePackageKey}";
-            if(!await ProcessZipFileEntriesAsync(
+            if(!await ProcessZipFileItemsAsync(
                 _manifestBucket,
                 key,
                 async entry => {
                     using(var stream = entry.Open())
                     using(var reader = new StreamReader(stream)) {
                         var manifest = await reader.ReadToEndAsync();
-                        entries.AddRange(manifest.Split('\n'));
+                        files.AddRange(manifest.Split('\n'));
                     }
                 }
             )) {
                 LogWarn($"unable to dowload zip file from s3://{_manifestBucket}/{key}");
             }
-            LogInfo($"found {entries.Count:N0} files to delete");
+            LogInfo($"found {files.Count:N0} files to delete");
 
             // delete all files from manifest
-            while(entries.Any()) {
-                var batch = entries.Take(MAX_BATCH_DELETE_OBJECTS).Select(entry => Path.Combine(properties.DestinationKeyPrefix, entry).Replace('\\', '/')).ToList();
+            while(files.Any()) {
+                var batch = files.Take(MAX_BATCH_DELETE_OBJECTS).Select(file => Path.Combine(properties.DestinationKeyPrefix, file).Replace('\\', '/')).ToList();
                 LogInfo($"deleting files: {string.Join(", ", batch)}");
                 await _s3Client.DeleteObjectsAsync(new DeleteObjectsRequest {
                     BucketName = properties.DestinationBucketName,
-                    Objects = batch.Select(entry => new KeyVersion {
-                        Key = entry
+                    Objects = batch.Select(filepath => new KeyVersion {
+                        Key = filepath
                     }).ToList()
                 });
-                entries = entries.Skip(MAX_BATCH_DELETE_OBJECTS).ToList();
+                files = files.Skip(MAX_BATCH_DELETE_OBJECTS).ToList();
             }
 
             // delete manifest file
@@ -180,7 +180,7 @@ namespace MindTouch.LambdaSharpS3PackageLoader.ResourceHandler {
             return new Response<ResponseProperties>();
         }
 
-        private async Task<bool> ProcessZipFileEntriesAsync(string bucketName, string key, Func<ZipArchiveEntry, Task> callbackAsync) {
+        private async Task<bool> ProcessZipFileItemsAsync(string bucketName, string key, Func<ZipArchiveEntry, Task> callbackAsync) {
             var tmpFilename = Path.GetTempFileName() + ".zip";
             try {
                 LogInfo($"downloading s3://{bucketName}/{key}");

@@ -38,22 +38,22 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
         public void Validate(ModuleBuilder builder) {
             _builder = builder;
             AtLocation("Items", () => {
-                foreach(var entry in builder.Entries) {
-                    AtLocation(entry.FullName, () => {
-                        switch(entry) {
-                        case FunctionEntry functionEntry:
-                            ValidateFunction(functionEntry);
+                foreach(var item in builder.Items) {
+                    AtLocation(item.FullName, () => {
+                        switch(item) {
+                        case FunctionItem functionItem:
+                            ValidateFunction(functionItem);
                             break;
-                        case ResourceEntry resourceEntry:
-                            switch(resourceEntry.Resource) {
+                        case ResourceItem resourceItem:
+                            switch(resourceItem.Resource) {
                             case Humidifier.CloudFormation.Macro macro:
                                 ValidateFunction((object)macro.FunctionName);
                                 break;
                             }
                             break;
-                        case ResourceTypeEntry resourceTypeEntry:
-                            AtLocation(resourceTypeEntry.CustomResourceType, () => {
-                                ValidateHandler(resourceTypeEntry.Handler);
+                        case ResourceTypeItem resourceTypeItem:
+                            AtLocation(resourceTypeItem.CustomResourceType, () => {
+                                ValidateHandler(resourceTypeItem.Handler);
                             });
                             break;
                         }
@@ -62,7 +62,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             });
         }
 
-        public void ValidateFunction(FunctionEntry function) {
+        public void ValidateFunction(FunctionItem function) {
             var index = 0;
             foreach(var source in function.Sources) {
                 AtLocation($"{++index}", () => {
@@ -108,31 +108,31 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
             // local functions
             void ValidateSourceParameter(string fullName) {
-                if(!_builder.TryGetEntry(fullName, out AModuleEntry entry)) {
+                if(!_builder.TryGetItem(fullName, out AModuleItem item)) {
                     AddError($"could not find function source {fullName}");
                     return;
                 }
-                switch(entry) {
-                case VariableEntry _:
-                case InputEntry _:
-                case PackageEntry _:
-                case ResourceEntry _:
-                case FunctionEntry _:
-                    if(awsType != entry.Type) {
-                        AddError($"function source '{fullName}' must be {awsType}, but was {entry.Type}");
+                switch(item) {
+                case VariableItem _:
+                case InputItem _:
+                case PackageItem _:
+                case ResourceItem _:
+                case FunctionItem _:
+                    if(awsType != item.Type) {
+                        AddError($"function source '{fullName}' must be {awsType}, but was {item.Type}");
                     }
                     break;
-                case ConditionEntry _:
-                    AddError($"function source '{fullName}' cannot be a condition '{entry.FullName}'");
+                case ConditionItem _:
+                    AddError($"function source '{fullName}' cannot be a condition '{item.FullName}'");
                     break;
-                case MappingEntry _:
-                    AddError($"function source '{fullName}' cannot be a mapping '{entry.FullName}'");
+                case MappingItem _:
+                    AddError($"function source '{fullName}' cannot be a mapping '{item.FullName}'");
                     break;
-                case ResourceTypeEntry _:
-                    AddError($"function source '{fullName}' cannot be a custom resource '{entry.FullName}'");
+                case ResourceTypeItem _:
+                    AddError($"function source '{fullName}' cannot be a custom resource '{item.FullName}'");
                     break;
                 default:
-                    throw new ApplicationException($"unexpected entry type: {entry.GetType()}");
+                    throw new ApplicationException($"unexpected item type: {item.GetType()}");
                 }
             }
         }
@@ -142,31 +142,31 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 AddError("invalid expression");
                 return;
             }
-            if(!_builder.TryGetEntry(fullName, out AModuleEntry entry)) {
-                AddError($"could not find handler entry {fullName}");
+            if(!_builder.TryGetItem(fullName, out AModuleItem item)) {
+                AddError($"could not find handler item {fullName}");
                 return;
             }
-            switch(entry) {
-            case VariableEntry _:
-            case InputEntry _:
-            case PackageEntry _:
-            case ResourceEntry _:
-            case FunctionEntry _:
-                if((entry.Type != "AWS::Lambda::Function") && (entry.Type != "AWS::SNS::Topic")) {
-                    AddError($"handler reference '{fullName}' must be either be AWS::SNS::Topic or AWS::Lambda::Function, but was {entry.Type}");
+            switch(item) {
+            case VariableItem _:
+            case InputItem _:
+            case PackageItem _:
+            case ResourceItem _:
+            case FunctionItem _:
+                if((item.Type != "AWS::Lambda::Function") && (item.Type != "AWS::SNS::Topic")) {
+                    AddError($"handler reference '{fullName}' must be either be AWS::SNS::Topic or AWS::Lambda::Function, but was {item.Type}");
                 }
                 break;
-            case ConditionEntry _:
-                AddError($"handler reference '{fullName}' cannot be a condition '{entry.FullName}'");
+            case ConditionItem _:
+                AddError($"handler reference '{fullName}' cannot be a condition '{item.FullName}'");
                 break;
-            case MappingEntry _:
-                AddError($"handler reference '{fullName}' cannot be a mapping '{entry.FullName}'");
+            case MappingItem _:
+                AddError($"handler reference '{fullName}' cannot be a mapping '{item.FullName}'");
                 break;
-            case ResourceTypeEntry _:
-                AddError($"handler reference '{fullName}' cannot be a custom resource '{entry.FullName}'");
+            case ResourceTypeItem _:
+                AddError($"handler reference '{fullName}' cannot be a custom resource '{item.FullName}'");
                 break;
             default:
-                throw new ApplicationException($"unexpected entry type: {entry.GetType()}");
+                throw new ApplicationException($"unexpected item type: {item.GetType()}");
             }
         }
 
@@ -175,31 +175,31 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 AddError("invalid expression");
                 return;
             }
-            if(!_builder.TryGetEntry(fullName, out AModuleEntry entry)) {
-                AddError($"could not find function entry {fullName}");
+            if(!_builder.TryGetItem(fullName, out AModuleItem item)) {
+                AddError($"could not find function item {fullName}");
                 return;
             }
-            switch(entry) {
-            case VariableEntry _:
-            case InputEntry _:
-            case PackageEntry _:
-            case ResourceEntry _:
-            case FunctionEntry _:
-                if(entry.Type != "AWS::Lambda::Function") {
-                    AddError($"function reference '{fullName}' must be be AWS::Lambda::Function, but was {entry.Type}");
+            switch(item) {
+            case VariableItem _:
+            case InputItem _:
+            case PackageItem _:
+            case ResourceItem _:
+            case FunctionItem _:
+                if(item.Type != "AWS::Lambda::Function") {
+                    AddError($"function reference '{fullName}' must be be AWS::Lambda::Function, but was {item.Type}");
                 }
                 break;
-            case ConditionEntry _:
-                AddError($"function reference '{fullName}' cannot be a condition '{entry.FullName}'");
+            case ConditionItem _:
+                AddError($"function reference '{fullName}' cannot be a condition '{item.FullName}'");
                 break;
-            case MappingEntry _:
-                AddError($"function reference '{fullName}' cannot be a mapping '{entry.FullName}'");
+            case MappingItem _:
+                AddError($"function reference '{fullName}' cannot be a mapping '{item.FullName}'");
                 break;
-            case ResourceTypeEntry _:
-                AddError($"function reference '{fullName}' cannot be a custom resource '{entry.FullName}'");
+            case ResourceTypeItem _:
+                AddError($"function reference '{fullName}' cannot be a custom resource '{item.FullName}'");
                 break;
             default:
-                throw new ApplicationException($"unexpected entry type: {entry.GetType()}");
+                throw new ApplicationException($"unexpected item type: {item.GetType()}");
             }
         }
     }

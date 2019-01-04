@@ -25,7 +25,7 @@ using System.Linq;
 
 namespace MindTouch.LambdaSharp.Tool.Model.AST {
 
-    public class EntryNode {
+    public class ModuleItemNode {
 
         //--- Class Fields ---
         public static readonly Dictionary<string, IEnumerable<string>> FieldCombinations = new Dictionary<string, IEnumerable<string>> {
@@ -116,7 +116,7 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
                 "Handler"
             },
 
-            // nodes with optional nested entries
+            // nodes with optional nested items
             ["Using"] = new[] {
                 "Description",
                 "Items"
@@ -178,7 +178,7 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
          * Imports: list<Parameter>
          */
         public string Using { get; set; }
-        public IList<EntryNode> Items { get; set; }
+        public IList<ModuleItemNode> Items { get; set; }
 
         /*
          * Variable: string

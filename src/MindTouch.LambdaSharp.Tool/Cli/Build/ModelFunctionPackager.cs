@@ -95,7 +95,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     } catch { }
                 }
             }
-            foreach(var function in builder.Entries.OfType<FunctionEntry>()) {
+            foreach(var function in builder.Items.OfType<FunctionItem>()) {
                 AtLocation(function.FullName, () => {
                     Process(
                         function,
@@ -109,7 +109,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
         }
 
         private void Process(
-            FunctionEntry function,
+            FunctionItem function,
             bool noCompile,
             bool noAssemblyValidation,
             string gitsha,
@@ -145,7 +145,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
         }
 
         private void ProcessDotNet(
-            FunctionEntry function,
+            FunctionItem function,
             bool noCompile,
             bool noAssemblyValidation,
             string gitsha,
@@ -308,7 +308,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
         }
 
         private void ProcessJavascript(
-            FunctionEntry function,
+            FunctionItem function,
             bool noCompile,
             bool noAssemblyValidation,
             string gitsha,

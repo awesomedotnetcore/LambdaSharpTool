@@ -18,7 +18,7 @@
         * renamed `CustomResource` to `ResourceType`
         * use `Namespace` as keyword for nested declarations
     * allow any AWS type as parameter type and map to `String` when AWS type is not natively supported
-    * new `Import` notation
+    * new `Using` notation (formerly `Import`)
     * module `Requires` section
     * `Topic` source now supports `Filters` to filter on SNS notifications
     * `Bucket`, `Queue`, `S3`, `DynamoDB`, `Kinesis` sources can now also be expressions

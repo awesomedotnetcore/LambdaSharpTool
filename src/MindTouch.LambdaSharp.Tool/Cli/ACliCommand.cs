@@ -162,7 +162,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     var deploymentBucketName = deploymentBucketNameOption.Value();
                     var deploymentNotificationTopicArn = deploymentNotificationTopicArnOption.Value();
 
-                    // create a settings entry for each module filename
+                    // create a settings instance for each module filename
                     return new Settings {
                         ToolVersion = Version,
                         ToolProfile = toolProfile,

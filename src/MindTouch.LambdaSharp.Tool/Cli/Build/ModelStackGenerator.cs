@@ -63,13 +63,13 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 Value = _module.Version.ToString()
             });
 
-            // add entries
-            foreach(var entry in _module.Entries) {
-                AddEntry(entry);
+            // add items
+            foreach(var item in _module.Items) {
+                AddItem(item);
             }
 
             // add interface for presenting inputs
-            var inputParameters = _module.Entries.OfType<InputEntry>();
+            var inputParameters = _module.Items.OfType<InputItem>();
             _stack.AddTemplateMetadata("AWS::CloudFormation::Interface", new Dictionary<string, object> {
                 ["ParameterLabels"] = inputParameters.ToDictionary(input => input.LogicalId, input => new Dictionary<string, object> {
                     ["default"] = input.Label
@@ -116,14 +116,14 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 CustomResourceTypes = new Dictionary<string, ModuleManifestCustomResource>(module.CustomResourceTypes),
                 MacroNames = module.MacroNames.ToList(),
                 CustomResourceNameMappings = module.CustomResourceNameMappings,
-                ResourceNameMappings = module.Entries
+                ResourceNameMappings = module.Items
 
                     // we only ned to worry about resource names
-                    .Where(entry => (entry is AResourceEntry))
+                    .Where(item => (item is AResourceItem))
 
-                    // we only care about entries where the logical ID and full-name don't match
-                    .Where(entry => entry.LogicalId != entry.FullName)
-                    .ToDictionary(entry => entry.LogicalId, entry => entry.FullName)
+                    // we only care about items where the logical ID and full-name don't match
+                    .Where(item => item.LogicalId != item.FullName)
+                    .ToDictionary(item => item.LogicalId, item => item.FullName)
             });
 
             // update DeploymentChecksum with template hash
@@ -133,77 +133,77 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             return new JsonStackSerializer().Serialize(_stack);
         }
 
-        private void AddEntry(AModuleEntry entry) {
-            var logicalId = entry.LogicalId;
-            switch(entry) {
-            case VariableEntry _:
-            case PackageEntry _:
-                if(entry.IsPublic) {
-                    AddExport(entry);
+        private void AddItem(AModuleItem item) {
+            var logicalId = item.LogicalId;
+            switch(item) {
+            case VariableItem _:
+            case PackageItem _:
+                if(item.IsPublic) {
+                    AddExport(item);
                 }
                 break;
-            case ResourceEntry resourceEntry:
+            case ResourceItem resourceItem:
                 _stack.Add(
                     logicalId,
-                    resourceEntry.Resource,
-                    resourceEntry.Condition,
-                    dependsOn: resourceEntry.DependsOn.ToArray()
+                    resourceItem.Resource,
+                    resourceItem.Condition,
+                    dependsOn: resourceItem.DependsOn.ToArray()
                 );
-                if(entry.IsPublic) {
-                    AddExport(entry);
+                if(item.IsPublic) {
+                    AddExport(item);
                 }
                 break;
-            case InputEntry inputEntry:
-                _stack.Add(logicalId, inputEntry.Parameter);
-                if(entry.IsPublic) {
-                    AddExport(entry, inputEntry.Label);
+            case InputItem inputItem:
+                _stack.Add(logicalId, inputItem.Parameter);
+                if(item.IsPublic) {
+                    AddExport(item, inputItem.Label);
                 }
                 break;
-            case FunctionEntry functionEntry:
+            case FunctionItem functionItem:
                 _stack.Add(
-                    functionEntry.LogicalId,
-                    functionEntry.Function,
-                    functionEntry.Condition,
-                    dependsOn: functionEntry.DependsOn.ToArray()
+                    functionItem.LogicalId,
+                    functionItem.Function,
+                    functionItem.Condition,
+                    dependsOn: functionItem.DependsOn.ToArray()
                 );
-                if(entry.IsPublic) {
-                    AddExport(entry);
+                if(item.IsPublic) {
+                    AddExport(item);
                 }
                 break;
-            case ConditionEntry conditionEntry:
-                _stack.Add(conditionEntry.LogicalId, new Condition(conditionEntry.Reference));
+            case ConditionItem conditionItem:
+                _stack.Add(conditionItem.LogicalId, new Condition(conditionItem.Reference));
                 break;
-            case MappingEntry mappingEntry: {
+            case MappingItem mappingItem: {
                     var mapping = new Mapping();
-                    foreach(var level1Mapping in mappingEntry.Mapping) {
+                    foreach(var level1Mapping in mappingItem.Mapping) {
                         mapping[level1Mapping.Key] = level1Mapping.Value.ToDictionary(
                             level2Mapping => level2Mapping.Key,
                             level2Mapping => level2Mapping.Value
                         );
                     }
-                    _stack.Add(mappingEntry.LogicalId, mapping);
+                    _stack.Add(mappingItem.LogicalId, mapping);
                 }
                 break;
-            case ResourceTypeEntry resourceTypeEntry:
-                _stack.Add(resourceTypeEntry.LogicalId, new Humidifier.Output {
-                    Description = resourceTypeEntry.Description,
-                    Value = resourceTypeEntry.Handler,
+            case ResourceTypeItem resourceTypeItem:
+                _stack.Add(resourceTypeItem.LogicalId, new Humidifier.Output {
+                    Description = resourceTypeItem.Description,
+                    Value = resourceTypeItem.Handler,
                     Export = new Dictionary<string, dynamic> {
-                        ["Name"] = Fn.Sub($"${{DeploymentPrefix}}CustomResource-{resourceTypeEntry.CustomResourceType}")
+                        ["Name"] = Fn.Sub($"${{DeploymentPrefix}}CustomResource-{resourceTypeItem.CustomResourceType}")
                     }
                 });
                 break;
             default:
-                throw new ArgumentOutOfRangeException(nameof(entry), entry, "unknown parameter type");
+                throw new ArgumentOutOfRangeException(nameof(item), item, "unknown parameter type");
             }
 
             // local functions
-            void AddExport(AModuleEntry exportEntry, string description = null) {
-                _stack.Add(exportEntry.LogicalId, new Humidifier.Output {
-                    Description = description ?? exportEntry.Description,
-                    Value = exportEntry.GetExportReference(),
+            void AddExport(AModuleItem exportItem, string description = null) {
+                _stack.Add(exportItem.LogicalId, new Humidifier.Output {
+                    Description = description ?? exportItem.Description,
+                    Value = exportItem.GetExportReference(),
                     Export = new Dictionary<string, dynamic> {
-                        ["Name"] = Fn.Sub($"${{AWS::StackName}}::{exportEntry.FullName}")
+                        ["Name"] = Fn.Sub($"${{AWS::StackName}}::{exportItem.FullName}")
                     }
                 });
             }
