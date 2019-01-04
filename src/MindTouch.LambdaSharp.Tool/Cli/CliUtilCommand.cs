@@ -27,6 +27,10 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using Amazon.CloudWatchLogs;
+using Amazon.CloudWatchLogs.Model;
+using Amazon.Lambda;
+using Amazon.Lambda.Model;
 using McMaster.Extensions.CommandLineUtils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -37,17 +41,15 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
         //--- Methods --
         public void Register(CommandLineApplication app) {
-            app.Command("refresh-spec", cmd => {
+            app.Command("refresh-cloudformation-spec", cmd => {
                 cmd.HelpOption();
                 cmd.Description = "Download CloudFormation JSON Specification";
                 cmd.ShowInHelpText = false;
-
-                // init options
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
 
                     // determine destination folder
-                    var lambdaSharpFolder = Environment.GetEnvironmentVariable("LAMBDASHARP");
+                    var lambdaSharpFolder = System.Environment.GetEnvironmentVariable("LAMBDASHARP");
                     if(lambdaSharpFolder == null) {
                         AddError("LAMBDASHARP environment variable is not defined");
                         return;
@@ -55,12 +57,25 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     var destinationZipLocation = Path.Combine(lambdaSharpFolder, "src/MindTouch.LambdaSharp.Tool/Resources/CloudFormationResourceSpecification.json.gz");
                     var destinationJsonLocation = Path.Combine(lambdaSharpFolder, "src/MindTouch.LambdaSharp.Tool/Docs/CloudFormationResourceSpecification.json");
 
-                    // determine if we want to install modules from a local check-out
+                    // run command
                     await Refresh(
                         "https://d1uauaxba7bl26.cloudfront.net/latest/gzip/CloudFormationResourceSpecification.json",
                         destinationZipLocation,
                         destinationJsonLocation
                     );
+                });
+            });
+
+            app.Command("delete-orphan-lambda-logs", cmd => {
+                cmd.HelpOption();
+                cmd.Description = "Delete orphaned Lambda CloudWatch logs";
+                cmd.ShowInHelpText = false;
+                var dryRunOption = cmd.Option("--dryrun", "(optional) Check which logs to delete without deleting them", CommandOptionType.NoValue);
+
+                // run command
+                cmd.OnExecute(async () => {
+                    Console.WriteLine($"{app.FullName} - {cmd.Description}");
+                    await DeleteOrphanLambdaLogs(dryRunOption.HasValue());
                 });
             });
         }
@@ -103,6 +118,67 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             var info = new FileInfo(destinationZipLocation);
             Console.WriteLine($"Stored compressed spec file {destinationZipLocation}");
             Console.WriteLine($"Compressed file size: {info.Length:N0}");
+        }
+
+        public async Task DeleteOrphanLambdaLogs(bool dryRun) {
+            Console.WriteLine();
+
+            // list all lambda functions
+            var lambdaClient = new AmazonLambdaClient();
+            var listFunctionsRequest = new ListFunctionsRequest { };
+            var lambdaLogGroupNames = new HashSet<string>();
+            do {
+                var listFunctionsResponse = await lambdaClient.ListFunctionsAsync(listFunctionsRequest);
+                foreach(var function in listFunctionsResponse.Functions) {
+                    lambdaLogGroupNames.Add($"/aws/lambda/{function.FunctionName}");
+                }
+                listFunctionsRequest.Marker = listFunctionsResponse.NextMarker;
+            } while(listFunctionsRequest.Marker != null);
+
+            // list all log groups for lambda functions
+            var logsClient = new AmazonCloudWatchLogsClient();
+            var describeLogGroupsRequest = new DescribeLogGroupsRequest {
+                LogGroupNamePrefix = "/aws/lambda/"
+            };
+            var totalLogGroups = 0;
+            var deletedLogGroups = 0;
+            var skippedLogGroups = 0;
+            do {
+                var describeLogGroupsResponse = await logsClient.DescribeLogGroupsAsync(describeLogGroupsRequest);
+                totalLogGroups += describeLogGroupsResponse.LogGroups.Count;
+                foreach(var logGroup in describeLogGroupsResponse.LogGroups) {
+                    if(lambdaLogGroupNames.Contains(logGroup.LogGroupName)) {
+
+                        // nothing to do
+                    } else if(System.Text.RegularExpressions.Regex.IsMatch(logGroup.LogGroupName, @"^\/aws\/lambda\/[a-zA-Z0-9\-_]+$")) {
+
+                        // attempt to delete log group
+                        if(dryRun) {
+                            Console.WriteLine($"* deleted '{logGroup.LogGroupName}' (skipped)");
+                        } else {
+                            try {
+                                await logsClient.DeleteLogGroupAsync(new DeleteLogGroupRequest {
+                                    LogGroupName = logGroup.LogGroupName
+                                });
+                                Console.WriteLine($"* deleted '{logGroup.LogGroupName}'");
+                                ++deletedLogGroups;
+                            } catch {
+                                AddError($"could not delete '{logGroup.LogGroupName}'");
+                            }
+                        }
+                    } else {
+
+                        // log group has an invalid name structure; skip it
+                        Console.WriteLine($"SKIPPED '{logGroup.LogGroupName}'");
+                        ++skippedLogGroups;
+                    }
+                }
+                describeLogGroupsRequest.NextToken = describeLogGroupsResponse.NextToken;
+            } while(describeLogGroupsRequest.NextToken != null);
+            if((deletedLogGroups > 0) || (skippedLogGroups > 0)) {
+                Console.WriteLine();
+            }
+            Console.WriteLine($"Found {totalLogGroups:N0} log groups. Deleted {deletedLogGroups:N0}. Skipped {skippedLogGroups:N0}");
         }
     }
 }

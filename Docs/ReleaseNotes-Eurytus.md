@@ -102,6 +102,7 @@
     * `--no-dependency-validation` to disable downloading of dependencies
     * BREAKING: changed `--cf-output` to `--cfn-output`; output can now be a path, in which case the module source name is used as output json
     * BREAKING: changed `--inputs` to `--parameters` for consistency reasons
+    * added `delete-orphan-lambda-logs` command to delete orphaned Lambda log groups
 
 * Build Process
     * validate that function entry point exists after compiling assembly
