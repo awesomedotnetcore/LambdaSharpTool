@@ -119,7 +119,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 } else {
 
                     // confirm that the implicit profile is the desired profile
-                    settings.ToolProfile = Prompt.GetString("CLI profile name:", settings.ToolProfile);
+                    settings.ToolProfile = Prompt.GetString("|=> CLI profile name:", settings.ToolProfile);
                     parameters["LambdaSharpToolProfile"] = settings.ToolProfile;
                 }
 
@@ -155,7 +155,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     }
                     if(existingVersion < Version) {
                         Console.WriteLine($"LambdaSharp CLI configuration appears to be out of date: (v{existingVersion})");
-                        var upgrade = Prompt.GetYesNo("Do you want to upgrade?", false);
+                        var upgrade = Prompt.GetYesNo("|=> Do you want to upgrade?", false);
                         if(!upgrade) {
                             return;
                         }
@@ -257,7 +257,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 Console.WriteLine();
                 Console.WriteLine($"Configuring {templateSummary.Description} Parameters");
                 foreach(var missingParameter in missingParameters) {
-                    var enteredValue = Prompt.GetString($"=> {missingParameter.Description ?? missingParameter.ParameterKey}:", missingParameter.DefaultValue) ?? "";
+                    var enteredValue = Prompt.GetString($"|=> {missingParameter.Description ?? missingParameter.ParameterKey}:", missingParameter.DefaultValue) ?? "";
                     result.Add(new Parameter {
                         ParameterKey = missingParameter.ParameterKey,
                         ParameterValue = enteredValue
