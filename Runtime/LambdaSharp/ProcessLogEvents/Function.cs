@@ -211,8 +211,7 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
                     Title = $"{report.FunctionName}: {report.Message}",
                     Custom = new {
                         report.Message,
-                        report.ModuleName,
-                        report.ModuleVersion,
+                        report.ModuleInfo,
                         report.ModuleId,
                         report.FunctionId,
                         report.FunctionName,

@@ -1,4 +1,4 @@
-Module: S3Sample
+Module: LambdaSharp.S3Sample
 Description: A sample module integrating with S3 Bucket events
 Items:
 

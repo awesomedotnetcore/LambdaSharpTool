@@ -113,8 +113,7 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
 
                     // fill-in error report with owner information
                     var report = new ErrorReport {
-                        ModuleName = owner.ModuleName,
-                        ModuleVersion = owner.ModuleVersion,
+                        ModuleInfo = owner.ModuleInfo,
                         ModuleId = owner.ModuleId,
                         FunctionId = owner.FunctionId,
                         FunctionName = owner.FunctionName,

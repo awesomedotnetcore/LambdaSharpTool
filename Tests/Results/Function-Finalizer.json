@@ -41,7 +41,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "B2205B4BE965987A175718891B3BA012"
+      "Default": "450B310133E7045C4F54F5C7AB063EE5"
     }
   },
   "Resources": {
@@ -56,16 +56,15 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "Modules/TestModule/Assets/Finalizer-DRYRUN.zip"
+          "S3Key": "Test/Modules/TestModule/Assets/Finalizer-DRYRUN.zip"
         },
         "Description": "My finalizer function (v1.0)",
         "Environment": {
           "Variables": {
-            "MODULE_NAME": "TestModule",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_VERSION": "1.0",
+            "MODULE_INFO": "Test.TestModule:1.0",
             "LAMBDA_NAME": "Finalizer",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEFAULTSECRETKEY": {
@@ -310,17 +309,13 @@
         "ModuleId": {
           "Ref": "AWS::StackName"
         },
-        "ModuleName": "TestModule",
-        "ModuleVersion": "1.0"
+        "ModuleInfo": "Test.TestModule:1.0"
       }
     }
   },
   "Outputs": {
-    "ModuleName": {
-      "Value": "TestModule"
-    },
-    "ModuleVersion": {
-      "Value": "1.0"
+    "ModuleInfo": {
+      "Value": "Test.TestModule:1.0"
     }
   },
   "Conditions": {
@@ -463,8 +458,7 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2018-12-31",
-      "ModuleName": "TestModule",
-      "ModuleVersion": "1.0",
+      "ModuleInfo": "Test.TestModule:1.0",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -499,12 +493,12 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "B2205B4BE965987A175718891B3BA012",
+      "Hash": "450B310133E7045C4F54F5C7AB063EE5",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [
         {
-          "ModuleName": "LambdaSharpRegistrar",
+          "ModuleFullName": "LambdaSharp.Core",
           "MinVersion": "0.5-WIP"
         }
       ],

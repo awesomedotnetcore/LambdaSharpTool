@@ -60,7 +60,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "ED47E54E3DA6C60C673D4D317E84442D"
+      "Default": "8B5A25626FB22ED560A49DAFCF2F06B7"
     }
   },
   "Resources": {
@@ -71,7 +71,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "Modules/SlackCommandSample/Assets/MyFunction-DRYRUN.zip"
+          "S3Key": "LambdaSharp/Modules/SlackCommandSample/Assets/MyFunction-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -108,11 +108,10 @@
         "Description": "This function is invoked by a Slack command (v1.0)",
         "Environment": {
           "Variables": {
-            "MODULE_NAME": "SlackCommandSample",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_VERSION": "1.0",
+            "MODULE_INFO": "LambdaSharp.SlackCommandSample:1.0",
             "LAMBDA_NAME": "MyFunction",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
@@ -378,8 +377,7 @@
         "ModuleId": {
           "Ref": "AWS::StackName"
         },
-        "ModuleName": "SlackCommandSample",
-        "ModuleVersion": "1.0"
+        "ModuleInfo": "LambdaSharp.SlackCommandSample:1.0"
       }
     },
     "MyFunctionRegistration": {
@@ -482,7 +480,7 @@
     "ModuleRestApi": {
       "Type": "AWS::ApiGateway::RestApi",
       "Properties": {
-        "Description": "${Module::Name} API (v${Module::Version})",
+        "Description": "${Module::FullName} API (v${Module::Version})",
         "FailOnWarnings": true,
         "Name": {
           "Fn::Sub": "${AWS::StackName} Module API"
@@ -656,11 +654,8 @@
     }
   },
   "Outputs": {
-    "ModuleName": {
-      "Value": "SlackCommandSample"
-    },
-    "ModuleVersion": {
-      "Value": "1.0"
+    "ModuleInfo": {
+      "Value": "LambdaSharp.SlackCommandSample:1.0"
     }
   },
   "Conditions": {
@@ -890,8 +885,7 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2018-12-31",
-      "ModuleName": "SlackCommandSample",
-      "ModuleVersion": "1.0",
+      "ModuleInfo": "LambdaSharp.SlackCommandSample:1.0",
       "ParameterSections": [
         {
           "Title": "Module Settings",
@@ -952,12 +946,12 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "ED47E54E3DA6C60C673D4D317E84442D",
+      "Hash": "8B5A25626FB22ED560A49DAFCF2F06B7",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [
         {
-          "ModuleName": "LambdaSharpRegistrar",
+          "ModuleFullName": "LambdaSharp.Core",
           "MinVersion": "0.5-WIP"
         }
       ],

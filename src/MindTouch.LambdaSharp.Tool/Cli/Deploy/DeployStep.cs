@@ -27,6 +27,7 @@ using System.Threading.Tasks;
 using Amazon.CloudFormation;
 using Amazon.CloudFormation.Model;
 using McMaster.Extensions.CommandLineUtils;
+using MindTouch.LambdaSharp.Tool.Internal;
 using MindTouch.LambdaSharp.Tool.Model;
 
 namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
@@ -74,7 +75,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
             }
 
             // download module manifest
-            var manifest = await _loader.LoadFromS3Async(location.BucketName, location.TemplatePath);
+            var manifest = await _loader.LoadFromS3Async(location.ModuleBucketName, location.TemplatePath);
             if(manifest == null) {
                 return false;
             }
@@ -96,7 +97,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
 
             // deploy module
             if(dryRun == null) {
-                var stackName = ToStackName(manifest.ModuleName, instanceName);
+                var stackName = ToStackName(manifest.GetFullName(), instanceName);
 
                 // check version of previously deployed module
                 CloudFormationStack existing = null;
@@ -122,14 +123,14 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
                 }
                 var dependenciesParameters = dependencies
                     .Select(dependency => new {
-                        ModuleName = dependency.Manifest.ModuleName,
+                        ModuleFullName = dependency.Manifest.GetFullName(),
                         Parameters = PromptModuleParameters(
                             dependency.Manifest,
                             promptAll: promptAllParameters,
                             promptsAsErrors: promptsAsErrors
                         )
                     })
-                    .ToDictionary(t => t.ModuleName, t => t.Parameters);
+                    .ToDictionary(t => t.ModuleFullName, t => t.Parameters);
                 if(HasErrors) {
                     return false;
                 }
@@ -137,10 +138,10 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
                     if(!await new ModelUpdater(Settings, dependency.Location.ToModuleReference()).DeployChangeSetAsync(
                         dependency.Manifest,
                         dependency.Location,
-                        ToStackName(dependency.Manifest.ModuleName),
+                        ToStackName(dependency.Manifest.GetFullName()),
                         allowDataLoos,
                         protectStack,
-                        dependenciesParameters[dependency.Manifest.ModuleName]
+                        dependenciesParameters[dependency.Manifest.GetFullName()]
                     )) {
                         return false;
                     }
@@ -168,27 +169,25 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
                 });
                 var existing = describe.Stacks.FirstOrDefault();
                 var deployedOutputs = existing?.Outputs;
-                var deployedName = deployedOutputs?.FirstOrDefault(output => output.OutputKey == "ModuleName")?.OutputValue;
-                var deployedVersionText = deployedOutputs?.FirstOrDefault(output => output.OutputKey == "ModuleVersion")?.OutputValue;
+                var deployed = deployedOutputs?.FirstOrDefault(output => output.OutputKey == "ModuleInfo")?.OutputValue;
 
                 // validate existing module deployment
-                if(deployedName == null) {
+                if(!deployed.TryParseModuleInfo(
+                    out string deployedOwner,
+                    out string deployedName,
+                    out VersionInfo deployedVersion,
+                    out string deployedBucketName
+                )) {
                     AddError("unable to determine the name of the deployed module; use --force-deploy to proceed anyway");
                     return (false, existing);
                 }
-                if(deployedName != manifest.ModuleName) {
-                    AddError($"deployed module name ({deployedName}) does not match {manifest.ModuleName}; use --force-deploy to proceed anyway");
+                var deployedFullName = $"{deployedOwner}.{deployedName}";
+                if(deployedFullName != manifest.GetFullName()) {
+                    AddError($"deployed module name ({deployedFullName}) does not match {manifest.GetFullName()}; use --force-deploy to proceed anyway");
                     return (false, existing);
                 }
-                if(
-                    (deployedVersionText == null)
-                    || !VersionInfo.TryParse(deployedVersionText, out VersionInfo deployedVersion)
-                ) {
-                    AddError("unable to determine the version of the deployed module; use --force-deploy to proceed anyway");
-                    return (false, existing);
-                }
-                if(deployedVersion > VersionInfo.Parse(manifest.ModuleVersion)) {
-                    AddError($"deployed module version (v{deployedVersionText}) is newer than v{manifest.ModuleVersion}; use --force-deploy to proceed anyway");
+                if(deployedVersion > VersionInfo.Parse(manifest.GetVersion())) {
+                    AddError($"deployed module version (v{deployedVersion}) is newer than v{manifest.GetVersion()}; use --force-deploy to proceed anyway");
                     return (false, existing);
                 }
                 return (true, existing);
@@ -213,7 +212,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
                 foreach(var dependency in current.Dependencies) {
 
                     // check if we have already discovered this dependency
-                    if(IsDependencyInList(current.ModuleName, dependency, existing) || IsDependencyInList(current.ModuleName, dependency, deployments))  {
+                    if(IsDependencyInList(current.GetFullName(), dependency, existing) || IsDependencyInList(current.GetFullName(), dependency, deployments))  {
                         continue;
                     }
 
@@ -223,15 +222,16 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
                         existing.Add(new DependencyRecord {
                             Location = deployed
                         });
-                    } else if(inProgress.Any(d => d.Manifest.ModuleName == dependency.ModuleName)) {
+                    } else if(inProgress.Any(d => d.Manifest.GetFullName() == dependency.ModuleFullName)) {
 
                         // circular dependency detected
-                        AddError($"circular dependency detected: {string.Join(" -> ", inProgress.Select(d => d.Manifest.ModuleName))}");
+                        AddError($"circular dependency detected: {string.Join(" -> ", inProgress.Select(d => d.Manifest.GetFullName()))}");
                         return;
                     } else {
+                        dependency.ModuleFullName.TryParseModuleOwnerName(out string moduleOwner, out string moduleName);
 
                         // resolve dependencies for dependency module
-                        var dependencyLocation = await _loader.LocateAsync(dependency.ModuleName, dependency.MinVersion, dependency.MaxVersion, dependency.BucketName);
+                        var dependencyLocation = await _loader.LocateAsync(moduleOwner, moduleName, dependency.MinVersion, dependency.MaxVersion, dependency.BucketName);
                         if(dependencyLocation == null) {
 
                             // error has already been reported
@@ -239,14 +239,14 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
                         }
 
                         // load manifest of dependency and add its dependencies
-                        var dependencyManifest = await _loader.LoadFromS3Async(dependencyLocation.BucketName, dependencyLocation.TemplatePath);
+                        var dependencyManifest = await _loader.LoadFromS3Async(dependencyLocation.ModuleBucketName, dependencyLocation.TemplatePath);
                         if(dependencyManifest == null) {
 
                             // error has already been reported
                             continue;
                         }
                         var nestedDependency = new DependencyRecord {
-                            Owner = current.ModuleName,
+//                            Owner = $"{current.ModuleOwner}.{current.ModuleName}",
                             Manifest = dependencyManifest,
                             Location = dependencyLocation
                         };
@@ -257,15 +257,15 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
                         inProgress.Remove(nestedDependency);
 
                         // append dependency now that all nested dependencies have been resolved
-                        Console.WriteLine($"=> Resolved dependency '{dependency.ModuleName}' to module reference: {dependencyLocation}");
+                        Console.WriteLine($"=> Resolved dependency '{dependency.ModuleFullName}' to module reference: {dependencyLocation}");
                         deployments.Add(nestedDependency);
                     }
                 }
             }
         }
 
-        private bool IsDependencyInList(string owner, ModuleManifestDependency dependency, IEnumerable<DependencyRecord> modules) {
-            var deployed = modules.FirstOrDefault(module => module.Location.ModuleName == dependency.ModuleName);
+        private bool IsDependencyInList(string fullName, ModuleManifestDependency dependency, IEnumerable<DependencyRecord> modules) {
+            var deployed = modules.FirstOrDefault(module => module.Location.ModuleFullName == dependency.ModuleFullName);
             if(deployed == null) {
                 return false;
             }
@@ -276,10 +276,10 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
             // confirm that the dependency version is in a valid range
             var deployedVersion = deployed.Location.ModuleVersion;
             if((dependency.MaxVersion != null) && (deployedVersion > dependency.MaxVersion)) {
-                AddError($"version conflict for module '{dependency.ModuleName}': module '{owner}' requires max version v{dependency.MaxVersion}, but {deployedOwner} uses v{deployedVersion})");
+                AddError($"version conflict for module '{dependency.ModuleFullName}': module '{fullName}' requires max version v{dependency.MaxVersion}, but {deployedOwner} uses v{deployedVersion})");
             }
             if((dependency.MinVersion != null) && (deployedVersion < dependency.MinVersion)) {
-                AddError($"version conflict for module '{dependency.ModuleName}': module '{owner}' requires min version v{dependency.MinVersion}, but {deployedOwner} uses v{deployedVersion})");
+                AddError($"version conflict for module '{dependency.ModuleFullName}': module '{fullName}' requires min version v{dependency.MinVersion}, but {deployedOwner} uses v{deployedVersion})");
             }
             return true;
         }
@@ -287,34 +287,34 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
         private async Task<ModuleLocation> FindExistingDependencyAsync(ModuleManifestDependency dependency) {
             try {
                 var describe = await Settings.CfnClient.DescribeStacksAsync(new DescribeStacksRequest {
-                    StackName = ToStackName(dependency.ModuleName)
+                    StackName = ToStackName(dependency.ModuleFullName)
                 });
                 var deployedOutputs = describe.Stacks.FirstOrDefault()?.Outputs;
-                var deployedName = deployedOutputs?.FirstOrDefault(output => output.OutputKey == "ModuleName")?.OutputValue;
-                var deployedVersionText = deployedOutputs?.FirstOrDefault(output => output.OutputKey == "ModuleVersion")?.OutputValue;
+                var deployedInfo = deployedOutputs?.FirstOrDefault(output => output.OutputKey == "ModuleInfo")?.OutputValue;
+                var success = deployedInfo.TryParseModuleInfo(
+                    out string deployedOwner,
+                    out string deployedName,
+                    out VersionInfo deployedVersion,
+                    out string deployedBucketName
+                );
                 var deployed = new ModuleLocation {
-                    ModuleName = deployedName ?? dependency.ModuleName,
-                    ModuleVersion = VersionInfo.Parse(deployedVersionText ?? "0.0"),
-                    BucketName = null,
+                    ModuleFullName = $"{deployedOwner}.{deployedName}",
+                    ModuleVersion = deployedVersion,
+                    ModuleBucketName = deployedBucketName,
                     TemplatePath = null
                 };
-                if(deployedName == null) {
-                    AddError($"unable to determine the name of the deployed dependent module");
-                    return deployed;
-                }
-                if((deployedVersionText == null) || !VersionInfo.TryParse(deployedVersionText, out VersionInfo _)) {
-                    AddError($"unable to determine the version of the deployed dependent module");
+                if(!success) {
+                    AddError($"unable to retrieve information of the deployed dependent module");
                     return deployed;
                 }
 
                 // confirm that the module name matches
-                if(deployed.ModuleName != dependency.ModuleName) {
-                    AddError($"deployed dependent module name ({deployed.ModuleName}) does not match {dependency.ModuleName}");
+                if(deployed.ModuleFullName != dependency.ModuleFullName) {
+                    AddError($"deployed dependent module name ({deployed.ModuleFullName}) does not match {dependency.ModuleFullName}");
                     return deployed;
                 }
 
                 // confirm that the module version is in a valid range
-                var deployedVersion = deployed.ModuleVersion;
                 if((dependency.MaxVersion != null) && (deployedVersion > dependency.MaxVersion)) {
                     AddError($"deployed dependent module version (v{deployedVersion}) is newer than max version constraint v{dependency.MaxVersion}");
                     return deployed;
@@ -365,7 +365,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
 
             // check if module requires any prompts
             if(manifest.ParameterSections.SelectMany(section => section.Parameters).Any(RequiresPrompt)) {
-                Console.WriteLine($"Configuring module {manifest.ModuleName} (v{manifest.ModuleVersion})");
+                Console.WriteLine($"Configuring module {manifest.GetFullName()} (v{manifest.GetVersion()})");
 
                 // only list parameter sections that contain a parameter that requires a prompt
                 foreach(var parameterGroup in manifest.ParameterSections.Where(group => group.Parameters.Any(RequiresPrompt))) {
@@ -408,7 +408,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
                     }
                 }
                 if(promptsAsErrors) {
-                    AddError($"{manifest.ModuleName} requires value for parameter '{parameter.Name}'");
+                    AddError($"{manifest.GetFullName()} requires value for parameter '{parameter.Name}'");
                     return false;
                 }
                 return true;

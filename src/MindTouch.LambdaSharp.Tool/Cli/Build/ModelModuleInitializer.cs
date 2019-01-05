@@ -80,11 +80,31 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             );
             _builder.AddVariable(
                 parent: moduleItem,
+                name: "Owner",
+                description: "Module Owner",
+                type: "String",
+                scope: null,
+                value: _builder.Owner,
+                allow: null,
+                encryptionContext: null
+            );
+            _builder.AddVariable(
+                parent: moduleItem,
                 name: "Name",
                 description: "Module Name",
                 type: "String",
                 scope: null,
                 value: _builder.Name,
+                allow: null,
+                encryptionContext: null
+            );
+            _builder.AddVariable(
+                parent: moduleItem,
+                name: "FullName",
+                description: "Module FullName",
+                type: "String",
+                scope: null,
+                value: _builder.FullName,
                 allow: null,
                 encryptionContext: null
             );
@@ -546,7 +566,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
             // add module registration
             if(_builder.HasModuleRegistration) {
-                _builder.AddDependency("LambdaSharpRegistrar", Settings.ToolVersion, maxVersion: null, bucketName: null);
+                _builder.AddDependency("LambdaSharp.Core", Settings.ToolVersion, maxVersion: null, bucketName: null);
 
                 // create module registration
                 _builder.AddResource(
@@ -558,8 +578,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     allow: null,
                     properties: new Dictionary<string, object> {
                         ["ModuleId"] = FnRef("AWS::StackName"),
-                        ["ModuleName"] = _builder.Name,
-                        ["ModuleVersion"] = _builder.Version.ToString()
+                        ["ModuleInfo"] = _builder.Info
                     },
                     dependsOn: null,
                     arnAttribute: null,

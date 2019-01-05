@@ -20,14 +20,15 @@
  */
 
 using System;
-using System.Linq;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
-using Amazon.S3.Transfer;
 using Amazon.S3.Model;
+using Amazon.S3.Transfer;
+using MindTouch.LambdaSharp.Tool.Internal;
 using MindTouch.LambdaSharp.Tool.Model;
 using Newtonsoft.Json;
-using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 
 namespace MindTouch.LambdaSharp.Tool.Cli.Publish {
@@ -46,7 +47,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Publish {
 
         //--- Methods ---
         public async Task<string> PublishAsync(ModuleManifest manifest, bool forcePublish) {
-            Console.WriteLine($"Publishing module: {manifest.ModuleName}");
+            Console.WriteLine($"Publishing module: {manifest.GetFullName()}");
             _forcePublish = forcePublish;
             _changesDetected = false;
 
@@ -70,17 +71,25 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Publish {
             var template = await UploadTemplateFileAsync(manifest, "template");
 
             // store copy of cloudformation template under version number
+            if(!manifest.ModuleInfo.TryParseModuleInfo(
+                out string moduleOwner,
+                out string moduleName,
+                out VersionInfo moduleVersion,
+                out string _
+            )) {
+                throw new ApplicationException("invalid module info");
+            }
             await Settings.S3Client.CopyObjectAsync(new CopyObjectRequest {
                 SourceBucket = Settings.DeploymentBucketName,
                 SourceKey = template,
                 DestinationBucket = Settings.DeploymentBucketName,
-                DestinationKey = $"Modules/{manifest.ModuleName}/Versions/{manifest.ModuleVersion}/cloudformation.json",
+                DestinationKey = $"{moduleOwner}/Modules/{moduleName}/Versions/{moduleVersion}/cloudformation.json",
                 ContentType = "application/json"
             });
             if(!_changesDetected) {
                 Console.WriteLine($"=> No changes found to publish");
             }
-            return $"s3://{Settings.DeploymentBucketName}/Modules/{manifest.ModuleName}/Versions/{manifest.ModuleVersion}/cloudformation.json";
+            return $"s3://{Settings.DeploymentBucketName}/{moduleOwner}/Modules/{moduleName}/Versions/{moduleVersion}/cloudformation.json";
         }
 
         private async Task<string> UploadTemplateFileAsync(ModuleManifest manifest, string description) {
@@ -96,7 +105,15 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Publish {
             });
 
             // upload minified json
-            var key = $"Modules/{manifest.ModuleName}/Assets/cloudformation_v{manifest.ModuleVersion}_{manifest.Hash}.json";
+            if(!manifest.ModuleInfo.TryParseModuleInfo(
+                out string moduleOwner,
+                out string moduleName,
+                out VersionInfo moduleVersion,
+                out string _
+            )) {
+                throw new ApplicationException("invalid module info");
+            }
+            var key = $"{moduleOwner}/Modules/{moduleName}/Assets/cloudformation_v{moduleVersion}_{manifest.Hash}.json";
             if(_forcePublish || !await S3ObjectExistsAsync(key)) {
                 Console.WriteLine($"=> Uploading {description}: s3://{Settings.DeploymentBucketName}/{key}");
                 await Settings.S3Client.PutObjectAsync(new PutObjectRequest {
@@ -111,8 +128,16 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Publish {
         }
 
         private async Task<string> UploadPackageAsync(ModuleManifest manifest, string relativeFilePath, string description) {
+            if(!manifest.ModuleInfo.TryParseModuleInfo(
+                out string moduleOwner,
+                out string moduleName,
+                out VersionInfo _,
+                out string _
+            )) {
+                throw new ApplicationException("invalid module info");
+            }
             var filePath = Path.Combine(Settings.OutputDirectory, relativeFilePath);
-            var key = $"Modules/{manifest.ModuleName}/Assets/{Path.GetFileName(filePath)}";
+            var key = $"{moduleOwner}/Modules/{moduleName}/Assets/{Path.GetFileName(filePath)}";
 
             // only upload files that don't exist
             if(_forcePublish || !await S3ObjectExistsAsync(key)) {

@@ -77,7 +77,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         scope: null,
                         resource: new Humidifier.ApiGateway.RestApi {
                             Name = FnSub("${AWS::StackName} Module API"),
-                            Description = "${Module::Name} API (v${Module::Version})",
+                            Description = "${Module::FullName} API (v${Module::Version})",
                             FailOnWarnings = true
                         },
                         resourceArnAttribute: null,
@@ -492,7 +492,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     });
                     break;
                 case S3Source s3Source:
-                    _builder.AddDependency("LambdaSharpS3Subscriber", Settings.ToolVersion, maxVersion: null, bucketName: null);
+                    _builder.AddDependency("LambdaSharp.S3Subscriber", Settings.ToolVersion, maxVersion: null, bucketName: null);
                     Enumerate(s3Source.Bucket, (suffix, arn) => {
                         var permission = _builder.AddResource(
                             parent: function,

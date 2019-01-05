@@ -60,7 +60,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "92D37E16F9B6ACCF8981C586D5FFB5CD"
+      "Default": "C46F33476A03115AF24756B78D777286"
     }
   },
   "Resources": {
@@ -117,7 +117,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "Modules/Demo/Assets/RecordMessage-DRYRUN.zip"
+          "S3Key": "LambdaSharp/Modules/Demo/Assets/RecordMessage-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -154,11 +154,10 @@
         "Description": "Record message in a DynamoDB table (v1.0)",
         "Environment": {
           "Variables": {
-            "MODULE_NAME": "Demo",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_VERSION": "1.0",
+            "MODULE_INFO": "LambdaSharp.Demo:1.0",
             "LAMBDA_NAME": "RecordMessage",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
@@ -257,7 +256,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "Modules/Demo/Assets/SlackCommand-DRYRUN.zip"
+          "S3Key": "LambdaSharp/Modules/Demo/Assets/SlackCommand-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -294,11 +293,10 @@
         "Description": "Respond to slack commands (v1.0)",
         "Environment": {
           "Variables": {
-            "MODULE_NAME": "Demo",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_VERSION": "1.0",
+            "MODULE_INFO": "LambdaSharp.Demo:1.0",
             "LAMBDA_NAME": "SlackCommand",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
@@ -634,8 +632,7 @@
         "ModuleId": {
           "Ref": "AWS::StackName"
         },
-        "ModuleName": "Demo",
-        "ModuleVersion": "1.0"
+        "ModuleInfo": "LambdaSharp.Demo:1.0"
       }
     },
     "RecordMessageRegistration": {
@@ -866,7 +863,7 @@
     "ModuleRestApi": {
       "Type": "AWS::ApiGateway::RestApi",
       "Properties": {
-        "Description": "${Module::Name} API (v${Module::Version})",
+        "Description": "${Module::FullName} API (v${Module::Version})",
         "FailOnWarnings": true,
         "Name": {
           "Fn::Sub": "${AWS::StackName} Module API"
@@ -1040,11 +1037,8 @@
     }
   },
   "Outputs": {
-    "ModuleName": {
-      "Value": "Demo"
-    },
-    "ModuleVersion": {
-      "Value": "1.0"
+    "ModuleInfo": {
+      "Value": "LambdaSharp.Demo:1.0"
     },
     "NotifyRecorderTopic": {
       "Value": {
@@ -1285,8 +1279,7 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2018-12-31",
-      "ModuleName": "Demo",
-      "ModuleVersion": "1.0",
+      "ModuleInfo": "LambdaSharp.Demo:1.0",
       "ParameterSections": [
         {
           "Title": "Module Settings",
@@ -1347,12 +1340,12 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "92D37E16F9B6ACCF8981C586D5FFB5CD",
+      "Hash": "C46F33476A03115AF24756B78D777286",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [
         {
-          "ModuleName": "LambdaSharpRegistrar",
+          "ModuleFullName": "LambdaSharp.Core",
           "MinVersion": "0.5-WIP"
         }
       ],

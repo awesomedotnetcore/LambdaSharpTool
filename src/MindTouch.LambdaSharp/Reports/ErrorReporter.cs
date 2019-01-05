@@ -85,8 +85,7 @@ namespace MindTouch.LambdaSharp.Reports {
 
         //--- Fields ---
         private readonly string _moduleId;
-        private readonly string _moduleName;
-        private readonly string _moduleVersion;
+        private readonly string _moduleInfo;
         private readonly string _functionId;
         private readonly string _functionName;
         private readonly string _framework;
@@ -97,8 +96,7 @@ namespace MindTouch.LambdaSharp.Reports {
         //--- Constructors ---
         public ErrorReporter(
             string moduleId,
-            string moduleName,
-            string moduleVersion,
+            string moduleInfo,
             string functionId,
             string functionName,
             string framework,
@@ -106,8 +104,7 @@ namespace MindTouch.LambdaSharp.Reports {
             string gitBranch
         ) {
             _moduleId = moduleId ?? throw new ArgumentNullException(nameof(moduleId));
-            _moduleName = moduleName ?? throw new ArgumentNullException(nameof(moduleName));
-            _moduleVersion = moduleVersion;
+            _moduleInfo = moduleInfo ?? throw new ArgumentNullException(nameof(moduleInfo));
             _platform = $"AWS Lambda ({System.Environment.OSVersion})";
             _functionId = functionId ?? throw new ArgumentNullException(nameof(functionName));
             _functionName = functionName ?? throw new ArgumentNullException(nameof(functionName));
@@ -134,8 +131,7 @@ namespace MindTouch.LambdaSharp.Reports {
             var timestamp = Convert.ToInt64((DateTime.UtcNow - _epoch).TotalSeconds);
             return new ErrorReport {
                 ModuleId = _moduleId,
-                ModuleName = _moduleName,
-                ModuleVersion = _moduleVersion,
+                ModuleInfo = _moduleInfo,
                 RequestId = requestId,
                 Level = level,
                 Fingerprint = fingerprint,

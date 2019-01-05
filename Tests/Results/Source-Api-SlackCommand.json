@@ -60,7 +60,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "1B3A05871FB8C22AB16BDBC6B307A9CA"
+      "Default": "0473AF870271432601725D0CE097EEA3"
     }
   },
   "Resources": {
@@ -71,7 +71,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "Modules/TestModule/Assets/Function-DRYRUN.zip"
+          "S3Key": "Test/Modules/TestModule/Assets/Function-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -108,11 +108,10 @@
         "Description": "My function (v1.0)",
         "Environment": {
           "Variables": {
-            "MODULE_NAME": "TestModule",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_VERSION": "1.0",
+            "MODULE_INFO": "Test.TestModule:1.0",
             "LAMBDA_NAME": "Function",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
@@ -378,8 +377,7 @@
         "ModuleId": {
           "Ref": "AWS::StackName"
         },
-        "ModuleName": "TestModule",
-        "ModuleVersion": "1.0"
+        "ModuleInfo": "Test.TestModule:1.0"
       }
     },
     "FunctionRegistration": {
@@ -482,7 +480,7 @@
     "ModuleRestApi": {
       "Type": "AWS::ApiGateway::RestApi",
       "Properties": {
-        "Description": "${Module::Name} API (v${Module::Version})",
+        "Description": "${Module::FullName} API (v${Module::Version})",
         "FailOnWarnings": true,
         "Name": {
           "Fn::Sub": "${AWS::StackName} Module API"
@@ -656,11 +654,8 @@
     }
   },
   "Outputs": {
-    "ModuleName": {
-      "Value": "TestModule"
-    },
-    "ModuleVersion": {
-      "Value": "1.0"
+    "ModuleInfo": {
+      "Value": "Test.TestModule:1.0"
     }
   },
   "Conditions": {
@@ -890,8 +885,7 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2018-12-31",
-      "ModuleName": "TestModule",
-      "ModuleVersion": "1.0",
+      "ModuleInfo": "Test.TestModule:1.0",
       "ParameterSections": [
         {
           "Title": "Module Settings",
@@ -952,12 +946,12 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "1B3A05871FB8C22AB16BDBC6B307A9CA",
+      "Hash": "0473AF870271432601725D0CE097EEA3",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [
         {
-          "ModuleName": "LambdaSharpRegistrar",
+          "ModuleFullName": "LambdaSharp.Core",
           "MinVersion": "0.5-WIP"
         }
       ],

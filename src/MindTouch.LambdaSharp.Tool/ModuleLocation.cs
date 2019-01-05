@@ -27,30 +27,41 @@ namespace MindTouch.LambdaSharp.Tool {
     public class ModuleLocation {
 
         //--- Properties ---
-        public string ModuleName { get; set; }
+        public string ModuleFullName { get; set; }
         public VersionInfo ModuleVersion { get; set; }
-        public string BucketName { get; set; }
+        public string ModuleBucketName { get; set; }
         public string TemplatePath { get; set; }
 
         //--- Methods ---
         public override string ToString() {
             var result = new StringBuilder();
-            if(ModuleName != null) {
-                result.Append(ModuleName);
+            if(ModuleFullName != null) {
+                result.Append(ModuleFullName);
                 if(ModuleVersion != null) {
                     result.Append($" (v{ModuleVersion})");
                 }
                 result.Append(" from ");
-                result.Append(BucketName);
+                result.Append(ModuleBucketName);
             } else {
-                result.Append($"s3://{BucketName}/{TemplatePath}");
+                result.Append($"s3://{ModuleBucketName}/{TemplatePath}");
             }
             return result.ToString();
         }
 
-        public string ToModuleReference()
-            => (BucketName != null)
-                ? $"{ModuleName}:{ModuleVersion}@{BucketName}"
-                : $"{ModuleName}:{ModuleVersion}";
+        public string ToModuleReference() {
+            var result = new StringBuilder();
+            result.Append(ModuleFullName);
+            result.Append(":");
+            if(ModuleVersion != null) {
+                result.Append(ModuleVersion);
+            } else {
+                result.Append("*");
+            }
+            if(ModuleBucketName != null) {
+                result.Append("@");
+                result.Append(ModuleBucketName);
+            }
+            return result.ToString();
+        }
     }
 }

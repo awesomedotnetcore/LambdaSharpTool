@@ -121,10 +121,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             // check if the module must be built and published first
             if(lambdaSharpPath != null) {
                 foreach(var module in new[] {
-                    "LambdaSharp",
-                    "LambdaSharpRegistrar",
-                    "LambdaSharpS3Subscriber",
-                    "LambdaSharpS3PackageLoader",
+                    "LambdaSharp.Core",
+                    "LambdaSharp.S3Subscriber",
+                    "LambdaSharp.S3PackageLoader",
                 }) {
                     var moduleSource = Path.Combine(lambdaSharpPath, "Runtime", module, "Module.yml");
                     settings.WorkingDirectory = Path.GetDirectoryName(moduleSource);

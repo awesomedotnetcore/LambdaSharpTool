@@ -91,9 +91,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         var environment = function.Function.Environment.Variables;
 
                         // set default environment variables
-                        environment["MODULE_NAME"] = builder.Name;
                         environment["MODULE_ID"] = FnRef("AWS::StackName");
-                        environment["MODULE_VERSION"] = builder.Version.ToString();
+                        environment["MODULE_INFO"] = builder.Info;
                         environment["LAMBDA_NAME"] = function.FullName;
                         environment["LAMBDA_RUNTIME"] = function.Function.Runtime;
                         if(builder.HasLambdaSharpDependencies) {

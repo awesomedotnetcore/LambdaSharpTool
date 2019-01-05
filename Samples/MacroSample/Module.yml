@@ -1,4 +1,4 @@
-Module: MacroSample
+Module: LambdaSharp.MacroSample
 Description: A sample module defining CloudFormation macros
 Items:
 

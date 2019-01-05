@@ -14,11 +14,11 @@
         * `Resource`: AWS and custom resources
         * `Variable`: hold arbitrary literal or intermediate values
         * `Package`: file package only (**BREAKING CHANGE:** files are no longer always deployed to S3)
-        * `Module`: create nested module resource
+        * `NestedModule`: create nested module resource
         * renamed `CustomResource` to `ResourceType`
-        * use `Namespace` as keyword for nested declarations
+        * use `Namespace` as keyword for nested items
+        * new `Using` notation (formerly `Import`)
     * allow any AWS type as parameter type and map to `String` when AWS type is not natively supported
-    * new `Using` notation (formerly `Import`)
     * module `Requires` section
     * `Topic` source now supports `Filters` to filter on SNS notifications
     * `Bucket`, `Queue`, `S3`, `DynamoDB`, `Kinesis` sources can now also be expressions
@@ -43,6 +43,14 @@
     * added support for `Condition` entry
     * garbage collection of optional resources and conditions
         * issue warning if a `Parameter` is never used (but don't garbage collect it!)
+    * entry type `Module`
+        ```yaml
+        - NestedModule: MyNestedModule
+          Reference: LambdaSharp.S3FooBar:1.0
+          Parameters:
+            ...
+          DependsOn: ...
+        ```
     * entry type `Condition`
         * allow custom condition in resources and functions
         * support for `!Condition`

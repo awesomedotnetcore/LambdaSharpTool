@@ -36,6 +36,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
     public class ModuleBuilder : AModelProcessor {
 
         //--- Fields ---
+        public readonly string _owner;
         private readonly string _name;
         private readonly VersionInfo _version;
         private readonly string _description;
@@ -52,6 +53,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         //--- Constructors ---
         public ModuleBuilder(Settings settings, string sourceFilename, Module module) : base(settings, sourceFilename) {
+            _owner = module.Owner;
             _name = module.Name;
             _version = module.Version;
             _description = module.Description;
@@ -80,7 +82,10 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         }
 
         //--- Properties ---
+        public string Owner => _owner;
         public string Name => _name;
+        public string FullName => $"{_owner}.{_name}";
+        public string Info => $"{FullName}:{Version}";
         public VersionInfo Version => _version;
         public IEnumerable<object> Secrets => _secrets;
         public IEnumerable<AModuleItem> Items => _items;
@@ -135,11 +140,11 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             GetItem(fullName).Reference = Path.GetFileName(asset);
         }
 
-        public void AddDependency(string moduleName, VersionInfo minVersion, VersionInfo maxVersion, string bucketName) {
+        public void AddDependency(string moduleFullName, VersionInfo minVersion, VersionInfo maxVersion, string bucketName) {
 
             // check if a dependency was already registered
             ModuleDependency dependency;
-            if(_dependencies.TryGetValue(moduleName, out dependency)) {
+            if(_dependencies.TryGetValue(moduleFullName, out dependency)) {
 
                 // keep the strongest version constraints
                 if(minVersion != null) {
@@ -159,12 +164,12 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                         dependency.BucketName = bucketName;
                     }
                     if(dependency.BucketName != bucketName) {
-                        AddError($"module {moduleName} source bucket conflict is empty ({dependency.BucketName} vs. {bucketName})");
+                        AddError($"module {moduleFullName} source bucket conflict is empty ({dependency.BucketName} vs. {bucketName})");
                     }
                 }
             } else {
                 dependency = new ModuleDependency {
-                    ModuleName = moduleName,
+                    ModuleFullName = moduleFullName,
                     MinVersion = minVersion,
                     MaxVersion = maxVersion,
                     BucketName = bucketName
@@ -173,16 +178,20 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
             // validate dependency
             if((dependency.MinVersion != null) && (dependency.MaxVersion != null) && (dependency.MinVersion > dependency.MaxVersion)) {
-                AddError($"module {moduleName} version range is empty (v{dependency.MinVersion}..v{dependency.MaxVersion})");
+                AddError($"module {moduleFullName} version range is empty (v{dependency.MinVersion}..v{dependency.MaxVersion})");
                 return;
             }
             if(!Settings.NoDependencyValidation) {
-                var loader = new ModelManifestLoader(Settings, moduleName);
-                var location = loader.LocateAsync(moduleName, minVersion, maxVersion, bucketName).Result;
+                if(!moduleFullName.TryParseModuleOwnerName(out string moduleOwner, out string moduleName)) {
+                    AddError("invalid module reference");
+                    return;
+                }
+                var loader = new ModelManifestLoader(Settings, moduleFullName);
+                var location = loader.LocateAsync(moduleOwner, moduleName, minVersion, maxVersion, bucketName).Result;
                 if(location == null) {
                     return;
                 }
-                var manifest = new ModelManifestLoader(Settings, moduleName).LoadFromS3Async(location.BucketName, location.TemplatePath).Result;
+                var manifest = new ModelManifestLoader(Settings, moduleFullName).LoadFromS3Async(location.ModuleBucketName, location.TemplatePath).Result;
                 if(manifest == null) {
 
                     // nothing to do; loader already emitted an error
@@ -192,8 +201,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 // update manifest in dependency
                 dependency.Manifest = manifest;
             }
-            if(!_dependencies.ContainsKey(moduleName)) {
-                _dependencies.Add(moduleName, dependency);
+            if(!_dependencies.ContainsKey(moduleFullName)) {
+                _dependencies.Add(moduleFullName, dependency);
             }
         }
 
@@ -565,18 +574,19 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             return result;
         }
 
-        public AModuleItem AddModule(
+        public AModuleItem AddNestedModule(
             AModuleItem parent,
             string name,
             string description,
-            object module,
-            object version,
-            object sourceBucketName,
+            string moduleOwner,
+            string moduleName,
+            VersionInfo moduleVersion,
+            string moduleBucketName,
             IList<string> scope,
             object dependsOn,
             IDictionary<string, object> parameters
         ) {
-            var source = sourceBucketName ?? FnRef("DeploymentBucketName");
+            var sourceBucketName = moduleBucketName ?? FnRef("DeploymentBucketName");
             var moduleParameters = (parameters != null)
                 ? new Dictionary<string, object>(parameters)
                 : new Dictionary<string, object>();
@@ -584,7 +594,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 OptionalAdd("LambdaSharpDeadLetterQueueArn", FnRef("Module::DeadLetterQueueArn"));
                 OptionalAdd("LambdaSharpLoggingStreamArn", FnRef("Module::LoggingStreamArn"));
                 OptionalAdd("LambdaSharpDefaultSecretKeyArn", FnRef("Module::DefaultSecretKeyArn"));
-                MandatoryAdd("DeploymentBucketName", source);
+                MandatoryAdd("DeploymentBucketName", sourceBucketName);
                 MandatoryAdd("DeploymentPrefix", FnRef("DeploymentPrefix"));
                 MandatoryAdd("DeploymentPrefixLowercase", FnRef("DeploymentPrefixLowercase"));
                 MandatoryAdd("DeploymentParent", FnRef("AWS::StackName"));
@@ -599,10 +609,11 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 resource: new Humidifier.CloudFormation.Stack {
                     NotificationARNs = FnRef("AWS::NotificationARNs"),
                     Parameters = moduleParameters,
-                    TemplateURL = FnSub("https://${ModuleSourceBucketName}.s3.${AWS::Region}.amazonaws.com/Modules/${ModuleName}/Versions/${ModuleVersion}/cloudformation.json", new Dictionary<string, object> {
-                        ["ModuleSourceBucketName"] = source,
-                        ["ModuleName"] = module ?? name,
-                        ["ModuleVersion"] = version
+                    TemplateURL = FnSub("https://${ModuleBucketName}.s3.${AWS::Region}.amazonaws.com/${ModuleOwner}/Modules/${ModuleName}/Versions/${ModuleVersion}/cloudformation.json", new Dictionary<string, object> {
+                        ["ModuleOwner"] = moduleOwner,
+                        ["ModuleName"] = moduleName,
+                        ["ModuleVersion"] = moduleVersion.ToString(),
+                        ["ModuleBucketName"] = sourceBucketName
                     }),
 
                     // TODO (2018-11-29, bjorg): make timeout configurable
@@ -661,7 +672,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             );
 
             // update the package variable to use the package-name variable
-            package.Reference = FnSub($"Modules/${{Module::Name}}/Assets/${{{packageName.FullName}}}");
+            package.Reference = FnSub($"${{Module::Owner}}/Modules/${{Module::Name}}/Assets/${{{packageName.FullName}}}");
             return package;
         }
 
@@ -751,7 +762,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 allow: null,
                 encryptionContext: null
             );
-            function.Function.Code.S3Key = FnSub($"Modules/${{Module::Name}}/Assets/${{{packageName.FullName}}}");
+            function.Function.Code.S3Key = FnSub($"${{Module::Owner}}/Modules/${{Module::Name}}/Assets/${{{packageName.FullName}}}");
 
             // check if function is a finalizer
             var isFinalizer = (parent == null) && (name == "Finalizer");
@@ -991,6 +1002,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                     .ToList();
             }
             return new Module {
+                Owner = _owner,
                 Name = _name,
                 Version = _version,
                 Description = _description,

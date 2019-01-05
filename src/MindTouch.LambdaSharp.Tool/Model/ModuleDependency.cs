@@ -25,7 +25,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
     public class ModuleDependency {
 
         //--- Properties ---
-        public string ModuleName { get; set; }
+        public string ModuleFullName { get; set; }
         public VersionInfo MinVersion { get; set; }
         public VersionInfo MaxVersion { get; set; }
         public string BucketName { get; set; }

@@ -27,6 +27,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Amazon.S3.Model;
+using MindTouch.LambdaSharp.Tool.Internal;
 using MindTouch.LambdaSharp.Tool.Model;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -34,9 +35,6 @@ using Newtonsoft.Json.Linq;
 namespace MindTouch.LambdaSharp.Tool {
 
     public class ModelManifestLoader : AModelProcessor {
-
-        //--- Class Fields ---
-        private static readonly Regex ModuleKeyPattern = new Regex(@"^(?<ModuleName>\w+)(:(?<Version>\*|[\w\.\-]+))?(@(?<BucketName>\w+))?$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         //--- Constructors --
         public ModelManifestLoader(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
@@ -91,58 +89,37 @@ namespace MindTouch.LambdaSharp.Tool {
         public async Task<ModuleLocation> LocateAsync(string moduleReference) {
 
             // module reference formats:
-            // * ModuleName
-            // * ModuleName:*
-            // * ModuleName:Version
-            // * ModuleName@Bucket
-            // * ModuleName:*@Bucket
-            // * ModuleName:Version@Bucket
-            // * s3://bucket-name/Modules/{ModuleName}/Versions/{Version}/
-            // * s3://bucket-name/Modules/{ModuleName}/Versions/{Version}/cloudformation.json
+            // * ModuleOwner.ModuleName
+            // * ModuleOwner.ModuleName:*
+            // * ModuleOwner.ModuleName:Version
+            // * ModuleOwner.ModuleName@Bucket
+            // * ModuleOwner.ModuleName:*@Bucket
+            // * ModuleOwner.ModuleName:Version@Bucket
+            // * s3://bucket-name/{ModuleOwner}/Modules/{ModuleName}/Versions/{Version}/
+            // * s3://bucket-name/{ModuleOwner}/Modules/{ModuleName}/Versions/{Version}/cloudformation.json
 
-            if(moduleReference.StartsWith("s3://", StringComparison.Ordinal)) {
-                var uri = new Uri(moduleReference);
-
-                // absolute path always starts with '/', which needs to be removed
-                var pathSegments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries).ToList();
-                if((pathSegments.Count < 4) || (pathSegments[0] != "Modules") || (pathSegments[2] != "Versions")) {
-                    return null;
-                }
-                if(pathSegments.Last() != "cloudformation.json") {
-                    pathSegments.Add("cloudformation.json");
-                }
-                return new ModuleLocation {
-                    ModuleName = pathSegments[1],
-                    ModuleVersion = VersionInfo.Parse(pathSegments[3]),
-                    BucketName = uri.Host,
-                    TemplatePath = string.Join("/", pathSegments)
-                };
-            } else {
-                var match = ModuleKeyPattern.Match(moduleReference);
-                if(match.Success) {
-                    var requestedModuleName = GetMatchValue("ModuleName");
-                    var requestedVersionText = GetMatchValue("Version");
-                    var requestedBucketName = GetMatchValue("BucketName");
-
-                    // parse optional version
-                    var requestedVersion = ((requestedVersionText != null) && (requestedVersionText != "*"))
-                        ? VersionInfo.Parse(requestedVersionText)
-                        : null;
-
-                    // find compatible module version
-                    return await LocateAsync(requestedModuleName, requestedVersion, requestedVersion, requestedBucketName);
-
-                    // local function
-                    string GetMatchValue(string groupName) {
-                        var group = match.Groups[groupName];
-                        return group.Success ? group.Value : null;
-                    }
-                }
+            if(!moduleReference.TryParseModuleInfo(
+                out string moduleOwner,
+                out string moduleName,
+                out VersionInfo moduleVersion,
+                out string moduleBucketName
+            )) {
+                return null;
             }
-            return null;
+            if((moduleVersion == null) || (moduleBucketName == null)) {
+
+                // find compatible module version
+                return await LocateAsync(moduleOwner, moduleName, moduleVersion, moduleVersion, moduleBucketName);
+            }
+            return new ModuleLocation {
+                ModuleFullName = $"{moduleOwner}.{moduleName}",
+                ModuleVersion = moduleVersion,
+                ModuleBucketName = moduleBucketName,
+                TemplatePath = $"{moduleOwner}/Modules/{moduleName}/Versions/{moduleVersion}/cloudformation.json"
+            };
         }
 
-        public async Task<ModuleLocation> LocateAsync(string moduleName, VersionInfo minVersion, VersionInfo maxVersion, string bucketName) {
+        public async Task<ModuleLocation> LocateAsync(string moduleOwner, string moduleName, VersionInfo minVersion, VersionInfo maxVersion, string bucketName) {
 
             // by default, attempt to find the module in the deployment bucket and then the regional lambdasharp bucket
             var searchBuckets = (bucketName != null)
@@ -161,7 +138,7 @@ namespace MindTouch.LambdaSharp.Tool {
             VersionInfo foundVersion = null;
             string foundBucketName = null;
             foreach(var bucket in searchBuckets) {
-                foundVersion = await FindNewestVersion(Settings, bucket, moduleName, minVersion, maxVersion);
+                foundVersion = await FindNewestVersion(Settings, bucket, moduleOwner, moduleName, minVersion, maxVersion);
                 if(foundVersion != null) {
                     foundBucketName = bucket;
                     break;
@@ -184,10 +161,10 @@ namespace MindTouch.LambdaSharp.Tool {
                 return null;
             }
             return new ModuleLocation {
-                ModuleName = moduleName,
+                ModuleFullName = $"{moduleOwner}.{moduleName}",
                 ModuleVersion = foundVersion,
-                BucketName = foundBucketName,
-                TemplatePath = $"Modules/{moduleName}/Versions/{foundVersion}/cloudformation.json"
+                ModuleBucketName = foundBucketName,
+                TemplatePath = $"{moduleOwner}/Modules/{moduleName}/Versions/{foundVersion}/cloudformation.json"
             };
         }
 
@@ -217,13 +194,13 @@ namespace MindTouch.LambdaSharp.Tool {
             return null;
         }
 
-        private async Task<VersionInfo> FindNewestVersion(Settings settings, string bucketName, string moduleName, VersionInfo minVersion, VersionInfo maxVersion) {
+        private async Task<VersionInfo> FindNewestVersion(Settings settings, string bucketName, string moduleOwner, string moduleName, VersionInfo minVersion, VersionInfo maxVersion) {
 
             // enumerate versions in bucket
             var versions = new List<VersionInfo>();
             var request = new ListObjectsV2Request {
                 BucketName = bucketName,
-                Prefix = $"Modules/{moduleName}/Versions/",
+                Prefix = $"{moduleOwner}/Modules/{moduleName}/Versions/",
                 Delimiter = "/",
                 MaxKeys = 100
             };

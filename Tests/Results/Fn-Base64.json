@@ -27,7 +27,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "C48A3A0C98A3B4F8581BD09F7BD81A86"
+      "Default": "A48CF8E27A07CB1EE1A05658F4F11B4B"
     }
   },
   "Resources": {
@@ -50,17 +50,13 @@
         "ModuleId": {
           "Ref": "AWS::StackName"
         },
-        "ModuleName": "TestModule",
-        "ModuleVersion": "1.0"
+        "ModuleInfo": "Test.TestModule:1.0"
       }
     }
   },
   "Outputs": {
-    "ModuleName": {
-      "Value": "TestModule"
-    },
-    "ModuleVersion": {
-      "Value": "1.0"
+    "ModuleInfo": {
+      "Value": "Test.TestModule:1.0"
     }
   },
   "Metadata": {
@@ -110,8 +106,7 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2018-12-31",
-      "ModuleName": "TestModule",
-      "ModuleVersion": "1.0",
+      "ModuleInfo": "Test.TestModule:1.0",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -127,12 +122,12 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "C48A3A0C98A3B4F8581BD09F7BD81A86",
+      "Hash": "A48CF8E27A07CB1EE1A05658F4F11B4B",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [
         {
-          "ModuleName": "LambdaSharpRegistrar",
+          "ModuleFullName": "LambdaSharp.Core",
           "MinVersion": "0.5-WIP"
         }
       ],

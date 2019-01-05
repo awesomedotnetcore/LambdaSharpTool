@@ -55,7 +55,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "B0C04D0EC6ACD5FF0D86B7AC9AD376AE"
+      "Default": "85BCB3617E4C8D6FFC48D0C3DD3D3F17"
     }
   },
   "Resources": {
@@ -66,7 +66,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "Modules/BadModule/Assets/NearTimeout-DRYRUN.zip"
+          "S3Key": "LambdaSharp/Modules/BadModule/Assets/NearTimeout-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -103,11 +103,10 @@
         "Description": "Gets within 1 second of a timeout (v1.0)",
         "Environment": {
           "Variables": {
-            "MODULE_NAME": "BadModule",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_VERSION": "1.0",
+            "MODULE_INFO": "LambdaSharp.BadModule:1.0",
             "LAMBDA_NAME": "NearTimeout",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
@@ -200,7 +199,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "Modules/BadModule/Assets/NearOutOfMemory-DRYRUN.zip"
+          "S3Key": "LambdaSharp/Modules/BadModule/Assets/NearOutOfMemory-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -237,11 +236,10 @@
         "Description": "Uses most of the available memory (v1.0)",
         "Environment": {
           "Variables": {
-            "MODULE_NAME": "BadModule",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_VERSION": "1.0",
+            "MODULE_INFO": "LambdaSharp.BadModule:1.0",
             "LAMBDA_NAME": "NearOutOfMemory",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
@@ -334,7 +332,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "Modules/BadModule/Assets/FailBadEntryPoint-DRYRUN.zip"
+          "S3Key": "LambdaSharp/Modules/BadModule/Assets/FailBadEntryPoint-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -371,11 +369,10 @@
         "Description": "Bad handler definition for assembly (v1.0)",
         "Environment": {
           "Variables": {
-            "MODULE_NAME": "BadModule",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_VERSION": "1.0",
+            "MODULE_INFO": "LambdaSharp.BadModule:1.0",
             "LAMBDA_NAME": "FailBadEntryPoint",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
@@ -468,7 +465,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "Modules/BadModule/Assets/FailError-DRYRUN.zip"
+          "S3Key": "LambdaSharp/Modules/BadModule/Assets/FailError-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -505,11 +502,10 @@
         "Description": "Throws an exception (v1.0)",
         "Environment": {
           "Variables": {
-            "MODULE_NAME": "BadModule",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_VERSION": "1.0",
+            "MODULE_INFO": "LambdaSharp.BadModule:1.0",
             "LAMBDA_NAME": "FailError",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
@@ -602,7 +598,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "Modules/BadModule/Assets/FailTimeout-DRYRUN.zip"
+          "S3Key": "LambdaSharp/Modules/BadModule/Assets/FailTimeout-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -639,11 +635,10 @@
         "Description": "Times out (v1.0)",
         "Environment": {
           "Variables": {
-            "MODULE_NAME": "BadModule",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_VERSION": "1.0",
+            "MODULE_INFO": "LambdaSharp.BadModule:1.0",
             "LAMBDA_NAME": "FailTimeout",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
@@ -736,7 +731,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "Modules/BadModule/Assets/FailOutOfMemory-DRYRUN.zip"
+          "S3Key": "LambdaSharp/Modules/BadModule/Assets/FailOutOfMemory-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -773,11 +768,10 @@
         "Description": "Runs out of memory (v1.0)",
         "Environment": {
           "Variables": {
-            "MODULE_NAME": "BadModule",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_VERSION": "1.0",
+            "MODULE_INFO": "LambdaSharp.BadModule:1.0",
             "LAMBDA_NAME": "FailOutOfMemory",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
@@ -870,7 +864,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "Modules/BadModule/Assets/FailConstructor-DRYRUN.zip"
+          "S3Key": "LambdaSharp/Modules/BadModule/Assets/FailConstructor-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -907,11 +901,10 @@
         "Description": "Throws an exception in the constructor (v1.0)",
         "Environment": {
           "Variables": {
-            "MODULE_NAME": "BadModule",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_VERSION": "1.0",
+            "MODULE_INFO": "LambdaSharp.BadModule:1.0",
             "LAMBDA_NAME": "FailConstructor",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
@@ -1004,7 +997,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "Modules/BadModule/Assets/JsBadSyntax-DRYRUN.zip"
+          "S3Key": "LambdaSharp/Modules/BadModule/Assets/JsBadSyntax-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -1041,11 +1034,10 @@
         "Description": "Throws an exception in Javascript function (v1.0)",
         "Environment": {
           "Variables": {
-            "MODULE_NAME": "BadModule",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_VERSION": "1.0",
+            "MODULE_INFO": "LambdaSharp.BadModule:1.0",
             "LAMBDA_NAME": "JsBadSyntax",
             "LAMBDA_RUNTIME": "nodejs8.10",
             "DEADLETTERQUEUE": {
@@ -1138,7 +1130,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "Modules/BadModule/Assets/JsError-DRYRUN.zip"
+          "S3Key": "LambdaSharp/Modules/BadModule/Assets/JsError-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -1175,11 +1167,10 @@
         "Description": "Throws an exception in Javascript function (v1.0)",
         "Environment": {
           "Variables": {
-            "MODULE_NAME": "BadModule",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_VERSION": "1.0",
+            "MODULE_INFO": "LambdaSharp.BadModule:1.0",
             "LAMBDA_NAME": "JsError",
             "LAMBDA_RUNTIME": "nodejs8.10",
             "DEADLETTERQUEUE": {
@@ -1272,7 +1263,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "Modules/BadModule/Assets/JsThrow-DRYRUN.zip"
+          "S3Key": "LambdaSharp/Modules/BadModule/Assets/JsThrow-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -1309,11 +1300,10 @@
         "Description": "Throws an exception in Javascript function (v1.0)",
         "Environment": {
           "Variables": {
-            "MODULE_NAME": "BadModule",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_VERSION": "1.0",
+            "MODULE_INFO": "LambdaSharp.BadModule:1.0",
             "LAMBDA_NAME": "JsThrow",
             "LAMBDA_RUNTIME": "nodejs8.10",
             "DEADLETTERQUEUE": {
@@ -1576,8 +1566,7 @@
         "ModuleId": {
           "Ref": "AWS::StackName"
         },
-        "ModuleName": "BadModule",
-        "ModuleVersion": "1.0"
+        "ModuleInfo": "LambdaSharp.BadModule:1.0"
       }
     },
     "NearTimeoutRegistration": {
@@ -2552,11 +2541,8 @@
     }
   },
   "Outputs": {
-    "ModuleName": {
-      "Value": "BadModule"
-    },
-    "ModuleVersion": {
-      "Value": "1.0"
+    "ModuleInfo": {
+      "Value": "LambdaSharp.BadModule:1.0"
     }
   },
   "Conditions": {
@@ -2775,8 +2761,7 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2018-12-31",
-      "ModuleName": "BadModule",
-      "ModuleVersion": "1.0",
+      "ModuleInfo": "LambdaSharp.BadModule:1.0",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -2825,12 +2810,12 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "B0C04D0EC6ACD5FF0D86B7AC9AD376AE",
+      "Hash": "85BCB3617E4C8D6FFC48D0C3DD3D3F17",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [
         {
-          "ModuleName": "LambdaSharpRegistrar",
+          "ModuleFullName": "LambdaSharp.Core",
           "MinVersion": "0.5-WIP"
         }
       ],

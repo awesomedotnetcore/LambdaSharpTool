@@ -32,12 +32,11 @@ namespace MindTouch.LambdaSharp.Reports {
 
         // Report
         public string Source { get; set; } = "LambdaError";
-        public string Version { get; set; } = "2018-09-27";
+        public string Version { get; set; } = "2018-12-31";
 
         // Origin
-        public string ModuleName { get; set; }
-        public string ModuleVersion { get; set; }
         public string ModuleId { get; set; }
+        public string ModuleInfo { get; set; }
         public string FunctionId { get; set; }
         public string FunctionName { get; set; }
         public string Platform { get; set; }

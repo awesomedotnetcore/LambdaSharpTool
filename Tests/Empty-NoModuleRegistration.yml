@@ -1,4 +1,4 @@
-Module: TestModule
+Module: Test.TestModule
 Description: LambdaSharp CloudFormation Test
 Pragmas:
   - no-module-registration

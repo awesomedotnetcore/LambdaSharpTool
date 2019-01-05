@@ -1,4 +1,4 @@
-Module: DemoS3Bucket
+Module: LambdaSharp.DemoS3Bucket
 Items:
 
   - Resource: Bucket

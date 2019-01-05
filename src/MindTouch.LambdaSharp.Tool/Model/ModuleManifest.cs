@@ -22,6 +22,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using MindTouch.LambdaSharp.Tool.Internal;
 using YamlDotNet.Serialization;
 
 namespace MindTouch.LambdaSharp.Tool.Model {
@@ -33,8 +34,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         //--- Properties ---
         public string Version { get; set; } = CurrentVersion;
-        public string ModuleName { get; set; }
-        public string ModuleVersion { get; set; }
+        public string ModuleInfo { get; set; }
         public IList<ModuleManifestParameterSection> ParameterSections { get; set; }
         public bool RuntimeCheck { get; set; }
         public string Hash { get; set; }
@@ -45,6 +45,31 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public IList<string> MacroNames { get; set; }
         public IDictionary<string, string> ResourceNameMappings { get; set; }
         public IDictionary<string, string> CustomResourceNameMappings { get; set; }
+
+        //--- Methods ---
+        public string GetFullName() {
+            if(!ModuleInfo.TryParseModuleInfo(
+                out string moduleOwner,
+                out string moduleName,
+                out VersionInfo _,
+                out string _
+            )) {
+                throw new ApplicationException("invalid module info");
+            }
+            return $"{moduleOwner}.{moduleName}";
+        }
+
+        public string GetVersion() {
+            if(!ModuleInfo.TryParseModuleInfo(
+                out string _,
+                out string _,
+                out VersionInfo moduleVersion,
+                out string _
+            )) {
+                throw new ApplicationException("invalid module info");
+            }
+            return moduleVersion.ToString();
+        }
     }
 
     public class ModuleManifestCustomResource {
@@ -64,7 +89,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
     public class ModuleManifestDependency {
 
         //--- Properties ---
-        public string ModuleName { get; set; }
+        public string ModuleFullName { get; set; }
         public VersionInfo MinVersion { get; set; }
         public VersionInfo MaxVersion { get; set; }
         public string BucketName { get; set; }

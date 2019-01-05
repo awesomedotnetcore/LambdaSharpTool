@@ -59,7 +59,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "7CE1D3330FF9C44207F4FE2DA30B0312"
+      "Default": "2EC96B0279D70A1A6813BDF89E83C620"
     }
   },
   "Resources": {
@@ -74,7 +74,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "Modules/TestModule/Assets/Function-DRYRUN.zip"
+          "S3Key": "Test/Modules/TestModule/Assets/Function-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -111,11 +111,10 @@
         "Description": "My function (v1.0)",
         "Environment": {
           "Variables": {
-            "MODULE_NAME": "TestModule",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_VERSION": "1.0",
+            "MODULE_INFO": "Test.TestModule:1.0",
             "LAMBDA_NAME": "Function",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
@@ -485,8 +484,7 @@
         "ModuleId": {
           "Ref": "AWS::StackName"
         },
-        "ModuleName": "TestModule",
-        "ModuleVersion": "1.0"
+        "ModuleInfo": "Test.TestModule:1.0"
       }
     },
     "FunctionRegistration": {
@@ -696,11 +694,8 @@
     }
   },
   "Outputs": {
-    "ModuleName": {
-      "Value": "TestModule"
-    },
-    "ModuleVersion": {
-      "Value": "1.0"
+    "ModuleInfo": {
+      "Value": "Test.TestModule:1.0"
     }
   },
   "Conditions": {
@@ -930,8 +925,7 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2018-12-31",
-      "ModuleName": "TestModule",
-      "ModuleVersion": "1.0",
+      "ModuleInfo": "Test.TestModule:1.0",
       "ParameterSections": [
         {
           "Title": "Module Settings",
@@ -991,16 +985,16 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "7CE1D3330FF9C44207F4FE2DA30B0312",
+      "Hash": "2EC96B0279D70A1A6813BDF89E83C620",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [
         {
-          "ModuleName": "LambdaSharpRegistrar",
+          "ModuleFullName": "LambdaSharp.Core",
           "MinVersion": "0.5-WIP"
         },
         {
-          "ModuleName": "LambdaSharpS3Subscriber",
+          "ModuleFullName": "LambdaSharp.S3Subscriber",
           "MinVersion": "0.5-WIP"
         }
       ],

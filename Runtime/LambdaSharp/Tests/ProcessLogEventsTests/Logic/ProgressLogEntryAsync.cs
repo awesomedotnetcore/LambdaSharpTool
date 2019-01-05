@@ -76,8 +76,7 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents.Tests {
             _provider = new MockDependencyProvider(output);
             _logic = new Logic(_provider);
             _owner = new OwnerMetaData {
-                ModuleName = "ModuleName",
-                ModuleVersion = "ModuleVersion",
+                ModuleInfo = "Test.Module:1.0",
                 ModuleId = "ModuleId",
                 FunctionId = "ModuleName-FunctionName-NT5EUXTNTXXD",
                 FunctionName = "FunctionName",
@@ -161,8 +160,7 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents.Tests {
 
         private void CommonErrorReportAsserts(bool usageReportCheck = true) {
             _provider.ErrorReport.Should().NotBeNull();
-            _provider.ErrorReport.ModuleName.Should().Be("ModuleName");
-            _provider.ErrorReport.ModuleVersion.Should().Be("ModuleVersion");
+            _provider.ErrorReport.ModuleInfo.Should().Be("Test.Module:1.0");
             _provider.ErrorReport.ModuleId.Should().Be("ModuleId");
             _provider.ErrorReport.FunctionId.Should().Be("ModuleName-FunctionName-NT5EUXTNTXXD");
             _provider.ErrorReport.FunctionName.Should().Be("FunctionName");

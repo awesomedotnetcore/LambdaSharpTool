@@ -17,7 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-Module: LambdaSharp
+Module: LambdaSharp.Core
 Version: 0.5-WIP
 Description: LambdaSharp Runtime
 Pragmas:

@@ -1,4 +1,4 @@
-Module: DemoS3Subscriber
+Module: LambdaSharp.DemoS3Subscriber
 Items:
 
   - Using: DemoS3Bucket

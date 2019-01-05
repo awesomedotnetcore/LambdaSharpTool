@@ -31,6 +31,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
     public class Module {
 
         //--- Properties ---
+        public string Owner { get; set; }
         public string Name { get; set; }
         public VersionInfo Version { get; set; }
         public string Description { get; set; }
@@ -42,6 +43,10 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public IEnumerable<KeyValuePair<string, ModuleManifestCustomResource>> CustomResourceTypes { get; set; }
         public IEnumerable<string> MacroNames { get; set; }
         public IDictionary<string, string> CustomResourceNameMappings { get; set; }
+
+        //--- Properties ---
+        public string FullName => Owner + "." + Name;
+        public string Info => FullName + ":" + Version;
 
         //--- Methods ---
         public bool HasPragma(string pragma) => Pragmas?.Contains(pragma) == true;

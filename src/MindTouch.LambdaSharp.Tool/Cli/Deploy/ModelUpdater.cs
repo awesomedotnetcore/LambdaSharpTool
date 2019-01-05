@@ -69,7 +69,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
             var now = DateTime.UtcNow;
 
             // check if cloudformation stack already exists and is in a final state
-            Console.WriteLine($"Deploying stack: {stackName} [{location.ModuleName}:{location.ModuleVersion}]");
+            Console.WriteLine($"Deploying stack: {stackName} [{location.ModuleFullName}:{location.ModuleVersion}]");
             var mostRecentStackEventId = await Settings.CfnClient.GetMostRecentStackEventIdAsync(stackName);
 
             // set optional notification topics for cloudformation operations
@@ -79,14 +79,14 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
             }
 
             // validate template
-            var templateUrl = $"https://{location.BucketName}.s3.amazonaws.com/{location.TemplatePath}";
+            var templateUrl = $"https://{location.ModuleBucketName}.s3.amazonaws.com/{location.TemplatePath}";
             var validation = await Settings.CfnClient.ValidateTemplateAsync(new ValidateTemplateRequest  {
                 TemplateURL = templateUrl
             });
 
             // create change-set
             var success = false;
-            var changeSetName = $"{location.ModuleName}-{now:yyyy-MM-dd-hh-mm-ss}";
+            var changeSetName = $"{location.ModuleFullName}-{now:yyyy-MM-dd-hh-mm-ss}";
             var updateOrCreate = (mostRecentStackEventId != null) ? "update" : "create";
             var capabilities = validation.Capabilities.Any()
                 ? "[" + string.Join(", ", validation.Capabilities) + "]"
@@ -96,7 +96,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
                 Capabilities = validation.Capabilities,
                 ChangeSetName = changeSetName,
                 ChangeSetType = (mostRecentStackEventId != null) ? ChangeSetType.UPDATE : ChangeSetType.CREATE,
-                Description = $"Stack {updateOrCreate} {location.ModuleName} (v{location.ModuleVersion})",
+                Description = $"Stack {updateOrCreate} {location.ModuleFullName} (v{location.ModuleVersion})",
                 NotificationARNs = notificationArns,
                 Parameters = new List<CloudFormationParameter>(parameters) {
                     new CloudFormationParameter {
@@ -109,7 +109,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
                     },
                     new CloudFormationParameter {
                         ParameterKey = "DeploymentBucketName",
-                        ParameterValue = location.BucketName ?? ""
+                        ParameterValue = location.ModuleBucketName ?? ""
                     }
                 },
                 StackName = stackName,

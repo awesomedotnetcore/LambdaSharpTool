@@ -1,4 +1,4 @@
-Module: SlackCommandSample
+Module: LambdaSharp.SlackCommandSample
 Description: A sample module integrating with Slack
 Items:
 

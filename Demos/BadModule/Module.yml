@@ -1,4 +1,4 @@
-Module: BadModule
+Module: LambdaSharp.BadModule
 Version: 1.0
 Description: Module for generating errors
 Items:

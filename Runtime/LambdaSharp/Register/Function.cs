@@ -39,8 +39,7 @@ namespace MindTouch.LambdaSharpRegistrar.Register {
 
         //--- Properties ---
         public string ModuleId { get; set; }
-        public string ModuleName { get; set; }
-        public string ModuleVersion { get; set; }
+        public string ModuleInfo { get; set; }
         public string FunctionId { get; set; }
         public string FunctionName { get; set; }
         public string FunctionLogGroupName { get; set; }
@@ -88,12 +87,12 @@ namespace MindTouch.LambdaSharpRegistrar.Register {
             // determine the kind of registration that is requested
             switch(request.ResourceType) {
             case "Custom::LambdaSharpRegisterModule": {
-                    LogInfo($"Adding Module: Id={properties.ModuleId}, Name={properties.ModuleName}, Version={properties.ModuleVersion}");
+                    LogInfo($"Adding Module: Id={properties.ModuleId}, Info={properties.ModuleInfo}");
                     var owner = PopulateOwnerMetaData(properties);
 
                     // create new rollbar project
                     if(_rollbarClient.HasTokens) {
-                        var name = _rollbarProjectPrefix + request.ResourceProperties.ModuleName;
+                        var name = _rollbarProjectPrefix + request.ResourceProperties.ModuleInfo;
                         var project = await _rollbarClient.FindProjectByName(name)
                             ?? await _rollbarClient.CreateProject(name);
                         var tokens = await _rollbarClient.ListProjectTokens(project.Id);
@@ -125,7 +124,7 @@ namespace MindTouch.LambdaSharpRegistrar.Register {
             var properties = request.ResourceProperties;
             switch(request.ResourceType) {
             case "Custom::LambdaSharpRegisterModule": {
-                    LogInfo($"Removing Module: Id={properties.ModuleId}, Name={properties.ModuleName}, Version={properties.ModuleVersion}");
+                    LogInfo($"Removing Module: Id={properties.ModuleId}, Info={properties.ModuleInfo}");
 
                     // delete old rollbar project
 
@@ -173,8 +172,7 @@ namespace MindTouch.LambdaSharpRegistrar.Register {
                 owner = new OwnerMetaData();
             }
             owner.ModuleId = properties.ModuleId ?? owner.ModuleId;
-            owner.ModuleName = properties.ModuleName ?? owner.ModuleName;
-            owner.ModuleVersion = properties.ModuleVersion ?? owner.ModuleVersion;
+            owner.ModuleInfo = properties.ModuleInfo ?? owner.ModuleInfo;
             owner.FunctionId = properties.FunctionId ?? owner.FunctionId;
             owner.FunctionName = properties.FunctionName ?? owner.FunctionName;
             owner.FunctionLogGroupName = properties.FunctionLogGroupName ?? owner.FunctionLogGroupName;

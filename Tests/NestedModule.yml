@@ -1,10 +1,7 @@
-Module: TestModule2
+Module: Test.TestModule
 Description: LambdaSharp CloudFormation Test
 Items:
 
   # Module Outputs
-  - Module: Test
-    Properties:
-      ModuleName: TestModule
-      Version: 1.0
-      SourceBucket: !Ref DeploymentBucketName
+  - NestedModule: Test
+    Reference: Test.OtherModule:1.0

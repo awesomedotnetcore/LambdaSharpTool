@@ -62,9 +62,15 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     version = VersionInfo.Parse("0.0");
                 }
 
+                // ensure owner is present
+                if(!module.Module.TryParseModuleOwnerName(out string moduleOwner, out string moduleName)) {
+                    AddError("invalid value for 'Module' attribute");
+                }
+
                 // initialize module
                 _builder = new ModuleBuilder(Settings, SourceFilename, new Module {
-                    Name = module.Module,
+                    Owner = moduleOwner,
+                    Name = moduleName,
                     Version = version,
                     Description = module.Description
                 });
@@ -150,7 +156,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     });
                 }
                 _builder.AddDependency(
-                    moduleName: dependency.Module,
+                    moduleFullName: dependency.Module,
                     minVersion: minVersion,
                     maxVersion: maxVersion,
                     bucketName: dependency.BucketName
@@ -261,7 +267,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 "Function",
                 "Macro",
                 "Mapping",
-                "Module",
+                "NestedModule",
                 "Namespace",
                 "Package",
                 "Parameter",
@@ -332,7 +338,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     Validate((node.Type != "Secret") || !(node.Value is IList<object>), "item with type 'Secret' cannot have a list of values");
 
                     // create variable item
-                    var result = _builder.AddVariable(
+                    _builder.AddVariable(
                         parent: parent,
                         name: node.Variable,
                         description: node.Description,
@@ -342,9 +348,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         allow: null,
                         encryptionContext: node.EncryptionContext
                     );
-
-                    // recurse
-                    ConvertItems(result);
                 });
                 break;
             case "Namespace":
@@ -416,40 +419,36 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     }
                 });
                 break;
-            case "Module":
-                AtLocation(node.Module, () => {
+            case "NestedModule":
+                AtLocation(node.NestedModule, () => {
 
-                    // read optional properties
-                    string moduleName = null;
-                    object moduleVersion = null;
-                    object moduleSourceBucket = null;
-                    if(node.Properties != null) {
-                        AtLocation("Properties", () => {
-                            node.Properties.TryGetValue("ModuleName", out object moduleNameObject);
-                            if(!(moduleNameObject is string moduleNameText)) {
-                                AddError("'ModuleName' attribute must be a string value");
-                            } else {
-                                moduleName = moduleNameText;
-                            }
-                            node.Properties.TryGetValue("Version", out moduleVersion);
+                    // validation
+                    if(node.Reference == null) {
+                        AddError("missing 'Reference' attribute");
+                    } else if(!node.Reference.TryParseModuleInfo(
+                        out string moduleOwner,
+                        out string moduleName,
+                        out VersionInfo moduleVersion,
+                        out string moduleBucketName
+                    )) {
+                        AddError("invalid value for 'Reference' attribute");
+                    } else {
 
-                            // TODO (2018-12-13, bjorg): should this be `SourceBucketName` or simply `BucketName`?
-                            node.Properties.TryGetValue("SourceBucket", out moduleSourceBucket);
-                        });
+                        // create nested module item
+                        _builder.AddNestedModule(
+                            parent: parent,
+                            name: node.NestedModule,
+                            description: node.Description,
+                            moduleOwner: moduleOwner,
+                            moduleName: moduleName,
+                            moduleVersion: moduleVersion,
+                            moduleBucketName: moduleBucketName,
+                            scope: ConvertScope(node.Scope),
+                            dependsOn: node.DependsOn,
+                            parameters: node.Parameters
+                        );
+
                     }
-
-                    // create module item
-                    var result = _builder.AddModule(
-                        parent: parent,
-                        name: node.Module,
-                        description: node.Description,
-                        module: moduleName,
-                        version: moduleVersion,
-                        sourceBucketName: moduleSourceBucket,
-                        scope: ConvertScope(node.Scope),
-                        dependsOn: node.DependsOn,
-                        parameters: node.Parameters
-                    );
                 });
                 break;
             case "Package":
@@ -487,7 +486,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     }
 
                     // create package resource item
-                    var result = _builder.AddPackage(
+                    _builder.AddPackage(
                         parent: parent,
                         name: node.Package,
                         description: node.Description,
@@ -527,7 +526,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         .Where(evt => evt != null)
                         .ToList()
                     );
-                    var result = _builder.AddFunction(
+                    _builder.AddFunction(
                         parent: parent,
                         name: node.Function,
                         description: node.Description,

@@ -76,7 +76,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "199343E8E6E19C4993CD81DAB2D7838B"
+      "Default": "A66BD3A07BD2FBC6E4A389FB9A961973"
     }
   },
   "Resources": {
@@ -205,16 +205,15 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "Modules/LambdaSharp/Assets/ProcessLogEvents-DRYRUN.zip"
+          "S3Key": "LambdaSharp/Modules/Core/Assets/ProcessLogEvents-DRYRUN.zip"
         },
         "Description": "Process log events from all LambdaSharp module functions (v0.5-WIP)",
         "Environment": {
           "Variables": {
-            "MODULE_NAME": "LambdaSharp",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_VERSION": "0.5-WIP",
+            "MODULE_INFO": "LambdaSharp.Core:0.5-WIP",
             "LAMBDA_NAME": "ProcessLogEvents",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "STR_ERRORREPORTTOPIC": {
@@ -289,16 +288,15 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "Modules/LambdaSharp/Assets/Register-DRYRUN.zip"
+          "S3Key": "LambdaSharp/Modules/Core/Assets/Register-DRYRUN.zip"
         },
         "Description": "Register LambdaSharp modules and functions (v0.5-WIP)",
         "Environment": {
           "Variables": {
-            "MODULE_NAME": "LambdaSharp",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_VERSION": "0.5-WIP",
+            "MODULE_INFO": "LambdaSharp.Core:0.5-WIP",
             "LAMBDA_NAME": "Register",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "SEC_ROLLBARREADACCESSTOKEN": {
@@ -525,16 +523,15 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "Modules/LambdaSharp/Assets/Finalizer-DRYRUN.zip"
+          "S3Key": "LambdaSharp/Modules/Core/Assets/Finalizer-DRYRUN.zip"
         },
         "Description": "Clean-up on deletion (v0.5-WIP)",
         "Environment": {
           "Variables": {
-            "MODULE_NAME": "LambdaSharp",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_VERSION": "0.5-WIP",
+            "MODULE_INFO": "LambdaSharp.Core:0.5-WIP",
             "LAMBDA_NAME": "Finalizer",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "STR_REGISTRATIONTABLE": {
@@ -892,11 +889,8 @@
     }
   },
   "Outputs": {
-    "ModuleName": {
-      "Value": "LambdaSharp"
-    },
-    "ModuleVersion": {
-      "Value": "0.5-WIP"
+    "ModuleInfo": {
+      "Value": "LambdaSharp.Core:0.5-WIP"
     },
     "DeadLetterQueue": {
       "Value": {
@@ -1147,8 +1141,7 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2018-12-31",
-      "ModuleName": "LambdaSharp",
-      "ModuleVersion": "0.5-WIP",
+      "ModuleInfo": "LambdaSharp.Core:0.5-WIP",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Tier Settings",
@@ -1242,7 +1235,7 @@
         }
       ],
       "RuntimeCheck": false,
-      "Hash": "199343E8E6E19C4993CD81DAB2D7838B",
+      "Hash": "A66BD3A07BD2FBC6E4A389FB9A961973",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [],

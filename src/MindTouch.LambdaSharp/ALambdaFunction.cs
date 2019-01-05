@@ -60,6 +60,30 @@ namespace MindTouch.LambdaSharp {
             }
         }
 
+        private static void ParseModuleInfo(string moduleInfo, out string moduleOwner, out string moduleName, out string moduleVersion) {
+            moduleOwner = null;
+            moduleName = null;
+            moduleVersion = null;
+            if(moduleInfo == null) {
+                return;
+            }
+
+            // extract module version
+            var colon = moduleInfo.IndexOf(':');
+            if(colon >= 0) {
+                moduleVersion = moduleInfo.Substring(colon + 1);
+            } else {
+                colon = moduleInfo.Length;
+            }
+
+            // extract module owner and module name
+            var dot = moduleInfo.IndexOf('.');
+            if(dot >= 0) {
+                moduleOwner = moduleInfo.Substring(0, dot);
+                moduleName = moduleInfo.Substring(dot + 1, colon - dot - 1);
+            }
+        }
+
         //--- Fields ---
         private readonly Func<DateTime> _now;
         private readonly DateTime _started;
@@ -84,6 +108,7 @@ namespace MindTouch.LambdaSharp {
         //--- Properties ---
         protected DateTime UtcNow => _now();
         protected DateTime Started => _started;
+        protected string ModuleOwner { get; private set; }
         protected string ModuleName { get; private set; }
         protected string ModuleId { get; private set; }
         protected string ModuleVersion { get; private set; }
@@ -145,17 +170,19 @@ namespace MindTouch.LambdaSharp {
         protected virtual async Task InitializeAsync(ILambdaConfigSource envSource, ILambdaContext context) {
 
             // read configuration from environment variables
-            ModuleName = envSource.Read("MODULE_NAME");
             ModuleId = envSource.Read("MODULE_ID");
-            ModuleVersion = envSource.Read("MODULE_VERSION");
+            var moduleInfo = envSource.Read("MODULE_INFO");
+            ParseModuleInfo(moduleInfo, out string moduleOwner, out string moduleName, out string moduleVersion);
+            ModuleOwner = moduleOwner;
+            ModuleName = moduleName;
+            ModuleVersion = moduleVersion;
             _deadLetterQueueUrl = AwsConverters.ConvertQueueArnToUrl(envSource.Read("DEADLETTERQUEUE"));
             DefaultSecretKey = envSource.Read("DEFAULTSECRETKEY");
             FunctionId = AwsConverters.ConvertFunctionArnToName(context.InvokedFunctionArn);
             FunctionName = envSource.Read("LAMBDA_NAME");
             var framework = envSource.Read("LAMBDA_RUNTIME");
-            LogInfo($"MODULE_NAME = {ModuleName}");
-            LogInfo($"MODULE_VERSION = {ModuleVersion}");
             LogInfo($"MODULE_ID = {ModuleId}");
+            LogInfo($"MODULE_INFO = {moduleInfo}");
             LogInfo($"FUNCTION_NAME = {FunctionName}");
             LogInfo($"FUNCTION_ID = {FunctionId}");
             LogInfo($"DEADLETTERQUEUE = {_deadLetterQueueUrl ?? "NONE"}");
@@ -171,8 +198,7 @@ namespace MindTouch.LambdaSharp {
             // initialize error/warning reporter
             ErrorReporter = new ErrorReporter(
                 ModuleId,
-                ModuleName,
-                ModuleVersion,
+                $"{ModuleOwner}.{ModuleName}:{ModuleVersion}",
                 FunctionId,
                 FunctionName,
                 framework,

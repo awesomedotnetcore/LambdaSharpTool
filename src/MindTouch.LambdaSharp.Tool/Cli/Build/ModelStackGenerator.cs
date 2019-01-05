@@ -56,11 +56,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             };
 
             // add outputs
-            _stack.Add("ModuleName", new Humidifier.Output {
-                Value = _module.Name
-            });
-            _stack.Add("ModuleVersion", new Humidifier.Output {
-                Value = _module.Version.ToString()
+            _stack.Add("ModuleInfo", new Humidifier.Output {
+                Value = _module.FullName + ":" + _module.Version.ToString()
             });
 
             // add items
@@ -88,8 +85,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             // add module manifest
             var templateHash = GenerateCloudFormationTemplateHash();
             _stack.AddTemplateMetadata("LambdaSharp::Manifest", new ModuleManifest {
-                ModuleName = module.Name,
-                ModuleVersion = module.Version.ToString(),
+                ModuleInfo = module.Info,
                 ParameterSections = inputParameters
                     .GroupBy(input => input.Section)
                     .Where(group => group.Key != "LambdaSharp Deployment Settings (DO NOT MODIFY)")
@@ -108,11 +104,11 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 GitSha = gitSha ?? "",
                 Assets = module.Assets.ToList(),
                 Dependencies = module.Dependencies.Select(dependency => new ModuleManifestDependency {
-                    ModuleName = dependency.Value.ModuleName,
+                    ModuleFullName = dependency.Value.ModuleFullName,
                     MinVersion = dependency.Value.MinVersion,
                     MaxVersion = dependency.Value.MaxVersion,
                     BucketName = dependency.Value.BucketName
-                }).OrderBy(dependency => dependency.ModuleName).ToList(),
+                }).OrderBy(dependency => dependency.ModuleFullName).ToList(),
                 CustomResourceTypes = new Dictionary<string, ModuleManifestCustomResource>(module.CustomResourceTypes),
                 MacroNames = module.MacroNames.ToList(),
                 CustomResourceNameMappings = module.CustomResourceNameMappings,

@@ -1,4 +1,4 @@
-Module: CustomResourceSample
+Module: LambdaSharp.CustomResourceSample
 Description: A sample module for defining a custom resource
 Items:
 

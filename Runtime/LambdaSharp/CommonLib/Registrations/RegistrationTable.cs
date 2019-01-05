@@ -43,8 +43,7 @@ namespace MindTouch.LambdaSharpRegistrar.Registrations {
             }
             return new OwnerMetaData {
                 ModuleId = TryGetAsString("ModuleId"),
-                ModuleName = TryGetAsString("ModuleName"),
-                ModuleVersion = TryGetAsString("ModuleVersion"),
+                ModuleInfo = TryGetAsString("ModuleInfo"),
                 FunctionId = TryGetAsString("FunctionId"),
                 FunctionName = TryGetAsString("FunctionName"),
                 FunctionLogGroupName = TryGetAsString("FunctionLogGroupName"),
@@ -72,8 +71,7 @@ namespace MindTouch.LambdaSharpRegistrar.Registrations {
             var document = new Document {
                 ["Id"] = id,
                 ["ModuleId"] = owner.ModuleId,
-                ["ModuleName"] = owner.ModuleName,
-                ["ModuleVersion"] = owner.ModuleVersion
+                ["ModuleInfo"] = owner.ModuleInfo
             };
             if(owner.FunctionId != null) {
                 document["FunctionId"] = owner.FunctionId;

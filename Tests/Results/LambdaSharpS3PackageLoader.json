@@ -55,7 +55,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "CloudFormation template MD5 checksum",
-      "Default": "C624B381A71E874E8507C13F73DD7B9E"
+      "Default": "C037409EAA06B9F10E26251C266D2AAF"
     }
   },
   "Resources": {
@@ -74,7 +74,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "Modules/LambdaSharpS3PackageLoader/Assets/ResourceHandler-DRYRUN.zip"
+          "S3Key": "LambdaSharp/Modules/S3PackageLoader/Assets/ResourceHandler-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -111,11 +111,10 @@
         "Description": "LambdaSharp S3 Package Loader handler (v0.5-WIP)",
         "Environment": {
           "Variables": {
-            "MODULE_NAME": "LambdaSharpS3PackageLoader",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_VERSION": "0.5-WIP",
+            "MODULE_INFO": "LambdaSharp.S3PackageLoader:0.5-WIP",
             "LAMBDA_NAME": "ResourceHandler",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
@@ -522,8 +521,7 @@
         "ModuleId": {
           "Ref": "AWS::StackName"
         },
-        "ModuleName": "LambdaSharpS3PackageLoader",
-        "ModuleVersion": "0.5-WIP"
+        "ModuleInfo": "LambdaSharp.S3PackageLoader:0.5-WIP"
       }
     },
     "ResourceHandlerRegistration": {
@@ -656,11 +654,8 @@
     }
   },
   "Outputs": {
-    "ModuleName": {
-      "Value": "LambdaSharpS3PackageLoader"
-    },
-    "ModuleVersion": {
-      "Value": "0.5-WIP"
+    "ModuleInfo": {
+      "Value": "LambdaSharp.S3PackageLoader:0.5-WIP"
     },
     "LambdaSharpS3Package": {
       "Value": {
@@ -890,8 +885,7 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2018-12-31",
-      "ModuleName": "LambdaSharpS3PackageLoader",
-      "ModuleVersion": "0.5-WIP",
+      "ModuleInfo": "LambdaSharp.S3PackageLoader:0.5-WIP",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -940,12 +934,12 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "C624B381A71E874E8507C13F73DD7B9E",
+      "Hash": "C037409EAA06B9F10E26251C266D2AAF",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [
         {
-          "ModuleName": "LambdaSharpRegistrar",
+          "ModuleFullName": "LambdaSharp.Core",
           "MinVersion": "0.5-WIP"
         }
       ],

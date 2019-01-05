@@ -252,11 +252,17 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     });
                     var deployedOutputs = describe.Stacks.FirstOrDefault()?.Outputs;
                     if(deployedOutputs != null) {
-                        var deployedName = deployedOutputs.FirstOrDefault(output => output.OutputKey == "ModuleName")?.OutputValue;
-                        var deployedVersionText = deployedOutputs.FirstOrDefault(output => output.OutputKey == "ModuleVersion")?.OutputValue;
+                        var deployed = deployedOutputs.FirstOrDefault(output => output.OutputKey == "ModuleInfo")?.OutputValue;
+
                         if(
-                            (deployedName == "LambdaSharp")
-                            && VersionInfo.TryParse(deployedVersionText, out VersionInfo deployedVersion)
+                            deployed.TryParseModuleInfo(
+                                out string deployedOwner,
+                                out string deployedName,
+                                out VersionInfo deployedVersion,
+                                out string deployedBucketName
+                            )
+                            && (deployedOwner == "LambdaSharp")
+                            && (deployedName == "Core")
                         ) {
                             settings.RuntimeVersion = deployedVersion;
                             return;

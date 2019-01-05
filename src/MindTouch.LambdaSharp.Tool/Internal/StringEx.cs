@@ -24,10 +24,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace MindTouch.LambdaSharp.Tool.Internal {
 
     internal static class StringEx {
+
+        //--- Class Fields ---
+        private static readonly Regex ModuleKeyPattern = new Regex(@"^(?<ModuleOwner>\w+)\.(?<ModuleName>\w+)(:(?<Version>\*|[\w\.\-]+))?(@(?<BucketName>\w+))?$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         //--- Extension Methods ---
         public static string ToMD5Hash(this string text) {
@@ -66,5 +70,84 @@ namespace MindTouch.LambdaSharp.Tool.Internal {
 
         public static string ToIdentifier(this string text)
             => new string(text.Where(char.IsLetterOrDigit).ToArray());
+
+        public static bool TryParseModuleOwnerName(this string compositeModuleOwnerName, out string moduleOwner, out string moduleName) {
+            moduleOwner = "<BAD>";
+            moduleName = "<BAD>";
+            if(compositeModuleOwnerName == null) {
+                return false;
+            }
+            var moduleOwnerAndName = compositeModuleOwnerName.Split(".");
+            if(
+                (moduleOwnerAndName.Length != 2)
+                || (moduleOwnerAndName[0].Length == 0)
+                || (moduleOwnerAndName[1].Length == 0)
+            ) {
+                return false;
+            }
+            moduleOwner = moduleOwnerAndName[0];
+            moduleName = moduleOwnerAndName[1];
+            return true;
+        }
+
+        public static bool TryParseModuleInfo(
+            this string moduleReference,
+            out string moduleOwner,
+            out string moduleName,
+            out VersionInfo moduleVersion,
+            out string moduleBucketName
+        ) {
+            if(moduleReference == null) {
+                moduleOwner = "<BAD>";
+                moduleName = "<BAD>";
+                moduleVersion = VersionInfo.Parse("0.0");
+                moduleBucketName = "<BAD>";
+                return false;
+            }
+            if(moduleReference.StartsWith("s3://", StringComparison.Ordinal)) {
+                var uri = new Uri(moduleReference);
+
+                // absolute path always starts with '/', which needs to be removed
+                var pathSegments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries).ToList();
+                if((pathSegments.Count < 5) || (pathSegments[1] != "Modules") || (pathSegments[3] != "Versions")) {
+                    moduleOwner = "<BAD>";
+                    moduleName = "<BAD>";
+                    moduleVersion = VersionInfo.Parse("0.0");
+                    moduleBucketName = "<BAD>";
+                    return false;
+                }
+                moduleOwner = pathSegments[0];
+                moduleName = pathSegments[2];
+                moduleVersion = VersionInfo.Parse(pathSegments[4]);
+                moduleBucketName = uri.Host;
+                return true;
+            }
+
+            // try parsing module reference
+            var match = ModuleKeyPattern.Match(moduleReference);
+            if(!match.Success) {
+                    moduleOwner = "<BAD>";
+                    moduleName = "<BAD>";
+                    moduleVersion = VersionInfo.Parse("0.0");
+                    moduleBucketName = "<BAD>";
+                return false;
+            }
+            moduleOwner = GetMatchValue("ModuleOwner");
+            moduleName = GetMatchValue("ModuleName");
+            moduleBucketName = GetMatchValue("BucketName");
+
+            // parse optional version
+            var requestedVersionText = GetMatchValue("Version");
+            moduleVersion = ((requestedVersionText != null) && (requestedVersionText != "*"))
+                ? VersionInfo.Parse(requestedVersionText)
+                : null;
+            return true;
+
+            // local function
+            string GetMatchValue(string groupName) {
+                var group = match.Groups[groupName];
+                return group.Success ? group.Value : null;
+            }
+        }
     }
 }

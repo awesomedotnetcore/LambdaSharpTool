@@ -56,11 +56,11 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
                 "Description",
                 "Value"
             },
-            ["Module"] = new[] {
+            ["NestedModule"] = new[] {
                 "DependsOn",
                 "Description",
                 "Parameters",
-                "Properties"
+                "Reference"
             },
             ["Function"] = new[] {
                 "Description",
@@ -224,16 +224,14 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         public string DefaultAttribute { get; set; }
 
         /*
-         * Module: string
+         * NestedModule: string
          * Description: string
+         * Reference: string
          * DependsOn: string -or- list<string>
-         * Properties: map
-         *   ModuleName: string
-         *   Version: string
-         *   BucketName: string
          * Parameters: map
          */
-        public string Module { get; set; }
+        public string NestedModule { get; set; }
+        public string Reference { get; set; }
         public IDictionary<string, object> Parameters { get; set; }
 
         /*
