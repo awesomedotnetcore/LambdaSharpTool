@@ -83,8 +83,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             });
 
             // add module manifest
-            var templateHash = GenerateCloudFormationTemplateHash();
-            _stack.AddTemplateMetadata("LambdaSharp::Manifest", new ModuleManifest {
+            var manifest = new ModuleManifest {
                 ModuleInfo = module.Info,
                 ParameterSections = inputParameters
                     .GroupBy(input => input.Section)
@@ -100,8 +99,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         }).ToList()
                     }).ToList(),
                 RuntimeCheck = module.HasRuntimeCheck,
-                Hash = templateHash,
-                GitSha = gitSha ?? "",
                 Assets = module.Assets.ToList(),
                 Dependencies = module.Dependencies.Select(dependency => new ModuleManifestDependency {
                     ModuleFullName = dependency.Value.ModuleFullName,
@@ -111,18 +108,22 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 }).OrderBy(dependency => dependency.ModuleFullName).ToList(),
                 CustomResourceTypes = new Dictionary<string, ModuleManifestCustomResource>(module.CustomResourceTypes),
                 MacroNames = module.MacroNames.ToList(),
-                CustomResourceNameMappings = module.CustomResourceNameMappings,
+                ResourceTypeNameMappings = module.ResourceTypeNameMappings,
                 ResourceNameMappings = module.Items
 
                     // we only ned to worry about resource names
-                    .Where(item => (item is AResourceItem))
+                    .Where(item => _stack.Resources.ContainsKey(item.LogicalId))
 
                     // we only care about items where the logical ID and full-name don't match
                     .Where(item => item.LogicalId != item.FullName)
                     .ToDictionary(item => item.LogicalId, item => item.FullName)
-            });
+            };
+            _stack.AddTemplateMetadata("LambdaSharp::Manifest", manifest);
 
-            // update DeploymentChecksum with template hash
+            // update template with template hash
+            var templateHash = GenerateCloudFormationTemplateHash();
+            manifest.Hash = templateHash;
+            manifest.GitSha = gitSha ?? "";
             _stack.Parameters["DeploymentChecksum"].Default = templateHash;
 
             // generate JSON template
@@ -214,8 +215,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             var value = JObject.Parse(json);
 
             // convert value to json, but sort the properties to achieve a stable hash
-            json = JsonConvert.SerializeObject(OrderFields(value));
-            return (json + ModuleManifest.CurrentVersion).ToMD5Hash();
+            return JsonConvert.SerializeObject(OrderFields(value)).ToMD5Hash();
         }
 
         private JObject OrderFields(JObject value) {
