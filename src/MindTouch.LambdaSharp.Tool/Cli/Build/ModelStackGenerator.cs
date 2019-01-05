@@ -108,7 +108,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 }).OrderBy(dependency => dependency.ModuleFullName).ToList(),
                 CustomResourceTypes = new Dictionary<string, ModuleManifestCustomResource>(module.CustomResourceTypes),
                 MacroNames = module.MacroNames.ToList(),
-                ResourceTypeNameMappings = module.ResourceTypeNameMappings,
+                ResourceTypeNameMappings = module.ResourceTypeNameMappings
+                    .Where(kv => _stack.Resources.Any(resource => resource.Value.AWSTypeName == kv.Key))
+                    .ToDictionary(kv => kv.Key, kv => kv.Value),
                 ResourceNameMappings = module.Items
 
                     // we only ned to worry about resource names
