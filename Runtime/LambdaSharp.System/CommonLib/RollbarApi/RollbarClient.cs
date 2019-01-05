@@ -36,7 +36,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
-namespace MindTouch.LambdaSharpRegistrar.RollbarApi {
+namespace MindTouch.LambdaSharp.System.RollbarApi {
 
     public class RollbarResponse {
 

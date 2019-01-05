@@ -28,10 +28,10 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
 using MindTouch.LambdaSharp.Reports;
-using MindTouch.LambdaSharpRegistrar.Registrations;
+using MindTouch.LambdaSharp.System.Registrations;
 using Newtonsoft.Json;
 
-namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
+namespace MindTouch.LambdaSharp.System.ProcessLogEvents {
 
     public interface ILogicDependencyProvider {
 

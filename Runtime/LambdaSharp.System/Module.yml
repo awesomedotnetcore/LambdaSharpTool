@@ -19,7 +19,7 @@
 
 Module: LambdaSharp.System
 Version: 0.5-WIP
-Description: LambdaSharp Runtime
+Description: LambdaSharp Resources and Services
 Pragmas:
   - no-runtime-version-check
   - no-lambdasharp-dependencies

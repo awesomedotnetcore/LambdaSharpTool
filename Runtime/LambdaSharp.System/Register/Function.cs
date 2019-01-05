@@ -27,13 +27,13 @@ using Amazon.DynamoDBv2;
 using Amazon.Lambda.Core;
 using MindTouch.LambdaSharp;
 using MindTouch.LambdaSharp.CustomResource;
-using MindTouch.LambdaSharpRegistrar.Registrations;
-using MindTouch.LambdaSharpRegistrar.RollbarApi;
+using MindTouch.LambdaSharp.System.Registrations;
+using MindTouch.LambdaSharp.System.RollbarApi;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
 
-namespace MindTouch.LambdaSharpRegistrar.Register {
+namespace MindTouch.LambdaSharp.System.Register {
 
     public class RequestProperties {
 

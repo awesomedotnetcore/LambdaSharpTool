@@ -21,7 +21,7 @@
 
 using System;
 
-namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
+namespace MindTouch.LambdaSharp.System.ProcessLogEvents {
 
     public class UsageReport {
 

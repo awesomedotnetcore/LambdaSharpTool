@@ -34,13 +34,13 @@ using Amazon.Lambda.Serialization.Json;
 using Amazon.SimpleNotificationService;
 using MindTouch.LambdaSharp;
 using MindTouch.LambdaSharp.Reports;
-using MindTouch.LambdaSharpRegistrar.Registrations;
-using MindTouch.LambdaSharpRegistrar.RollbarApi;
+using MindTouch.LambdaSharp.System.Registrations;
+using MindTouch.LambdaSharp.System.RollbarApi;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
 
-namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
+namespace MindTouch.LambdaSharp.System.ProcessLogEvents {
 
     public class LogEventsMessage {
 

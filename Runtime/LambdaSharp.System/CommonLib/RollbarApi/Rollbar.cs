@@ -32,7 +32,7 @@ using System.Globalization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
-namespace MindTouch.LambdaSharpRegistrar.RollbarApi
+namespace MindTouch.LambdaSharp.System.RollbarApi
 {
 
     public partial class Rollbar

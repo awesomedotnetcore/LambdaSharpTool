@@ -977,7 +977,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             // resolve references in output values
             AtLocation("ResourceStatements", () => {
 
-                // TODO: pass in 'Module::Role' item?
+                // TODO (2019-01-05, bjorg): pass in 'Module::Role' item?
                 _resourceStatements = (IList<Humidifier.Statement>)visitor(null, _resourceStatements);
             });
         }

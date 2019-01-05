@@ -23,12 +23,12 @@ using System;
 using System.Threading.Tasks;
 using FluentAssertions;
 using MindTouch.LambdaSharp.Reports;
-using MindTouch.LambdaSharpRegistrar.Registrations;
+using MindTouch.LambdaSharp.System.Registrations;
 using Newtonsoft.Json;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents.Tests {
+namespace MindTouch.LambdaSharp.System.ProcessLogEvents.Tests {
 
     public class ProgressLogEntryAsync {
 
@@ -101,9 +101,9 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents.Tests {
 
         [Fact]
         public void LambdaException() {
-            _logic.ProgressLogEntryAsync(_owner, "Unable to load type 'MindTouch.LambdaSharpRegistrar.ProcessLogEvents.Function' from assembly 'ProcessLogEvents'.: LambdaException", "1539238963679").Wait();
+            _logic.ProgressLogEntryAsync(_owner, "Unable to load type 'MindTouch.LambdaSharp.System.ProcessLogEvents.Function' from assembly 'ProcessLogEvents'.: LambdaException", "1539238963679").Wait();
             CommonErrorReportAsserts();
-            _provider.ErrorReport.Message.Should().Be("Unable to load type 'MindTouch.LambdaSharpRegistrar.ProcessLogEvents.Function' from assembly 'ProcessLogEvents'.");
+            _provider.ErrorReport.Message.Should().Be("Unable to load type 'MindTouch.LambdaSharp.System.ProcessLogEvents.Function' from assembly 'ProcessLogEvents'.");
             _provider.ErrorReport.Timestamp.Should().Be(1539238963679);
             _provider.ErrorReport.RequestId.Should().Be("");
         }
