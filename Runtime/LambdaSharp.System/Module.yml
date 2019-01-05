@@ -17,7 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-Module: LambdaSharp.Core
+Module: LambdaSharp.System
 Version: 0.5-WIP
 Description: LambdaSharp Runtime
 Pragmas:
@@ -119,7 +119,7 @@ Items:
   - Parameter: RollbarReadAccessToken
     Section: Rollbar Settings
     Label: Read Access Token
-    Description: Account-level token for read operations
+    Description: Account-level token for read operations (Rollbar integration is disabled if blank)
     Type: Secret
     Scope: Register
     Default: ""
@@ -127,7 +127,7 @@ Items:
   - Parameter: RollbarWriteAccessToken
     Section: Rollbar Settings
     Label: Write Access Token
-    Description: Account-level token for write operations
+    Description: Account-level token for write operations (Rollbar integration is disabled if blank)
     Type: Secret
     Scope: Register
     Default: ""
@@ -135,7 +135,7 @@ Items:
   - Parameter: RollbarProjectPrefix
     Section: Rollbar Settings
     Label: Project Prefix
-    Description: Optional prefix when creating Rollbar projects
+    Description: Optional prefix when creating Rollbar projects (e.g. "LambdaSharp-")
     Scope: Register
     Default: ""
 
@@ -195,9 +195,7 @@ Items:
       Request:
         - Name: ModuleId
           Required: true
-        - Name: ModuleName
-          Required: true
-        - Name: ModuleVersion
+        - Name: ModuleInfo
           Required: true
       Response:
         - Name: Registration
@@ -228,121 +226,121 @@ Items:
       Response:
         - Name: Registration
 
-  # Firehose Declarations
-  - Parameter: EnableFirehose
-    Section: Firehose Settings (Experimental)
-    Label: Enable Firehose
-    Description: Enable Kinesis Firehose logging to S3 Bucket
-    Type: String
-    Default: no
-    AllowedValues:
-      - yes
-      - no
+  # # Firehose Declarations
+  # - Parameter: EnableFirehose
+  #   Section: Firehose Settings (Experimental)
+  #   Label: Enable Firehose
+  #   Description: Enable Kinesis Firehose logging to S3 Bucket
+  #   Type: String
+  #   Default: no
+  #   AllowedValues:
+  #     - yes
+  #     - no
 
-  - Namespace: Firehose
-    Items:
+  # - Namespace: Firehose
+  #   Items:
 
-    - Condition: IsEnabled
-      Value: !Equals [ !Ref EnableFirehose, "yes" ]
+  #   - Condition: IsEnabled
+  #     Value: !Equals [ !Ref EnableFirehose, "yes" ]
 
-    - Resource: LoggingBucket
-      If: Firehose::IsEnabled
-      Scope: Finalizer
-      Type: AWS::S3::Bucket
-      Allow: ReadWrite
-      Properties:
-        LifecycleConfiguration:
-          Rules:
-            - Id: LogDeletion
-              ExpirationInDays: 90
-              Status: Enabled
+  #   - Resource: LoggingBucket
+  #     If: Firehose::IsEnabled
+  #     Scope: Finalizer
+  #     Type: AWS::S3::Bucket
+  #     Allow: ReadWrite
+  #     Properties:
+  #       LifecycleConfiguration:
+  #         Rules:
+  #           - Id: LogDeletion
+  #             ExpirationInDays: 90
+  #             Status: Enabled
 
-    - Resource: LoggingStream
-      If: Firehose::IsEnabled
-      Type: AWS::KinesisFirehose::DeliveryStream
-      Properties:
-        DeliveryStreamType: KinesisStreamAsSource
-        KinesisStreamSourceConfiguration:
-          KinesisStreamARN: !Ref LoggingStream
-          RoleARN: !GetAtt Firehose::LoggingRole.Arn
-        S3DestinationConfiguration:
-          BucketARN: !GetAtt Firehose::LoggingBucket.Arn
-          CloudWatchLoggingOptions:
-            Enabled: true
-            LogGroupName: !Ref Firehose::CloudWatchGroup
-            LogStreamName: !Ref Firehose::CloudWatchStream
-          Prefix: "firehose/"
-          BufferingHints:
-            IntervalInSeconds: 60
-            SizeInMBs: 100
-          CompressionFormat: GZIP
-          EncryptionConfiguration:
-            NoEncryptionConfig: NoEncryption
-          RoleARN: !GetAtt Firehose::LoggingRole.Arn
+  #   - Resource: LoggingStream
+  #     If: Firehose::IsEnabled
+  #     Type: AWS::KinesisFirehose::DeliveryStream
+  #     Properties:
+  #       DeliveryStreamType: KinesisStreamAsSource
+  #       KinesisStreamSourceConfiguration:
+  #         KinesisStreamARN: !Ref LoggingStream
+  #         RoleARN: !GetAtt Firehose::LoggingRole.Arn
+  #       S3DestinationConfiguration:
+  #         BucketARN: !GetAtt Firehose::LoggingBucket.Arn
+  #         CloudWatchLoggingOptions:
+  #           Enabled: true
+  #           LogGroupName: !Ref Firehose::CloudWatchGroup
+  #           LogStreamName: !Ref Firehose::CloudWatchStream
+  #         Prefix: "firehose/"
+  #         BufferingHints:
+  #           IntervalInSeconds: 60
+  #           SizeInMBs: 100
+  #         CompressionFormat: GZIP
+  #         EncryptionConfiguration:
+  #           NoEncryptionConfig: NoEncryption
+  #         RoleARN: !GetAtt Firehose::LoggingRole.Arn
 
-    - Resource: CloudWatchGroup
-      If: Firehose::IsEnabled
-      Type: AWS::Logs::LogGroup
-      Properties:
-        RetentionInDays: 30
+  #   - Resource: CloudWatchGroup
+  #     If: Firehose::IsEnabled
+  #     Type: AWS::Logs::LogGroup
+  #     Properties:
+  #       RetentionInDays: 30
 
-    - Resource: CloudWatchStream
-      If: Firehose::IsEnabled
-      Type: AWS::Logs::LogStream
-      Properties:
-        LogGroupName: !Ref Firehose::CloudWatchGroup
+  #   - Resource: CloudWatchStream
+  #     If: Firehose::IsEnabled
+  #     Type: AWS::Logs::LogStream
+  #     Properties:
+  #       LogGroupName: !Ref Firehose::CloudWatchGroup
 
-    - Resource: LoggingRole
-      If: Firehose::IsEnabled
-      Type: AWS::IAM::Role
-      Properties:
-        AssumeRolePolicyDocument:
-          Version: 2012-10-17
-          Statement:
-            Sid: FirehoseLoggingPrincipal
-            Effect: Allow
-            Principal:
-              Service: firehose.amazonaws.com
-            Action: sts:AssumeRole
-        Policies:
-          - PolicyName: !Sub "${AWS::StackName}FirehoseLoggingPolicy"
-            PolicyDocument:
-              Version: 2012-10-17
-              Statement:
-                - Sid: FirehoseLoggingDestinationS3Access
-                  Effect: Allow
-                  Action:
-                    - s3:AbortMultipartUpload
-                    - s3:GetBucketLocation
-                    - s3:GetObject
-                    - s3:ListBucket
-                    - s3:ListBucketMultipartUploads
-                    - s3:PutObject
-                  Resource:
-                    - !Sub "${Firehose::LoggingBucket.Arn}"
-                    - !Sub "${Firehose::LoggingBucket.Arn}/*"
-                - Sid: FirehoseLoggingSourceStreamAccess
-                  Effect: Allow
-                  Action:
-                    - kinesis:DescribeStream
-                    - kinesis:GetShardIterator
-                    - kinesis:GetRecords
-                  Resource: !Ref LoggingStream
-                - Sid: FirehoseLoggingCloudWatchLogsAccess
-                  Effect: Allow
-                  Action:
-                    - logs:CreateLogGroup
-                    - logs:CreateLogStream
-                    - logs:DescribeLogGroups
-                    - logs:DescribeLogStreams
-                    - logs:PutLogEvents
-                    - logs:GetLogEvents
-                    - logs:FilterLogEvents
-                  Resource: arn:aws:logs:*:*:*
+  #   - Resource: LoggingRole
+  #     If: Firehose::IsEnabled
+  #     Type: AWS::IAM::Role
+  #     Properties:
+  #       AssumeRolePolicyDocument:
+  #         Version: 2012-10-17
+  #         Statement:
+  #           Sid: FirehoseLoggingPrincipal
+  #           Effect: Allow
+  #           Principal:
+  #             Service: firehose.amazonaws.com
+  #           Action: sts:AssumeRole
+  #       Policies:
+  #         - PolicyName: !Sub "${AWS::StackName}FirehoseLoggingPolicy"
+  #           PolicyDocument:
+  #             Version: 2012-10-17
+  #             Statement:
+  #               - Sid: FirehoseLoggingDestinationS3Access
+  #                 Effect: Allow
+  #                 Action:
+  #                   - s3:AbortMultipartUpload
+  #                   - s3:GetBucketLocation
+  #                   - s3:GetObject
+  #                   - s3:ListBucket
+  #                   - s3:ListBucketMultipartUploads
+  #                   - s3:PutObject
+  #                 Resource:
+  #                   - !Sub "${Firehose::LoggingBucket.Arn}"
+  #                   - !Sub "${Firehose::LoggingBucket.Arn}/*"
+  #               - Sid: FirehoseLoggingSourceStreamAccess
+  #                 Effect: Allow
+  #                 Action:
+  #                   - kinesis:DescribeStream
+  #                   - kinesis:GetShardIterator
+  #                   - kinesis:GetRecords
+  #                 Resource: !Ref LoggingStream
+  #               - Sid: FirehoseLoggingCloudWatchLogsAccess
+  #                 Effect: Allow
+  #                 Action:
+  #                   - logs:CreateLogGroup
+  #                   - logs:CreateLogStream
+  #                   - logs:DescribeLogGroups
+  #                   - logs:DescribeLogStreams
+  #                   - logs:PutLogEvents
+  #                   - logs:GetLogEvents
+  #                   - logs:FilterLogEvents
+  #                 Resource: arn:aws:logs:*:*:*
 
-  # Module Finalizer
-  - Function: Finalizer
-    If: Firehose::IsEnabled
-    Description: Clean-up on deletion
-    Memory: 256
-    Timeout: 900
+  # # Module Finalizer
+  # - Function: Finalizer
+  #   If: Firehose::IsEnabled
+  #   Description: Clean-up on deletion
+  #   Memory: 256
+  #   Timeout: 900
