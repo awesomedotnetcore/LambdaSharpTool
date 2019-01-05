@@ -71,6 +71,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
             // determine location of cloudformation template from module key
             var location = await _loader.LocateAsync(moduleReference);
             if(location == null) {
+                AddError($"unable to resolve: {moduleReference}");
                 return false;
             }
 
@@ -176,7 +177,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
                     out string deployedOwner,
                     out string deployedName,
                     out VersionInfo deployedVersion,
-                    out string deployedBucketName
+                    out string _
                 )) {
                     AddError("unable to determine the name of the deployed module; use --force-deploy to proceed anyway");
                     return (false, existing);
@@ -415,6 +416,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
             }
         }
 
-        private string ToStackName(string moduleName, string instanceName = null) => $"{Settings.Tier}-{instanceName ?? moduleName}";
+        private string ToStackName(string moduleName, string instanceName = null)
+            => $"{Settings.Tier}-{instanceName ?? moduleName.Replace(".", "-")}";
     }
 }

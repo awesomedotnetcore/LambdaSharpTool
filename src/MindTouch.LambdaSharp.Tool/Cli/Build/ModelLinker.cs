@@ -145,6 +145,41 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             // replace all references with their logical IDs
             builder.VisitAll(Finalize);
 
+            // NOTE (2018-12-17, bjorg): at this point, we have to use `LogicalId` for items
+
+            // check if module contains a finalizer invocation function
+            if(
+                builder.TryGetItem("Finalizer::Invocation", out AModuleItem finalizerInvocationItem)
+                && (finalizerInvocationItem is ResourceItem finalizerResourceItem)
+                && (finalizerResourceItem.Resource is Humidifier.CustomResource finalizerCustomResource)
+            ) {
+                var allResourceItems = builder.Items
+                    .OfType<AResourceItem>()
+                    .Where(item => item.FullName != finalizerInvocationItem.FullName)
+                    .ToList();
+
+                // finalizer invocation depends on all non-conditional resources
+                finalizerResourceItem.DependsOn = allResourceItems
+                    .Where(item => item.Condition == null)
+                    .Select(item => item.LogicalId)
+                    .OrderBy(logicalId => logicalId)
+                    .ToList();
+
+                // NOTE: for conditional resources, we need to take a dependency via an expression; however
+                //  this approach doesn't work for custom resources because they don't support !Ref
+                var allConditionalResourceItems = allResourceItems
+                    .Where(item => item.Condition != null)
+                    .Where(item => item.HasAwsType)
+                    .ToList();
+                if(allConditionalResourceItems.Any()) {
+                    finalizerCustomResource["DependsOn"] = allConditionalResourceItems
+                        .Select(item => FnIf(item.Condition, FnRef(item.LogicalId), FnRef("AWS::NoValue")))
+                        .ToList();
+                }
+
+            }
+            return;
+
             // local functions
             void DiscoverItems() {
                 foreach(var item in builder.Items) {

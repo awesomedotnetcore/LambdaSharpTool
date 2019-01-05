@@ -44,7 +44,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public IDictionary<string, ModuleManifestCustomResource> CustomResourceTypes { get; set; }
         public IList<string> MacroNames { get; set; }
         public IDictionary<string, string> ResourceNameMappings { get; set; }
-        public IDictionary<string, string> CustomResourceNameMappings { get; set; }
+        public IDictionary<string, string> ResourceTypeNameMappings { get; set; }
 
         //--- Methods ---
         public string GetFullName() {

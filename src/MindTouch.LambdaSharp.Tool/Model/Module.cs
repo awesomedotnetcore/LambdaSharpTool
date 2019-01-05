@@ -42,7 +42,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public IEnumerable<KeyValuePair<string, ModuleDependency>> Dependencies { get; set; }
         public IEnumerable<KeyValuePair<string, ModuleManifestCustomResource>> CustomResourceTypes { get; set; }
         public IEnumerable<string> MacroNames { get; set; }
-        public IDictionary<string, string> CustomResourceNameMappings { get; set; }
+        public IDictionary<string, string> ResourceTypeNameMappings { get; set; }
 
         //--- Properties ---
         public string FullName => Owner + "." + Name;

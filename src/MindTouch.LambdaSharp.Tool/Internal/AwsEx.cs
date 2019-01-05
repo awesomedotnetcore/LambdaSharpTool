@@ -87,7 +87,7 @@ namespace MindTouch.LambdaSharp.Tool.Internal {
             string stackName,
             string mostRecentStackEventId,
             IDictionary<string, string> resourceNameMappings = null,
-            IDictionary<string, string> customResourceNameMappings = null
+            IDictionary<string, string> resourceTypeNameMappings = null
         ) {
             var seenEventIds = new HashSet<string>();
             var foundMostRecentStackEvent = (mostRecentStackEventId == null);
@@ -153,7 +153,7 @@ namespace MindTouch.LambdaSharp.Tool.Internal {
 
             string TranslateResourceTypeToFullName(string awsType) {
                 var fullName = awsType;
-                customResourceNameMappings?.TryGetValue(awsType, out fullName);
+                resourceTypeNameMappings?.TryGetValue(awsType, out fullName);
                 return fullName ?? awsType;
             }
         }

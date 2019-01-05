@@ -49,7 +49,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         private IDictionary<string, ModuleDependency> _dependencies;
         private IDictionary<string, ModuleManifestCustomResource> _customResourceTypes;
         private IList<string> _macroNames;
-        private IDictionary<string, string> _customResourceNameMappings;
+        private IDictionary<string, string> _resourceTypeNameMappings;
 
         //--- Constructors ---
         public ModuleBuilder(Settings settings, string sourceFilename, Module module) : base(settings, sourceFilename) {
@@ -69,7 +69,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 ? new Dictionary<string, ModuleManifestCustomResource>(module.CustomResourceTypes)
                 : new Dictionary<string, ModuleManifestCustomResource>();
             _macroNames = new List<string>(module.MacroNames ?? new string[0]);
-            _customResourceNameMappings = module.CustomResourceNameMappings ?? new Dictionary<string, string>();
+            _resourceTypeNameMappings = module.ResourceTypeNameMappings ?? new Dictionary<string, string>();
 
             // extract existing resource statements when they exist
             if(TryGetItem("Module::Role", out AModuleItem moduleRoleItem)) {
@@ -986,21 +986,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 var role = (Humidifier.IAM.Role)((ResourceItem)moduleRoleItem).Resource;
                 role.Policies[0].PolicyDocument.Statement = _resourceStatements.ToList();
             }
-
-            // NOTE (2018-12-17, bjorg): at this point, we have to use `LogicalId` for items since the module is
-            //  generated after the linker has completed its job.
-
-            // check if module contains a finalizer invocation function
-            if(TryGetItem("Finalizer::Invocation", out AModuleItem finalizerInvocationItem)) {
-
-                // finalizer depends on all resources having been created
-                ((ResourceItem)finalizerInvocationItem).DependsOn = _items
-                    .OfType<AResourceItem>()
-                    .Where(item => item.LogicalId != finalizerInvocationItem.LogicalId)
-                    .Select(item => item.LogicalId)
-                    .OrderBy(logicalId => logicalId)
-                    .ToList();
-            }
             return new Module {
                 Owner = _owner,
                 Name = _name,
@@ -1013,7 +998,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 Dependencies = _dependencies.OrderBy(kv => kv.Key).ToList(),
                 CustomResourceTypes = _customResourceTypes.OrderBy(kv => kv.Key).ToList(),
                 MacroNames = _macroNames.OrderBy(value => value).ToList(),
-                CustomResourceNameMappings = _customResourceNameMappings
+                ResourceTypeNameMappings = _resourceTypeNameMappings
             };
         }
 
@@ -1158,7 +1143,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         private Humidifier.CustomResource RegisterCustomResourceNameMapping(Humidifier.CustomResource customResource) {
             if(customResource.AWSTypeName != customResource.OriginalTypeName) {
-                _customResourceNameMappings[customResource.AWSTypeName] = customResource.OriginalTypeName;
+                _resourceTypeNameMappings[customResource.AWSTypeName] = customResource.OriginalTypeName;
             }
             return customResource;
         }

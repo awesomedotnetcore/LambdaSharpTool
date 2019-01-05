@@ -86,7 +86,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
 
             // create change-set
             var success = false;
-            var changeSetName = $"{location.ModuleFullName}-{now:yyyy-MM-dd-hh-mm-ss}";
+            var changeSetName = $"{location.ModuleFullName.Replace(".", "-")}-{now:yyyy-MM-dd-hh-mm-ss}";
             var updateOrCreate = (mostRecentStackEventId != null) ? "update" : "create";
             var capabilities = validation.Capabilities.Any()
                 ? "[" + string.Join(", ", validation.Capabilities) + "]"
@@ -143,7 +143,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
                     ChangeSetName = changeSetName,
                     StackName = stackName
                 });
-                var outcome = await Settings.CfnClient.TrackStackUpdateAsync(stackName, mostRecentStackEventId, manifest.ResourceNameMappings, manifest.CustomResourceNameMappings);
+                var outcome = await Settings.CfnClient.TrackStackUpdateAsync(stackName, mostRecentStackEventId, manifest.ResourceNameMappings, manifest.ResourceTypeNameMappings);
                 if(outcome.Success) {
                     Console.WriteLine($"=> Stack {updateOrCreate} finished");
                     ShowStackResult(outcome.Stack);
