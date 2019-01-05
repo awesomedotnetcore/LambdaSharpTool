@@ -8,15 +8,13 @@ Items:
 
   - Package: FilesPackage
     Files: TestFiles
-    # Bucket: MyBucket
-    # Prefix: Bucket/Folder/
 
   - Resource: MyPackage
-    Type: LambdaSharp::S3::Package
+    Type: LambdaSharp::S3::UnzipPackage
     Pragmas:
       - no-type-validation
     Properties:
-      DestinationBucketArn: !GetAtt MyBucket.Arn
+      DestinationBucketName: !Ref MyBucket
       DestinationKeyPrefix: Bucket/Folder/
       SourceBucketName: !Ref DeploymentBucketName
       SourcePackageKey: !Ref FilesPackage

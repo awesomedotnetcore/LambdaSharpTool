@@ -22,7 +22,7 @@ Version: 0.5-WIP
 Description: LambdaSharp S3 Package Loader
 Items:
 
-  - ResourceType: LambdaSharp::S3::Package
+  - ResourceType: LambdaSharp::S3::UnzipPackage
     Description: Custom resource for deploying packages to S3 buckets
     Handler: CustomResourceTopic
     Properties:

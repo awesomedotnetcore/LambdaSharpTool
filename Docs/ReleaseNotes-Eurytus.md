@@ -41,6 +41,12 @@
             * `no-module-registration`: don't register module with λ# registrar
             * `no-lambdasharp-dependencies`: don't reference λ# base resources (DLQ, Logging Stream, etc.)
             * `Overrides`: provide alternative definitions for `Module::*` variables that are usually imported from `LambdaSharp.System`
+            ```yaml
+                - Overrides:
+                    Module::DeadLetterQueue: !Ref DeadLetterQueue
+                    Module::LoggingStream: !Ref LoggingStream
+                    Module::LoggingStreamRole: !GetAtt LoggingStreamRole.Arn
+            ```
     * default log retention was increased from 7 to 30 days
     * added support for `Condition` entry
     * garbage collection of optional resources and conditions
