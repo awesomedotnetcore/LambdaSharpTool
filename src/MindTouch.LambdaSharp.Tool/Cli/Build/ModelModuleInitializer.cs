@@ -128,7 +128,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 label: "Secret Keys (ARNs)",
                 description: "Comma-separated list of optional secret keys",
 
-                // TODO: see if we can use CommaDelimitedList here instead?
+                // TODO (2019-01-04, bjorg): see if we can use CommaDelimitedList here instead?
                 type: "String",
                 scope: null,
                 noEcho: null,
@@ -153,7 +153,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 value: FnEquals(FnRef("Secrets"), "")
             );
 
-            // add standard parameters (unless requested otherwise)
+            // import lambdasharp dependencies (unless requested otherwise)
             if(_builder.HasLambdaSharpDependencies) {
 
                 // add LambdaSharp Module Internal resource imports
@@ -265,51 +265,20 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     encryptionContext: null,
                     pragmas: null
                 ).DiscardIfNotReachable = true;
-                _builder.AddSecret(FnRef("Module::DefaultSecretKeyArn"));
+            }
 
-                // add lambdasharp imports
+            // add module variables
+            if(TryGetModuleVariable("DeadLetterQueueArn", out object deadLetterQueueArnVariable)) {
                 _builder.AddVariable(
                     parent: moduleItem,
                     name: "DeadLetterQueueArn",
                     description: "Module Dead Letter Queue (ARN)",
                     type: "String",
                     scope: null,
-                    value: FnRef("LambdaSharp::DeadLetterQueueArn"),
+                    value: deadLetterQueueArnVariable,
                     allow: null,
                     encryptionContext: null
                 );
-                _builder.AddVariable(
-                    parent: moduleItem,
-                    name: "LoggingStreamArn",
-                    description: "Module Logging Stream (ARN)",
-                    type: "String",
-                    scope: null,
-                    value: FnRef("LambdaSharp::LoggingStreamArn"),
-                    allow: null,
-                    encryptionContext: null
-                );
-                _builder.AddVariable(
-                    parent: moduleItem,
-                    name: "LoggingStreamRoleArn",
-                    description: "Module Logging Stream Role (ARN)",
-                    type: "String",
-                    scope: null,
-                    value: FnRef("LambdaSharp::LoggingStreamRoleArn"),
-                    allow: null,
-                    encryptionContext: null
-                );
-                _builder.AddVariable(
-                    parent: moduleItem,
-                    name: "DefaultSecretKeyArn",
-                    description: "Module Default Secret Key (ARN)",
-                    type: "String",
-                    scope: null,
-                    value: FnRef("LambdaSharp::DefaultSecretKeyArn"),
-                    allow: null,
-                    encryptionContext: null
-                );
-
-                // permissions needed for dead-letter queue
                 _builder.AddGrant(
                     sid: "ModuleDeadLetterQueueLogging",
                     awsType: null,
@@ -318,6 +287,43 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         "sqs:SendMessage"
                     }
                 );
+            }
+            if(TryGetModuleVariable("LoggingStreamArn", out object loggingStreamArnVariable)) {
+                _builder.AddVariable(
+                    parent: moduleItem,
+                    name: "LoggingStreamArn",
+                    description: "Module Logging Stream (ARN)",
+                    type: "String",
+                    scope: null,
+                    value: loggingStreamArnVariable,
+                    allow: null,
+                    encryptionContext: null
+                );
+            }
+            if(TryGetModuleVariable("LoggingStreamRoleArn", out object loggingStreamRoleArnVariable)) {
+                _builder.AddVariable(
+                    parent: moduleItem,
+                    name: "LoggingStreamRoleArn",
+                    description: "Module Logging Stream Role (ARN)",
+                    type: "String",
+                    scope: null,
+                    value: loggingStreamRoleArnVariable,
+                    allow: null,
+                    encryptionContext: null
+                );
+            }
+            if(TryGetModuleVariable("DefaultSecretKeyArn", out object defaultSecretKeyArnVariable)) {
+                _builder.AddVariable(
+                    parent: moduleItem,
+                    name: "DefaultSecretKeyArn",
+                    description: "Module Default Secret Key (ARN)",
+                    type: "String",
+                    scope: null,
+                    value: defaultSecretKeyArnVariable,
+                    allow: null,
+                    encryptionContext: null
+                );
+                _builder.AddSecret(FnRef("Module::DefaultSecretKeyArn"));
             }
 
             // add decryption permission for secrets
@@ -336,7 +342,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 : FnIf(
                     secretsIsEmpty.ResourceName,
 
-                    // NOTE (2018-11-26, bjorg): we use a dummy KMS key, because an empty value would fail
+                    // TODO (2018-11-26, bjorg): this hack does not work to bypass the error of an empty list :(
                     "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/12345678-1234-1234-1234-123456789012",
                     FnSplit(",", FnRef("Secrets"))
                 );
@@ -540,7 +546,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             var functions = _builder.Items.OfType<FunctionItem>().ToList();
 
             // check if lambdasharp specific resources need to be initialized
-            if(_builder.HasLambdaSharpDependencies) {
+            if(_builder.TryGetItem("Module::DeadLetterQueueArn", out AModuleItem _)) {
                 foreach(var function in functions.Where(f => f.HasDeadLetterQueue)) {
 
                     // initialize dead-letter queue
@@ -622,7 +628,10 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         );
 
                         // create function log-group subscription
-                        if(_builder.HasLambdaSharpDependencies) {
+                        if(
+                            _builder.TryGetItem("Module::LoggingStreamArn", out AModuleItem _)
+                            && _builder.TryGetItem("Module::LoggingStreamRoleArn", out AModuleItem _)
+                        ) {
                             _builder.AddResource(
                                 parent: function,
                                 name: "LogGroupSubscription",
@@ -643,6 +652,25 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     }
                 }
             }
+        }
+
+        private bool TryGetModuleVariable(string name, out object variable) {
+            if(
+                _builder.TryGetLabeledPragma("Overrides", out object value)
+                && (value is IDictionary dictionary)
+            ) {
+                var entry = dictionary[$"Module::{name}"];
+                if(entry != null) {
+                    variable = entry;
+                    return true;
+                }
+            }
+            if(_builder.HasLambdaSharpDependencies) {
+                variable = FnRef($"LambdaSharp::{name}");
+                return true;
+            }
+            variable = null;
+            return false;
         }
     }
 }

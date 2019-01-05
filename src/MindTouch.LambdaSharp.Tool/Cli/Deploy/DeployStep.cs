@@ -366,19 +366,16 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
 
             // check if module requires any prompts
             if(manifest.ParameterSections.SelectMany(section => section.Parameters).Any(RequiresPrompt)) {
-                Console.WriteLine($"Configuring module {manifest.GetFullName()} (v{manifest.GetVersion()})");
+                Console.WriteLine();
+                Console.WriteLine($"Configuration for {manifest.GetFullName()} (v{manifest.GetVersion()})");
 
                 // only list parameter sections that contain a parameter that requires a prompt
                 foreach(var parameterGroup in manifest.ParameterSections.Where(group => group.Parameters.Any(RequiresPrompt))) {
-                    Console.WriteLine($"* {parameterGroup.Title}");
+                    Console.WriteLine($"=> {parameterGroup.Title.ToUpper()}");
 
                     // only prompt for required parameters
                     foreach(var parameter in parameterGroup.Parameters.Where(RequiresPrompt)) {
-                        var prompt = $"=> {parameter.Label ?? parameter.Name}";
-                        if(parameter.Description != null) {
-                            prompt += $": {parameter.Description}=";
-                        }
-                        var enteredValue = Prompt.GetString(prompt, parameter.Default) ?? "";
+                        var enteredValue = PromptString(parameter, parameter.Default) ?? "";
                         stackParameters[parameter.Name] = new CloudFormationParameter {
                             ParameterKey = parameter.Name,
                             ParameterValue = enteredValue
@@ -396,23 +393,47 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
                     // no prompt since parameter is provided explicitly
                     return false;
                 }
-                if(!promptAll) {
-                    if(existing?.Parameters.Any(p => p.ParameterKey == parameter.Name) == true) {
+                if(existing?.Parameters.Any(p => p.ParameterKey == parameter.Name) == true) {
 
-                        // no prompt since we can reuse the previous parameter value
-                        return false;
-                    }
-                    if(parameter.Default != null) {
+                    // no prompt since we can reuse the previous parameter value
+                    return false;
+                }
+                if(!promptAll && (parameter.Default != null)) {
 
-                        // no prompt since parameter has a default value
-                        return false;
-                    }
+                    // no prompt since parameter has a default value
+                    return false;
                 }
                 if(promptsAsErrors) {
                     AddError($"{manifest.GetFullName()} requires value for parameter '{parameter.Name}'");
                     return false;
                 }
                 return true;
+            }
+
+            string PromptString(ModuleManifestParameter parameter, string defaultValue = null) {
+                var prompt = $"|=> {parameter.Label ?? parameter.Name}";
+                if(parameter.Description != null) {
+                    prompt += $": {parameter.Description}:";
+                }
+                if(!string.IsNullOrEmpty(defaultValue)) {
+                    prompt = $"{prompt} [{defaultValue}]";
+                }
+                Console.Write(prompt);
+                Console.Write(' ');
+                SetCursorVisible(true);
+                var resp = Console.ReadLine();
+                SetCursorVisible(false);
+                if(!string.IsNullOrEmpty(resp)) {
+                    return resp;
+                }
+                return defaultValue;
+
+                // local functions
+                void SetCursorVisible(bool visible) {
+                    try {
+                        Console.CursorVisible = visible;
+                    } catch { }
+                }
             }
         }
 

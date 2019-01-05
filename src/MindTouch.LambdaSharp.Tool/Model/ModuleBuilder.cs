@@ -94,6 +94,18 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public bool HasModuleRegistration => !HasPragma("no-module-registration");
         public bool HasLambdaSharpDependencies => !HasPragma("no-lambdasharp-dependencies");
 
+        public bool TryGetLabeledPragma(string key, out object value) {
+            foreach(var dictionaryPragma in _pragmas.OfType<IDictionary>()) {
+                var entry = dictionaryPragma[key];
+                if(entry != null) {
+                    value = entry;
+                    return true;
+                }
+            }
+            value = null;
+            return false;
+        }
+
         //--- Methods ---
         public AModuleItem GetItem(string fullNameOrResourceName) {
             if(fullNameOrResourceName.StartsWith("@", StringComparison.Ordinal)) {

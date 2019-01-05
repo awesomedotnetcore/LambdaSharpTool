@@ -25,14 +25,15 @@ Pragmas:
   - no-lambdasharp-dependencies
   - no-module-registration
   - Overrides:
-      Module::DeadLetterQueue: !Ref DeadLetterQueue
-      Module::LoggingStream: !Ref LoggingStream
-      Module::LoggingStreamRole: !GetAtt LoggingStreamRole.Arn
+      Module::DeadLetterQueueArn: !Ref DeadLetterQueueArn
+      Module::LoggingStreamArn: !Ref LoggingStreamArn
+      Module::LoggingStreamRoleArn: !GetAtt LoggingStreamRole.Arn
+      Module::DefaultSecretKeyArn: !Ref DefaultSecretKeyArn
 
 Items:
 
   # LambdaSharp Tier
-  - Parameter: DeadLetterQueue
+  - Parameter: DeadLetterQueueArn
     Scope: public
     Section: LambdaSharp Tier Settings
     Label: Dead Letter Queue (ARN)
@@ -40,7 +41,7 @@ Items:
     Type: AWS::SQS::Queue
     Default: ""
 
-  - Parameter: LoggingStream
+  - Parameter: LoggingStreamArn
     Scope: public
     Section: LambdaSharp Tier Settings
     Label: Logging Stream (ARN)
@@ -58,11 +59,11 @@ Items:
     Description: How long logging stream entries are kept before they are lost
     Default: 24
 
-  - Parameter: DefaultSecretKey
+  - Parameter: DefaultSecretKeyArn
     Scope: public
     Section: LambdaSharp Tier Settings
     Label: Default Secret Key (ARN)
-    Description: Default secret key for functions (leave blank to create a new key)
+    Description: Default secret key for functions (leave blank to create a new encryption key)
     Type: AWS::KMS::Key
     Default: ""
     Properties:
@@ -106,14 +107,14 @@ Items:
               - Sid: CloudWatchLogsKinesisPermissions
                 Effect: Allow
                 Action: kinesis:PutRecord
-                Resource: !Ref LoggingStream
+                Resource: !Ref LoggingStreamArn
 
   - Resource: DefaultSecretKeyAlias
     Description: Alias for default secrets key
     Type: AWS::KMS::Alias
     Properties:
       AliasName: !Sub "alias/${DeploymentPrefix}LambdaSharpDefaultSecretKey"
-      TargetKeyId: !Ref DefaultSecretKey
+      TargetKeyId: !Ref DefaultSecretKeyArn
 
   # Rollbar Settings
   - Parameter: RollbarReadAccessToken
@@ -145,7 +146,7 @@ Items:
     Memory: 128
     Timeout: 30
     Sources:
-      - Kinesis: LoggingStream
+      - Kinesis: LoggingStreamArn
 
   # Module & Function Registrations
   - Resource: RegistrationTopic
@@ -255,13 +256,13 @@ Items:
   #             ExpirationInDays: 90
   #             Status: Enabled
 
-  #   - Resource: LoggingStream
+  #   - Resource: LoggingStreamArn
   #     If: Firehose::IsEnabled
   #     Type: AWS::KinesisFirehose::DeliveryStream
   #     Properties:
   #       DeliveryStreamType: KinesisStreamAsSource
   #       KinesisStreamSourceConfiguration:
-  #         KinesisStreamARN: !Ref LoggingStream
+  #         KinesisStreamARN: !Ref LoggingStreamArn
   #         RoleARN: !GetAtt Firehose::LoggingRole.Arn
   #       S3DestinationConfiguration:
   #         BucketARN: !GetAtt Firehose::LoggingBucket.Arn
@@ -325,7 +326,7 @@ Items:
   #                   - kinesis:DescribeStream
   #                   - kinesis:GetShardIterator
   #                   - kinesis:GetRecords
-  #                 Resource: !Ref LoggingStream
+  #                 Resource: !Ref LoggingStreamArn
   #               - Sid: FirehoseLoggingCloudWatchLogsAccess
   #                 Effect: Allow
   #                 Action:
