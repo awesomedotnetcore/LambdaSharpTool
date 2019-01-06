@@ -280,7 +280,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 MinValue = minValue,
                 NoEcho = noEcho
             };
-            var result = AddItem(new InputItem(
+            var result = AddItem(new ParameterItem(
                 parent: parent,
                 name: name,
                 section: section ?? parent?.Description,
@@ -955,7 +955,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             _resourceStatements.Add(statement);
         }
 
-        public void VisitAll(Func<AModuleItem, object, object> visitor) {
+        public void VisitAll(ModuleVisitorDelegate visitor) {
             if(visitor == null) {
                 throw new ArgumentNullException(nameof(visitor));
             }

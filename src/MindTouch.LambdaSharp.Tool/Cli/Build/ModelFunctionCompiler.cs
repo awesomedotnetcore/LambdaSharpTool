@@ -580,7 +580,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                             (eventSourceToken != null)
                             && TryGetFnRef(eventSourceToken, out string refKey)
                             && _builder.TryGetItem(refKey, out AModuleItem item)
-                            && item is InputItem
+                            && item is ParameterItem
                         ) {
 
                             // create conditional expression to allow "*" values

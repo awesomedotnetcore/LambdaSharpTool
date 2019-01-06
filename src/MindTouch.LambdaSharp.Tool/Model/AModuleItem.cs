@@ -30,6 +30,8 @@ using Newtonsoft.Json;
 namespace MindTouch.LambdaSharp.Tool.Model {
     using static ModelFunctions;
 
+    public delegate object ModuleVisitorDelegate(AModuleItem item, object value);
+
     public abstract class AModuleItem {
 
         //--- Constructors ---
@@ -72,12 +74,11 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public bool HasTypeValidation => !HasPragma("no-type-validation");
         public bool IsPublic => Scope.Contains("public");
 
-
         //--- Methods ---
         public virtual object GetExportReference() => Reference;
         public virtual bool HasAttribute(string attribute) => false;
         public virtual bool HasPragma(string pragma) => false;
-        public virtual void Visit(Func<AModuleItem, object, object> visitor) {
+        public virtual void Visit(ModuleVisitorDelegate visitor) {
             Reference = visitor(this, Reference);
         }
     }
@@ -112,10 +113,10 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public IList<KeyValuePair<string, string>> Files { get; }
     }
 
-    public class InputItem : AModuleItem {
+    public class ParameterItem : AModuleItem {
 
         //--- Constructors ---
-        public InputItem(
+        public ParameterItem(
             AModuleItem parent,
             string name,
             string section,
@@ -162,7 +163,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public IList<object> Pragmas { get; set; }
 
         //--- Methods ---
-        public override void Visit(Func<AModuleItem, object, object> visitor) {
+        public override void Visit(ModuleVisitorDelegate visitor) {
             base.Visit(visitor);
 
             // TODO (2018-11-29, bjorg): we need to make sure that only other resources are referenced (no literal items, or itself, no loops either)
@@ -206,7 +207,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public string ResourceArnAttribute { get; set; }
 
         //--- Methods ---
-        public override void Visit(Func<AModuleItem, object, object> visitor) {
+        public override void Visit(ModuleVisitorDelegate visitor) {
             base.Visit(visitor);
             Resource = (Humidifier.Resource)visitor(this, Resource);
         }
@@ -260,46 +261,13 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public bool HasWildcardScopedVariables => !HasPragma("no-wildcard-scoped-variables");
 
         //--- Methods ---
-        public override void Visit(Func<AModuleItem, object, object> visitor) {
+        public override void Visit(ModuleVisitorDelegate visitor) {
             base.Visit(visitor);
             Environment = (IDictionary<string, object>)visitor(this, Environment);
             Function = (Humidifier.Lambda.Function)visitor(this, Function);
             ExportReference = visitor(this, ExportReference);
-
-            // update function sources
             foreach(var source in Sources) {
-                switch(source) {
-                case AlexaSource alexaSource:
-                    if(alexaSource.EventSourceToken != null) {
-                        alexaSource.EventSourceToken = visitor(this, alexaSource.EventSourceToken);
-                    }
-                    break;
-                case DynamoDBSource dynamoDBSource:
-                    if(dynamoDBSource.DynamoDB != null) {
-                        dynamoDBSource.DynamoDB = visitor(this, dynamoDBSource.DynamoDB);
-                    }
-                    break;
-                case KinesisSource kinesisSource:
-                    if(kinesisSource.Kinesis != null) {
-                        kinesisSource.Kinesis = visitor(this, kinesisSource.Kinesis);
-                    }
-                    break;
-                case TopicSource topicSource:
-                    if(topicSource.TopicName != null) {
-                        topicSource.TopicName = visitor(this, topicSource.TopicName);
-                    }
-                    break;
-                case S3Source s3Source:
-                    if(s3Source.Bucket != null) {
-                        s3Source.Bucket = visitor(this, s3Source.Bucket);
-                    }
-                    break;
-                case SqsSource sqsSource:
-                    if(sqsSource.Queue != null) {
-                        sqsSource.Queue = visitor(this, sqsSource.Queue);
-                    }
-                    break;
-                }
+                source.Visit(this, visitor);
             }
         }
 
@@ -332,7 +300,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             IDictionary<string, IDictionary<string, string>> value
         ) : base(parent, name, description, type: "Mapping", scope: null, reference: value) {
 
-            // NOTE (2018-12-19, bjorg): conditionals should be deleted unless used
+            // NOTE (2018-12-19, bjorg): mappings should be deleted unless used
             DiscardIfNotReachable = true;
         }
 
@@ -357,7 +325,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public object Handler { get; set; }
 
         //--- Methods ---
-        public override void Visit(Func<AModuleItem, object, object> visitor) {
+        public override void Visit(ModuleVisitorDelegate visitor) {
             base.Visit(visitor);
             Handler = visitor(this, Handler);
         }

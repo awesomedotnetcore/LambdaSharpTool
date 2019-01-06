@@ -377,19 +377,38 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     return true;
                 }
 
+                // TODO (2019-01-06): must know what types of references are legal (Parameters only -or- Resources and Paramaters)
+
                 // check if the requested key can be resolved using a free item
                 if(_freeItems.TryGetValue(key, out AModuleItem freeItem)) {
-                    if(freeItem is ConditionItem) {
-                        AddError($"condition '{freeItem.FullName}' cannot be used here");
-                    } else if(attribute != null) {
-                        if(freeItem.HasTypeValidation && !_builder.HasAttribute(freeItem, attribute)) {
-                            AddError($"item '{freeItem.FullName}' of type '{freeItem.Type}' does not have attribute '{attribute}'");
+                    switch(freeItem) {
+                    case ConditionItem _:
+                    case MappingItem _:
+                    case ResourceTypeItem _:
+                        AddError($"item '{freeItem.FullName}' must be a resource, parameter, or variable");
+                        break;
+                    case ParameterItem _:
+                    case VariableItem _:
+                    case PackageItem _:
+                        if(attribute != null) {
+                            AddError($"item '{freeItem.FullName}' does not have attributes");
                         }
+                        found = freeItem.Reference;
+                        break;
+                    case AResourceItem _:
 
                         // attributes can be used with managed resources/functions
-                        found = FnGetAtt(freeItem.ResourceName, attribute);
-                    } else {
-                        found = freeItem.Reference;
+                        if(attribute != null) {
+                            if(freeItem.HasTypeValidation && !_builder.HasAttribute(freeItem, attribute)) {
+                                AddError($"item '{freeItem.FullName}' of type '{freeItem.Type}' does not have attribute '{attribute}'");
+                            }
+                            found = FnGetAtt(freeItem.ResourceName, attribute);
+                        } else {
+                            found = freeItem.Reference;
+                        }
+                        break;
+                    default:
+                        throw new ApplicationException($"unsupported type: {freeItem?.GetType().ToString() ?? "<null>"}");
                     }
                     return true;
                 }
@@ -436,7 +455,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                             foundItemsToRemove = true;
                             DebugWriteLine(() => $"DISCARD '{item.FullName}'");
                             _builder.RemoveItem(item.FullName);
-                        } else if(item is InputItem) {
+                        } else if(item is ParameterItem) {
                             switch(item.FullName) {
                             case "Secrets":
                             case "DeploymentBucketName":
@@ -457,7 +476,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             }
             foreach(var item in unused.Values.OrderBy(e => e.FullName)) {
                 AddWarning($"'{item.FullName}' is defined but never used");
-
             }
 
             // local functions
@@ -479,7 +497,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     // handle !Sub expression
                     if(TryGetFnSub(value, out string subPattern, out IDictionary<string, object> subArgs)) {
 
-                        // replace as many ${VAR} occurrences as possible
+                        // substitute ${VAR} occurrences if possible
                         subPattern = ReplaceSubPattern(subPattern, (subRefKey, suffix) => {
                             if(!subArgs.ContainsKey(subRefKey)) {
                                 MarkReachableItem(item, subRefKey);
@@ -562,7 +580,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     return FnCondition(condition.Substring(1));
                 }
 
-                // handle !Condition expression
+                // handle !FindInMap expression
                 if(TryGetFnFindInMap(value, out string mapName, out object topLevelKey, out object secondLevelKey) && mapName.StartsWith("@", StringComparison.Ordinal)) {
                     return FnFindInMap(mapName.Substring(1), topLevelKey, secondLevelKey);
                 }

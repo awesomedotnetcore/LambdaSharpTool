@@ -114,7 +114,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 }
                 switch(item) {
                 case VariableItem _:
-                case InputItem _:
+                case ParameterItem _:
                 case PackageItem _:
                 case ResourceItem _:
                 case FunctionItem _:
@@ -148,7 +148,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             }
             switch(item) {
             case VariableItem _:
-            case InputItem _:
+            case ParameterItem _:
             case PackageItem _:
             case ResourceItem _:
             case FunctionItem _:
@@ -181,7 +181,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             }
             switch(item) {
             case VariableItem _:
-            case InputItem _:
+            case ParameterItem _:
             case PackageItem _:
             case ResourceItem _:
             case FunctionItem _:

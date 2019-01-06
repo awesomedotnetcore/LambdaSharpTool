@@ -125,10 +125,12 @@
     * validate that function entry point exists after compiling assembly
     * comprehensive variable resolution
     * validate custom resource types using module dependencies
-    * validate AWS resources using the cloudformation json spec
+    * validate AWS resource names using the cloudformation json spec
     * validation of attribute in `!GetAtt` expressions
     * `ModuleCloudWatchLogsRole` is defined once in base module and then re-used by all modules
     * garbage collection generated import parameters if not used
+    * warn on unused parameters
+    * simplify references in `!Sub` expressions
 
 * Deploy Process
     * use change-sets for deploying stacks

@@ -66,7 +66,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             }
 
             // add interface for presenting inputs
-            var inputParameters = _module.Items.OfType<InputItem>();
+            var inputParameters = _module.Items.OfType<ParameterItem>();
             _stack.AddTemplateMetadata("AWS::CloudFormation::Interface", new Dictionary<string, object> {
                 ["ParameterLabels"] = inputParameters.ToDictionary(input => input.LogicalId, input => new Dictionary<string, object> {
                     ["default"] = input.Label
@@ -152,10 +152,10 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     AddExport(item);
                 }
                 break;
-            case InputItem inputItem:
-                _stack.Add(logicalId, inputItem.Parameter);
+            case ParameterItem parameterItem:
+                _stack.Add(logicalId, parameterItem.Parameter);
                 if(item.IsPublic) {
-                    AddExport(item, inputItem.Label);
+                    AddExport(item, parameterItem.Label);
                 }
                 break;
             case FunctionItem functionItem:

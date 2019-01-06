@@ -24,13 +24,24 @@ using System.Collections.Generic;
 
 namespace MindTouch.LambdaSharp.Tool.Model {
 
-    public abstract class AFunctionSource { }
+    public abstract class AFunctionSource {
+
+        //--- Abstract Methods ---
+        public abstract void Visit(AModuleItem item, ModuleVisitorDelegate visitor);
+    }
 
     public class TopicSource : AFunctionSource {
 
        //--- Properties ---
         public object TopicName { get; set; }
         public IDictionary<string, object> Filters { get; set; }
+
+        //--- Methods ---
+        public override void Visit(AModuleItem item, ModuleVisitorDelegate visitor) {
+            if(TopicName != null) {
+                TopicName = visitor(item, TopicName);
+            }
+        }
     }
 
     public class ScheduleSource : AFunctionSource {
@@ -38,6 +49,9 @@ namespace MindTouch.LambdaSharp.Tool.Model {
        //--- Properties ---
         public string Expression { get; set; }
         public string Name { get; set; }
+
+        //--- Methods ---
+        public override void Visit(AModuleItem item, ModuleVisitorDelegate visitor) { }
     }
 
     public enum ApiGatewaySourceIntegration {
@@ -54,6 +68,9 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public ApiGatewaySourceIntegration Integration { get; set; }
         public string OperationName { get; set; }
         public bool? ApiKeyRequired { get; set; }
+
+        //--- Methods ---
+        public override void Visit(AModuleItem item, ModuleVisitorDelegate visitor) { }
     }
 
     public class S3Source : AFunctionSource {
@@ -63,6 +80,13 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public IList<string> Events { get; set; }
         public string Prefix { get; set; }
         public string Suffix { get; set; }
+
+        //--- Methods ---
+        public override void Visit(AModuleItem item, ModuleVisitorDelegate visitor) {
+            if(Bucket != null) {
+                Bucket = visitor(item, Bucket);
+            }
+        }
     }
 
     public class SqsSource : AFunctionSource {
@@ -70,12 +94,26 @@ namespace MindTouch.LambdaSharp.Tool.Model {
        //--- Properties ---
         public object Queue { get; set; }
         public int BatchSize { get; set; }
+
+        //--- Methods ---
+        public override void Visit(AModuleItem item, ModuleVisitorDelegate visitor) {
+            if(Queue != null) {
+                Queue = visitor(item, Queue);
+            }
+        }
     }
 
     public class AlexaSource : AFunctionSource {
 
         //--- Properties ---
         public object EventSourceToken { get; set; }
+
+        //--- Methods ---
+        public override void Visit(AModuleItem item, ModuleVisitorDelegate visitor) {
+            if(EventSourceToken != null) {
+                EventSourceToken = visitor(item, EventSourceToken);
+            }
+        }
     }
 
     public class DynamoDBSource : AFunctionSource {
@@ -84,6 +122,13 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public object DynamoDB { get; set; }
         public int BatchSize { get; set; }
         public string StartingPosition { get; set; }
+
+        //--- Methods ---
+        public override void Visit(AModuleItem item, ModuleVisitorDelegate visitor) {
+            if(DynamoDB != null) {
+                DynamoDB = visitor(item, DynamoDB);
+            }
+        }
     }
 
     public class KinesisSource : AFunctionSource {
@@ -92,5 +137,12 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public object Kinesis { get; set; }
         public int BatchSize { get; set; }
         public string StartingPosition { get; set; }
+
+        //--- Methods ---
+        public override void Visit(AModuleItem item, ModuleVisitorDelegate visitor) {
+            if(Kinesis != null) {
+                Kinesis = visitor(item, Kinesis);
+            }
+        }
     }
 }
