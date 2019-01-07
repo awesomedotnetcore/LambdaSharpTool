@@ -68,9 +68,12 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             // add interface for presenting inputs
             var inputParameters = _module.Items.OfType<ParameterItem>();
             _stack.AddTemplateMetadata("AWS::CloudFormation::Interface", new Dictionary<string, object> {
-                ["ParameterLabels"] = inputParameters.ToDictionary(input => input.LogicalId, input => new Dictionary<string, object> {
-                    ["default"] = input.Label
-                }),
+                ["ParameterLabels"] = inputParameters.ToDictionary(
+                    input => input.LogicalId,
+                    input => new Dictionary<string, object> {
+                        ["default"] = $"[{input.Type}] {input.Label}"
+                    }
+                ),
                 ["ParameterGroups"] = inputParameters
                     .GroupBy(input => input.Section)
                     .Select(section => new Dictionary<string, object> {
@@ -93,7 +96,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         Parameters = group.Select(input => new ModuleManifestParameter {
                             Name = input.Name,
                             Type = input.Type,
-                            Description = input.Description,
                             Label = input.Label,
                             Default = input.Parameter.Default
                         }).ToList()
@@ -155,7 +157,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             case ParameterItem parameterItem:
                 _stack.Add(logicalId, parameterItem.Parameter);
                 if(item.IsPublic) {
-                    AddExport(item, parameterItem.Label);
+                    AddExport(item);
                 }
                 break;
             case FunctionItem functionItem:
@@ -197,9 +199,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             }
 
             // local functions
-            void AddExport(AModuleItem exportItem, string description = null) {
+            void AddExport(AModuleItem exportItem) {
                 _stack.Add(exportItem.LogicalId, new Humidifier.Output {
-                    Description = description ?? exportItem.Description,
+                    Description = exportItem.Description,
                     Value = exportItem.GetExportReference(),
                     Export = new Dictionary<string, dynamic> {
                         ["Name"] = Fn.Sub($"${{AWS::StackName}}::{exportItem.FullName}")

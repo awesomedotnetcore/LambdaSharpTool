@@ -411,9 +411,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
             }
 
             string PromptString(ModuleManifestParameter parameter, string defaultValue = null) {
-                var prompt = $"|=> {parameter.Label ?? parameter.Name}";
-                if(parameter.Description != null) {
-                    prompt += $": {parameter.Description}:";
+                var prompt = $"|=> {parameter.Name} [{parameter.Type}]:";
+                if(parameter.Label != null) {
+                    prompt += $" {parameter.Label}:";
                 }
                 if(!string.IsNullOrEmpty(defaultValue)) {
                     prompt = $"{prompt} [{defaultValue}]";

@@ -36,34 +36,40 @@ Items:
   - Parameter: DeadLetterQueueArn
     Scope: public
     Section: LambdaSharp Tier Settings
-    Label: Dead Letter Queue (ARN)
-    Description: Dead letter queue for functions (leave blank to create a new queue)
+    Label: Dead letter queue for functions (leave blank to create a new queue)
+    Description: Dead Letter Queue (ARN)
     Type: AWS::SQS::Queue
     Default: ""
 
   - Parameter: LoggingStreamArn
     Scope: public
     Section: LambdaSharp Tier Settings
-    Label: Logging Stream (ARN)
-    Description: Logging kinesis stream for functions (leave blank to create a new stream)
+    Label: Logging Kinesis stream for functions (leave blank to create a new stream)
+    Description: Logging Stream (ARN)
     Type: AWS::Kinesis::Stream
     Default: ""
     Allow: Subscribe
     Properties:
-      RetentionPeriodHours: !Ref LoggingStreamRetentionPeriod
-      ShardCount: 1
+      RetentionPeriodHours: !Ref LoggingStreamRetentionPeriodHours
+      ShardCount: !Ref LoggingStreamShardCount
 
-  - Parameter: LoggingStreamRetentionPeriod
+  - Parameter: LoggingStreamRetentionPeriodHours
     Section: LambdaSharp Tier Settings
-    Label: Retention period (hours)
-    Description: How long logging stream entries are kept before they are lost
+    Label: Size of the Logging stream buffer (in hours)
+    Description: Retention period (hours)
     Default: 24
+
+  - Parameter: LoggingStreamShardCount
+    Section: LambdaSharp Tier Settings
+    Label: Number of Kinesis shards for the logging streams
+    Description: Number of Kinesis shards
+    Default: 1
 
   - Parameter: DefaultSecretKeyArn
     Scope: public
     Section: LambdaSharp Tier Settings
-    Label: Default Secret Key (ARN)
-    Description: Default secret key for functions (leave blank to create a new encryption key)
+    Label: Default secret key for functions (leave blank to create a new encryption key)
+    Description: Default Secret Key (ARN)
     Type: AWS::KMS::Key
     Default: ""
     Properties:
@@ -82,8 +88,8 @@ Items:
 
   - Parameter: DefaultSecretKeyRotationEnabled
     Section: LambdaSharp Tier Settings
-    Label: Enable key rotation
-    Description: Rotate KMS key automatically every 365 days
+    Label: Enabled rotating KMS key automatically every 365 days
+    Description: Default key rotation enabled
     Default: false
 
   - Resource: LoggingStreamRole
@@ -119,24 +125,24 @@ Items:
   # Rollbar Settings
   - Parameter: RollbarReadAccessToken
     Section: Rollbar Settings
-    Label: Read Access Token
-    Description: Account-level token for read operations (Rollbar integration is disabled if blank)
+    Label: Account-level token for read operations (keep blank to disable Rollbar integration)
+    Description: Read Access Token
     Type: Secret
     Scope: Register
     Default: ""
 
   - Parameter: RollbarWriteAccessToken
     Section: Rollbar Settings
-    Label: Write Access Token
-    Description: Account-level token for write operations (Rollbar integration is disabled if blank)
+    Label: Account-level token for write operations (keep blank to disable Rollbar integration)
+    Description: Write Access Token
     Type: Secret
     Scope: Register
     Default: ""
 
   - Parameter: RollbarProjectPrefix
     Section: Rollbar Settings
-    Label: Project Prefix
-    Description: Optional prefix when creating Rollbar projects (e.g. "LambdaSharp-")
+    Label: Optional prefix when creating Rollbar projects (e.g. "LambdaSharp-")
+    Description: Project Prefix
     Scope: Register
     Default: ""
 
@@ -230,8 +236,8 @@ Items:
   # # Firehose Declarations
   # - Parameter: EnableFirehose
   #   Section: Firehose Settings (Experimental)
-  #   Label: Enable Firehose
-  #   Description: Enable Kinesis Firehose logging to S3 Bucket
+  #   Label: Enable Kinesis Firehose logging to S3 Bucket
+  #   Description: Enable Firehose
   #   Type: String
   #   Default: no
   #   AllowedValues:

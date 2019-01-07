@@ -63,6 +63,11 @@ namespace MindTouch.LambdaSharp.Tool.Internal {
                         }
                         builder.Append(c);
                     }
+                } else {
+                    if(!isUppercase) {
+                        builder.Append(' ');
+                    }
+                    isUppercase = true;
                 }
             }
             return builder.ToString();

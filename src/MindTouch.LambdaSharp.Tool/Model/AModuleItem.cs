@@ -128,7 +128,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             Humidifier.Parameter parameter
         ) : base(parent, name, description, type, scope, reference) {
             Section = section ?? "Module Settings";
-            Label = label ?? StringEx.PascalCaseToLabel(name);
+            Label = label;
             Parameter = parameter;
         }
 
