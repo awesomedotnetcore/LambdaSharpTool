@@ -95,7 +95,10 @@ namespace Humidifier {
         bool ICollection.IsSynchronized => false;
         object ICollection.SyncRoot => this;
         object IDictionary.this[object key] {
-            get => _properties[(string)key];
+            get {
+                _properties.TryGetValue((string)key, out object value);
+                return value;
+            }
             set => _properties[(string)key] = value;
         }
 

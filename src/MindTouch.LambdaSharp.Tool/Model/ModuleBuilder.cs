@@ -292,7 +292,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 parameter: parameter
             ));
 
-            // check if parameter is coming from an imported module
+            // check if parameter belongs to an import statement
             if(parent != null) {
 
                 // default value for an imported parameter is always the cross-module reference
