@@ -579,7 +579,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     parent: moduleItem,
                     name: "Registration",
                     description: null,
-                    type: "LambdaSharp::Register::Module",
+                    type: "LambdaSharp::Registration::Module",
                     scope: null,
                     allow: null,
                     properties: new Dictionary<string, object> {
@@ -607,7 +607,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                             parent: function,
                             name: "Registration",
                             description: null,
-                            type: "LambdaSharp::Register::Function",
+                            type: "LambdaSharp::Registration::Function",
                             scope: null,
                             allow: null,
                             properties: new Dictionary<string, object> {
