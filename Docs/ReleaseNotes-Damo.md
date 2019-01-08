@@ -401,7 +401,7 @@ Custom resource definitions create new types of resources that can be used by ot
   Memory: 128
   Timeout: 30
   Sources:
-    - SNS: AccountReportGeneratorTopic
+    - Topic: AccountReportGeneratorTopic
 ```
 See [custom resource documentation](Module-CustomResource.md) for more details.
 
