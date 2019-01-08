@@ -101,11 +101,11 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
                 Parameters = new List<CloudFormationParameter>(parameters) {
                     new CloudFormationParameter {
                         ParameterKey = "DeploymentPrefix",
-                        ParameterValue = string.IsNullOrEmpty(Settings.Tier) ? "" : Settings.Tier + "-"
+                        ParameterValue = string.IsNullOrEmpty(Settings.Tier) ? "" : (Settings.Tier + "-")
                     },
                     new CloudFormationParameter {
                         ParameterKey = "DeploymentPrefixLowercase",
-                        ParameterValue = string.IsNullOrEmpty(Settings.Tier) ? "" : Settings.Tier.ToLowerInvariant() + "-"
+                        ParameterValue = string.IsNullOrEmpty(Settings.Tier) ? "" : (Settings.Tier.ToLowerInvariant() + "-")
                     },
                     new CloudFormationParameter {
                         ParameterKey = "DeploymentBucketName",
