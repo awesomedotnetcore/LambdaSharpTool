@@ -12,6 +12,7 @@
         * generalized input/variable/function node types using `Declarations:` section
         * output/export values are now handled with `Scope: export`
         * `Function` declarations can now also have the `Scope` attribute
+            * `Project` can just be the name of the folder now
         * `Resource`: AWS and custom resources
         * `Variable`: hold arbitrary literal or intermediate values
         * `Package`: file package only (**BREAKING CHANGE:** files are no longer always deployed to S3)

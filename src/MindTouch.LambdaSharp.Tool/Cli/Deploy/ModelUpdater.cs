@@ -74,8 +74,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
 
             // set optional notification topics for cloudformation operations
             var notificationArns =  new List<string>();
-            if(Settings.DeploymentNotificationsTopicArn != null) {
-                notificationArns.Add(Settings.DeploymentNotificationsTopicArn);
+            if(Settings.DeploymentNotificationsTopic != null) {
+                notificationArns.Add(Settings.DeploymentNotificationsTopic);
             }
 
             // validate template

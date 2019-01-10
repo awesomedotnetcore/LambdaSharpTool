@@ -111,7 +111,7 @@ namespace MindTouch.LambdaSharp.Tool {
         public string AwsRegion { get; set; }
         public string AwsAccountId { get; set; }
         public string DeploymentBucketName { get; set; }
-        public string DeploymentNotificationsTopicArn { get; set; }
+        public string DeploymentNotificationsTopic { get; set; }
         public IAmazonSimpleSystemsManagement SsmClient { get; set; }
         public IAmazonCloudFormation CfnClient { get; set; }
         public IAmazonKeyManagementService KmsClient { get; set; }

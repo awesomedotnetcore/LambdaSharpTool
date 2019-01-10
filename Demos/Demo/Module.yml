@@ -23,13 +23,9 @@ Items:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
 
-  - Variable: NotifyRecorderTopic
+  - Resource: NotifyRecorderTopic
+    Description: The topic for recording messages
     Scope: public
-    Description: The topic that the lambda function subscribes to record messages
-    Value: !Ref SnsTopic
-
-  - Resource: SnsTopic
-    Description: The topic that the lambda function subscribes to record messages
     Type: AWS::SNS::Topic
     Allow: Subscribe
 
@@ -51,7 +47,7 @@ Items:
     Memory: 128
     Timeout: 30
     Sources:
-      - Topic: SnsTopic
+      - Topic: NotifyRecorderTopic
 
   - Function: SlackCommand
     Description: Respond to slack commands

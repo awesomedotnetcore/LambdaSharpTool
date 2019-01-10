@@ -163,7 +163,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 );
                 _builder.AddParameter(
                     parent: lambdasharp,
-                    name: "DeadLetterQueueArn",
+                    name: "DeadLetterQueue",
                     section: null,
                     label: "Dead letter queue for functions",
                     description: "Dead Letter Queue (ARN)",
@@ -190,7 +190,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 ).DiscardIfNotReachable = true;
                 _builder.AddParameter(
                     parent: lambdasharp,
-                    name: "LoggingStreamArn",
+                    name: "LoggingStream",
                     section: null,
                     label: "Logging kinesis stream for functions",
                     description: "Logging Stream (ARN)",
@@ -215,7 +215,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 ).DiscardIfNotReachable = true;
                 _builder.AddParameter(
                     parent: lambdasharp,
-                    name: "LoggingStreamRoleArn",
+                    name: "LoggingStreamRole",
                     section: null,
                     label: "Role for logging to kinesis stream for functions",
                     description: "Logging Stream Role (ARN)",
@@ -240,7 +240,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 ).DiscardIfNotReachable = true;
                 _builder.AddParameter(
                     parent: lambdasharp,
-                    name: "DefaultSecretKeyArn",
+                    name: "DefaultSecretKey",
                     section: null,
                     label: "Default secret key for functions",
                     description: "Secret Key (ARN)",
@@ -268,62 +268,62 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             }
 
             // add module variables
-            if(TryGetModuleVariable("DeadLetterQueueArn", out object deadLetterQueueArnVariable)) {
+            if(TryGetModuleVariable("DeadLetterQueue", out object deadLetterQueueVariable)) {
                 _builder.AddVariable(
                     parent: moduleItem,
-                    name: "DeadLetterQueueArn",
+                    name: "DeadLetterQueue",
                     description: "Module Dead Letter Queue (ARN)",
                     type: "String",
                     scope: null,
-                    value: deadLetterQueueArnVariable,
+                    value: deadLetterQueueVariable,
                     allow: null,
                     encryptionContext: null
                 );
                 _builder.AddGrant(
                     sid: "ModuleDeadLetterQueueLogging",
                     awsType: null,
-                    reference: FnRef("Module::DeadLetterQueueArn"),
+                    reference: FnRef("Module::DeadLetterQueue"),
                     allow: new[] {
                         "sqs:SendMessage"
                     }
                 );
             }
-            if(TryGetModuleVariable("LoggingStreamArn", out object loggingStreamArnVariable)) {
+            if(TryGetModuleVariable("LoggingStream", out object loggingStreamVariable)) {
                 _builder.AddVariable(
                     parent: moduleItem,
-                    name: "LoggingStreamArn",
+                    name: "LoggingStream",
                     description: "Module Logging Stream (ARN)",
                     type: "String",
                     scope: null,
-                    value: loggingStreamArnVariable,
+                    value: loggingStreamVariable,
                     allow: null,
                     encryptionContext: null
                 );
             }
-            if(TryGetModuleVariable("LoggingStreamRoleArn", out object loggingStreamRoleArnVariable)) {
+            if(TryGetModuleVariable("LoggingStreamRole", out object loggingStreamRoleVariable)) {
                 _builder.AddVariable(
                     parent: moduleItem,
-                    name: "LoggingStreamRoleArn",
+                    name: "LoggingStreamRole",
                     description: "Module Logging Stream Role (ARN)",
                     type: "String",
                     scope: null,
-                    value: loggingStreamRoleArnVariable,
+                    value: loggingStreamRoleVariable,
                     allow: null,
                     encryptionContext: null
                 );
             }
-            if(TryGetModuleVariable("DefaultSecretKeyArn", out object defaultSecretKeyArnVariable)) {
+            if(TryGetModuleVariable("DefaultSecretKey", out object defaultSecretKeyVariable)) {
                 _builder.AddVariable(
                     parent: moduleItem,
-                    name: "DefaultSecretKeyArn",
+                    name: "DefaultSecretKey",
                     description: "Module Default Secret Key (ARN)",
                     type: "String",
                     scope: null,
-                    value: defaultSecretKeyArnVariable,
+                    value: defaultSecretKeyVariable,
                     allow: null,
                     encryptionContext: null
                 );
-                _builder.AddSecret(FnRef("Module::DefaultSecretKeyArn"));
+                _builder.AddSecret(FnRef("Module::DefaultSecretKey"));
             }
 
             // add decryption permission for secrets
@@ -546,12 +546,12 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             var functions = _builder.Items.OfType<FunctionItem>().ToList();
 
             // check if lambdasharp specific resources need to be initialized
-            if(_builder.TryGetItem("Module::DeadLetterQueueArn", out AModuleItem _)) {
+            if(_builder.TryGetItem("Module::DeadLetterQueue", out AModuleItem _)) {
                 foreach(var function in functions.Where(f => f.HasDeadLetterQueue)) {
 
                     // initialize dead-letter queue
                     function.Function.DeadLetterConfig = new Humidifier.Lambda.FunctionTypes.DeadLetterConfig {
-                        TargetArn = FnRef("Module::DeadLetterQueueArn")
+                        TargetArn = FnRef("Module::DeadLetterQueue")
                     };
                 }
             }
@@ -629,8 +629,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
                         // create function log-group subscription
                         if(
-                            _builder.TryGetItem("Module::LoggingStreamArn", out AModuleItem _)
-                            && _builder.TryGetItem("Module::LoggingStreamRoleArn", out AModuleItem _)
+                            _builder.TryGetItem("Module::LoggingStream", out AModuleItem _)
+                            && _builder.TryGetItem("Module::LoggingStreamRole", out AModuleItem _)
                         ) {
                             _builder.AddResource(
                                 parent: function,
@@ -638,10 +638,10 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                                 description: null,
                                 scope: null,
                                 resource: new Humidifier.Logs.SubscriptionFilter {
-                                    DestinationArn = FnRef("Module::LoggingStreamArn"),
+                                    DestinationArn = FnRef("Module::LoggingStream"),
                                     FilterPattern = "-\"*** \"",
                                     LogGroupName = FnRef($"{function.FullName}::LogGroup"),
-                                    RoleArn = FnRef("Module::LoggingStreamRoleArn")
+                                    RoleArn = FnRef("Module::LoggingStreamRole")
                                 },
                                 resourceArnAttribute: null,
                                 dependsOn: null,

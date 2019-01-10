@@ -603,9 +603,9 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 ? new Dictionary<string, object>(parameters)
                 : new Dictionary<string, object>();
             AtLocation("Parameters", () => {
-                OptionalAdd("LambdaSharpDeadLetterQueueArn", FnRef("Module::DeadLetterQueueArn"));
-                OptionalAdd("LambdaSharpLoggingStreamArn", FnRef("Module::LoggingStreamArn"));
-                OptionalAdd("LambdaSharpDefaultSecretKeyArn", FnRef("Module::DefaultSecretKeyArn"));
+                OptionalAdd("LambdaSharpDeadLetterQueue", FnRef("Module::DeadLetterQueue"));
+                OptionalAdd("LambdaSharpLoggingStream", FnRef("Module::LoggingStream"));
+                OptionalAdd("LambdaSharpDefaultSecretKey", FnRef("Module::DefaultSecretKey"));
                 MandatoryAdd("DeploymentBucketName", sourceBucketName);
                 MandatoryAdd("DeploymentPrefix", FnRef("DeploymentPrefix"));
                 MandatoryAdd("DeploymentPrefixLowercase", FnRef("DeploymentPrefixLowercase"));

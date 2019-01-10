@@ -25,15 +25,15 @@ Pragmas:
   - no-lambdasharp-dependencies
   - no-module-registration
   - Overrides:
-      Module::DeadLetterQueueArn: !Ref DeadLetterQueueArn
-      Module::LoggingStreamArn: !Ref LoggingStreamArn
-      Module::LoggingStreamRoleArn: !GetAtt LoggingStreamRole.Arn
-      Module::DefaultSecretKeyArn: !Ref DefaultSecretKeyArn
+      Module::DeadLetterQueue: !Ref DeadLetterQueue
+      Module::LoggingStream: !Ref LoggingStream
+      Module::LoggingStreamRole: !GetAtt LoggingStreamRole.Arn
+      Module::DefaultSecretKey: !Ref DefaultSecretKey
 
 Items:
 
   # LambdaSharp Tier
-  - Parameter: DeadLetterQueueArn
+  - Parameter: DeadLetterQueue
     Scope: public
     Section: LambdaSharp Tier Settings
     Label: Dead letter queue for functions (leave blank to create a new queue)
@@ -41,7 +41,7 @@ Items:
     Type: AWS::SQS::Queue
     Default: ""
 
-  - Parameter: LoggingStreamArn
+  - Parameter: LoggingStream
     Scope: public
     Section: LambdaSharp Tier Settings
     Label: Logging Kinesis stream for functions (leave blank to create a new stream)
@@ -65,7 +65,7 @@ Items:
     Description: Number of Kinesis shards
     Default: 1
 
-  - Parameter: DefaultSecretKeyArn
+  - Parameter: DefaultSecretKey
     Scope: public
     Section: LambdaSharp Tier Settings
     Label: Default secret key for functions (leave blank to create a new encryption key)
@@ -113,14 +113,14 @@ Items:
               - Sid: CloudWatchLogsKinesisPermissions
                 Effect: Allow
                 Action: kinesis:PutRecord
-                Resource: !Ref LoggingStreamArn
+                Resource: !Ref LoggingStream
 
   - Resource: DefaultSecretKeyAlias
     Description: Alias for default secrets key
     Type: AWS::KMS::Alias
     Properties:
       AliasName: !Sub "alias/${DeploymentPrefix}LambdaSharpDefaultSecretKey"
-      TargetKeyId: !Ref DefaultSecretKeyArn
+      TargetKeyId: !Ref DefaultSecretKey
 
   # Rollbar Settings
   - Parameter: RollbarReadAccessToken
@@ -152,7 +152,7 @@ Items:
     Memory: 128
     Timeout: 30
     Sources:
-      - Kinesis: LoggingStreamArn
+      - Kinesis: LoggingStream
 
   # Module & Function Registrations
   - Resource: RegistrationTopic

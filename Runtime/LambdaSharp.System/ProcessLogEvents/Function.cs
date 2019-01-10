@@ -69,8 +69,8 @@ namespace MindTouch.LambdaSharp.System.ProcessLogEvents {
         //--- Fields ---
         private Logic _logic;
         private IAmazonSimpleNotificationService _snsClient;
-        private string _errorTopicArn;
-        private string _usageTopicArn;
+        private string _errorTopic;
+        private string _usageTopic;
         private RegistrationTable _registrations;
         private Dictionary<string, OwnerMetaData> _cachedRegistrations;
         private RollbarClient _rollbarClient;
@@ -79,8 +79,8 @@ namespace MindTouch.LambdaSharp.System.ProcessLogEvents {
         public override async Task InitializeAsync(LambdaConfig config) {
             _logic = new Logic(this);
             _snsClient = new AmazonSimpleNotificationServiceClient();
-            _errorTopicArn = config.ReadText("ErrorReportTopic");
-            _usageTopicArn = config.ReadText("UsageReportTopic");
+            _errorTopic = config.ReadText("ErrorReportTopic");
+            _usageTopic = config.ReadText("UsageReportTopic");
             var tableName = config.ReadDynamoDBTableName("RegistrationTable");
             var dynamoClient = new AmazonDynamoDBClient();
             _registrations = new RegistrationTable(dynamoClient, tableName);
@@ -178,7 +178,7 @@ namespace MindTouch.LambdaSharp.System.ProcessLogEvents {
             try {
                 return Task.WhenAll(new[] {
                     PublishErrorReportToRollbarAsync(owner, report),
-                    _snsClient.PublishAsync(_errorTopicArn, SerializeJson(report))
+                    _snsClient.PublishAsync(_errorTopic, SerializeJson(report))
                 });
             } catch(Exception) {
                 LambdaLogger.Log(SerializeJson(report) + "\n");
@@ -275,7 +275,7 @@ namespace MindTouch.LambdaSharp.System.ProcessLogEvents {
             => PublishErrorReportAsync(owner, report);
 
         async Task ILogicDependencyProvider.SendUsageReportAsync(OwnerMetaData owner, UsageReport report)
-            => await _snsClient.PublishAsync(_usageTopicArn, SerializeJson(report));
+            => await _snsClient.PublishAsync(_usageTopic, SerializeJson(report));
 
         void ILogicDependencyProvider.WriteLine(string message)
             => LogInfo(message);

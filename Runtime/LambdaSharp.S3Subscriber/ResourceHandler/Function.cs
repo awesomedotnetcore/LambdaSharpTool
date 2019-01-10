@@ -42,8 +42,8 @@ namespace MindTouch.LambdaSharpS3Subscriber.ResourceHandler {
     public class RequestProperties {
 
         //--- Properties ---
-        public string BucketArn { get; set; }
-        public string FunctionArn { get; set; }
+        public string Bucket { get; set; }
+        public string Function { get; set; }
         public IList<Filter> Filters { get; set; }
     }
 
@@ -76,7 +76,7 @@ namespace MindTouch.LambdaSharpS3Subscriber.ResourceHandler {
             var properties = request.ResourceProperties;
 
             // extract bucket name from arn (arn:aws:s3:::bucket_name)
-            var bucketName = AwsConverters.ConvertBucketArnToName(properties.BucketArn);
+            var bucketName = AwsConverters.ConvertBucketArnToName(properties.Bucket);
             var config = await _s3Client.GetBucketNotificationAsync(new GetBucketNotificationRequest {
                 BucketName = bucketName
             });
@@ -88,7 +88,7 @@ namespace MindTouch.LambdaSharpS3Subscriber.ResourceHandler {
                 TopicConfigurations = config.TopicConfigurations
             });
             return new Response<ResponseProperties> {
-                PhysicalResourceId = $"s3subscription:{bucketName}:{properties.FunctionArn}",
+                PhysicalResourceId = $"s3subscription:{bucketName}:{properties.Function}",
                 Properties = new ResponseProperties {
                     Result = $"s3://{bucketName}/"
                 }
@@ -99,7 +99,7 @@ namespace MindTouch.LambdaSharpS3Subscriber.ResourceHandler {
             var properties = request.ResourceProperties;
 
             // extract bucket name from arn (arn:aws:s3:::bucket_name)
-            var bucketName = AwsConverters.ConvertBucketArnToName(properties.BucketArn);
+            var bucketName = AwsConverters.ConvertBucketArnToName(properties.Bucket);
             var config = await _s3Client.GetBucketNotificationAsync(new GetBucketNotificationRequest {
                 BucketName = bucketName
             });
@@ -117,7 +117,7 @@ namespace MindTouch.LambdaSharpS3Subscriber.ResourceHandler {
             var properties = request.ResourceProperties;
 
             // extract bucket name from arn (arn:aws:s3:::bucket_name)
-            var bucketName = AwsConverters.ConvertBucketArnToName(properties.BucketArn);
+            var bucketName = AwsConverters.ConvertBucketArnToName(properties.Bucket);
             var config = await _s3Client.GetBucketNotificationAsync(new GetBucketNotificationRequest {
                 BucketName = bucketName
             });
@@ -140,7 +140,7 @@ namespace MindTouch.LambdaSharpS3Subscriber.ResourceHandler {
         private void Add(List<LambdaSubscription> subscriptions, RequestProperties properties) {
             foreach(var filter in properties.Filters) {
                 var subscription = new LambdaSubscription {
-                    FunctionArn = properties.FunctionArn,
+                    FunctionArn = properties.Function,
                     Events = filter.Events.Select(e => EventType.FindValue(e)).ToList()
                 };
 
@@ -170,7 +170,7 @@ namespace MindTouch.LambdaSharpS3Subscriber.ResourceHandler {
         }
 
         private void Remove(List<LambdaSubscription> subscriptions, RequestProperties properties) {
-            subscriptions.RemoveAll(subscription => subscription.FunctionArn == properties.FunctionArn);
+            subscriptions.RemoveAll(subscription => subscription.FunctionArn == properties.Function);
         }
     }
 }

@@ -14,7 +14,7 @@ Parameters:
     AllowedPattern: '[a-z0-9\-]*'
     ConstraintDescription: Must only contain lowercase alphanumeric characters or left blank
 
-  DeploymentNotificationTopicArn:
+  DeploymentNotificationTopic:
     Type: String
     Description: ARN of existing SNS topic for CloudFormation notifications (if blank, an SNS topic is created)
     AllowedPattern: '(arn:aws:sns:.*)?'
@@ -40,7 +40,7 @@ Metadata:
         Parameters:
           - DeploymentBucketName
           - RequestedBucketName
-          - DeploymentNotificationTopicArn
+          - DeploymentNotificationTopic
       - Label:
           default: LambdaSharp Tool Settings
         Parameters:
@@ -51,7 +51,7 @@ Metadata:
         default: Name of an existing S3 bucket for LambdaSharp deployments (if blank, a new S3 bucket is created)
       RequestedBucketName:
         default: (optional) Name of newly created S3 bucket (if blank, a unique name is generated)
-      DeploymentNotificationTopicArn:
+      DeploymentNotificationTopic:
         default: ARN of existing SNS topic for CloudFormation notifications (if blank, an SNS topic is created)
       LambdaSharpToolVersion:
         default: LambdaSharpTool version
@@ -61,7 +61,7 @@ Metadata:
 Conditions:
   DeploymentBucketNameIsEmpty: !Equals [ !Ref DeploymentBucketName, "" ]
   RequestedBucketNameIsEmpty: !Equals [ !Ref RequestedBucketName, "" ]
-  CreateDeploymentNotificationTopic: !Equals [ !Ref DeploymentNotificationTopicArn, "" ]
+  CreateDeploymentNotificationTopic: !Equals [ !Ref DeploymentNotificationTopic, "" ]
 
 Resources:
 
@@ -125,10 +125,10 @@ Resources:
   DeploymentNotificationTopicSsmParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub '/LambdaSharpTool/${LambdaSharpToolProfile}/DeploymentNotificationTopicArn'
+      Name: !Sub '/LambdaSharpTool/${LambdaSharpToolProfile}/DeploymentNotificationTopic'
       Description: SNS topic for CloudFormation notifications
       Type: String
       Value: !If
         - CreateDeploymentNotificationTopic
         - !Ref DeploymentNotificationTopic
-        - !Ref DeploymentNotificationTopicArn
+        - !Ref DeploymentNotificationTopic

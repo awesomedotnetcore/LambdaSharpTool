@@ -102,13 +102,13 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             var awsRegionOption = cmd.Option("--aws-region <NAME>", "(test only) Override AWS region (default: read from AWS profile)", CommandOptionType.SingleValue);
             var toolVersionOption = cmd.Option("--cli-version <VALUE>", "(test only) LambdaSharp CLI version for profile", CommandOptionType.SingleValue);
             var deploymentBucketNameOption = cmd.Option("--deployment-bucket-name <NAME>", "(test only) S3 Bucket name used to deploy modules (default: read from LambdaSharp CLI configuration)", CommandOptionType.SingleValue);
-            var deploymentNotificationTopicArnOption = cmd.Option("--deployment-notifications-topic-arn <ARN>", "(test only) SNS Topic for CloudFormation deployment notifications (default: read from LambdaSharp CLI configuration)", CommandOptionType.SingleValue);
+            var deploymentNotificationTopicOption = cmd.Option("--deployment-notifications-topic <ARN>", "(test only) SNS Topic for CloudFormation deployment notifications (default: read from LambdaSharp CLI configuration)", CommandOptionType.SingleValue);
             var runtimeVersionOption = cmd.Option("--runtime-version <VERSION>", "(test only) LambdaSharp runtime version (default: read from deployment tier)", CommandOptionType.SingleValue);
             awsAccountIdOption.ShowInHelpText = false;
             awsRegionOption.ShowInHelpText = false;
             toolVersionOption.ShowInHelpText = false;
             deploymentBucketNameOption.ShowInHelpText = false;
-            deploymentNotificationTopicArnOption.ShowInHelpText = false;
+            deploymentNotificationTopicOption.ShowInHelpText = false;
             runtimeVersionOption.ShowInHelpText = false;
             return async () => {
 
@@ -160,7 +160,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     // initialize LambdaSharp deployment values
                     var runtimeVersion = runtimeVersionOption.Value();
                     var deploymentBucketName = deploymentBucketNameOption.Value();
-                    var deploymentNotificationTopicArn = deploymentNotificationTopicArnOption.Value();
+                    var deploymentNotificationTopic = deploymentNotificationTopicOption.Value();
 
                     // create a settings instance for each module filename
                     return new Settings {
@@ -172,7 +172,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         AwsRegion = awsAccount.GetValueOrDefault().Region,
                         AwsAccountId = awsAccount.GetValueOrDefault().AccountId,
                         DeploymentBucketName = deploymentBucketName,
-                        DeploymentNotificationsTopicArn = deploymentNotificationTopicArn,
+                        DeploymentNotificationsTopic = deploymentNotificationTopic,
                         SsmClient = ssmClient,
                         CfnClient = cfClient,
                         KmsClient = kmsClient,
@@ -215,7 +215,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
         protected async Task PopulateToolSettingsAsync(Settings settings) {
             if(
                 (settings.DeploymentBucketName == null)
-                || (settings.DeploymentNotificationsTopicArn == null)
+                || (settings.DeploymentNotificationsTopic == null)
             ) {
 
                 // import LambdaSharp CLI settings
@@ -231,7 +231,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         return;
                     }
                     settings.DeploymentBucketName = settings.DeploymentBucketName ?? GetLambdaSharpToolSetting("DeploymentBucketName");
-                    settings.DeploymentNotificationsTopicArn = settings.DeploymentNotificationsTopicArn ?? GetLambdaSharpToolSetting("DeploymentNotificationTopicArn");
+                    settings.DeploymentNotificationsTopic = settings.DeploymentNotificationsTopic ?? GetLambdaSharpToolSetting("DeploymentNotificationTopic");
 
                     // local functions
                     string GetLambdaSharpToolSetting(string name) {

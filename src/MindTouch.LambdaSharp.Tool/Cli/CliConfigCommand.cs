@@ -61,7 +61,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
                 // tool options
                 var moduleS3BucketNameOption = cmd.Option("--module-s3-bucket-name <NAME>", "(optional) Existing S3 bucket name for module deployments", CommandOptionType.SingleValue);
-                var cloudFormationNotificationsTopicArnOption = cmd.Option("--cloudformation-notifications-topic <ARN>", "(optional) Existing SNS topic ARN for CloudFormation notifications ", CommandOptionType.SingleValue);
+                var cloudFormationNotificationsTopicOption = cmd.Option("--cloudformation-notifications-topic <ARN>", "(optional) Existing SNS topic ARN for CloudFormation notifications ", CommandOptionType.SingleValue);
                 var protectStackOption = cmd.Option("--protect", "(optional) Enable termination protection for the CloudFormation stack", CommandOptionType.NoValue);
                 var forceUpdateOption = cmd.Option("--force-update", "(optional) Force CLI profile update", CommandOptionType.NoValue);
                 var initSettingsCallback = CreateSettingsInitializer(cmd, requireDeploymentTier: false);
@@ -80,8 +80,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     if(moduleS3BucketNameOption.HasValue()) {
                         parameters.Add("DeploymentBucketName", moduleS3BucketNameOption.Value());
                     }
-                    if(cloudFormationNotificationsTopicArnOption.HasValue()) {
-                        parameters.Add("DeploymentNotificationTopicArn", cloudFormationNotificationsTopicArnOption.Value());
+                    if(cloudFormationNotificationsTopicOption.HasValue()) {
+                        parameters.Add("DeploymentNotificationTopic", cloudFormationNotificationsTopicOption.Value());
                     }
                     await Config(
                         settings,

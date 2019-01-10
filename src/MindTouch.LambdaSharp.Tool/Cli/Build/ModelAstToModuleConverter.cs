@@ -641,9 +641,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 ForEach("Declarations", node.Items, (i, p) => ConvertItem(result, i, p, nestedExpectedTypes ?? expectedTypes));
             }
 
-            void ValidateARN(object resourceArn) {
-                if((resourceArn is string text) && !text.StartsWith("arn:") && (text != "*")) {
-                    AddError($"resource name must be a valid ARN or wildcard: {resourceArn}");
+            void ValidateARN(object arn) {
+                if((arn is string text) && !text.StartsWith("arn:") && (text != "*")) {
+                    AddError($"resource name must be a valid ARN or wildcard: {arn}");
                 }
             }
         }
@@ -796,23 +796,36 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             ref string runtime,
             ref string handler
         ) {
-
-            // identify folder for function
-            var folderName = new[] {
-                functionName,
-                $"{_builder.Name}.{functionName}"
-            }.FirstOrDefault(name => Directory.Exists(Path.Combine(Settings.WorkingDirectory, name)));
-            if(folderName == null) {
-                AddError($"could not locate function directory");
-                return;
-            }
-
-            // determine the function project
-            project = project ?? new [] {
-                Path.Combine(Settings.WorkingDirectory, folderName, $"{folderName}.csproj"),
-                Path.Combine(Settings.WorkingDirectory, folderName, "index.js")
-            }.FirstOrDefault(path => File.Exists(path));
             if(project == null) {
+
+                // identify folder for function
+                var folderName = new[] {
+                    functionName,
+                    $"{_builder.Name}.{functionName}"
+                }.FirstOrDefault(name => Directory.Exists(Path.Combine(Settings.WorkingDirectory, name)));
+                if(folderName == null) {
+                    AddError($"could not locate function directory");
+                    return;
+                }
+
+                // determine the function project
+                project = project ?? new [] {
+                    Path.Combine(Settings.WorkingDirectory, folderName, $"{folderName}.csproj"),
+                    Path.Combine(Settings.WorkingDirectory, folderName, "index.js")
+                }.FirstOrDefault(path => File.Exists(path));
+            } else if(Path.GetExtension(project) == ".csproj") {
+                project = Path.Combine(Settings.WorkingDirectory, project);
+            } else if(Path.GetExtension(project) == ".js") {
+                project = Path.Combine(Settings.WorkingDirectory, project);
+            } else if(Directory.Exists(Path.Combine(Settings.WorkingDirectory, project))) {
+
+                // determine the function project
+                project = new [] {
+                    Path.Combine(Settings.WorkingDirectory, project, $"{project}.csproj"),
+                    Path.Combine(Settings.WorkingDirectory, project, "index.js")
+                }.FirstOrDefault(path => File.Exists(path));
+            }
+            if((project == null) || !File.Exists(project)) {
                 AddError("could not locate the function project");
                 return;
             }

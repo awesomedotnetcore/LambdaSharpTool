@@ -27,9 +27,9 @@ Items:
     Handler: CustomResourceTopic
     Properties:
       Request:
-        - Name: BucketArn
+        - Name: Bucket
           Type: String
-        - Name: FunctionArn
+        - Name: Function
           Type: String
         - Name: Filters
           Type: List<String>

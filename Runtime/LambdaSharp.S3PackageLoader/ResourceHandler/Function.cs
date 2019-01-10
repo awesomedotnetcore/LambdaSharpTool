@@ -40,16 +40,24 @@ namespace MindTouch.LambdaSharpS3PackageLoader.ResourceHandler {
     public class RequestProperties {
 
         //--- Properties ---
+        public string DestinationBucket { get; set; }
         public string DestinationBucketName { get; set; }
-        public string DestinationBucketArn { get; set; }
         public string DestinationKeyPrefix { get; set; }
+        public string SourceBucket { get; set; }
         public string SourceBucketName { get; set; }
         public string SourcePackageKey { get; set; }
 
         //--- Methods ---
         public void SetDestinationBucketName() {
-            if(DestinationBucketArn != null) {
-                DestinationBucketName = AwsConverters.ConvertBucketArnToName(DestinationBucketArn);
+            if(DestinationBucket != null) {
+                DestinationBucketName = DestinationBucket.StartsWith("arn:")
+                    ? AwsConverters.ConvertBucketArnToName(DestinationBucket)
+                    : DestinationBucket;
+            }
+            if(SourceBucket != null) {
+                SourceBucketName = SourceBucket.StartsWith("arn:")
+                    ? AwsConverters.ConvertBucketArnToName(SourceBucket)
+                    : SourceBucket;
             }
         }
     }

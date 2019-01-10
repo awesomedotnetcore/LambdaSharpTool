@@ -4,30 +4,30 @@
   "Parameters": {
     "Secrets": {
       "Type": "String",
-      "Description": "Comma-separated list of optional secret keys",
+      "Description": "Secret Keys (ARNs)",
       "Default": ""
     },
     "DeploymentBucketName": {
       "Type": "String",
-      "Description": "Source deployment S3 bucket name"
+      "Description": "Deployment S3 Bucket Name"
     },
     "DeploymentPrefix": {
       "Type": "String",
-      "Description": "Module deployment prefix"
+      "Description": "Deployment Tier Prefix"
     },
     "DeploymentPrefixLowercase": {
       "Type": "String",
-      "Description": "Module deployment prefix (lowercase)"
+      "Description": "Deployment Tier Prefix (lowercase)"
     },
     "DeploymentParent": {
       "Type": "String",
-      "Description": "Parent stack name for nested deployments, blank otherwise",
+      "Description": "Parent Stack Name",
       "Default": ""
     },
     "DeploymentChecksum": {
       "Type": "String",
-      "Description": "CloudFormation template MD5 checksum",
-      "Default": "22E0B3339C70BDCAF50F44D37BBDB25A"
+      "Description": "Deployment Checksum",
+      "Default": "85A82F8A5E0D1B187BCAFDB9CC5E1E92"
     }
   },
   "Resources": {
@@ -36,11 +36,11 @@
       "Properties": {}
     },
     "ModuleRegistration": {
-      "Type": "Custom::LambdaSharpRegisterModule",
+      "Type": "Custom::LambdaSharpRegistrationModule",
       "Properties": {
         "ServiceToken": {
           "Fn::ImportValue": {
-            "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::Register::Module"
+            "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::Registration::Module"
           }
         },
         "ModuleId": {
@@ -70,22 +70,22 @@
     "AWS::CloudFormation::Interface": {
       "ParameterLabels": {
         "Secrets": {
-          "default": "Secret Keys (ARNs)"
+          "default": "[String] Comma-separated list of optional secret keys"
         },
         "DeploymentBucketName": {
-          "default": "Deployment S3 Bucket"
+          "default": "[String] Deployment S3 bucket name"
         },
         "DeploymentPrefix": {
-          "default": "Deployment Prefix"
+          "default": "[String] Deployment tier prefix"
         },
         "DeploymentPrefixLowercase": {
-          "default": "Deployment Prefix (lowercase)"
+          "default": "[String] Deployment tier prefix (lowercase)"
         },
         "DeploymentParent": {
-          "default": "Parent Stack Name"
+          "default": "[String] Parent stack name for nested deployments, blank otherwise"
         },
         "DeploymentChecksum": {
-          "default": "Deployment Checksum"
+          "default": "[String] CloudFormation template MD5 checksum"
         }
       },
       "ParameterGroups": [
@@ -121,20 +121,19 @@
             {
               "Name": "Secrets",
               "Type": "String",
-              "Description": "Comma-separated list of optional secret keys",
-              "Label": "Secret Keys (ARNs)",
+              "Label": "Comma-separated list of optional secret keys",
               "Default": ""
             }
           ]
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "22E0B3339C70BDCAF50F44D37BBDB25A",
+      "Hash": "85A82F8A5E0D1B187BCAFDB9CC5E1E92",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [
         {
-          "ModuleFullName": "LambdaSharp.Core",
+          "ModuleFullName": "LambdaSharp.System",
           "MinVersion": "0.5-WIP"
         }
       ],
@@ -143,8 +142,8 @@
       "ResourceNameMappings": {
         "ModuleRegistration": "Module::Registration"
       },
-      "CustomResourceNameMappings": {
-        "Custom::LambdaSharpRegisterModule": "LambdaSharp::Register::Module"
+      "ResourceTypeNameMappings": {
+        "Custom::LambdaSharpRegistrationModule": "LambdaSharp::Registration::Module"
       }
     }
   }

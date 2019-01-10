@@ -74,7 +74,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             Console.WriteLine($"    Profile: {settings.ToolProfile ?? "<NOT SET>"}");
             Console.WriteLine($"    Version: {settings.ToolVersion}");
             Console.WriteLine($"    Module Deployment S3 Bucket: {settings.DeploymentBucketName ?? "<NOT SET>"}");
-            Console.WriteLine($"    Module Deployment Notifications Topic: {ConcealAwsAccountId(settings.DeploymentNotificationsTopicArn ?? "<NOT SET>")}");
+            Console.WriteLine($"    Module Deployment Notifications Topic: {ConcealAwsAccountId(settings.DeploymentNotificationsTopic ?? "<NOT SET>")}");
             Console.WriteLine($"LambdaSharp Deployment Tier");
             Console.WriteLine($"    Name: {settings.Tier ?? "<NOT SET>"}");
             Console.WriteLine($"    Runtime Version: {settings.RuntimeVersion?.ToString() ?? "<NOT SET>"}");

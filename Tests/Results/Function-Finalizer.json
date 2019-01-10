@@ -4,44 +4,44 @@
   "Parameters": {
     "Secrets": {
       "Type": "String",
-      "Description": "Comma-separated list of optional secret keys",
+      "Description": "Secret Keys (ARNs)",
       "Default": ""
     },
-    "LambdaSharpDeadLetterQueueArn": {
+    "LambdaSharpDeadLetterQueue": {
       "Type": "String",
-      "Description": "Dead letter queue for functions",
+      "Description": "Dead Letter Queue (ARN)",
       "AllowedPattern": "^.+$",
       "ConstraintDescription": "must either be a cross-module import reference or a non-empty value",
-      "Default": "$LambdaSharp::DeadLetterQueueArn"
+      "Default": "$LambdaSharp::DeadLetterQueue"
     },
-    "LambdaSharpDefaultSecretKeyArn": {
+    "LambdaSharpDefaultSecretKey": {
       "Type": "String",
-      "Description": "Default secret key for functions",
+      "Description": "Secret Key (ARN)",
       "AllowedPattern": "^.+$",
       "ConstraintDescription": "must either be a cross-module import reference or a non-empty value",
-      "Default": "$LambdaSharp::DefaultSecretKeyArn"
+      "Default": "$LambdaSharp::DefaultSecretKey"
     },
     "DeploymentBucketName": {
       "Type": "String",
-      "Description": "Source deployment S3 bucket name"
+      "Description": "Deployment S3 Bucket Name"
     },
     "DeploymentPrefix": {
       "Type": "String",
-      "Description": "Module deployment prefix"
+      "Description": "Deployment Tier Prefix"
     },
     "DeploymentPrefixLowercase": {
       "Type": "String",
-      "Description": "Module deployment prefix (lowercase)"
+      "Description": "Deployment Tier Prefix (lowercase)"
     },
     "DeploymentParent": {
       "Type": "String",
-      "Description": "Parent stack name for nested deployments, blank otherwise",
+      "Description": "Parent Stack Name",
       "Default": ""
     },
     "DeploymentChecksum": {
       "Type": "String",
-      "Description": "CloudFormation template MD5 checksum",
-      "Default": "450B310133E7045C4F54F5C7AB063EE5"
+      "Description": "Deployment Checksum",
+      "Default": "5BA37B1130933F7028B58C35A749B3EE"
     }
   },
   "Resources": {
@@ -69,7 +69,7 @@
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEFAULTSECRETKEY": {
               "Fn::If": [
-                "LambdaSharpDefaultSecretKeyArnIsImported",
+                "LambdaSharpDefaultSecretKeyIsImported",
                 {
                   "Fn::ImportValue": {
                     "Fn::Sub": [
@@ -82,7 +82,7 @@
                               "Fn::Split": [
                                 "$",
                                 {
-                                  "Ref": "LambdaSharpDefaultSecretKeyArn"
+                                  "Ref": "LambdaSharpDefaultSecretKey"
                                 }
                               ]
                             }
@@ -93,7 +93,7 @@
                   }
                 },
                 {
-                  "Ref": "LambdaSharpDefaultSecretKeyArn"
+                  "Ref": "LambdaSharpDefaultSecretKey"
                 }
               ]
             }
@@ -161,7 +161,7 @@
                   ],
                   "Resource": {
                     "Fn::If": [
-                      "LambdaSharpDeadLetterQueueArnIsImported",
+                      "LambdaSharpDeadLetterQueueIsImported",
                       {
                         "Fn::ImportValue": {
                           "Fn::Sub": [
@@ -174,7 +174,7 @@
                                     "Fn::Split": [
                                       "$",
                                       {
-                                        "Ref": "LambdaSharpDeadLetterQueueArn"
+                                        "Ref": "LambdaSharpDeadLetterQueue"
                                       }
                                     ]
                                   }
@@ -185,7 +185,7 @@
                         }
                       },
                       {
-                        "Ref": "LambdaSharpDeadLetterQueueArn"
+                        "Ref": "LambdaSharpDeadLetterQueue"
                       }
                     ]
                   }
@@ -207,7 +207,7 @@
                           "SecretsIsEmpty",
                           {
                             "Fn::If": [
-                              "LambdaSharpDefaultSecretKeyArnIsImported",
+                              "LambdaSharpDefaultSecretKeyIsImported",
                               {
                                 "Fn::ImportValue": {
                                   "Fn::Sub": [
@@ -220,7 +220,7 @@
                                             "Fn::Split": [
                                               "$",
                                               {
-                                                "Ref": "LambdaSharpDefaultSecretKeyArn"
+                                                "Ref": "LambdaSharpDefaultSecretKey"
                                               }
                                             ]
                                           }
@@ -231,7 +231,7 @@
                                 }
                               },
                               {
-                                "Ref": "LambdaSharpDefaultSecretKeyArn"
+                                "Ref": "LambdaSharpDefaultSecretKey"
                               }
                             ]
                           },
@@ -241,7 +241,7 @@
                               [
                                 {
                                   "Fn::If": [
-                                    "LambdaSharpDefaultSecretKeyArnIsImported",
+                                    "LambdaSharpDefaultSecretKeyIsImported",
                                     {
                                       "Fn::ImportValue": {
                                         "Fn::Sub": [
@@ -254,7 +254,7 @@
                                                   "Fn::Split": [
                                                     "$",
                                                     {
-                                                      "Ref": "LambdaSharpDefaultSecretKeyArn"
+                                                      "Ref": "LambdaSharpDefaultSecretKey"
                                                     }
                                                   ]
                                                 }
@@ -265,7 +265,7 @@
                                       }
                                     },
                                     {
-                                      "Ref": "LambdaSharpDefaultSecretKeyArn"
+                                      "Ref": "LambdaSharpDefaultSecretKey"
                                     }
                                   ]
                                 },
@@ -299,11 +299,11 @@
       }
     },
     "ModuleRegistration": {
-      "Type": "Custom::LambdaSharpRegisterModule",
+      "Type": "Custom::LambdaSharpRegistrationModule",
       "Properties": {
         "ServiceToken": {
           "Fn::ImportValue": {
-            "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::Register::Module"
+            "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::Registration::Module"
           }
         },
         "ModuleId": {
@@ -327,14 +327,14 @@
         ""
       ]
     },
-    "LambdaSharpDeadLetterQueueArnIsImported": {
+    "LambdaSharpDeadLetterQueueIsImported": {
       "Fn::And": [
         {
           "Fn::Not": [
             {
               "Fn::Equals": [
                 {
-                  "Ref": "LambdaSharpDeadLetterQueueArn"
+                  "Ref": "LambdaSharpDeadLetterQueue"
                 },
                 ""
               ]
@@ -350,7 +350,7 @@
                   "Fn::Split": [
                     "$",
                     {
-                      "Ref": "LambdaSharpDeadLetterQueueArn"
+                      "Ref": "LambdaSharpDeadLetterQueue"
                     }
                   ]
                 }
@@ -361,14 +361,14 @@
         }
       ]
     },
-    "LambdaSharpDefaultSecretKeyArnIsImported": {
+    "LambdaSharpDefaultSecretKeyIsImported": {
       "Fn::And": [
         {
           "Fn::Not": [
             {
               "Fn::Equals": [
                 {
-                  "Ref": "LambdaSharpDefaultSecretKeyArn"
+                  "Ref": "LambdaSharpDefaultSecretKey"
                 },
                 ""
               ]
@@ -384,7 +384,7 @@
                   "Fn::Split": [
                     "$",
                     {
-                      "Ref": "LambdaSharpDefaultSecretKeyArn"
+                      "Ref": "LambdaSharpDefaultSecretKey"
                     }
                   ]
                 }
@@ -400,28 +400,28 @@
     "AWS::CloudFormation::Interface": {
       "ParameterLabels": {
         "Secrets": {
-          "default": "Secret Keys (ARNs)"
+          "default": "[String] Comma-separated list of optional secret keys"
         },
-        "LambdaSharpDeadLetterQueueArn": {
-          "default": "Dead Letter Queue (ARN)"
+        "LambdaSharpDeadLetterQueue": {
+          "default": "[String] Dead letter queue for functions"
         },
-        "LambdaSharpDefaultSecretKeyArn": {
-          "default": "Secret Key (ARN)"
+        "LambdaSharpDefaultSecretKey": {
+          "default": "[String] Default secret key for functions"
         },
         "DeploymentBucketName": {
-          "default": "Deployment S3 Bucket"
+          "default": "[String] Deployment S3 bucket name"
         },
         "DeploymentPrefix": {
-          "default": "Deployment Prefix"
+          "default": "[String] Deployment tier prefix"
         },
         "DeploymentPrefixLowercase": {
-          "default": "Deployment Prefix (lowercase)"
+          "default": "[String] Deployment tier prefix (lowercase)"
         },
         "DeploymentParent": {
-          "default": "Parent Stack Name"
+          "default": "[String] Parent stack name for nested deployments, blank otherwise"
         },
         "DeploymentChecksum": {
-          "default": "Deployment Checksum"
+          "default": "[String] CloudFormation template MD5 checksum"
         }
       },
       "ParameterGroups": [
@@ -438,8 +438,8 @@
             "default": "LambdaSharp Runtime Imports"
           },
           "Parameters": [
-            "LambdaSharpDeadLetterQueueArn",
-            "LambdaSharpDefaultSecretKeyArn"
+            "LambdaSharpDeadLetterQueue",
+            "LambdaSharpDefaultSecretKey"
           ]
         },
         {
@@ -466,8 +466,7 @@
             {
               "Name": "Secrets",
               "Type": "String",
-              "Description": "Comma-separated list of optional secret keys",
-              "Label": "Secret Keys (ARNs)",
+              "Label": "Comma-separated list of optional secret keys",
               "Default": ""
             }
           ]
@@ -476,29 +475,27 @@
           "Title": "LambdaSharp Runtime Imports",
           "Parameters": [
             {
-              "Name": "DeadLetterQueueArn",
+              "Name": "DeadLetterQueue",
               "Type": "String",
-              "Description": "Dead letter queue for functions",
-              "Label": "Dead Letter Queue (ARN)",
-              "Default": "$LambdaSharp::DeadLetterQueueArn"
+              "Label": "Dead letter queue for functions",
+              "Default": "$LambdaSharp::DeadLetterQueue"
             },
             {
-              "Name": "DefaultSecretKeyArn",
+              "Name": "DefaultSecretKey",
               "Type": "String",
-              "Description": "Default secret key for functions",
-              "Label": "Secret Key (ARN)",
-              "Default": "$LambdaSharp::DefaultSecretKeyArn"
+              "Label": "Default secret key for functions",
+              "Default": "$LambdaSharp::DefaultSecretKey"
             }
           ]
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "450B310133E7045C4F54F5C7AB063EE5",
+      "Hash": "5BA37B1130933F7028B58C35A749B3EE",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [
         {
-          "ModuleFullName": "LambdaSharp.Core",
+          "ModuleFullName": "LambdaSharp.System",
           "MinVersion": "0.5-WIP"
         }
       ],
@@ -509,9 +506,9 @@
         "ModuleRole": "Module::Role",
         "ModuleRegistration": "Module::Registration"
       },
-      "CustomResourceNameMappings": {
+      "ResourceTypeNameMappings": {
         "Custom::ModuleFinalizer": "Module::Finalizer",
-        "Custom::LambdaSharpRegisterModule": "LambdaSharp::Register::Module"
+        "Custom::LambdaSharpRegistrationModule": "LambdaSharp::Registration::Module"
       }
     }
   }

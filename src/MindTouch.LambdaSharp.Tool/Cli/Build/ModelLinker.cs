@@ -97,9 +97,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         environment["LAMBDA_RUNTIME"] = function.Function.Runtime;
                         if(builder.HasLambdaSharpDependencies) {
                             if(function.HasDeadLetterQueue) {
-                                environment["DEADLETTERQUEUE"] = FnRef("Module::DeadLetterQueueArn");
+                                environment["DEADLETTERQUEUE"] = FnRef("Module::DeadLetterQueue");
                             }
-                            environment["DEFAULTSECRETKEY"] = FnRef("Module::DefaultSecretKeyArn");
+                            environment["DEFAULTSECRETKEY"] = FnRef("Module::DefaultSecretKey");
                         }
 
                         // add all items scoped to this function

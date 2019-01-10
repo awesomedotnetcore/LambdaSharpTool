@@ -2,5 +2,4 @@ Module: LambdaSharp.DemoS3Bucket
 Items:
 
   - Resource: Bucket
-    Scope: public
     Type: AWS::S3::Bucket

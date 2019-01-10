@@ -27,11 +27,15 @@ Items:
     Handler: CustomResourceTopic
     Properties:
       Request:
+        - Name: DestinationBucket
+          Type: String
         - Name: DestinationBucketName
           Type: String
         - Name: DestinationBucketArn
           Type: AWS::S3::Bucket
         - Name: DestinationKeyPrefix
+          Type: String
+        - Name: SourceBucket
           Type: String
         - Name: SourceBucketName
           Type: String

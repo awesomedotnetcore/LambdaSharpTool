@@ -9,7 +9,7 @@ if [ -z "$1" ]; then
         --runtime-version 0.5-WIP \
         --cli-version 0.5-WIP \
         --deployment-bucket-name lambdasharp-bucket-name \
-        --deployment-notifications-topic-arn  arn:aws:sns:us-east-1:123456789012:LambdaSharp-DeploymentNotificationTopic
+        --deployment-notifications-topic  arn:aws:sns:us-east-1:123456789012:LambdaSharp-DeploymentNotificationTopic
 
     if [ $? -ne 0 ]; then
         exit $?
@@ -27,7 +27,7 @@ if [ -z "$1" ]; then
         --runtime-version 0.5-WIP \
         --cli-version 0.5-WIP \
         --deployment-bucket-name lambdasharp-bucket-name \
-        --deployment-notifications-topic-arn  arn:aws:sns:us-east-1:123456789012:LambdaSharp-DeploymentNotificationTopic \
+        --deployment-notifications-topic  arn:aws:sns:us-east-1:123456789012:LambdaSharp-DeploymentNotificationTopic \
         --no-dependency-validation \
         Empty.yml \
         Empty-NoLambdaSharpDependencies.yml \
@@ -81,9 +81,9 @@ if [ -z "$1" ]; then
         Condition-Scoped-Resource.yml \
         Condition-Function.yml \
         Condition-Condition.yml \
-        ../Runtime/LambdaSharp \
-        ../Runtime/LambdaSharpS3PackageLoader \
-        ../Runtime/LambdaSharpS3Subscriber \
+        ../Runtime/LambdaSharp.System \
+        ../Runtime/LambdaSharp.S3PackageLoader \
+        ../Runtime/LambdaSharp.S3Subscriber \
         ../Samples/AlexaSample \
         ../Samples/ApiSample \
         ../Samples/CustomResourceSample \
@@ -114,7 +114,7 @@ else
         --runtime-version 0.5-WIP \
         --cli-version 0.5-WIP \
         --deployment-bucket-name lambdasharp-bucket-name \
-        --deployment-notifications-topic-arn  arn:aws:sns:us-east-1:123456789012:LambdaSharp-DeploymentNotificationTopic \
+        --deployment-notifications-topic  arn:aws:sns:us-east-1:123456789012:LambdaSharp-DeploymentNotificationTopic \
         --no-dependency-validation \
         $1.yml
 fi

@@ -3,7 +3,7 @@ Description: LambdaSharp CloudFormation Test
 Items:
 
   - Function: Function
-    Scope: public
     Description: My function
+    Scope: public
     Memory: 128
     Timeout: 30

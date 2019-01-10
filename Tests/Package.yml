@@ -14,7 +14,7 @@ Items:
     Pragmas:
       - no-type-validation
     Properties:
-      DestinationBucketName: !Ref MyBucket
+      DestinationBucket: !Ref MyBucket
       DestinationKeyPrefix: Bucket/Folder/
       SourceBucketName: !Ref DeploymentBucketName
       SourcePackageKey: !Ref FilesPackage
