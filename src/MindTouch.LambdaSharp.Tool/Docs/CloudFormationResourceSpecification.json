@@ -96,15 +96,6 @@
         }
       }
     },
-    "AWS::CodePipeline::Pipeline.InputArtifact": {
-      "Properties": {
-        "Name": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "Alexa::ASK::Skill.SkillPackage": {
       "Properties": {
         "S3BucketRole": {
@@ -134,6 +125,15 @@
         }
       }
     },
+    "AWS::CodePipeline::Pipeline.InputArtifact": {
+      "Properties": {
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::S3::Bucket.BucketEncryption": {
       "Properties": {
         "ServerSideEncryptionConfiguration": {
@@ -159,6 +159,24 @@
         }
       }
     },
+    "AWS::CodeDeploy::DeploymentGroup.LoadBalancerInfo": {
+      "Properties": {
+        "ElbInfoList": {
+          "DuplicatesAllowed": false,
+          "ItemType": "ELBInfo",
+          "Required": false,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        },
+        "TargetGroupInfoList": {
+          "DuplicatesAllowed": false,
+          "ItemType": "TargetGroupInfo",
+          "Required": false,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::ElasticBeanstalk::Environment.OptionSetting": {
       "Properties": {
         "Namespace": {
@@ -179,24 +197,6 @@
         "Value": {
           "PrimitiveType": "String",
           "Required": false,
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::CodeDeploy::DeploymentGroup.LoadBalancerInfo": {
-      "Properties": {
-        "ElbInfoList": {
-          "DuplicatesAllowed": false,
-          "ItemType": "ELBInfo",
-          "Required": false,
-          "Type": "List",
-          "UpdateType": "Mutable"
-        },
-        "TargetGroupInfoList": {
-          "DuplicatesAllowed": false,
-          "ItemType": "TargetGroupInfo",
-          "Required": false,
-          "Type": "List",
           "UpdateType": "Mutable"
         }
       }
@@ -235,15 +235,6 @@
         }
       }
     },
-    "AWS::S3::Bucket.NotificationFilter": {
-      "Properties": {
-        "S3Key": {
-          "Required": true,
-          "Type": "S3KeyFilter",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::DataPipeline::Pipeline.ParameterAttribute": {
       "Properties": {
         "Key": {
@@ -254,6 +245,15 @@
         "StringValue": {
           "PrimitiveType": "String",
           "Required": true,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::S3::Bucket.NotificationFilter": {
+      "Properties": {
+        "S3Key": {
+          "Required": true,
+          "Type": "S3KeyFilter",
           "UpdateType": "Mutable"
         }
       }
@@ -384,6 +384,20 @@
         }
       }
     },
+    "AWS::AppSync::DataSource.AuthorizationConfig": {
+      "Properties": {
+        "AwsIamConfig": {
+          "Type": "AwsIamConfig",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "AuthorizationType": {
+          "Required": true,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::KinesisFirehose::DeliveryStream.ElasticsearchDestinationConfiguration": {
       "Properties": {
         "BufferingHints": {
@@ -439,20 +453,6 @@
         "TypeName": {
           "PrimitiveType": "String",
           "Required": true,
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::AppSync::DataSource.AuthorizationConfig": {
-      "Properties": {
-        "AwsIamConfig": {
-          "Type": "AwsIamConfig",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "AuthorizationType": {
-          "Required": true,
-          "PrimitiveType": "String",
           "UpdateType": "Mutable"
         }
       }
@@ -522,6 +522,30 @@
         }
       }
     },
+    "AWS::AutoScaling::LaunchConfiguration.BlockDeviceMapping": {
+      "Properties": {
+        "DeviceName": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "Ebs": {
+          "Required": false,
+          "Type": "BlockDevice",
+          "UpdateType": "Mutable"
+        },
+        "NoDevice": {
+          "PrimitiveType": "Boolean",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "VirtualName": {
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::DMS::Endpoint.S3Settings": {
       "Properties": {
         "ExternalTableDefinition": {
@@ -557,30 +581,6 @@
         "CompressionType": {
           "Required": false,
           "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::AutoScaling::LaunchConfiguration.BlockDeviceMapping": {
-      "Properties": {
-        "DeviceName": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Mutable"
-        },
-        "Ebs": {
-          "Required": false,
-          "Type": "BlockDevice",
-          "UpdateType": "Mutable"
-        },
-        "NoDevice": {
-          "PrimitiveType": "Boolean",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "VirtualName": {
-          "PrimitiveType": "String",
-          "Required": false,
           "UpdateType": "Mutable"
         }
       }
@@ -638,25 +638,6 @@
         }
       }
     },
-    "AWS::KinesisAnalytics::ApplicationReferenceDataSource.S3ReferenceDataSource": {
-      "Properties": {
-        "BucketARN": {
-          "Required": true,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        },
-        "FileKey": {
-          "Required": true,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        },
-        "ReferenceRoleARN": {
-          "Required": true,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::Batch::JobDefinition.NodeProperties": {
       "Properties": {
         "MainNode": {
@@ -673,6 +654,25 @@
         "NumNodes": {
           "Required": true,
           "PrimitiveType": "Integer",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::KinesisAnalytics::ApplicationReferenceDataSource.S3ReferenceDataSource": {
+      "Properties": {
+        "BucketARN": {
+          "Required": true,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "FileKey": {
+          "Required": true,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "ReferenceRoleARN": {
+          "Required": true,
+          "PrimitiveType": "String",
           "UpdateType": "Mutable"
         }
       }
@@ -1162,35 +1162,6 @@
         }
       }
     },
-    "AWS::Cognito::UserPool.PasswordPolicy": {
-      "Properties": {
-        "RequireNumbers": {
-          "Required": false,
-          "PrimitiveType": "Boolean",
-          "UpdateType": "Mutable"
-        },
-        "MinimumLength": {
-          "Required": false,
-          "PrimitiveType": "Integer",
-          "UpdateType": "Mutable"
-        },
-        "RequireUppercase": {
-          "Required": false,
-          "PrimitiveType": "Boolean",
-          "UpdateType": "Mutable"
-        },
-        "RequireLowercase": {
-          "Required": false,
-          "PrimitiveType": "Boolean",
-          "UpdateType": "Mutable"
-        },
-        "RequireSymbols": {
-          "Required": false,
-          "PrimitiveType": "Boolean",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::ElasticLoadBalancing::LoadBalancer.HealthCheck": {
       "Properties": {
         "HealthyThreshold": {
@@ -1216,6 +1187,35 @@
         "UnhealthyThreshold": {
           "PrimitiveType": "String",
           "Required": true,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::Cognito::UserPool.PasswordPolicy": {
+      "Properties": {
+        "RequireNumbers": {
+          "Required": false,
+          "PrimitiveType": "Boolean",
+          "UpdateType": "Mutable"
+        },
+        "MinimumLength": {
+          "Required": false,
+          "PrimitiveType": "Integer",
+          "UpdateType": "Mutable"
+        },
+        "RequireUppercase": {
+          "Required": false,
+          "PrimitiveType": "Boolean",
+          "UpdateType": "Mutable"
+        },
+        "RequireLowercase": {
+          "Required": false,
+          "PrimitiveType": "Boolean",
+          "UpdateType": "Mutable"
+        },
+        "RequireSymbols": {
+          "Required": false,
+          "PrimitiveType": "Boolean",
           "UpdateType": "Mutable"
         }
       }
@@ -1300,20 +1300,6 @@
         }
       }
     },
-    "AWS::OpsWorks::Layer.ShutdownEventConfiguration": {
-      "Properties": {
-        "DelayUntilElbConnectionsDrained": {
-          "PrimitiveType": "Boolean",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "ExecutionTimeout": {
-          "PrimitiveType": "Integer",
-          "Required": false,
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::DataPipeline::Pipeline.PipelineTag": {
       "Properties": {
         "Key": {
@@ -1324,6 +1310,20 @@
         "Value": {
           "PrimitiveType": "String",
           "Required": true,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::OpsWorks::Layer.ShutdownEventConfiguration": {
+      "Properties": {
+        "DelayUntilElbConnectionsDrained": {
+          "PrimitiveType": "Boolean",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "ExecutionTimeout": {
+          "PrimitiveType": "Integer",
+          "Required": false,
           "UpdateType": "Mutable"
         }
       }
@@ -1666,6 +1666,20 @@
         }
       }
     },
+    "AWS::AutoScaling::AutoScalingGroup.MixedInstancesPolicy": {
+      "Properties": {
+        "InstancesDistribution": {
+          "Required": false,
+          "Type": "InstancesDistribution",
+          "UpdateType": "Mutable"
+        },
+        "LaunchTemplate": {
+          "Required": true,
+          "Type": "LaunchTemplate",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::SageMaker::EndpointConfig.ProductionVariant": {
       "Properties": {
         "ModelName": {
@@ -1697,20 +1711,6 @@
           "Required": true,
           "PrimitiveType": "Double",
           "UpdateType": "Immutable"
-        }
-      }
-    },
-    "AWS::AutoScaling::AutoScalingGroup.MixedInstancesPolicy": {
-      "Properties": {
-        "InstancesDistribution": {
-          "Required": false,
-          "Type": "InstancesDistribution",
-          "UpdateType": "Mutable"
-        },
-        "LaunchTemplate": {
-          "Required": true,
-          "Type": "LaunchTemplate",
-          "UpdateType": "Mutable"
         }
       }
     },
@@ -1790,6 +1790,15 @@
         }
       }
     },
+    "AWS::Batch::JobDefinition.RetryStrategy": {
+      "Properties": {
+        "Attempts": {
+          "Required": false,
+          "PrimitiveType": "Integer",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::CodePipeline::Pipeline.ActionDeclaration": {
       "Properties": {
         "ActionTypeId": {
@@ -1848,15 +1857,6 @@
         "MarketType": {
           "Required": false,
           "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::Batch::JobDefinition.RetryStrategy": {
-      "Properties": {
-        "Attempts": {
-          "Required": false,
-          "PrimitiveType": "Integer",
           "UpdateType": "Mutable"
         }
       }
@@ -1977,6 +1977,20 @@
         }
       }
     },
+    "AWS::Redshift::Cluster.LoggingProperties": {
+      "Properties": {
+        "BucketName": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "S3KeyPrefix": {
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::EC2::LaunchTemplate.CreditSpecification": {
       "Properties": {
         "CpuCredits": {
@@ -1986,14 +2000,14 @@
         }
       }
     },
-    "AWS::Redshift::Cluster.LoggingProperties": {
+    "AWS::ElasticLoadBalancingV2::TargetGroup.TargetGroupAttribute": {
       "Properties": {
-        "BucketName": {
+        "Key": {
           "PrimitiveType": "String",
-          "Required": true,
+          "Required": false,
           "UpdateType": "Mutable"
         },
-        "S3KeyPrefix": {
+        "Value": {
           "PrimitiveType": "String",
           "Required": false,
           "UpdateType": "Mutable"
@@ -2014,14 +2028,19 @@
         }
       }
     },
-    "AWS::ElasticLoadBalancingV2::TargetGroup.TargetGroupAttribute": {
+    "AWS::OpsWorks::App.DataSource": {
       "Properties": {
-        "Key": {
+        "Arn": {
           "PrimitiveType": "String",
           "Required": false,
           "UpdateType": "Mutable"
         },
-        "Value": {
+        "DatabaseName": {
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "Type": {
           "PrimitiveType": "String",
           "Required": false,
           "UpdateType": "Mutable"
@@ -2052,21 +2071,11 @@
         }
       }
     },
-    "AWS::OpsWorks::App.DataSource": {
+    "AWS::WAF::WebACL.WafAction": {
       "Properties": {
-        "Arn": {
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "DatabaseName": {
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
         "Type": {
           "PrimitiveType": "String",
-          "Required": false,
+          "Required": true,
           "UpdateType": "Mutable"
         }
       }
@@ -2076,15 +2085,6 @@
         "ServerSideEncryptionByDefault": {
           "Required": false,
           "Type": "ServerSideEncryptionByDefault",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::WAF::WebACL.WafAction": {
-      "Properties": {
-        "Type": {
-          "PrimitiveType": "String",
-          "Required": true,
           "UpdateType": "Mutable"
         }
       }
@@ -2399,15 +2399,6 @@
         }
       }
     },
-    "AWS::EC2::SpotFleet.IamInstanceProfileSpecification": {
-      "Properties": {
-        "Arn": {
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::AutoScalingPlans::ScalingPlan.ApplicationSource": {
       "Properties": {
         "CloudFormationStackARN": {
@@ -2419,6 +2410,15 @@
           "Type": "List",
           "Required": false,
           "ItemType": "TagFilter",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::EC2::SpotFleet.IamInstanceProfileSpecification": {
+      "Properties": {
+        "Arn": {
+          "PrimitiveType": "String",
+          "Required": false,
           "UpdateType": "Mutable"
         }
       }
@@ -2626,20 +2626,6 @@
         }
       }
     },
-    "AWS::WAFRegional::IPSet.IPSetDescriptor": {
-      "Properties": {
-        "Type": {
-          "Required": true,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        },
-        "Value": {
-          "Required": true,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::AutoScaling::AutoScalingGroup.LaunchTemplateSpecification": {
       "Properties": {
         "LaunchTemplateId": {
@@ -2655,6 +2641,94 @@
         "Version": {
           "PrimitiveType": "String",
           "Required": true,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::WAFRegional::IPSet.IPSetDescriptor": {
+      "Properties": {
+        "Type": {
+          "Required": true,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "Value": {
+          "Required": true,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::Batch::JobDefinition.ContainerProperties": {
+      "Properties": {
+        "User": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "Memory": {
+          "Required": true,
+          "PrimitiveType": "Integer",
+          "UpdateType": "Mutable"
+        },
+        "Privileged": {
+          "Required": false,
+          "PrimitiveType": "Boolean",
+          "UpdateType": "Mutable"
+        },
+        "JobRoleArn": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "ReadonlyRootFilesystem": {
+          "Required": false,
+          "PrimitiveType": "Boolean",
+          "UpdateType": "Mutable"
+        },
+        "Vcpus": {
+          "Required": true,
+          "PrimitiveType": "Integer",
+          "UpdateType": "Mutable"
+        },
+        "Image": {
+          "Required": true,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "MountPoints": {
+          "Type": "List",
+          "Required": false,
+          "ItemType": "MountPoints",
+          "UpdateType": "Mutable"
+        },
+        "Volumes": {
+          "Type": "List",
+          "Required": false,
+          "ItemType": "Volumes",
+          "UpdateType": "Mutable"
+        },
+        "Command": {
+          "PrimitiveItemType": "String",
+          "Type": "List",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "Environment": {
+          "Type": "List",
+          "Required": false,
+          "ItemType": "Environment",
+          "UpdateType": "Mutable"
+        },
+        "Ulimits": {
+          "Type": "List",
+          "Required": false,
+          "ItemType": "Ulimit",
+          "UpdateType": "Mutable"
+        },
+        "InstanceType": {
+          "Required": false,
+          "PrimitiveType": "String",
           "UpdateType": "Mutable"
         }
       }
@@ -2834,80 +2908,6 @@
         }
       }
     },
-    "AWS::Batch::JobDefinition.ContainerProperties": {
-      "Properties": {
-        "User": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        },
-        "Memory": {
-          "Required": true,
-          "PrimitiveType": "Integer",
-          "UpdateType": "Mutable"
-        },
-        "Privileged": {
-          "Required": false,
-          "PrimitiveType": "Boolean",
-          "UpdateType": "Mutable"
-        },
-        "JobRoleArn": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        },
-        "ReadonlyRootFilesystem": {
-          "Required": false,
-          "PrimitiveType": "Boolean",
-          "UpdateType": "Mutable"
-        },
-        "Vcpus": {
-          "Required": true,
-          "PrimitiveType": "Integer",
-          "UpdateType": "Mutable"
-        },
-        "Image": {
-          "Required": true,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        },
-        "MountPoints": {
-          "Type": "List",
-          "Required": false,
-          "ItemType": "MountPoints",
-          "UpdateType": "Mutable"
-        },
-        "Volumes": {
-          "Type": "List",
-          "Required": false,
-          "ItemType": "Volumes",
-          "UpdateType": "Mutable"
-        },
-        "Command": {
-          "PrimitiveItemType": "String",
-          "Type": "List",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "Environment": {
-          "Type": "List",
-          "Required": false,
-          "ItemType": "Environment",
-          "UpdateType": "Mutable"
-        },
-        "Ulimits": {
-          "Type": "List",
-          "Required": false,
-          "ItemType": "Ulimit",
-          "UpdateType": "Mutable"
-        },
-        "InstanceType": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::GameLift::Fleet.IpPermission": {
       "Properties": {
         "FromPort": {
@@ -3068,39 +3068,6 @@
         }
       }
     },
-    "AWS::IoT::TopicRule.SqsAction": {
-      "Properties": {
-        "QueueUrl": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Mutable"
-        },
-        "RoleArn": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Mutable"
-        },
-        "UseBase64": {
-          "PrimitiveType": "Boolean",
-          "Required": false,
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::WAF::SqlInjectionMatchSet.FieldToMatch": {
-      "Properties": {
-        "Data": {
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "Type": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::AutoScaling::ScalingPolicy.CustomizedMetricSpecification": {
       "Properties": {
         "Dimensions": {
@@ -3127,6 +3094,39 @@
         },
         "Unit": {
           "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::WAF::SqlInjectionMatchSet.FieldToMatch": {
+      "Properties": {
+        "Data": {
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "Type": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::IoT::TopicRule.SqsAction": {
+      "Properties": {
+        "QueueUrl": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "RoleArn": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "UseBase64": {
+          "PrimitiveType": "Boolean",
           "Required": false,
           "UpdateType": "Mutable"
         }
@@ -3231,20 +3231,6 @@
         }
       }
     },
-    "AWS::EMR::InstanceGroupConfig.MetricDimension": {
-      "Properties": {
-        "Key": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Mutable"
-        },
-        "Value": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::ECS::Service.LoadBalancer": {
       "Properties": {
         "ContainerName": {
@@ -3269,6 +3255,20 @@
         }
       }
     },
+    "AWS::EMR::InstanceGroupConfig.MetricDimension": {
+      "Properties": {
+        "Key": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "Value": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::KinesisFirehose::DeliveryStream.EncryptionConfiguration": {
       "Properties": {
         "KMSEncryptionConfig": {
@@ -3278,6 +3278,22 @@
         },
         "NoEncryptionConfig": {
           "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::AppStream::ImageBuilder.VpcConfig": {
+      "Properties": {
+        "SecurityGroupIds": {
+          "PrimitiveItemType": "String",
+          "Type": "List",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "SubnetIds": {
+          "PrimitiveItemType": "String",
+          "Type": "List",
           "Required": false,
           "UpdateType": "Mutable"
         }
@@ -3297,22 +3313,6 @@
         },
         "LogStreamName": {
           "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::AppStream::ImageBuilder.VpcConfig": {
-      "Properties": {
-        "SecurityGroupIds": {
-          "PrimitiveItemType": "String",
-          "Type": "List",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "SubnetIds": {
-          "PrimitiveItemType": "String",
-          "Type": "List",
           "Required": false,
           "UpdateType": "Mutable"
         }
@@ -3430,20 +3430,6 @@
         }
       }
     },
-    "AWS::SES::ReceiptFilter.Filter": {
-      "Properties": {
-        "IpFilter": {
-          "Type": "IpFilter",
-          "Required": true,
-          "UpdateType": "Mutable"
-        },
-        "Name": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::ElasticLoadBalancing::LoadBalancer.AccessLoggingPolicy": {
       "Properties": {
         "EmitInterval": {
@@ -3464,6 +3450,20 @@
         "S3BucketPrefix": {
           "PrimitiveType": "String",
           "Required": false,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::SES::ReceiptFilter.Filter": {
+      "Properties": {
+        "IpFilter": {
+          "Type": "IpFilter",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "Name": {
+          "Required": false,
+          "PrimitiveType": "String",
           "UpdateType": "Mutable"
         }
       }
@@ -3782,25 +3782,6 @@
         }
       }
     },
-    "AWS::EC2::EC2Fleet.FleetLaunchTemplateSpecificationRequest": {
-      "Properties": {
-        "LaunchTemplateName": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        },
-        "Version": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        },
-        "LaunchTemplateId": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::EMR::Cluster.InstanceFleetConfig": {
       "Properties": {
         "InstanceTypeConfigs": {
@@ -3828,6 +3809,25 @@
         "TargetSpotCapacity": {
           "PrimitiveType": "Integer",
           "Required": false,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::EC2::EC2Fleet.FleetLaunchTemplateSpecificationRequest": {
+      "Properties": {
+        "LaunchTemplateName": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "Version": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "LaunchTemplateId": {
+          "Required": false,
+          "PrimitiveType": "String",
           "UpdateType": "Mutable"
         }
       }
@@ -4188,20 +4188,6 @@
         }
       }
     },
-    "AWS::EMR::Cluster.ScalingAction": {
-      "Properties": {
-        "Market": {
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "SimpleScalingPolicyConfiguration": {
-          "Required": true,
-          "Type": "SimpleScalingPolicyConfiguration",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::Budgets::Budget.Subscriber": {
       "Properties": {
         "SubscriptionType": {
@@ -4212,6 +4198,20 @@
         "Address": {
           "Required": true,
           "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::EMR::Cluster.ScalingAction": {
+      "Properties": {
+        "Market": {
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "SimpleScalingPolicyConfiguration": {
+          "Required": true,
+          "Type": "SimpleScalingPolicyConfiguration",
           "UpdateType": "Mutable"
         }
       }
@@ -4346,6 +4346,22 @@
         }
       }
     },
+    "AWS::DirectoryService::SimpleAD.VpcSettings": {
+      "Properties": {
+        "SubnetIds": {
+          "DuplicatesAllowed": false,
+          "PrimitiveItemType": "String",
+          "Required": true,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        },
+        "VpcId": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::CloudFront::Distribution.CacheBehavior": {
       "Properties": {
         "Compress": {
@@ -4420,22 +4436,6 @@
         "MaxTTL": {
           "Required": false,
           "PrimitiveType": "Double",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::DirectoryService::SimpleAD.VpcSettings": {
-      "Properties": {
-        "SubnetIds": {
-          "DuplicatesAllowed": false,
-          "PrimitiveItemType": "String",
-          "Required": true,
-          "Type": "List",
-          "UpdateType": "Mutable"
-        },
-        "VpcId": {
-          "PrimitiveType": "String",
-          "Required": true,
           "UpdateType": "Mutable"
         }
       }
@@ -4521,15 +4521,6 @@
         }
       }
     },
-    "AWS::Lambda::Function.DeadLetterConfig": {
-      "Properties": {
-        "TargetArn": {
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::CodePipeline::CustomActionType.Settings": {
       "Properties": {
         "EntityUrlTemplate": {
@@ -4548,6 +4539,15 @@
           "UpdateType": "Mutable"
         },
         "ThirdPartyConfigurationUrl": {
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::Lambda::Function.DeadLetterConfig": {
+      "Properties": {
+        "TargetArn": {
           "PrimitiveType": "String",
           "Required": false,
           "UpdateType": "Mutable"
@@ -5075,27 +5075,6 @@
         }
       }
     },
-    "AWS::Config::ConfigurationRecorder.RecordingGroup": {
-      "Properties": {
-        "AllSupported": {
-          "PrimitiveType": "Boolean",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "IncludeGlobalResourceTypes": {
-          "PrimitiveType": "Boolean",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "ResourceTypes": {
-          "DuplicatesAllowed": false,
-          "PrimitiveItemType": "String",
-          "Required": false,
-          "Type": "List",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::ApiGateway::UsagePlan.ApiStage": {
       "Properties": {
         "ApiId": {
@@ -5113,6 +5092,27 @@
           "ItemType": "ThrottleSettings",
           "Required": false,
           "Type": "Map",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::Config::ConfigurationRecorder.RecordingGroup": {
+      "Properties": {
+        "AllSupported": {
+          "PrimitiveType": "Boolean",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "IncludeGlobalResourceTypes": {
+          "PrimitiveType": "Boolean",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "ResourceTypes": {
+          "DuplicatesAllowed": false,
+          "PrimitiveItemType": "String",
+          "Required": false,
+          "Type": "List",
           "UpdateType": "Mutable"
         }
       }
@@ -5365,20 +5365,6 @@
         }
       }
     },
-    "AWS::CodePipeline::Pipeline.ArtifactStoreMap": {
-      "Properties": {
-        "ArtifactStore": {
-          "Required": true,
-          "Type": "ArtifactStore",
-          "UpdateType": "Mutable"
-        },
-        "Region": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::AutoScaling::ScalingPolicy.PredefinedMetricSpecification": {
       "Properties": {
         "PredefinedMetricType": {
@@ -5389,6 +5375,20 @@
         "ResourceLabel": {
           "PrimitiveType": "String",
           "Required": false,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::CodePipeline::Pipeline.ArtifactStoreMap": {
+      "Properties": {
+        "ArtifactStore": {
+          "Required": true,
+          "Type": "ArtifactStore",
+          "UpdateType": "Mutable"
+        },
+        "Region": {
+          "PrimitiveType": "String",
+          "Required": true,
           "UpdateType": "Mutable"
         }
       }
@@ -5856,16 +5856,22 @@
         }
       }
     },
-    "AWS::AppSync::GraphQLApi.LogConfig": {
+    "AWS::DLM::LifecyclePolicy.CreateRule": {
       "Properties": {
-        "CloudWatchLogsRoleArn": {
-          "Required": false,
+        "IntervalUnit": {
+          "Required": true,
           "PrimitiveType": "String",
           "UpdateType": "Mutable"
         },
-        "FieldLogLevel": {
+        "Times": {
+          "PrimitiveItemType": "String",
+          "Type": "List",
           "Required": false,
-          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "Interval": {
+          "Required": true,
+          "PrimitiveType": "Integer",
           "UpdateType": "Mutable"
         }
       }
@@ -5884,22 +5890,30 @@
         }
       }
     },
-    "AWS::DLM::LifecyclePolicy.CreateRule": {
+    "AWS::AppSync::GraphQLApi.LogConfig": {
       "Properties": {
-        "IntervalUnit": {
+        "CloudWatchLogsRoleArn": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "FieldLogLevel": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::KinesisAnalytics::Application.CSVMappingParameters": {
+      "Properties": {
+        "RecordRowDelimiter": {
           "Required": true,
           "PrimitiveType": "String",
           "UpdateType": "Mutable"
         },
-        "Times": {
-          "PrimitiveItemType": "String",
-          "Type": "List",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "Interval": {
+        "RecordColumnDelimiter": {
           "Required": true,
-          "PrimitiveType": "Integer",
+          "PrimitiveType": "String",
           "UpdateType": "Mutable"
         }
       }
@@ -5928,20 +5942,6 @@
         "Name": {
           "PrimitiveType": "String",
           "Required": false,
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::KinesisAnalytics::Application.CSVMappingParameters": {
-      "Properties": {
-        "RecordRowDelimiter": {
-          "Required": true,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        },
-        "RecordColumnDelimiter": {
-          "Required": true,
-          "PrimitiveType": "String",
           "UpdateType": "Mutable"
         }
       }
@@ -6052,20 +6052,6 @@
         }
       }
     },
-    "AWS::OpsWorks::Stack.ChefConfiguration": {
-      "Properties": {
-        "BerkshelfVersion": {
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "ManageBerkshelf": {
-          "PrimitiveType": "Boolean",
-          "Required": false,
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::ElasticLoadBalancingV2::Listener.FixedResponseConfig": {
       "Properties": {
         "ContentType": {
@@ -6081,6 +6067,20 @@
         "StatusCode": {
           "PrimitiveType": "String",
           "Required": true,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::OpsWorks::Stack.ChefConfiguration": {
+      "Properties": {
+        "BerkshelfVersion": {
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "ManageBerkshelf": {
+          "PrimitiveType": "Boolean",
+          "Required": false,
           "UpdateType": "Mutable"
         }
       }
@@ -6340,6 +6340,22 @@
         }
       }
     },
+    "AWS::EMR::InstanceFleetConfig.EbsConfiguration": {
+      "Properties": {
+        "EbsBlockDeviceConfigs": {
+          "DuplicatesAllowed": false,
+          "ItemType": "EbsBlockDeviceConfig",
+          "Required": false,
+          "Type": "List",
+          "UpdateType": "Immutable"
+        },
+        "EbsOptimized": {
+          "PrimitiveType": "Boolean",
+          "Required": false,
+          "UpdateType": "Immutable"
+        }
+      }
+    },
     "AWS::Logs::MetricFilter.MetricTransformation": {
       "Properties": {
         "DefaultValue": {
@@ -6361,22 +6377,6 @@
           "PrimitiveType": "String",
           "Required": true,
           "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::EMR::InstanceFleetConfig.EbsConfiguration": {
-      "Properties": {
-        "EbsBlockDeviceConfigs": {
-          "DuplicatesAllowed": false,
-          "ItemType": "EbsBlockDeviceConfig",
-          "Required": false,
-          "Type": "List",
-          "UpdateType": "Immutable"
-        },
-        "EbsOptimized": {
-          "PrimitiveType": "Boolean",
-          "Required": false,
-          "UpdateType": "Immutable"
         }
       }
     },
@@ -6503,22 +6503,6 @@
         }
       }
     },
-    "AWS::Glue::Crawler.Targets": {
-      "Properties": {
-        "S3Targets": {
-          "Type": "List",
-          "Required": false,
-          "ItemType": "S3Target",
-          "UpdateType": "Mutable"
-        },
-        "JdbcTargets": {
-          "Type": "List",
-          "Required": false,
-          "ItemType": "JdbcTarget",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::WAF::ByteMatchSet.ByteMatchTuple": {
       "Properties": {
         "FieldToMatch": {
@@ -6544,6 +6528,22 @@
         "TextTransformation": {
           "PrimitiveType": "String",
           "Required": true,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::Glue::Crawler.Targets": {
+      "Properties": {
+        "S3Targets": {
+          "Type": "List",
+          "Required": false,
+          "ItemType": "S3Target",
+          "UpdateType": "Mutable"
+        },
+        "JdbcTargets": {
+          "Type": "List",
+          "Required": false,
+          "ItemType": "JdbcTarget",
           "UpdateType": "Mutable"
         }
       }
@@ -7058,6 +7058,20 @@
         }
       }
     },
+    "AWS::AutoScalingPlans::ScalingPlan.MetricDimension": {
+      "Properties": {
+        "Value": {
+          "Required": true,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "Name": {
+          "Required": true,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::DynamoDB::Table.GlobalSecondaryIndex": {
       "Properties": {
         "IndexName": {
@@ -7080,20 +7094,6 @@
         "ProvisionedThroughput": {
           "Required": false,
           "Type": "ProvisionedThroughput",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::AutoScalingPlans::ScalingPlan.MetricDimension": {
-      "Properties": {
-        "Value": {
-          "Required": true,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        },
-        "Name": {
-          "Required": true,
-          "PrimitiveType": "String",
           "UpdateType": "Mutable"
         }
       }
@@ -7634,6 +7634,20 @@
         }
       }
     },
+    "AWS::EC2::NetworkAclEntry.PortRange": {
+      "Properties": {
+        "From": {
+          "PrimitiveType": "Integer",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "To": {
+          "PrimitiveType": "Integer",
+          "Required": false,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::ElasticBeanstalk::Environment.Tier": {
       "Properties": {
         "Name": {
@@ -7648,20 +7662,6 @@
         },
         "Version": {
           "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::EC2::NetworkAclEntry.PortRange": {
-      "Properties": {
-        "From": {
-          "PrimitiveType": "Integer",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "To": {
-          "PrimitiveType": "Integer",
           "Required": false,
           "UpdateType": "Mutable"
         }
@@ -7702,15 +7702,6 @@
         }
       }
     },
-    "AWS::Route53::HostedZone.HostedZoneConfig": {
-      "Properties": {
-        "Comment": {
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::CloudFront::Distribution.Origin": {
       "Properties": {
         "OriginCustomHeaders": {
@@ -7741,6 +7732,15 @@
         },
         "CustomOriginConfig": {
           "Type": "CustomOriginConfig",
+          "Required": false,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::Route53::HostedZone.HostedZoneConfig": {
+      "Properties": {
+        "Comment": {
+          "PrimitiveType": "String",
           "Required": false,
           "UpdateType": "Mutable"
         }
@@ -7800,6 +7800,22 @@
         }
       }
     },
+    "AWS::EC2::Instance.AssociationParameter": {
+      "Properties": {
+        "Key": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "Value": {
+          "DuplicatesAllowed": true,
+          "PrimitiveItemType": "String",
+          "Required": true,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::IoT::TopicRule.TopicRulePayload": {
       "Properties": {
         "Actions": {
@@ -7832,37 +7848,6 @@
         "Sql": {
           "PrimitiveType": "String",
           "Required": true,
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::EC2::Instance.AssociationParameter": {
-      "Properties": {
-        "Key": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Mutable"
-        },
-        "Value": {
-          "DuplicatesAllowed": true,
-          "PrimitiveItemType": "String",
-          "Required": true,
-          "Type": "List",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::Cognito::IdentityPool.PushSync": {
-      "Properties": {
-        "ApplicationArns": {
-          "PrimitiveItemType": "String",
-          "Type": "List",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "RoleArn": {
-          "Required": false,
-          "PrimitiveType": "String",
           "UpdateType": "Mutable"
         }
       }
@@ -7908,6 +7893,21 @@
         }
       }
     },
+    "AWS::Cognito::IdentityPool.PushSync": {
+      "Properties": {
+        "ApplicationArns": {
+          "PrimitiveItemType": "String",
+          "Type": "List",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "RoleArn": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::WorkSpaces::Workspace.WorkspaceProperties": {
       "Properties": {
         "ComputeTypeName": {
@@ -7937,20 +7937,6 @@
         }
       }
     },
-    "AWS::ECS::TaskDefinition.VolumeFrom": {
-      "Properties": {
-        "ReadOnly": {
-          "PrimitiveType": "Boolean",
-          "Required": false,
-          "UpdateType": "Immutable"
-        },
-        "SourceContainer": {
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Immutable"
-        }
-      }
-    },
     "AWS::ElasticLoadBalancing::LoadBalancer.ConnectionDrainingPolicy": {
       "Properties": {
         "Enabled": {
@@ -7962,6 +7948,20 @@
           "PrimitiveType": "Integer",
           "Required": false,
           "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::ECS::TaskDefinition.VolumeFrom": {
+      "Properties": {
+        "ReadOnly": {
+          "PrimitiveType": "Boolean",
+          "Required": false,
+          "UpdateType": "Immutable"
+        },
+        "SourceContainer": {
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Immutable"
         }
       }
     },
@@ -8204,11 +8204,16 @@
         }
       }
     },
-    "AWS::Events::Rule.KinesisParameters": {
+    "AWS::Batch::JobDefinition.NodeRangeProperty": {
       "Properties": {
-        "PartitionKeyPath": {
-          "PrimitiveType": "String",
+        "Container": {
+          "Type": "ContainerProperties",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "TargetNodes": {
           "Required": true,
+          "PrimitiveType": "String",
           "UpdateType": "Mutable"
         }
       }
@@ -8222,16 +8227,11 @@
         }
       }
     },
-    "AWS::Batch::JobDefinition.NodeRangeProperty": {
+    "AWS::Events::Rule.KinesisParameters": {
       "Properties": {
-        "Container": {
-          "Type": "ContainerProperties",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "TargetNodes": {
-          "Required": true,
+        "PartitionKeyPath": {
           "PrimitiveType": "String",
+          "Required": true,
           "UpdateType": "Mutable"
         }
       }
@@ -8264,17 +8264,6 @@
         }
       }
     },
-    "AWS::CodeDeploy::DeploymentGroup.OnPremisesTagSetListObject": {
-      "Properties": {
-        "OnPremisesTagGroup": {
-          "DuplicatesAllowed": false,
-          "ItemType": "TagFilter",
-          "Required": false,
-          "Type": "List",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::SNS::Topic.Subscription": {
       "Properties": {
         "Endpoint": {
@@ -8286,6 +8275,17 @@
           "PrimitiveType": "String",
           "Required": true,
           "UpdateType": "Immutable"
+        }
+      }
+    },
+    "AWS::CodeDeploy::DeploymentGroup.OnPremisesTagSetListObject": {
+      "Properties": {
+        "OnPremisesTagGroup": {
+          "DuplicatesAllowed": false,
+          "ItemType": "TagFilter",
+          "Required": false,
+          "Type": "List",
+          "UpdateType": "Mutable"
         }
       }
     },
@@ -8304,6 +8304,22 @@
         "Version": {
           "PrimitiveType": "String",
           "Required": true,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::AutoScaling::AutoScalingGroup.MetricsCollection": {
+      "Properties": {
+        "Granularity": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "Metrics": {
+          "DuplicatesAllowed": true,
+          "PrimitiveItemType": "String",
+          "Required": false,
+          "Type": "List",
           "UpdateType": "Mutable"
         }
       }
@@ -8346,17 +8362,17 @@
         }
       }
     },
-    "AWS::AutoScaling::AutoScalingGroup.MetricsCollection": {
+    "AWS::S3::Bucket.ReplicationConfiguration": {
       "Properties": {
-        "Granularity": {
+        "Role": {
           "PrimitiveType": "String",
           "Required": true,
           "UpdateType": "Mutable"
         },
-        "Metrics": {
-          "DuplicatesAllowed": true,
-          "PrimitiveItemType": "String",
-          "Required": false,
+        "Rules": {
+          "DuplicatesAllowed": false,
+          "ItemType": "ReplicationRule",
+          "Required": true,
           "Type": "List",
           "UpdateType": "Mutable"
         }
@@ -8372,22 +8388,6 @@
         "KeyType": {
           "PrimitiveType": "String",
           "Required": true,
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::S3::Bucket.ReplicationConfiguration": {
-      "Properties": {
-        "Role": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Mutable"
-        },
-        "Rules": {
-          "DuplicatesAllowed": false,
-          "ItemType": "ReplicationRule",
-          "Required": true,
-          "Type": "List",
           "UpdateType": "Mutable"
         }
       }
@@ -8800,20 +8800,6 @@
         }
       }
     },
-    "AWS::CodePipeline::Webhook.WebhookFilterRule": {
-      "Properties": {
-        "JsonPath": {
-          "Required": true,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        },
-        "MatchEquals": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::ElasticLoadBalancing::LoadBalancer.Listeners": {
       "Properties": {
         "InstancePort": {
@@ -8850,30 +8836,25 @@
         }
       }
     },
+    "AWS::CodePipeline::Webhook.WebhookFilterRule": {
+      "Properties": {
+        "JsonPath": {
+          "Required": true,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "MatchEquals": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::EMR::InstanceGroupConfig.ScalingTrigger": {
       "Properties": {
         "CloudWatchAlarmDefinition": {
           "Required": true,
           "Type": "CloudWatchAlarmDefinition",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::S3::Bucket.TopicConfiguration": {
-      "Properties": {
-        "Event": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Mutable"
-        },
-        "Filter": {
-          "Required": false,
-          "Type": "NotificationFilter",
-          "UpdateType": "Mutable"
-        },
-        "Topic": {
-          "PrimitiveType": "String",
-          "Required": true,
           "UpdateType": "Mutable"
         }
       }
@@ -8893,6 +8874,25 @@
         "TimeZone": {
           "Required": true,
           "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::S3::Bucket.TopicConfiguration": {
+      "Properties": {
+        "Event": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "Filter": {
+          "Required": false,
+          "Type": "NotificationFilter",
+          "UpdateType": "Mutable"
+        },
+        "Topic": {
+          "PrimitiveType": "String",
+          "Required": true,
           "UpdateType": "Mutable"
         }
       }
@@ -8917,15 +8917,6 @@
         }
       }
     },
-    "AWS::CloudFront::Distribution.S3OriginConfig": {
-      "Properties": {
-        "OriginAccessIdentity": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::ElasticLoadBalancingV2::LoadBalancer.LoadBalancerAttribute": {
       "Properties": {
         "Key": {
@@ -8936,6 +8927,15 @@
         "Value": {
           "PrimitiveType": "String",
           "Required": false,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::CloudFront::Distribution.S3OriginConfig": {
+      "Properties": {
+        "OriginAccessIdentity": {
+          "Required": false,
+          "PrimitiveType": "String",
           "UpdateType": "Mutable"
         }
       }
@@ -9025,6 +9025,16 @@
         }
       }
     },
+    "AWS::SSM::PatchBaseline.PatchFilterGroup": {
+      "Properties": {
+        "PatchFilters": {
+          "Type": "List",
+          "Required": false,
+          "ItemType": "PatchFilter",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::Cognito::UserPool.LambdaConfig": {
       "Properties": {
         "CreateAuthChallenge": {
@@ -9069,16 +9079,6 @@
         }
       }
     },
-    "AWS::SSM::PatchBaseline.PatchFilterGroup": {
-      "Properties": {
-        "PatchFilters": {
-          "Type": "List",
-          "Required": false,
-          "ItemType": "PatchFilter",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::Glue::Crawler.JdbcTarget": {
       "Properties": {
         "ConnectionName": {
@@ -9117,6 +9117,20 @@
           "Type": "List",
           "Required": false,
           "ItemType": "Tag",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::AmazonMQ::Configuration.TagsEntry": {
+      "Properties": {
+        "Value": {
+          "Required": true,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "Key": {
+          "Required": true,
+          "PrimitiveType": "String",
           "UpdateType": "Mutable"
         }
       }
@@ -9490,15 +9504,6 @@
         }
       }
     },
-    "AWS::CodeDeploy::DeploymentGroup.Alarm": {
-      "Properties": {
-        "Name": {
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::Cognito::UserPool.SchemaAttribute": {
       "Properties": {
         "DeveloperOnlyAttribute": {
@@ -9534,6 +9539,15 @@
         "Name": {
           "Required": false,
           "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::CodeDeploy::DeploymentGroup.Alarm": {
+      "Properties": {
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": false,
           "UpdateType": "Mutable"
         }
       }
@@ -9612,6 +9626,20 @@
         }
       }
     },
+    "AWS::KinesisAnalytics::Application.RecordFormat": {
+      "Properties": {
+        "MappingParameters": {
+          "Type": "MappingParameters",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "RecordFormatType": {
+          "Required": true,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::SageMaker::Model.VpcConfig": {
       "Properties": {
         "Subnets": {
@@ -9628,6 +9656,20 @@
         }
       }
     },
+    "AWS::AppSync::DataSource.HttpConfig": {
+      "Properties": {
+        "Endpoint": {
+          "Required": true,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "AuthorizationConfig": {
+          "Type": "AuthorizationConfig",
+          "Required": false,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::EC2::LaunchTemplate.TagSpecification": {
       "Properties": {
         "ResourceType": {
@@ -9639,34 +9681,6 @@
           "Type": "List",
           "Required": false,
           "ItemType": "Tag",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::KinesisAnalytics::Application.RecordFormat": {
-      "Properties": {
-        "MappingParameters": {
-          "Type": "MappingParameters",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "RecordFormatType": {
-          "Required": true,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::AppSync::DataSource.HttpConfig": {
-      "Properties": {
-        "Endpoint": {
-          "Required": true,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        },
-        "AuthorizationConfig": {
-          "Type": "AuthorizationConfig",
-          "Required": false,
           "UpdateType": "Mutable"
         }
       }
@@ -9903,20 +9917,6 @@
         }
       }
     },
-    "AWS::AppStream::ImageBuilder.DomainJoinInfo": {
-      "Properties": {
-        "OrganizationalUnitDistinguishedName": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        },
-        "DirectoryName": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::CloudTrail::Trail.DataResource": {
       "Properties": {
         "Type": {
@@ -9933,6 +9933,20 @@
         }
       }
     },
+    "AWS::AppStream::ImageBuilder.DomainJoinInfo": {
+      "Properties": {
+        "OrganizationalUnitDistinguishedName": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "DirectoryName": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::IoT::TopicRule.DynamoDBv2Action": {
       "Properties": {
         "PutItem": {
@@ -9943,6 +9957,20 @@
         "RoleArn": {
           "PrimitiveType": "String",
           "Required": false,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::AmazonMQ::Broker.TagsEntry": {
+      "Properties": {
+        "Value": {
+          "Required": true,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "Key": {
+          "Required": true,
+          "PrimitiveType": "String",
           "UpdateType": "Mutable"
         }
       }
@@ -9990,6 +10018,27 @@
         }
       }
     },
+    "AWS::DataPipeline::Pipeline.PipelineObject": {
+      "Properties": {
+        "Fields": {
+          "DuplicatesAllowed": true,
+          "ItemType": "Field",
+          "Required": true,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        },
+        "Id": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::ApiGateway::DocumentationPart.Location": {
       "Properties": {
         "Method": {
@@ -10016,27 +10065,6 @@
           "PrimitiveType": "String",
           "Required": false,
           "UpdateType": "Immutable"
-        }
-      }
-    },
-    "AWS::DataPipeline::Pipeline.PipelineObject": {
-      "Properties": {
-        "Fields": {
-          "DuplicatesAllowed": true,
-          "ItemType": "Field",
-          "Required": true,
-          "Type": "List",
-          "UpdateType": "Mutable"
-        },
-        "Id": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Mutable"
-        },
-        "Name": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Mutable"
         }
       }
     },
@@ -10346,20 +10374,6 @@
         }
       }
     },
-    "AWS::ElasticBeanstalk::Application.ApplicationVersionLifecycleConfig": {
-      "Properties": {
-        "MaxAgeRule": {
-          "Required": false,
-          "Type": "MaxAgeRule",
-          "UpdateType": "Mutable"
-        },
-        "MaxCountRule": {
-          "Required": false,
-          "Type": "MaxCountRule",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::Cognito::UserPool.SmsConfiguration": {
       "Properties": {
         "ExternalId": {
@@ -10370,6 +10384,20 @@
         "SnsCallerArn": {
           "Required": false,
           "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::ElasticBeanstalk::Application.ApplicationVersionLifecycleConfig": {
+      "Properties": {
+        "MaxAgeRule": {
+          "Required": false,
+          "Type": "MaxAgeRule",
+          "UpdateType": "Mutable"
+        },
+        "MaxCountRule": {
+          "Required": false,
+          "Type": "MaxCountRule",
           "UpdateType": "Mutable"
         }
       }
@@ -10579,16 +10607,16 @@
         }
       }
     },
-    "AWS::IoTAnalytics::Dataset.RetentionPeriod": {
+    "AWS::WAFRegional::XssMatchSet.FieldToMatch": {
       "Properties": {
-        "NumberOfDays": {
+        "Type": {
           "Required": true,
-          "PrimitiveType": "Integer",
+          "PrimitiveType": "String",
           "UpdateType": "Mutable"
         },
-        "Unlimited": {
-          "Required": true,
-          "PrimitiveType": "Boolean",
+        "Data": {
+          "Required": false,
+          "PrimitiveType": "String",
           "UpdateType": "Mutable"
         }
       }
@@ -10602,16 +10630,16 @@
         }
       }
     },
-    "AWS::WAFRegional::XssMatchSet.FieldToMatch": {
+    "AWS::IoTAnalytics::Dataset.RetentionPeriod": {
       "Properties": {
-        "Type": {
+        "NumberOfDays": {
           "Required": true,
-          "PrimitiveType": "String",
+          "PrimitiveType": "Integer",
           "UpdateType": "Mutable"
         },
-        "Data": {
-          "Required": false,
-          "PrimitiveType": "String",
+        "Unlimited": {
+          "Required": true,
+          "PrimitiveType": "Boolean",
           "UpdateType": "Mutable"
         }
       }
@@ -10700,20 +10728,6 @@
         }
       }
     },
-    "AWS::ECS::Service.PlacementConstraint": {
-      "Properties": {
-        "Expression": {
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Immutable"
-        },
-        "Type": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Immutable"
-        }
-      }
-    },
     "AWS::ElasticLoadBalancingV2::TargetGroup.TargetDescription": {
       "Properties": {
         "AvailabilityZone": {
@@ -10730,6 +10744,20 @@
           "PrimitiveType": "Integer",
           "Required": false,
           "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::ECS::Service.PlacementConstraint": {
+      "Properties": {
+        "Expression": {
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Immutable"
+        },
+        "Type": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
         }
       }
     },
@@ -11049,6 +11077,15 @@
         }
       }
     },
+    "AWS::ServiceDiscovery::Service.HealthCheckCustomConfig": {
+      "Properties": {
+        "FailureThreshold": {
+          "Required": false,
+          "PrimitiveType": "Double",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::EC2::SpotFleet.InstanceIpv6Address": {
       "Properties": {
         "Ipv6Address": {
@@ -11074,15 +11111,6 @@
         }
       }
     },
-    "AWS::ServiceDiscovery::Service.HealthCheckCustomConfig": {
-      "Properties": {
-        "FailureThreshold": {
-          "Required": false,
-          "PrimitiveType": "Double",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::SSM::Association.S3OutputLocation": {
       "Properties": {
         "OutputS3BucketName": {
@@ -11093,6 +11121,15 @@
         "OutputS3KeyPrefix": {
           "PrimitiveType": "String",
           "Required": false,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::WAFRegional::WebACL.Action": {
+      "Properties": {
+        "Type": {
+          "Required": true,
+          "PrimitiveType": "String",
           "UpdateType": "Mutable"
         }
       }
@@ -11111,10 +11148,25 @@
         }
       }
     },
-    "AWS::WAFRegional::WebACL.Action": {
+    "AWS::CloudFront::Distribution.CustomErrorResponse": {
       "Properties": {
-        "Type": {
+        "ResponseCode": {
+          "Required": false,
+          "PrimitiveType": "Integer",
+          "UpdateType": "Mutable"
+        },
+        "ErrorCachingMinTTL": {
+          "Required": false,
+          "PrimitiveType": "Double",
+          "UpdateType": "Mutable"
+        },
+        "ErrorCode": {
           "Required": true,
+          "PrimitiveType": "Integer",
+          "UpdateType": "Mutable"
+        },
+        "ResponsePagePath": {
+          "Required": false,
           "PrimitiveType": "String",
           "UpdateType": "Mutable"
         }
@@ -11140,30 +11192,6 @@
         "ZipFile": {
           "PrimitiveType": "String",
           "Required": false,
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::CloudFront::Distribution.CustomErrorResponse": {
-      "Properties": {
-        "ResponseCode": {
-          "Required": false,
-          "PrimitiveType": "Integer",
-          "UpdateType": "Mutable"
-        },
-        "ErrorCachingMinTTL": {
-          "Required": false,
-          "PrimitiveType": "Double",
-          "UpdateType": "Mutable"
-        },
-        "ErrorCode": {
-          "Required": true,
-          "PrimitiveType": "Integer",
-          "UpdateType": "Mutable"
-        },
-        "ResponsePagePath": {
-          "Required": false,
-          "PrimitiveType": "String",
           "UpdateType": "Mutable"
         }
       }
@@ -11317,6 +11345,15 @@
         }
       }
     },
+    "AWS::SageMaker::NotebookInstanceLifecycleConfig.NotebookInstanceLifecycleHook": {
+      "Properties": {
+        "Content": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::CodeDeploy::DeploymentGroup.EC2TagFilter": {
       "Properties": {
         "Key": {
@@ -11376,15 +11413,6 @@
         }
       }
     },
-    "AWS::SageMaker::NotebookInstanceLifecycleConfig.NotebookInstanceLifecycleHook": {
-      "Properties": {
-        "Content": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::EC2::SecurityGroup.Egress": {
       "Properties": {
         "CidrIp": {
@@ -11429,6 +11457,15 @@
         }
       }
     },
+    "AWS::KinesisAnalytics::Application.InputParallelism": {
+      "Properties": {
+        "Count": {
+          "Required": false,
+          "PrimitiveType": "Integer",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::IoTAnalytics::Pipeline.Channel": {
       "Properties": {
         "ChannelName": {
@@ -11444,15 +11481,6 @@
         "Name": {
           "Required": false,
           "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::KinesisAnalytics::Application.InputParallelism": {
-      "Properties": {
-        "Count": {
-          "Required": false,
-          "PrimitiveType": "Integer",
           "UpdateType": "Mutable"
         }
       }
@@ -11632,15 +11660,6 @@
         }
       }
     },
-    "AWS::EC2::SpotFleet.GroupIdentifier": {
-      "Properties": {
-        "GroupId": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::Budgets::Budget.CostTypes": {
       "Properties": {
         "IncludeSupport": {
@@ -11696,6 +11715,15 @@
         "IncludeRefund": {
           "Required": false,
           "PrimitiveType": "Boolean",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::EC2::SpotFleet.GroupIdentifier": {
+      "Properties": {
+        "GroupId": {
+          "PrimitiveType": "String",
+          "Required": true,
           "UpdateType": "Mutable"
         }
       }
@@ -12064,6 +12092,16 @@
         }
       }
     },
+    "AWS::Cognito::IdentityPoolRoleAttachment.RulesConfigurationType": {
+      "Properties": {
+        "Rules": {
+          "Type": "List",
+          "Required": true,
+          "ItemType": "MappingRule",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::S3::Bucket.NoncurrentVersionTransition": {
       "Properties": {
         "StorageClass": {
@@ -12078,12 +12116,11 @@
         }
       }
     },
-    "AWS::Cognito::IdentityPoolRoleAttachment.RulesConfigurationType": {
+    "AWS::Glue::Job.ExecutionProperty": {
       "Properties": {
-        "Rules": {
-          "Type": "List",
-          "Required": true,
-          "ItemType": "MappingRule",
+        "MaxConcurrentRuns": {
+          "Required": false,
+          "PrimitiveType": "Double",
           "UpdateType": "Mutable"
         }
       }
@@ -12118,15 +12155,6 @@
           "Required": false,
           "Type": "List",
           "UpdateType": "Immutable"
-        }
-      }
-    },
-    "AWS::Glue::Job.ExecutionProperty": {
-      "Properties": {
-        "MaxConcurrentRuns": {
-          "Required": false,
-          "PrimitiveType": "Double",
-          "UpdateType": "Mutable"
         }
       }
     },
@@ -12376,6 +12404,34 @@
         }
       }
     },
+    "AWS::Batch::JobDefinition.VolumesHost": {
+      "Properties": {
+        "SourcePath": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::SES::ConfigurationSetEventDestination.DimensionConfiguration": {
+      "Properties": {
+        "DimensionValueSource": {
+          "Required": true,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "DefaultDimensionValue": {
+          "Required": true,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "DimensionName": {
+          "Required": true,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::KinesisFirehose::DeliveryStream.S3DestinationConfiguration": {
       "Properties": {
         "BucketARN": {
@@ -12415,30 +12471,17 @@
         }
       }
     },
-    "AWS::SES::ConfigurationSetEventDestination.DimensionConfiguration": {
+    "AWS::Glue::Trigger.Predicate": {
       "Properties": {
-        "DimensionValueSource": {
-          "Required": true,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        },
-        "DefaultDimensionValue": {
-          "Required": true,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        },
-        "DimensionName": {
-          "Required": true,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::Batch::JobDefinition.VolumesHost": {
-      "Properties": {
-        "SourcePath": {
+        "Logical": {
           "Required": false,
           "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "Conditions": {
+          "Type": "List",
+          "Required": false,
+          "ItemType": "Condition",
           "UpdateType": "Mutable"
         }
       }
@@ -12483,17 +12526,16 @@
         }
       }
     },
-    "AWS::Glue::Trigger.Predicate": {
+    "AWS::IAM::Group.Policy": {
       "Properties": {
-        "Logical": {
-          "Required": false,
-          "PrimitiveType": "String",
+        "PolicyDocument": {
+          "PrimitiveType": "Json",
+          "Required": true,
           "UpdateType": "Mutable"
         },
-        "Conditions": {
-          "Type": "List",
-          "Required": false,
-          "ItemType": "Condition",
+        "PolicyName": {
+          "PrimitiveType": "String",
+          "Required": true,
           "UpdateType": "Mutable"
         }
       }
@@ -12531,20 +12573,6 @@
           "PrimitiveType": "Integer",
           "Required": false,
           "UpdateType": "Immutable"
-        }
-      }
-    },
-    "AWS::IAM::Group.Policy": {
-      "Properties": {
-        "PolicyDocument": {
-          "PrimitiveType": "Json",
-          "Required": true,
-          "UpdateType": "Mutable"
-        },
-        "PolicyName": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Mutable"
         }
       }
     },
@@ -12751,6 +12779,20 @@
         }
       }
     },
+    "AWS::SSM::MaintenanceWindowTask.MaintenanceWindowStepFunctionsParameters": {
+      "Properties": {
+        "Input": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "Name": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::CodeBuild::Project.EnvironmentVariable": {
       "Properties": {
         "Type": {
@@ -12765,20 +12807,6 @@
         },
         "Name": {
           "Required": true,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::SSM::MaintenanceWindowTask.MaintenanceWindowStepFunctionsParameters": {
-      "Properties": {
-        "Input": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        },
-        "Name": {
-          "Required": false,
           "PrimitiveType": "String",
           "UpdateType": "Mutable"
         }
@@ -12932,6 +12960,25 @@
         }
       }
     },
+    "AWS::AutoScaling::AutoScalingGroup.TagProperty": {
+      "Properties": {
+        "Key": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "PropagateAtLaunch": {
+          "PrimitiveType": "Boolean",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "Value": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::KinesisAnalytics::ApplicationReferenceDataSource.ReferenceSchema": {
       "Properties": {
         "RecordEncoding": {
@@ -12947,6 +12994,20 @@
         },
         "RecordFormat": {
           "Type": "RecordFormat",
+          "Required": true,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::S3::Bucket.FilterRule": {
+      "Properties": {
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "Value": {
+          "PrimitiveType": "String",
           "Required": true,
           "UpdateType": "Mutable"
         }
@@ -12970,39 +13031,6 @@
           "UpdateType": "Mutable"
         },
         "Version": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::S3::Bucket.FilterRule": {
-      "Properties": {
-        "Name": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Mutable"
-        },
-        "Value": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::AutoScaling::AutoScalingGroup.TagProperty": {
-      "Properties": {
-        "Key": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Mutable"
-        },
-        "PropagateAtLaunch": {
-          "PrimitiveType": "Boolean",
-          "Required": true,
-          "UpdateType": "Mutable"
-        },
-        "Value": {
           "PrimitiveType": "String",
           "Required": true,
           "UpdateType": "Mutable"
@@ -13059,14 +13087,14 @@
     },
     "Tag": {
       "Properties": {
-        "Key": {
-          "PrimitiveType": "String",
+        "Value": {
           "Required": true,
+          "PrimitiveType": "String",
           "UpdateType": "Mutable"
         },
-        "Value": {
-          "PrimitiveType": "String",
+        "Key": {
           "Required": true,
+          "PrimitiveType": "String",
           "UpdateType": "Mutable"
         }
       }
@@ -13143,6 +13171,20 @@
         }
       }
     },
+    "AWS::Budgets::Budget.TimePeriod": {
+      "Properties": {
+        "Start": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "End": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::Events::Rule.EcsParameters": {
       "Properties": {
         "TaskCount": {
@@ -13165,20 +13207,6 @@
           "UpdateType": "Mutable"
         },
         "Location": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::Budgets::Budget.TimePeriod": {
-      "Properties": {
-        "Start": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        },
-        "End": {
           "Required": false,
           "PrimitiveType": "String",
           "UpdateType": "Mutable"
@@ -13324,15 +13352,6 @@
         }
       }
     },
-    "AWS::KinesisFirehose::DeliveryStream.KMSEncryptionConfig": {
-      "Properties": {
-        "AWSKMSKeyARN": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::GameLift::Build.S3Location": {
       "Properties": {
         "Bucket": {
@@ -13349,6 +13368,15 @@
           "PrimitiveType": "String",
           "Required": true,
           "UpdateType": "Immutable"
+        }
+      }
+    },
+    "AWS::KinesisFirehose::DeliveryStream.KMSEncryptionConfig": {
+      "Properties": {
+        "AWSKMSKeyARN": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
         }
       }
     },
@@ -13540,20 +13568,6 @@
         }
       }
     },
-    "AWS::KinesisAnalytics::ApplicationOutput.LambdaOutput": {
-      "Properties": {
-        "ResourceARN": {
-          "Required": true,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        },
-        "RoleARN": {
-          "Required": true,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::SES::ReceiptRule.AddHeaderAction": {
       "Properties": {
         "HeaderValue": {
@@ -13562,6 +13576,20 @@
           "UpdateType": "Mutable"
         },
         "HeaderName": {
+          "Required": true,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::KinesisAnalytics::ApplicationOutput.LambdaOutput": {
+      "Properties": {
+        "ResourceARN": {
+          "Required": true,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "RoleARN": {
           "Required": true,
           "PrimitiveType": "String",
           "UpdateType": "Mutable"
@@ -13641,6 +13669,20 @@
         }
       }
     },
+    "AWS::AutoScalingPlans::ScalingPlan.PredefinedLoadMetricSpecification": {
+      "Properties": {
+        "PredefinedLoadMetricType": {
+          "Required": true,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "ResourceLabel": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::EMR::InstanceGroupConfig.VolumeSpecification": {
       "Properties": {
         "Iops": {
@@ -13656,20 +13698,6 @@
         "VolumeType": {
           "PrimitiveType": "String",
           "Required": true,
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::AutoScalingPlans::ScalingPlan.PredefinedLoadMetricSpecification": {
-      "Properties": {
-        "PredefinedLoadMetricType": {
-          "Required": true,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        },
-        "ResourceLabel": {
-          "Required": false,
-          "PrimitiveType": "String",
           "UpdateType": "Mutable"
         }
       }
@@ -13732,20 +13760,6 @@
         }
       }
     },
-    "AWS::RDS::OptionGroup.OptionSetting": {
-      "Properties": {
-        "Name": {
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "Value": {
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::WAFRegional::SqlInjectionMatchSet.SqlInjectionMatchTuple": {
       "Properties": {
         "TextTransformation": {
@@ -13756,6 +13770,20 @@
         "FieldToMatch": {
           "Type": "FieldToMatch",
           "Required": true,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::RDS::OptionGroup.OptionSetting": {
+      "Properties": {
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "Value": {
+          "PrimitiveType": "String",
+          "Required": false,
           "UpdateType": "Mutable"
         }
       }
@@ -13940,20 +13968,15 @@
         }
       }
     },
-    "AWS::Cognito::IdentityPool.CognitoStreams": {
+    "AWS::AppSync::DataSource.ElasticsearchConfig": {
       "Properties": {
-        "StreamingStatus": {
-          "Required": false,
+        "AwsRegion": {
+          "Required": true,
           "PrimitiveType": "String",
           "UpdateType": "Mutable"
         },
-        "StreamName": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        },
-        "RoleArn": {
-          "Required": false,
+        "Endpoint": {
+          "Required": true,
           "PrimitiveType": "String",
           "UpdateType": "Mutable"
         }
@@ -13974,26 +13997,22 @@
         }
       }
     },
-    "AWS::AppSync::DataSource.ElasticsearchConfig": {
+    "AWS::Cognito::IdentityPool.CognitoStreams": {
       "Properties": {
-        "AwsRegion": {
-          "Required": true,
+        "StreamingStatus": {
+          "Required": false,
           "PrimitiveType": "String",
           "UpdateType": "Mutable"
         },
-        "Endpoint": {
-          "Required": true,
+        "StreamName": {
+          "Required": false,
           "PrimitiveType": "String",
           "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::ECS::TaskDefinition.HostVolumeProperties": {
-      "Properties": {
-        "SourcePath": {
-          "PrimitiveType": "String",
+        },
+        "RoleArn": {
           "Required": false,
-          "UpdateType": "Immutable"
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
         }
       }
     },
@@ -14008,6 +14027,15 @@
           "PrimitiveType": "String",
           "Required": true,
           "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::ECS::TaskDefinition.HostVolumeProperties": {
+      "Properties": {
+        "SourcePath": {
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Immutable"
         }
       }
     },
@@ -14259,20 +14287,6 @@
         }
       }
     },
-    "AWS::IoTAnalytics::Datastore.RetentionPeriod": {
-      "Properties": {
-        "NumberOfDays": {
-          "Required": false,
-          "PrimitiveType": "Integer",
-          "UpdateType": "Mutable"
-        },
-        "Unlimited": {
-          "Required": false,
-          "PrimitiveType": "Boolean",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::Cloud9::EnvironmentEC2.Repository": {
       "Properties": {
         "PathComponent": {
@@ -14283,6 +14297,20 @@
         "RepositoryUrl": {
           "Required": true,
           "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::IoTAnalytics::Datastore.RetentionPeriod": {
+      "Properties": {
+        "NumberOfDays": {
+          "Required": false,
+          "PrimitiveType": "Integer",
+          "UpdateType": "Mutable"
+        },
+        "Unlimited": {
+          "Required": false,
+          "PrimitiveType": "Boolean",
           "UpdateType": "Mutable"
         }
       }
@@ -14374,6 +14402,15 @@
         }
       }
     },
+    "AWS::DMS::Endpoint.DynamoDbSettings": {
+      "Properties": {
+        "ServiceAccessRoleArn": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::RDS::OptionGroup.OptionConfiguration": {
       "Properties": {
         "DBSecurityGroupMemberships": {
@@ -14410,15 +14447,6 @@
           "PrimitiveItemType": "String",
           "Required": false,
           "Type": "List",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::DMS::Endpoint.DynamoDbSettings": {
-      "Properties": {
-        "ServiceAccessRoleArn": {
-          "Required": false,
-          "PrimitiveType": "String",
           "UpdateType": "Mutable"
         }
       }
@@ -14550,20 +14578,6 @@
         }
       }
     },
-    "AWS::Elasticsearch::Domain.EncryptionAtRestOptions": {
-      "Properties": {
-        "Enabled": {
-          "PrimitiveType": "Boolean",
-          "Required": false,
-          "UpdateType": "Immutable"
-        },
-        "KmsKeyId": {
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Immutable"
-        }
-      }
-    },
     "AWS::ElasticBeanstalk::Application.MaxAgeRule": {
       "Properties": {
         "DeleteSourceFromS3": {
@@ -14580,6 +14594,20 @@
           "PrimitiveType": "Integer",
           "Required": false,
           "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::Elasticsearch::Domain.EncryptionAtRestOptions": {
+      "Properties": {
+        "Enabled": {
+          "PrimitiveType": "Boolean",
+          "Required": false,
+          "UpdateType": "Immutable"
+        },
+        "KmsKeyId": {
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Immutable"
         }
       }
     },
@@ -14664,20 +14692,6 @@
         }
       }
     },
-    "AWS::EFS::FileSystem.ElasticFileSystemTag": {
-      "Properties": {
-        "Key": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Mutable"
-        },
-        "Value": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::Budgets::Budget.Spend": {
       "Properties": {
         "Amount": {
@@ -14688,6 +14702,20 @@
         "Unit": {
           "Required": true,
           "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::EFS::FileSystem.ElasticFileSystemTag": {
+      "Properties": {
+        "Key": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "Value": {
+          "PrimitiveType": "String",
+          "Required": true,
           "UpdateType": "Mutable"
         }
       }
@@ -14729,12 +14757,17 @@
         }
       }
     },
-    "AWS::ECS::TaskDefinition.RepositoryCredentials": {
+    "AWS::ApplicationAutoScaling::ScalableTarget.ScalableTargetAction": {
       "Properties": {
-        "CredentialsParameter": {
-          "PrimitiveType": "String",
+        "MaxCapacity": {
+          "PrimitiveType": "Integer",
           "Required": false,
-          "UpdateType": "Immutable"
+          "UpdateType": "Mutable"
+        },
+        "MinCapacity": {
+          "PrimitiveType": "Integer",
+          "Required": false,
+          "UpdateType": "Mutable"
         }
       }
     },
@@ -14749,17 +14782,12 @@
         }
       }
     },
-    "AWS::ApplicationAutoScaling::ScalableTarget.ScalableTargetAction": {
+    "AWS::ECS::TaskDefinition.RepositoryCredentials": {
       "Properties": {
-        "MaxCapacity": {
-          "PrimitiveType": "Integer",
+        "CredentialsParameter": {
+          "PrimitiveType": "String",
           "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "MinCapacity": {
-          "PrimitiveType": "Integer",
-          "Required": false,
-          "UpdateType": "Mutable"
+          "UpdateType": "Immutable"
         }
       }
     }
@@ -14910,6 +14938,12 @@
           "Required": true,
           "PrimitiveType": "Boolean",
           "UpdateType": "Immutable"
+        },
+        "Tags": {
+          "Type": "List",
+          "Required": false,
+          "ItemType": "TagsEntry",
+          "UpdateType": "Mutable"
         }
       }
     },
@@ -15165,15 +15199,6 @@
         }
       }
     },
-    "AWS::EC2::PlacementGroup": {
-      "Properties": {
-        "Strategy": {
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Immutable"
-        }
-      }
-    },
     "AWS::EC2::VPCPeeringConnection": {
       "Properties": {
         "PeerOwnerId": {
@@ -15206,6 +15231,15 @@
         "VpcId": {
           "PrimitiveType": "String",
           "Required": true,
+          "UpdateType": "Immutable"
+        }
+      }
+    },
+    "AWS::EC2::PlacementGroup": {
+      "Properties": {
+        "Strategy": {
+          "PrimitiveType": "String",
+          "Required": false,
           "UpdateType": "Immutable"
         }
       }
@@ -15347,47 +15381,6 @@
         }
       }
     },
-    "AWS::EMR::InstanceFleetConfig": {
-      "Properties": {
-        "ClusterId": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Immutable"
-        },
-        "InstanceFleetType": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Immutable"
-        },
-        "InstanceTypeConfigs": {
-          "DuplicatesAllowed": false,
-          "ItemType": "InstanceTypeConfig",
-          "Required": false,
-          "Type": "List",
-          "UpdateType": "Immutable"
-        },
-        "LaunchSpecifications": {
-          "Required": false,
-          "Type": "InstanceFleetProvisioningSpecifications",
-          "UpdateType": "Immutable"
-        },
-        "Name": {
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Immutable"
-        },
-        "TargetOnDemandCapacity": {
-          "PrimitiveType": "Integer",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "TargetSpotCapacity": {
-          "PrimitiveType": "Integer",
-          "Required": false,
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::WorkSpaces::Workspace": {
       "Properties": {
         "BundleId": {
@@ -15434,6 +15427,47 @@
         }
       }
     },
+    "AWS::EMR::InstanceFleetConfig": {
+      "Properties": {
+        "ClusterId": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        },
+        "InstanceFleetType": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        },
+        "InstanceTypeConfigs": {
+          "DuplicatesAllowed": false,
+          "ItemType": "InstanceTypeConfig",
+          "Required": false,
+          "Type": "List",
+          "UpdateType": "Immutable"
+        },
+        "LaunchSpecifications": {
+          "Required": false,
+          "Type": "InstanceFleetProvisioningSpecifications",
+          "UpdateType": "Immutable"
+        },
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Immutable"
+        },
+        "TargetOnDemandCapacity": {
+          "PrimitiveType": "Integer",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "TargetSpotCapacity": {
+          "PrimitiveType": "Integer",
+          "Required": false,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::WAFRegional::SqlInjectionMatchSet": {
       "Properties": {
         "SqlInjectionMatchTuples": {
@@ -15446,6 +15480,25 @@
           "Required": true,
           "PrimitiveType": "String",
           "UpdateType": "Immutable"
+        }
+      }
+    },
+    "AWS::Logs::LogGroup": {
+      "Attributes": {
+        "Arn": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Properties": {
+        "LogGroupName": {
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Immutable"
+        },
+        "RetentionInDays": {
+          "PrimitiveType": "Integer",
+          "Required": false,
+          "UpdateType": "Mutable"
         }
       }
     },
@@ -15495,25 +15548,6 @@
         "RegisterWithThirdParty": {
           "Required": false,
           "PrimitiveType": "Boolean",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::Logs::LogGroup": {
-      "Attributes": {
-        "Arn": {
-          "PrimitiveType": "String"
-        }
-      },
-      "Properties": {
-        "LogGroupName": {
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Immutable"
-        },
-        "RetentionInDays": {
-          "PrimitiveType": "Integer",
-          "Required": false,
           "UpdateType": "Mutable"
         }
       }
@@ -15654,6 +15688,51 @@
         }
       }
     },
+    "AWS::EC2::TransitGateway": {
+      "Properties": {
+        "DefaultRouteTablePropagation": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Immutable"
+        },
+        "Description": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Immutable"
+        },
+        "AutoAcceptSharedAttachments": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Immutable"
+        },
+        "DefaultRouteTableAssociation": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Immutable"
+        },
+        "VpnEcmpSupport": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Immutable"
+        },
+        "DnsSupport": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Immutable"
+        },
+        "AmazonSideAsn": {
+          "Required": false,
+          "PrimitiveType": "Integer",
+          "UpdateType": "Immutable"
+        },
+        "Tags": {
+          "Type": "List",
+          "Required": false,
+          "ItemType": "Tag",
+          "UpdateType": "Immutable"
+        }
+      }
+    },
     "AWS::SQS::Queue": {
       "Attributes": {
         "Arn": {
@@ -15725,51 +15804,6 @@
           "PrimitiveType": "Integer",
           "Required": false,
           "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::EC2::TransitGateway": {
-      "Properties": {
-        "DefaultRouteTablePropagation": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Immutable"
-        },
-        "Description": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Immutable"
-        },
-        "AutoAcceptSharedAttachments": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Immutable"
-        },
-        "DefaultRouteTableAssociation": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Immutable"
-        },
-        "VpnEcmpSupport": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Immutable"
-        },
-        "DnsSupport": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Immutable"
-        },
-        "AmazonSideAsn": {
-          "Required": false,
-          "PrimitiveType": "Integer",
-          "UpdateType": "Immutable"
-        },
-        "Tags": {
-          "Type": "List",
-          "Required": false,
-          "ItemType": "Tag",
-          "UpdateType": "Immutable"
         }
       }
     },
@@ -15935,6 +15969,21 @@
         }
       }
     },
+    "AWS::WAFRegional::XssMatchSet": {
+      "Properties": {
+        "XssMatchTuples": {
+          "Type": "List",
+          "Required": false,
+          "ItemType": "XssMatchTuple",
+          "UpdateType": "Mutable"
+        },
+        "Name": {
+          "Required": true,
+          "PrimitiveType": "String",
+          "UpdateType": "Immutable"
+        }
+      }
+    },
     "AWS::Route53::RecordSet": {
       "Properties": {
         "AliasTarget": {
@@ -16013,21 +16062,6 @@
           "PrimitiveType": "Integer",
           "Required": false,
           "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::WAFRegional::XssMatchSet": {
-      "Properties": {
-        "XssMatchTuples": {
-          "Type": "List",
-          "Required": false,
-          "ItemType": "XssMatchTuple",
-          "UpdateType": "Mutable"
-        },
-        "Name": {
-          "Required": true,
-          "PrimitiveType": "String",
-          "UpdateType": "Immutable"
         }
       }
     },
@@ -16110,20 +16144,6 @@
         }
       }
     },
-    "AWS::ECS::Cluster": {
-      "Attributes": {
-        "Arn": {
-          "PrimitiveType": "String"
-        }
-      },
-      "Properties": {
-        "ClusterName": {
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Immutable"
-        }
-      }
-    },
     "AWS::IAM::Policy": {
       "Properties": {
         "Groups": {
@@ -16167,6 +16187,20 @@
           "Required": false,
           "Type": "List",
           "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::ECS::Cluster": {
+      "Attributes": {
+        "Arn": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Properties": {
+        "ClusterName": {
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Immutable"
         }
       }
     },
@@ -16794,27 +16828,6 @@
         }
       }
     },
-    "AWS::WAF::Rule": {
-      "Properties": {
-        "MetricName": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Immutable"
-        },
-        "Name": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Immutable"
-        },
-        "Predicates": {
-          "DuplicatesAllowed": false,
-          "ItemType": "Predicate",
-          "Required": false,
-          "Type": "List",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::DirectoryService::MicrosoftAD": {
       "Attributes": {
         "Alias": {
@@ -16860,6 +16873,27 @@
           "Required": true,
           "Type": "VpcSettings",
           "UpdateType": "Immutable"
+        }
+      }
+    },
+    "AWS::WAF::Rule": {
+      "Properties": {
+        "MetricName": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        },
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        },
+        "Predicates": {
+          "DuplicatesAllowed": false,
+          "ItemType": "Predicate",
+          "Required": false,
+          "Type": "List",
+          "UpdateType": "Mutable"
         }
       }
     },
@@ -16949,47 +16983,6 @@
         }
       }
     },
-    "AWS::SageMaker::Model": {
-      "Attributes": {
-        "ModelName": {
-          "PrimitiveType": "String"
-        }
-      },
-      "Properties": {
-        "ExecutionRoleArn": {
-          "Required": true,
-          "PrimitiveType": "String",
-          "UpdateType": "Immutable"
-        },
-        "PrimaryContainer": {
-          "Type": "ContainerDefinition",
-          "Required": false,
-          "UpdateType": "Immutable"
-        },
-        "ModelName": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Immutable"
-        },
-        "VpcConfig": {
-          "Type": "VpcConfig",
-          "Required": false,
-          "UpdateType": "Immutable"
-        },
-        "Containers": {
-          "Type": "List",
-          "Required": false,
-          "ItemType": "ContainerDefinition",
-          "UpdateType": "Immutable"
-        },
-        "Tags": {
-          "Type": "List",
-          "Required": false,
-          "ItemType": "Tag",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::SNS::Topic": {
       "Attributes": {
         "TopicName": {
@@ -17037,6 +17030,47 @@
           "PrimitiveType": "String",
           "Required": true,
           "UpdateType": "Immutable"
+        }
+      }
+    },
+    "AWS::SageMaker::Model": {
+      "Attributes": {
+        "ModelName": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Properties": {
+        "ExecutionRoleArn": {
+          "Required": true,
+          "PrimitiveType": "String",
+          "UpdateType": "Immutable"
+        },
+        "PrimaryContainer": {
+          "Type": "ContainerDefinition",
+          "Required": false,
+          "UpdateType": "Immutable"
+        },
+        "ModelName": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Immutable"
+        },
+        "VpcConfig": {
+          "Type": "VpcConfig",
+          "Required": false,
+          "UpdateType": "Immutable"
+        },
+        "Containers": {
+          "Type": "List",
+          "Required": false,
+          "ItemType": "ContainerDefinition",
+          "UpdateType": "Immutable"
+        },
+        "Tags": {
+          "Type": "List",
+          "Required": false,
+          "ItemType": "Tag",
+          "UpdateType": "Mutable"
         }
       }
     },
@@ -17133,35 +17167,6 @@
         }
       }
     },
-    "AWS::Cognito::UserPoolGroup": {
-      "Properties": {
-        "GroupName": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Immutable"
-        },
-        "Description": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        },
-        "UserPoolId": {
-          "Required": true,
-          "PrimitiveType": "String",
-          "UpdateType": "Immutable"
-        },
-        "Precedence": {
-          "Required": false,
-          "PrimitiveType": "Double",
-          "UpdateType": "Mutable"
-        },
-        "RoleArn": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::ApiGateway::Deployment": {
       "Properties": {
         "DeploymentCanarySettings": {
@@ -17187,6 +17192,35 @@
         "StageName": {
           "PrimitiveType": "String",
           "Required": false,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::Cognito::UserPoolGroup": {
+      "Properties": {
+        "GroupName": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Immutable"
+        },
+        "Description": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "UserPoolId": {
+          "Required": true,
+          "PrimitiveType": "String",
+          "UpdateType": "Immutable"
+        },
+        "Precedence": {
+          "Required": false,
+          "PrimitiveType": "Double",
+          "UpdateType": "Mutable"
+        },
+        "RoleArn": {
+          "Required": false,
+          "PrimitiveType": "String",
           "UpdateType": "Mutable"
         }
       }
@@ -17233,118 +17267,6 @@
           "ItemType": "Tag",
           "Required": false,
           "Type": "List",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::CloudWatch::Alarm": {
-      "Attributes": {
-        "Arn": {
-          "PrimitiveType": "String"
-        }
-      },
-      "Properties": {
-        "ActionsEnabled": {
-          "PrimitiveType": "Boolean",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "AlarmActions": {
-          "DuplicatesAllowed": true,
-          "PrimitiveItemType": "String",
-          "Required": false,
-          "Type": "List",
-          "UpdateType": "Mutable"
-        },
-        "AlarmDescription": {
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "AlarmName": {
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Immutable"
-        },
-        "ComparisonOperator": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Mutable"
-        },
-        "DatapointsToAlarm": {
-          "PrimitiveType": "Integer",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "Dimensions": {
-          "DuplicatesAllowed": true,
-          "ItemType": "Dimension",
-          "Required": false,
-          "Type": "List",
-          "UpdateType": "Mutable"
-        },
-        "EvaluateLowSampleCountPercentile": {
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "EvaluationPeriods": {
-          "PrimitiveType": "Integer",
-          "Required": true,
-          "UpdateType": "Mutable"
-        },
-        "ExtendedStatistic": {
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "InsufficientDataActions": {
-          "DuplicatesAllowed": true,
-          "PrimitiveItemType": "String",
-          "Required": false,
-          "Type": "List",
-          "UpdateType": "Mutable"
-        },
-        "MetricName": {
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "Namespace": {
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "OKActions": {
-          "DuplicatesAllowed": true,
-          "PrimitiveItemType": "String",
-          "Required": false,
-          "Type": "List",
-          "UpdateType": "Mutable"
-        },
-        "Period": {
-          "PrimitiveType": "Integer",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "Statistic": {
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "Threshold": {
-          "PrimitiveType": "Double",
-          "Required": true,
-          "UpdateType": "Mutable"
-        },
-        "TreatMissingData": {
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "Unit": {
-          "PrimitiveType": "String",
-          "Required": false,
           "UpdateType": "Mutable"
         }
       }
@@ -17510,6 +17432,118 @@
           "PrimitiveItemType": "String",
           "Required": false,
           "Type": "List",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::CloudWatch::Alarm": {
+      "Attributes": {
+        "Arn": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Properties": {
+        "ActionsEnabled": {
+          "PrimitiveType": "Boolean",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "AlarmActions": {
+          "DuplicatesAllowed": true,
+          "PrimitiveItemType": "String",
+          "Required": false,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        },
+        "AlarmDescription": {
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "AlarmName": {
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Immutable"
+        },
+        "ComparisonOperator": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "DatapointsToAlarm": {
+          "PrimitiveType": "Integer",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "Dimensions": {
+          "DuplicatesAllowed": true,
+          "ItemType": "Dimension",
+          "Required": false,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        },
+        "EvaluateLowSampleCountPercentile": {
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "EvaluationPeriods": {
+          "PrimitiveType": "Integer",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "ExtendedStatistic": {
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "InsufficientDataActions": {
+          "DuplicatesAllowed": true,
+          "PrimitiveItemType": "String",
+          "Required": false,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        },
+        "MetricName": {
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "Namespace": {
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "OKActions": {
+          "DuplicatesAllowed": true,
+          "PrimitiveItemType": "String",
+          "Required": false,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        },
+        "Period": {
+          "PrimitiveType": "Integer",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "Statistic": {
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "Threshold": {
+          "PrimitiveType": "Double",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "TreatMissingData": {
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "Unit": {
+          "PrimitiveType": "String",
+          "Required": false,
           "UpdateType": "Mutable"
         }
       }
@@ -17706,6 +17740,21 @@
         }
       }
     },
+    "AWS::Inspector::ResourceGroup": {
+      "Attributes": {
+        "Arn": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Properties": {
+        "ResourceGroupTags": {
+          "Type": "List",
+          "Required": true,
+          "ItemType": "Tag",
+          "UpdateType": "Immutable"
+        }
+      }
+    },
     "AWS::IoT1Click::Project": {
       "Attributes": {
         "ProjectName": {
@@ -17754,21 +17803,6 @@
           "PrimitiveType": "String",
           "Required": false,
           "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::Inspector::ResourceGroup": {
-      "Attributes": {
-        "Arn": {
-          "PrimitiveType": "String"
-        }
-      },
-      "Properties": {
-        "ResourceGroupTags": {
-          "Type": "List",
-          "Required": true,
-          "ItemType": "Tag",
-          "UpdateType": "Immutable"
         }
       }
     },
@@ -17905,31 +17939,6 @@
         }
       }
     },
-    "AWS::EC2::VPCEndpointConnectionNotification": {
-      "Properties": {
-        "ConnectionEvents": {
-          "PrimitiveItemType": "String",
-          "Type": "List",
-          "Required": true,
-          "UpdateType": "Mutable"
-        },
-        "VPCEndpointId": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Immutable"
-        },
-        "ServiceId": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Immutable"
-        },
-        "ConnectionNotificationArn": {
-          "Required": true,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::GameLift::Fleet": {
       "Properties": {
         "BuildId": {
@@ -17990,6 +17999,31 @@
           "PrimitiveType": "String",
           "Required": true,
           "UpdateType": "Immutable"
+        }
+      }
+    },
+    "AWS::EC2::VPCEndpointConnectionNotification": {
+      "Properties": {
+        "ConnectionEvents": {
+          "PrimitiveItemType": "String",
+          "Type": "List",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "VPCEndpointId": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Immutable"
+        },
+        "ServiceId": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Immutable"
+        },
+        "ConnectionNotificationArn": {
+          "Required": true,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
         }
       }
     },
@@ -18073,25 +18107,6 @@
           "PrimitiveType": "String",
           "Required": true,
           "UpdateType": "Immutable"
-        }
-      }
-    },
-    "Alexa::ASK::Skill": {
-      "Properties": {
-        "AuthenticationConfiguration": {
-          "Type": "AuthenticationConfiguration",
-          "Required": true,
-          "UpdateType": "Mutable"
-        },
-        "VendorId": {
-          "Required": true,
-          "PrimitiveType": "String",
-          "UpdateType": "Immutable"
-        },
-        "SkillPackage": {
-          "Type": "SkillPackage",
-          "Required": true,
-          "UpdateType": "Mutable"
         }
       }
     },
@@ -18243,6 +18258,25 @@
         }
       }
     },
+    "Alexa::ASK::Skill": {
+      "Properties": {
+        "AuthenticationConfiguration": {
+          "Type": "AuthenticationConfiguration",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "VendorId": {
+          "Required": true,
+          "PrimitiveType": "String",
+          "UpdateType": "Immutable"
+        },
+        "SkillPackage": {
+          "Type": "SkillPackage",
+          "Required": true,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::ECS::Service": {
       "Attributes": {
         "Name": {
@@ -18379,45 +18413,6 @@
         }
       }
     },
-    "AWS::Batch::JobQueue": {
-      "Properties": {
-        "ComputeEnvironmentOrder": {
-          "Type": "List",
-          "Required": true,
-          "ItemType": "ComputeEnvironmentOrder",
-          "UpdateType": "Mutable"
-        },
-        "Priority": {
-          "Required": true,
-          "PrimitiveType": "Integer",
-          "UpdateType": "Mutable"
-        },
-        "State": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        },
-        "JobQueueName": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Immutable"
-        }
-      }
-    },
-    "AWS::IoT::Thing": {
-      "Properties": {
-        "AttributePayload": {
-          "Required": false,
-          "Type": "AttributePayload",
-          "UpdateType": "Mutable"
-        },
-        "ThingName": {
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Immutable"
-        }
-      }
-    },
     "AWS::ElasticLoadBalancing::LoadBalancer": {
       "Attributes": {
         "CanonicalHostedZoneName": {
@@ -18534,6 +18529,45 @@
           "Required": false,
           "Type": "List",
           "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::Batch::JobQueue": {
+      "Properties": {
+        "ComputeEnvironmentOrder": {
+          "Type": "List",
+          "Required": true,
+          "ItemType": "ComputeEnvironmentOrder",
+          "UpdateType": "Mutable"
+        },
+        "Priority": {
+          "Required": true,
+          "PrimitiveType": "Integer",
+          "UpdateType": "Mutable"
+        },
+        "State": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "JobQueueName": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Immutable"
+        }
+      }
+    },
+    "AWS::IoT::Thing": {
+      "Properties": {
+        "AttributePayload": {
+          "Required": false,
+          "Type": "AttributePayload",
+          "UpdateType": "Mutable"
+        },
+        "ThingName": {
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Immutable"
         }
       }
     },
@@ -18743,25 +18777,6 @@
         }
       }
     },
-    "AWS::IoT::Policy": {
-      "Attributes": {
-        "Arn": {
-          "PrimitiveType": "String"
-        }
-      },
-      "Properties": {
-        "PolicyDocument": {
-          "PrimitiveType": "Json",
-          "Required": true,
-          "UpdateType": "Immutable"
-        },
-        "PolicyName": {
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Immutable"
-        }
-      }
-    },
     "AWS::IAM::InstanceProfile": {
       "Attributes": {
         "Arn": {
@@ -18784,6 +18799,54 @@
           "PrimitiveItemType": "String",
           "Required": true,
           "Type": "List",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::IoT::Policy": {
+      "Attributes": {
+        "Arn": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "PrimitiveType": "Json",
+          "Required": true,
+          "UpdateType": "Immutable"
+        },
+        "PolicyName": {
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Immutable"
+        }
+      }
+    },
+    "AWS::Batch::ComputeEnvironment": {
+      "Properties": {
+        "Type": {
+          "Required": true,
+          "PrimitiveType": "String",
+          "UpdateType": "Immutable"
+        },
+        "ServiceRole": {
+          "Required": true,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "ComputeEnvironmentName": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Immutable"
+        },
+        "ComputeResources": {
+          "Type": "ComputeResources",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "State": {
+          "Required": false,
+          "PrimitiveType": "String",
           "UpdateType": "Mutable"
         }
       }
@@ -18871,35 +18934,6 @@
           "ItemType": "TriggerConfig",
           "Required": false,
           "Type": "List",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::Batch::ComputeEnvironment": {
-      "Properties": {
-        "Type": {
-          "Required": true,
-          "PrimitiveType": "String",
-          "UpdateType": "Immutable"
-        },
-        "ServiceRole": {
-          "Required": true,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        },
-        "ComputeEnvironmentName": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Immutable"
-        },
-        "ComputeResources": {
-          "Type": "ComputeResources",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "State": {
-          "Required": false,
-          "PrimitiveType": "String",
           "UpdateType": "Mutable"
         }
       }
@@ -19239,25 +19273,6 @@
         }
       }
     },
-    "AWS::ElasticBeanstalk::Application": {
-      "Properties": {
-        "ApplicationName": {
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Immutable"
-        },
-        "Description": {
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "ResourceLifecycleConfig": {
-          "Required": false,
-          "Type": "ApplicationResourceLifecycleConfig",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::ElasticLoadBalancingV2::LoadBalancer": {
       "Attributes": {
         "CanonicalHostedZoneID": {
@@ -19356,6 +19371,25 @@
           "PrimitiveType": "String",
           "Required": true,
           "UpdateType": "Immutable"
+        }
+      }
+    },
+    "AWS::ElasticBeanstalk::Application": {
+      "Properties": {
+        "ApplicationName": {
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Immutable"
+        },
+        "Description": {
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "ResourceLifecycleConfig": {
+          "Required": false,
+          "Type": "ApplicationResourceLifecycleConfig",
+          "UpdateType": "Mutable"
         }
       }
     },
@@ -19639,6 +19673,44 @@
         }
       }
     },
+    "AWS::ElasticLoadBalancingV2::Listener": {
+      "Properties": {
+        "Certificates": {
+          "DuplicatesAllowed": false,
+          "ItemType": "Certificate",
+          "Required": false,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        },
+        "DefaultActions": {
+          "DuplicatesAllowed": false,
+          "ItemType": "Action",
+          "Required": true,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        },
+        "LoadBalancerArn": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        },
+        "Port": {
+          "PrimitiveType": "Integer",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "Protocol": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "SslPolicy": {
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::EC2::SecurityGroupEgress": {
       "Properties": {
         "CidrIp": {
@@ -19685,44 +19757,6 @@
           "PrimitiveType": "Integer",
           "Required": false,
           "UpdateType": "Immutable"
-        }
-      }
-    },
-    "AWS::ElasticLoadBalancingV2::Listener": {
-      "Properties": {
-        "Certificates": {
-          "DuplicatesAllowed": false,
-          "ItemType": "Certificate",
-          "Required": false,
-          "Type": "List",
-          "UpdateType": "Mutable"
-        },
-        "DefaultActions": {
-          "DuplicatesAllowed": false,
-          "ItemType": "Action",
-          "Required": true,
-          "Type": "List",
-          "UpdateType": "Mutable"
-        },
-        "LoadBalancerArn": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Immutable"
-        },
-        "Port": {
-          "PrimitiveType": "Integer",
-          "Required": true,
-          "UpdateType": "Mutable"
-        },
-        "Protocol": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Mutable"
-        },
-        "SslPolicy": {
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
         }
       }
     },
@@ -20159,6 +20193,9 @@
         },
         "TargetIps": {
           "PrimitiveType": "String"
+        },
+        "Name": {
+          "PrimitiveType": "String"
         }
       },
       "Properties": {
@@ -20401,35 +20438,6 @@
         }
       }
     },
-    "AWS::ServiceCatalog::LaunchRoleConstraint": {
-      "Properties": {
-        "Description": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        },
-        "AcceptLanguage": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        },
-        "PortfolioId": {
-          "Required": true,
-          "PrimitiveType": "String",
-          "UpdateType": "Immutable"
-        },
-        "ProductId": {
-          "Required": true,
-          "PrimitiveType": "String",
-          "UpdateType": "Immutable"
-        },
-        "RoleArn": {
-          "Required": true,
-          "PrimitiveType": "String",
-          "UpdateType": "Immutable"
-        }
-      }
-    },
     "AWS::ServiceCatalog::CloudFormationProvisionedProduct": {
       "Attributes": {
         "CloudformationStackArn": {
@@ -20492,6 +20500,35 @@
           "Required": false,
           "PrimitiveType": "String",
           "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::ServiceCatalog::LaunchRoleConstraint": {
+      "Properties": {
+        "Description": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "AcceptLanguage": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "PortfolioId": {
+          "Required": true,
+          "PrimitiveType": "String",
+          "UpdateType": "Immutable"
+        },
+        "ProductId": {
+          "Required": true,
+          "PrimitiveType": "String",
+          "UpdateType": "Immutable"
+        },
+        "RoleArn": {
+          "Required": true,
+          "PrimitiveType": "String",
+          "UpdateType": "Immutable"
         }
       }
     },
@@ -20741,6 +20778,46 @@
         }
       }
     },
+    "AWS::ElastiCache::SecurityGroupIngress": {
+      "Properties": {
+        "CacheSecurityGroupName": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "EC2SecurityGroupName": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "EC2SecurityGroupOwnerId": {
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::EC2::NatGateway": {
+      "Properties": {
+        "AllocationId": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        },
+        "SubnetId": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        },
+        "Tags": {
+          "DuplicatesAllowed": true,
+          "ItemType": "Tag",
+          "Required": false,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::RDS::OptionGroup": {
       "Properties": {
         "EngineName": {
@@ -20770,46 +20847,6 @@
           "ItemType": "Tag",
           "Required": false,
           "Type": "List",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::EC2::NatGateway": {
-      "Properties": {
-        "AllocationId": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Immutable"
-        },
-        "SubnetId": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Immutable"
-        },
-        "Tags": {
-          "DuplicatesAllowed": true,
-          "ItemType": "Tag",
-          "Required": false,
-          "Type": "List",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::ElastiCache::SecurityGroupIngress": {
-      "Properties": {
-        "CacheSecurityGroupName": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Mutable"
-        },
-        "EC2SecurityGroupName": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Mutable"
-        },
-        "EC2SecurityGroupOwnerId": {
-          "PrimitiveType": "String",
-          "Required": false,
           "UpdateType": "Mutable"
         }
       }
@@ -21092,69 +21129,6 @@
         }
       }
     },
-    "AWS::AppSync::FunctionConfiguration": {
-      "Attributes": {
-        "FunctionId": {
-          "PrimitiveType": "String"
-        },
-        "FunctionArn": {
-          "PrimitiveType": "String"
-        },
-        "DataSourceName": {
-          "PrimitiveType": "String"
-        },
-        "Name": {
-          "PrimitiveType": "String"
-        }
-      },
-      "Properties": {
-        "ResponseMappingTemplateS3Location": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        },
-        "Description": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        },
-        "DataSourceName": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        },
-        "RequestMappingTemplate": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        },
-        "ResponseMappingTemplate": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        },
-        "FunctionVersion": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        },
-        "RequestMappingTemplateS3Location": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        },
-        "ApiId": {
-          "Required": true,
-          "PrimitiveType": "String",
-          "UpdateType": "Immutable"
-        },
-        "Name": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::ServiceCatalog::CloudFormationProduct": {
       "Attributes": {
         "ProductName": {
@@ -21218,6 +21192,69 @@
           "Type": "List",
           "Required": true,
           "ItemType": "ProvisioningArtifactProperties",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::AppSync::FunctionConfiguration": {
+      "Attributes": {
+        "FunctionId": {
+          "PrimitiveType": "String"
+        },
+        "FunctionArn": {
+          "PrimitiveType": "String"
+        },
+        "DataSourceName": {
+          "PrimitiveType": "String"
+        },
+        "Name": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Properties": {
+        "ResponseMappingTemplateS3Location": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "Description": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "DataSourceName": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "RequestMappingTemplate": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "ResponseMappingTemplate": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "FunctionVersion": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "RequestMappingTemplateS3Location": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "ApiId": {
+          "Required": true,
+          "PrimitiveType": "String",
+          "UpdateType": "Immutable"
+        },
+        "Name": {
+          "Required": false,
+          "PrimitiveType": "String",
           "UpdateType": "Mutable"
         }
       }
@@ -21679,25 +21716,6 @@
         }
       }
     },
-    "AWS::ServiceDiscovery::Instance": {
-      "Properties": {
-        "InstanceAttributes": {
-          "Required": true,
-          "PrimitiveType": "Map",
-          "UpdateType": "Mutable"
-        },
-        "InstanceId": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Immutable"
-        },
-        "ServiceId": {
-          "Required": true,
-          "PrimitiveType": "String",
-          "UpdateType": "Immutable"
-        }
-      }
-    },
     "AWS::EC2::VPC": {
       "Attributes": {
         "CidrBlock": {
@@ -21745,6 +21763,25 @@
           "Required": false,
           "Type": "List",
           "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::ServiceDiscovery::Instance": {
+      "Properties": {
+        "InstanceAttributes": {
+          "Required": true,
+          "PrimitiveType": "Map",
+          "UpdateType": "Mutable"
+        },
+        "InstanceId": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Immutable"
+        },
+        "ServiceId": {
+          "Required": true,
+          "PrimitiveType": "String",
+          "UpdateType": "Immutable"
         }
       }
     },
@@ -21961,6 +21998,30 @@
         }
       }
     },
+    "AWS::Events::EventBusPolicy": {
+      "Properties": {
+        "Condition": {
+          "Type": "Condition",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "Action": {
+          "Required": true,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "StatementId": {
+          "Required": true,
+          "PrimitiveType": "String",
+          "UpdateType": "Immutable"
+        },
+        "Principal": {
+          "Required": true,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::EKS::Cluster": {
       "Attributes": {
         "Endpoint": {
@@ -21996,30 +22057,6 @@
         }
       }
     },
-    "AWS::Events::EventBusPolicy": {
-      "Properties": {
-        "Condition": {
-          "Type": "Condition",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "Action": {
-          "Required": true,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        },
-        "StatementId": {
-          "Required": true,
-          "PrimitiveType": "String",
-          "UpdateType": "Immutable"
-        },
-        "Principal": {
-          "Required": true,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::CloudFormation::Stack": {
       "Properties": {
         "NotificationARNs": {
@@ -22052,6 +22089,20 @@
           "PrimitiveType": "Integer",
           "Required": false,
           "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::Config::AggregationAuthorization": {
+      "Properties": {
+        "AuthorizedAccountId": {
+          "Required": true,
+          "PrimitiveType": "String",
+          "UpdateType": "Immutable"
+        },
+        "AuthorizedAwsRegion": {
+          "Required": true,
+          "PrimitiveType": "String",
+          "UpdateType": "Immutable"
         }
       }
     },
@@ -22092,20 +22143,6 @@
         }
       }
     },
-    "AWS::Config::AggregationAuthorization": {
-      "Properties": {
-        "AuthorizedAccountId": {
-          "Required": true,
-          "PrimitiveType": "String",
-          "UpdateType": "Immutable"
-        },
-        "AuthorizedAwsRegion": {
-          "Required": true,
-          "PrimitiveType": "String",
-          "UpdateType": "Immutable"
-        }
-      }
-    },
     "AWS::SQS::QueuePolicy": {
       "Properties": {
         "PolicyDocument": {
@@ -22118,6 +22155,66 @@
           "PrimitiveItemType": "String",
           "Required": true,
           "Type": "List",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::WAF::SqlInjectionMatchSet": {
+      "Properties": {
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        },
+        "SqlInjectionMatchTuples": {
+          "DuplicatesAllowed": false,
+          "ItemType": "SqlInjectionMatchTuple",
+          "Required": false,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::ApplicationAutoScaling::ScalingPolicy": {
+      "Properties": {
+        "PolicyName": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        },
+        "PolicyType": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "ResourceId": {
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Immutable"
+        },
+        "ScalableDimension": {
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Immutable"
+        },
+        "ScalingTargetId": {
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Immutable"
+        },
+        "ServiceNamespace": {
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Immutable"
+        },
+        "StepScalingPolicyConfiguration": {
+          "Required": false,
+          "Type": "StepScalingPolicyConfiguration",
+          "UpdateType": "Mutable"
+        },
+        "TargetTrackingScalingPolicyConfiguration": {
+          "Required": false,
+          "Type": "TargetTrackingScalingPolicyConfiguration",
           "UpdateType": "Mutable"
         }
       }
@@ -22154,22 +22251,6 @@
         "ThroughputMode": {
           "PrimitiveType": "String",
           "Required": false,
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::WAF::SqlInjectionMatchSet": {
-      "Properties": {
-        "Name": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Immutable"
-        },
-        "SqlInjectionMatchTuples": {
-          "DuplicatesAllowed": false,
-          "ItemType": "SqlInjectionMatchTuple",
-          "Required": false,
-          "Type": "List",
           "UpdateType": "Mutable"
         }
       }
@@ -22253,50 +22334,6 @@
         }
       }
     },
-    "AWS::ApplicationAutoScaling::ScalingPolicy": {
-      "Properties": {
-        "PolicyName": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Immutable"
-        },
-        "PolicyType": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Mutable"
-        },
-        "ResourceId": {
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Immutable"
-        },
-        "ScalableDimension": {
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Immutable"
-        },
-        "ScalingTargetId": {
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Immutable"
-        },
-        "ServiceNamespace": {
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Immutable"
-        },
-        "StepScalingPolicyConfiguration": {
-          "Required": false,
-          "Type": "StepScalingPolicyConfiguration",
-          "UpdateType": "Mutable"
-        },
-        "TargetTrackingScalingPolicyConfiguration": {
-          "Required": false,
-          "Type": "TargetTrackingScalingPolicyConfiguration",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::CodeCommit::Repository": {
       "Attributes": {
         "CloneUrlHttp": {
@@ -22328,41 +22365,6 @@
           "Required": false,
           "PrimitiveType": "String",
           "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::SecretsManager::Secret": {
-      "Properties": {
-        "Description": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        },
-        "KmsKeyId": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        },
-        "SecretString": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        },
-        "GenerateSecretString": {
-          "Type": "GenerateSecretString",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "Tags": {
-          "Type": "List",
-          "Required": false,
-          "ItemType": "Tag",
-          "UpdateType": "Mutable"
-        },
-        "Name": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Immutable"
         }
       }
     },
@@ -22431,6 +22433,41 @@
           "Type": "List",
           "Required": false,
           "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::SecretsManager::Secret": {
+      "Properties": {
+        "Description": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "KmsKeyId": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "SecretString": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "GenerateSecretString": {
+          "Type": "GenerateSecretString",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "Tags": {
+          "Type": "List",
+          "Required": false,
+          "ItemType": "Tag",
+          "UpdateType": "Mutable"
+        },
+        "Name": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Immutable"
         }
       }
     },
@@ -22545,20 +22582,6 @@
         }
       }
     },
-    "AWS::ServiceCatalog::AcceptedPortfolioShare": {
-      "Properties": {
-        "AcceptLanguage": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Immutable"
-        },
-        "PortfolioId": {
-          "Required": true,
-          "PrimitiveType": "String",
-          "UpdateType": "Immutable"
-        }
-      }
-    },
     "AWS::ServiceDiscovery::Service": {
       "Attributes": {
         "Id": {
@@ -22599,6 +22622,20 @@
         },
         "Name": {
           "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Immutable"
+        }
+      }
+    },
+    "AWS::ServiceCatalog::AcceptedPortfolioShare": {
+      "Properties": {
+        "AcceptLanguage": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Immutable"
+        },
+        "PortfolioId": {
+          "Required": true,
           "PrimitiveType": "String",
           "UpdateType": "Immutable"
         }
@@ -22832,6 +22869,59 @@
         }
       }
     },
+    "AWS::IoTAnalytics::Pipeline": {
+      "Properties": {
+        "PipelineName": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Immutable"
+        },
+        "Tags": {
+          "Type": "List",
+          "Required": false,
+          "ItemType": "Tag",
+          "UpdateType": "Mutable"
+        },
+        "PipelineActivities": {
+          "Type": "List",
+          "Required": true,
+          "ItemType": "Activity",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::IoT1Click::Placement": {
+      "Attributes": {
+        "PlacementName": {
+          "PrimitiveType": "String"
+        },
+        "ProjectName": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Properties": {
+        "PlacementName": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Immutable"
+        },
+        "ProjectName": {
+          "Required": true,
+          "PrimitiveType": "String",
+          "UpdateType": "Immutable"
+        },
+        "AssociatedDevices": {
+          "Required": false,
+          "PrimitiveType": "Json",
+          "UpdateType": "Immutable"
+        },
+        "Attributes": {
+          "Required": false,
+          "PrimitiveType": "Json",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::Lambda::Function": {
       "Attributes": {
         "Arn": {
@@ -22925,56 +23015,27 @@
         }
       }
     },
-    "AWS::IoTAnalytics::Pipeline": {
+    "AWS::EC2::TransitGatewayRoute": {
       "Properties": {
-        "PipelineName": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Immutable"
-        },
-        "Tags": {
-          "Type": "List",
-          "Required": false,
-          "ItemType": "Tag",
-          "UpdateType": "Mutable"
-        },
-        "PipelineActivities": {
-          "Type": "List",
-          "Required": true,
-          "ItemType": "Activity",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::IoT1Click::Placement": {
-      "Attributes": {
-        "PlacementName": {
-          "PrimitiveType": "String"
-        },
-        "ProjectName": {
-          "PrimitiveType": "String"
-        }
-      },
-      "Properties": {
-        "PlacementName": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Immutable"
-        },
-        "ProjectName": {
+        "TransitGatewayRouteTableId": {
           "Required": true,
           "PrimitiveType": "String",
           "UpdateType": "Immutable"
         },
-        "AssociatedDevices": {
+        "DestinationCidrBlock": {
           "Required": false,
-          "PrimitiveType": "Json",
+          "PrimitiveType": "String",
           "UpdateType": "Immutable"
         },
-        "Attributes": {
+        "Blackhole": {
           "Required": false,
-          "PrimitiveType": "Json",
-          "UpdateType": "Mutable"
+          "PrimitiveType": "Boolean",
+          "UpdateType": "Immutable"
+        },
+        "TransitGatewayAttachmentId": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Immutable"
         }
       }
     },
@@ -23017,30 +23078,6 @@
           "Required": false,
           "Type": "List",
           "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::EC2::TransitGatewayRoute": {
-      "Properties": {
-        "TransitGatewayRouteTableId": {
-          "Required": true,
-          "PrimitiveType": "String",
-          "UpdateType": "Immutable"
-        },
-        "DestinationCidrBlock": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Immutable"
-        },
-        "Blackhole": {
-          "Required": false,
-          "PrimitiveType": "Boolean",
-          "UpdateType": "Immutable"
-        },
-        "TransitGatewayAttachmentId": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Immutable"
         }
       }
     },
@@ -24076,90 +24113,6 @@
         }
       }
     },
-    "AWS::EC2::NetworkInterfaceAttachment": {
-      "Properties": {
-        "DeleteOnTermination": {
-          "PrimitiveType": "Boolean",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "DeviceIndex": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Mutable"
-        },
-        "InstanceId": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Mutable"
-        },
-        "NetworkInterfaceId": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::IAM::ManagedPolicy": {
-      "Properties": {
-        "Description": {
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Immutable"
-        },
-        "Groups": {
-          "DuplicatesAllowed": false,
-          "PrimitiveItemType": "String",
-          "Required": false,
-          "Type": "List",
-          "UpdateType": "Mutable"
-        },
-        "ManagedPolicyName": {
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Immutable"
-        },
-        "Path": {
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Immutable"
-        },
-        "PolicyDocument": {
-          "PrimitiveType": "Json",
-          "Required": true,
-          "UpdateType": "Mutable"
-        },
-        "Roles": {
-          "DuplicatesAllowed": true,
-          "PrimitiveItemType": "String",
-          "Required": false,
-          "Type": "List",
-          "UpdateType": "Mutable"
-        },
-        "Users": {
-          "DuplicatesAllowed": true,
-          "PrimitiveItemType": "String",
-          "Required": false,
-          "Type": "List",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::WAFRegional::IPSet": {
-      "Properties": {
-        "IPSetDescriptors": {
-          "Type": "List",
-          "Required": false,
-          "ItemType": "IPSetDescriptor",
-          "UpdateType": "Mutable"
-        },
-        "Name": {
-          "Required": true,
-          "PrimitiveType": "String",
-          "UpdateType": "Immutable"
-        }
-      }
-    },
     "AWS::RDS::DBInstance": {
       "Attributes": {
         "Endpoint.Address": {
@@ -24422,6 +24375,90 @@
         }
       }
     },
+    "AWS::IAM::ManagedPolicy": {
+      "Properties": {
+        "Description": {
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Immutable"
+        },
+        "Groups": {
+          "DuplicatesAllowed": false,
+          "PrimitiveItemType": "String",
+          "Required": false,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        },
+        "ManagedPolicyName": {
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Immutable"
+        },
+        "Path": {
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Immutable"
+        },
+        "PolicyDocument": {
+          "PrimitiveType": "Json",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "Roles": {
+          "DuplicatesAllowed": true,
+          "PrimitiveItemType": "String",
+          "Required": false,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        },
+        "Users": {
+          "DuplicatesAllowed": true,
+          "PrimitiveItemType": "String",
+          "Required": false,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::EC2::NetworkInterfaceAttachment": {
+      "Properties": {
+        "DeleteOnTermination": {
+          "PrimitiveType": "Boolean",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "DeviceIndex": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "InstanceId": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "NetworkInterfaceId": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::WAFRegional::IPSet": {
+      "Properties": {
+        "IPSetDescriptors": {
+          "Type": "List",
+          "Required": false,
+          "ItemType": "IPSetDescriptor",
+          "UpdateType": "Mutable"
+        },
+        "Name": {
+          "Required": true,
+          "PrimitiveType": "String",
+          "UpdateType": "Immutable"
+        }
+      }
+    },
     "AWS::IoT::PolicyPrincipalAttachment": {
       "Properties": {
         "PolicyName": {
@@ -24614,6 +24651,39 @@
         }
       }
     },
+    "AWS::Route53Resolver::ResolverRuleAssociation": {
+      "Attributes": {
+        "VPCId": {
+          "PrimitiveType": "String"
+        },
+        "ResolverRuleId": {
+          "PrimitiveType": "String"
+        },
+        "ResolverRuleAssociationId": {
+          "PrimitiveType": "String"
+        },
+        "Name": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Properties": {
+        "VPCId": {
+          "Required": true,
+          "PrimitiveType": "String",
+          "UpdateType": "Immutable"
+        },
+        "ResolverRuleId": {
+          "Required": true,
+          "PrimitiveType": "String",
+          "UpdateType": "Immutable"
+        },
+        "Name": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Immutable"
+        }
+      }
+    },
     "AWS::Cognito::UserPoolClient": {
       "Attributes": {
         "ClientSecret": {
@@ -24684,30 +24754,6 @@
         }
       }
     },
-    "AWS::EC2::TrunkInterfaceAssociation": {
-      "Properties": {
-        "BranchInterfaceId": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Immutable"
-        },
-        "GREKey": {
-          "PrimitiveType": "Integer",
-          "Required": false,
-          "UpdateType": "Immutable"
-        },
-        "TrunkInterfaceId": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Immutable"
-        },
-        "VLANId": {
-          "PrimitiveType": "Integer",
-          "Required": false,
-          "UpdateType": "Immutable"
-        }
-      }
-    },
     "AWS::ECR::Repository": {
       "Attributes": {
         "Arn": {
@@ -24729,6 +24775,30 @@
           "PrimitiveType": "Json",
           "Required": false,
           "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::EC2::TrunkInterfaceAssociation": {
+      "Properties": {
+        "BranchInterfaceId": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        },
+        "GREKey": {
+          "PrimitiveType": "Integer",
+          "Required": false,
+          "UpdateType": "Immutable"
+        },
+        "TrunkInterfaceId": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        },
+        "VLANId": {
+          "PrimitiveType": "Integer",
+          "Required": false,
+          "UpdateType": "Immutable"
         }
       }
     },
@@ -24955,15 +25025,6 @@
         }
       }
     },
-    "AWS::SES::ReceiptRuleSet": {
-      "Properties": {
-        "RuleSetName": {
-          "Required": false,
-          "PrimitiveType": "String",
-          "UpdateType": "Immutable"
-        }
-      }
-    },
     "AWS::ServiceCatalog::LaunchNotificationConstraint": {
       "Properties": {
         "Description": {
@@ -24994,6 +25055,15 @@
         }
       }
     },
+    "AWS::SES::ReceiptRuleSet": {
+      "Properties": {
+        "RuleSetName": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Immutable"
+        }
+      }
+    },
     "AWS::AppStream::StackUserAssociation": {
       "Properties": {
         "SendEmailNotification": {
@@ -25014,25 +25084,6 @@
         "AuthenticationType": {
           "Required": true,
           "PrimitiveType": "String",
-          "UpdateType": "Immutable"
-        }
-      }
-    },
-    "AWS::EC2::VolumeAttachment": {
-      "Properties": {
-        "Device": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Immutable"
-        },
-        "InstanceId": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Immutable"
-        },
-        "VolumeId": {
-          "PrimitiveType": "String",
-          "Required": true,
           "UpdateType": "Immutable"
         }
       }
@@ -25086,6 +25137,25 @@
         "VpcSettings": {
           "Required": true,
           "Type": "VpcSettings",
+          "UpdateType": "Immutable"
+        }
+      }
+    },
+    "AWS::EC2::VolumeAttachment": {
+      "Properties": {
+        "Device": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        },
+        "InstanceId": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        },
+        "VolumeId": {
+          "PrimitiveType": "String",
+          "Required": true,
           "UpdateType": "Immutable"
         }
       }
@@ -25156,6 +25226,20 @@
         }
       }
     },
+    "AWS::KMS::Alias": {
+      "Properties": {
+        "AliasName": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        },
+        "TargetKeyId": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::ECS::TaskDefinition": {
       "Properties": {
         "ContainerDefinitions": {
@@ -25214,20 +25298,6 @@
           "ItemType": "Volume",
           "Required": false,
           "Type": "List",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::KMS::Alias": {
-      "Properties": {
-        "AliasName": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Immutable"
-        },
-        "TargetKeyId": {
-          "PrimitiveType": "String",
-          "Required": true,
           "UpdateType": "Mutable"
         }
       }
@@ -26164,6 +26234,12 @@
           "PrimitiveType": "String",
           "UpdateType": "Mutable"
         },
+        "Tags": {
+          "Type": "List",
+          "Required": false,
+          "ItemType": "TagsEntry",
+          "UpdateType": "Mutable"
+        },
         "Name": {
           "Required": true,
           "PrimitiveType": "String",
@@ -26192,35 +26268,6 @@
         "ApplicationCode": {
           "Required": false,
           "PrimitiveType": "String",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::Logs::Destination": {
-      "Attributes": {
-        "Arn": {
-          "PrimitiveType": "String"
-        }
-      },
-      "Properties": {
-        "DestinationName": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Immutable"
-        },
-        "DestinationPolicy": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Mutable"
-        },
-        "RoleArn": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Mutable"
-        },
-        "TargetArn": {
-          "PrimitiveType": "String",
-          "Required": true,
           "UpdateType": "Mutable"
         }
       }
@@ -26303,6 +26350,35 @@
         "TimeToLiveSpecification": {
           "Required": false,
           "Type": "TimeToLiveSpecification",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::Logs::Destination": {
+      "Attributes": {
+        "Arn": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Properties": {
+        "DestinationName": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        },
+        "DestinationPolicy": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "RoleArn": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "TargetArn": {
+          "PrimitiveType": "String",
+          "Required": true,
           "UpdateType": "Mutable"
         }
       }
@@ -26561,32 +26637,6 @@
         }
       }
     },
-    "AWS::RDS::DBClusterParameterGroup": {
-      "Properties": {
-        "Description": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Immutable"
-        },
-        "Family": {
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Immutable"
-        },
-        "Parameters": {
-          "PrimitiveType": "Json",
-          "Required": true,
-          "UpdateType": "Mutable"
-        },
-        "Tags": {
-          "DuplicatesAllowed": true,
-          "ItemType": "Tag",
-          "Required": false,
-          "Type": "List",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::Neptune::DBInstance": {
       "Attributes": {
         "Endpoint": {
@@ -26651,6 +26701,32 @@
           "Type": "List",
           "Required": false,
           "ItemType": "Tag",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::RDS::DBClusterParameterGroup": {
+      "Properties": {
+        "Description": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        },
+        "Family": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        },
+        "Parameters": {
+          "PrimitiveType": "Json",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "Tags": {
+          "DuplicatesAllowed": true,
+          "ItemType": "Tag",
+          "Required": false,
+          "Type": "List",
           "UpdateType": "Mutable"
         }
       }
@@ -27383,5 +27459,5 @@
       }
     }
   },
-  "ResourceSpecificationVersion": "2.18.0"
+  "ResourceSpecificationVersion": "2.18.1"
 }
