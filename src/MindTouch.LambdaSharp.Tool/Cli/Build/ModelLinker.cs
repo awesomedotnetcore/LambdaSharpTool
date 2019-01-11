@@ -410,6 +410,18 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     default:
                         throw new ApplicationException($"unsupported type: {freeItem?.GetType().ToString() ?? "<null>"}");
                     }
+
+                    // check if we're accessing a conditional resource from a resource with a different condition or no condition
+                    var freeItemConditionName = (freeItem as AResourceItem)?.Condition;
+                    if((freeItemConditionName != null) && (item is AResourceItem resourceItem)) {
+                        _builder.TryGetItem(freeItemConditionName, out AModuleItem freeItemCondition);
+                        if(resourceItem.Condition == null) {
+                            AddError($"cannot reference conditional item {freeItem.FullName} from non-conditional item");
+                        } else if(resourceItem.Condition != freeItemConditionName) {
+                             _builder.TryGetItem(resourceItem.Condition, out AModuleItem resourceItemCondition);
+                            AddWarning($"conditional item {freeItem.FullName} with condition '{freeItemCondition?.FullName ?? freeItemConditionName}' is accessed by item with condition '{resourceItemCondition.FullName ?? resourceItem.Condition}'");
+                        }
+                    }
                     return true;
                 }
                 return false;
