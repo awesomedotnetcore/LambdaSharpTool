@@ -132,6 +132,7 @@
     * garbage collection generated import parameters if not used
     * warn on unused parameters
     * simplify references in `!Sub` expressions
+    * validate that `!Ref` and `!GetAtt` references to conditional resources are only made from compatible, conditional resources
 
 * Deploy Process
     * use change-sets for deploying stacks
