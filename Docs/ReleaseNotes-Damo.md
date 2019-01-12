@@ -483,6 +483,7 @@ This method serializes an object into a JSON string using the built-in AWS Lambd
 * [Fixed LambdaSharp modules are always installed from public lambdasharp bucket](https://github.com/LambdaSharp/LambdaSharpTool/issues/82)
 * [Fixed documentation error that showed wrong keyword for subscribing a function to a topic](https://github.com/LambdaSharp/LambdaSharpTool/issues/83)
 * [Fixed cannot unzip package from deployment bucket when S3PackageLoader is installed from the global lambdasharp bucket](https://github.com/LambdaSharp/LambdaSharpTool/issues/84)
+* [Fixed error when creating a resource with custom resource type](https://github.com/LambdaSharp/LambdaSharpTool/issues/85)
 
 ### (v0.4.0.3) - 2018-12-16
 
