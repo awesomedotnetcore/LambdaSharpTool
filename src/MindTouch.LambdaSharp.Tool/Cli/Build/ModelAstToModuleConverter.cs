@@ -267,7 +267,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 "Function",
                 "Macro",
                 "Mapping",
-                "NestedModule",
+                "Module",
                 "Namespace",
                 "Package",
                 "Parameter",
@@ -419,13 +419,13 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     }
                 });
                 break;
-            case "NestedModule":
-                AtLocation(node.NestedModule, () => {
+            case "Module":
+                AtLocation(node.Module, () => {
 
                     // validation
-                    if(node.Reference == null) {
+                    if(node.Source == null) {
                         AddError("missing 'Reference' attribute");
-                    } else if(!node.Reference.TryParseModuleInfo(
+                    } else if(!node.Source.TryParseModuleInfo(
                         out string moduleOwner,
                         out string moduleName,
                         out VersionInfo moduleVersion,
@@ -435,9 +435,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     } else {
 
                         // create nested module item
-                        _builder.AddNestedModule(
+                        _builder.AddModule(
                             parent: parent,
-                            name: node.NestedModule,
+                            name: node.Module,
                             description: node.Description,
                             moduleOwner: moduleOwner,
                             moduleName: moduleName,

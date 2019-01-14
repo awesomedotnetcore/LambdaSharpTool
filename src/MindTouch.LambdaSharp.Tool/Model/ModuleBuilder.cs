@@ -586,7 +586,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             return result;
         }
 
-        public AModuleItem AddNestedModule(
+        public AModuleItem AddModule(
             AModuleItem parent,
             string name,
             string description,

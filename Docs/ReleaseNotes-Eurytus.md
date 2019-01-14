@@ -16,7 +16,7 @@
         * `Resource`: AWS and custom resources
         * `Variable`: hold arbitrary literal or intermediate values
         * `Package`: file package only (**BREAKING CHANGE:** files are no longer always deployed to S3)
-        * `NestedModule`: create nested module resource
+        * `Module`: create nested module resource
         * renamed `CustomResource` to `ResourceType`
         * use `Namespace` as keyword for nested items
         * new `Using` notation (formerly `Import`)
@@ -54,8 +54,8 @@
         * issue warning if a `Parameter` is never used (but don't garbage collect it!)
     * entry type `Module`
         ```yaml
-        - NestedModule: MyNestedModule
-          Reference: LambdaSharp.S3FooBar:1.0
+        - Module: MyNestedModule
+          Source: LambdaSharp.S3FooBar:1.0
           Parameters:
             ...
           DependsOn: ...
@@ -106,7 +106,7 @@
             HVM64: "ami-06cd52961ce9f0d85"
             HVMG2: "ami-053cdd503598e4a9d"
         ```
-
+    * updated manifest format, includes: resource types, macros, and outputs
 
 * CLI
     * new module specification for deploying: `ModuleName[:Version][@Bucket]`

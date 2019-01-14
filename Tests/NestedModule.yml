@@ -2,6 +2,9 @@ Module: Test.TestModule
 Description: LambdaSharp CloudFormation Test
 Items:
 
-  # Module Outputs
-  - NestedModule: Test
-    Reference: Test.OtherModule:1.0
+  # Nested Module
+  - Module: Test
+    Source: Test.OtherModule:1.0
+    Parameters:
+      Abc: 123
+
