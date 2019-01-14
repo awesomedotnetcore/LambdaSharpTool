@@ -10,7 +10,7 @@ Items:
     Files: TestFiles
 
   - Resource: MyPackage
-    Type: LambdaSharp::S3::UnzipPackage
+    Type: LambdaSharp::S3::Unzip
     Pragmas:
       - no-type-validation
     Properties:

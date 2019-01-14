@@ -75,6 +75,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
     public class ModuleManifestCustomResource {
 
        //--- Properties ---
+       public string Description { get; set; }
        public IEnumerable<ModuleManifestResourceProperty> Request { get; set; }
        public IEnumerable<ModuleManifestResourceProperty> Response { get; set; }
     }
@@ -83,7 +84,9 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
        //--- Properties ---
        public string Name { get; set; }
+       public string Description { get; set; }
        public string Type { get; set; } = "String";
+       public bool Required { get; set; } = true;
     }
 
     public class ModuleManifestDependency {

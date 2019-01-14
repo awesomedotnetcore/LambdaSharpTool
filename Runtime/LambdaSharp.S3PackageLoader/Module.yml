@@ -22,52 +22,61 @@ Version: 0.5-WIP
 Description: LambdaSharp S3 Package Loader
 Items:
 
-  - ResourceType: LambdaSharp::S3::UnzipPackage
-    Description: Custom resource for deploying packages to S3 buckets
+  - ResourceType: LambdaSharp::S3::Unzip
+    Description: Resource for deploying the contents of a zip file to an S3 bucket
     Handler: CustomResourceTopic
     Properties:
       Request:
+
         - Name: DestinationBucket
+          Description: Destination S3 bucket ARN/name where to unzip the zip file to
           Type: String
-        - Name: DestinationBucketName
-          Type: String
-        - Name: DestinationBucketArn
-          Type: AWS::S3::Bucket
+          Required: true
+
         - Name: DestinationKeyPrefix
+          Description: Destination S3 key prefix for all unzipped files
           Type: String
+          Required: true
+
         - Name: SourceBucket
+          Description: Source S3 bucket ARN/name for the zip file
           Type: String
-        - Name: SourceBucketName
-          Type: String
+          Required: true
+
         - Name: SourcePackageKey
+          Description: Source S3 key for the zip file
           Type: String
+          Required: true
+
       Response:
+
         - Name: Url
+          Description: Destination S3 URL with destination bucket name and key prefix
           Type: String
 
 
   - Resource: S3TargetBucketPermissions
     Description: LambdaSharpS3PackageLoader requires read-write access to all S3 buckets
-      Type: AWS::S3::Bucket
-      Allow: ReadWrite
+    Type: AWS::S3::Bucket
+    Allow: ReadWrite
     Value: !Sub "arn:aws:s3:::${DeploymentPrefixLowercase}*"
 
   - Resource: S3DeploymentBucketPermissions
     Description: LambdaSharpS3PackageLoader requires read-write access to all S3 buckets
-      Type: AWS::S3::Bucket
-      Allow: ReadOnly
+    Type: AWS::S3::Bucket
+    Allow: ReadOnly
     Value: !Sub "arn:aws:s3:::*"
 
   - Resource: CustomResourceTopic
     Description: Custom resource topic for deploying packages to S3 buckets
-      Type: AWS::SNS::Topic
-      Allow: Subscribe
+    Type: AWS::SNS::Topic
+    Allow: Subscribe
 
   - Resource: ManifestBucket
     Scope: "*"
     Description: Bucket to store information about uploaded packages
-      Type: AWS::S3::Bucket
-      Allow: ReadWrite
+    Type: AWS::S3::Bucket
+    Allow: ReadWrite
 
   - Function: ResourceHandler
     Description: LambdaSharp S3 Package Loader handler

@@ -41,25 +41,17 @@ namespace MindTouch.LambdaSharpS3PackageLoader.ResourceHandler {
 
         //--- Properties ---
         public string DestinationBucket { get; set; }
-        public string DestinationBucketName { get; set; }
         public string DestinationKeyPrefix { get; set; }
         public string SourceBucket { get; set; }
-        public string SourceBucketName { get; set; }
         public string SourcePackageKey { get; set; }
 
-        //--- Methods ---
-        public void SetDestinationBucketName() {
-            if(DestinationBucket != null) {
-                DestinationBucketName = DestinationBucket.StartsWith("arn:")
-                    ? AwsConverters.ConvertBucketArnToName(DestinationBucket)
-                    : DestinationBucket;
-            }
-            if(SourceBucket != null) {
-                SourceBucketName = SourceBucket.StartsWith("arn:")
-                    ? AwsConverters.ConvertBucketArnToName(SourceBucket)
-                    : SourceBucket;
-            }
-        }
+        public string DestinationBucketName => DestinationBucket.StartsWith("arn:")
+            ? AwsConverters.ConvertBucketArnToName(DestinationBucket)
+            : DestinationBucket;
+
+        public string SourceBucketName => SourceBucket.StartsWith("arn:")
+            ? AwsConverters.ConvertBucketArnToName(SourceBucket)
+            : SourceBucket;
     }
 
     public class ResponseProperties {
@@ -98,7 +90,6 @@ namespace MindTouch.LambdaSharpS3PackageLoader.ResourceHandler {
         }
 
         private async Task<Response<ResponseProperties>> UploadFiles(RequestProperties properties) {
-            properties.SetDestinationBucketName();
             LogInfo($"uploading package s3://{properties.SourceBucketName}/{properties.SourcePackageKey} to S3 bucket {properties.DestinationBucketName}");
 
             // download package and copy all files to destination bucket
@@ -142,7 +133,6 @@ namespace MindTouch.LambdaSharpS3PackageLoader.ResourceHandler {
         }
 
         private async Task<Response<ResponseProperties>> DeleteFiles(RequestProperties properties) {
-            properties.SetDestinationBucketName();
             LogInfo($"deleting package {properties.SourcePackageKey} from S3 bucket {properties.DestinationBucketName}");
 
             // download package manifest

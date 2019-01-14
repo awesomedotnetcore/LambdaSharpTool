@@ -55,7 +55,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "25B06914F7F6D23C1B2EB7B4C7333EDA"
+      "Default": "8C2DAAD24A69853EBE7FC199504B55FE"
     }
   },
   "Resources": {
@@ -64,11 +64,11 @@
       "Properties": {}
     },
     "MyPackage": {
-      "Type": "Custom::LambdaSharpS3UnzipPackage",
+      "Type": "Custom::LambdaSharpS3Unzip",
       "Properties": {
         "ServiceToken": {
           "Fn::ImportValue": {
-            "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::S3::UnzipPackage"
+            "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::S3::Unzip"
           }
         },
         "DestinationBucket": {
@@ -793,7 +793,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "25B06914F7F6D23C1B2EB7B4C7333EDA",
+      "Hash": "8C2DAAD24A69853EBE7FC199504B55FE",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [
@@ -812,7 +812,7 @@
         "FunctionLogGroupSubscription": "Function::LogGroupSubscription"
       },
       "ResourceTypeNameMappings": {
-        "Custom::LambdaSharpS3UnzipPackage": "LambdaSharp::S3::UnzipPackage",
+        "Custom::LambdaSharpS3Unzip": "LambdaSharp::S3::Unzip",
         "Custom::LambdaSharpRegistrationModule": "LambdaSharp::Registration::Module",
         "Custom::LambdaSharpRegistrationFunction": "LambdaSharp::Registration::Function"
       }

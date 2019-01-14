@@ -618,12 +618,19 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                                 properties = JObject.FromObject(node.Properties, new JsonSerializer {
                                     NullValueHandling = NullValueHandling.Ignore
                                 }).ToObject<ModuleManifestCustomResource>();
+
+                                // validate fields
+                                Validate((properties.Request?.Count() ?? 0) > 0, "missing or empty 'Request' section");
+                                Validate((properties.Response?.Count() ?? 0) > 0, "missing or empty 'Response' section");
+
+                                // set optional fields
+                                if(properties.Description == null) {
+                                    properties.Description = node.Description;
+                                }
                             } catch(JsonSerializationException e) {
                                 AddError(e.Message);
                             }
                         });
-                        Validate((properties.Request?.Count() ?? 0) > 0, "missing or empty 'Request' section");
-                        Validate((properties.Response?.Count() ?? 0) > 0, "missing or empty 'Response' section");
                     } else {
                         AddError("missing 'Properties' section");
                     }

@@ -55,7 +55,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "56D7D4288D52251F2462AC39803F7A60"
+      "Default": "CACE3437495807D506157ECC4EAAC461"
     }
   },
   "Resources": {
@@ -746,7 +746,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "56D7D4288D52251F2462AC39803F7A60",
+      "Hash": "CACE3437495807D506157ECC4EAAC461",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [
@@ -757,16 +757,19 @@
       ],
       "CustomResourceTypes": {
         "MyNamespace::MyResource": {
+          "Description": "Handler for MyNamespace::MyResource custom resource",
           "Request": [
             {
               "Name": "SampleInput",
-              "Type": "String"
+              "Type": "String",
+              "Required": true
             }
           ],
           "Response": [
             {
               "Name": "SampleOutput",
-              "Type": "String"
+              "Type": "String",
+              "Required": true
             }
           ]
         }

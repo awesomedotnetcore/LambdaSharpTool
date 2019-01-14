@@ -27,14 +27,26 @@ Items:
     Handler: CustomResourceTopic
     Properties:
       Request:
+
         - Name: Bucket
+          Description: S3 bucket ARN/name to subscribe to
           Type: String
+          Required: true
+
         - Name: Function
+          Description: Lambda ARN that the S3 bucket will invoke with the events
           Type: String
+          Required: true
+
         - Name: Filters
-          Type: List<String>
+          Description: List of filters for S3 events to subscribe to
+          Type: List
+          Required: true
+
       Response:
+
         - Name: Result
+          Description: S3 bucker URL
           Type: String
 
   - Resource: S3BucketPermissions

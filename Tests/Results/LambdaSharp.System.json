@@ -72,7 +72,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "CE5F42EE38EBEF3861BDB3C1FFF83BB2"
+      "Default": "DF1DCF2CC969EDA1269870C1DF735123"
     }
   },
   "Resources": {
@@ -966,72 +966,98 @@
         }
       ],
       "RuntimeCheck": false,
-      "Hash": "CE5F42EE38EBEF3861BDB3C1FFF83BB2",
+      "Hash": "DF1DCF2CC969EDA1269870C1DF735123",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [],
       "CustomResourceTypes": {
         "LambdaSharp::Registration::Function": {
+          "Description": "Custom resources for registering LambdaSharp functions",
           "Request": [
             {
               "Name": "ModuleId",
-              "Type": "String"
+              "Description": "Module CloudFormation stack name",
+              "Type": "String",
+              "Required": true
             },
             {
               "Name": "FunctionId",
-              "Type": "String"
+              "Description": "Module function ARN",
+              "Type": "String",
+              "Required": true
             },
             {
               "Name": "FunctionName",
-              "Type": "String"
+              "Description": "Module function name",
+              "Type": "String",
+              "Required": true
             },
             {
               "Name": "FunctionLogGroupName",
-              "Type": "String"
+              "Description": "Module function CloudWatch log group name",
+              "Type": "String",
+              "Required": true
             },
             {
               "Name": "FunctionMaxMemory",
-              "Type": "String"
+              "Description": "Max memory for module function",
+              "Type": "String",
+              "Required": true
             },
             {
               "Name": "FunctionMaxDuration",
-              "Type": "String"
+              "Description": "Max duration for module function",
+              "Type": "String",
+              "Required": true
             },
             {
               "Name": "FunctionPlatform",
-              "Type": "String"
+              "Description": "Module function execution platform",
+              "Type": "String",
+              "Required": true
             },
             {
               "Name": "FunctionFramework",
-              "Type": "String"
+              "Description": "Module function execution framework",
+              "Type": "String",
+              "Required": true
             },
             {
               "Name": "FunctionLanguage",
-              "Type": "String"
+              "Description": "Module function programming language",
+              "Type": "String",
+              "Required": true
             }
           ],
           "Response": [
             {
               "Name": "Registration",
-              "Type": "String"
+              "Type": "String",
+              "Required": true
             }
           ]
         },
         "LambdaSharp::Registration::Module": {
+          "Description": "Custom resources for registering LambdaSharp modules",
           "Request": [
             {
               "Name": "ModuleId",
-              "Type": "String"
+              "Description": "Module CloudFormation stack name",
+              "Type": "String",
+              "Required": true
             },
             {
               "Name": "ModuleInfo",
-              "Type": "String"
+              "Description": "Module full name and version",
+              "Type": "String",
+              "Required": true
             }
           ],
           "Response": [
             {
               "Name": "Registration",
-              "Type": "String"
+              "Type": "String",
+              "Required": true
             }
           ]
         }

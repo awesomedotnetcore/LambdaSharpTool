@@ -55,7 +55,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "D011D8F6E228117C3B96A817C1F7EA8B"
+      "Default": "AAAA3516828F44AC5ED3E6BCB3C20F32"
     }
   },
   "Resources": {
@@ -816,7 +816,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "D011D8F6E228117C3B96A817C1F7EA8B",
+      "Hash": "AAAA3516828F44AC5ED3E6BCB3C20F32",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [
@@ -827,24 +827,33 @@
       ],
       "CustomResourceTypes": {
         "LambdaSharp::S3::Subscription": {
+          "Description": "Custom resource for S3 bucket subscriptions",
           "Request": [
             {
               "Name": "Bucket",
-              "Type": "String"
+              "Description": "S3 bucket ARN/name to subscribe to",
+              "Type": "String",
+              "Required": true
             },
             {
               "Name": "Function",
-              "Type": "String"
+              "Description": "Lambda ARN that the S3 bucket will invoke with the events",
+              "Type": "String",
+              "Required": true
             },
             {
               "Name": "Filters",
-              "Type": "List<String>"
+              "Description": "List of filters for S3 events to subscribe to",
+              "Type": "List",
+              "Required": true
             }
           ],
           "Response": [
             {
               "Name": "Result",
-              "Type": "String"
+              "Description": "S3 bucker URL",
+              "Type": "String",
+              "Required": true
             }
           ]
         }

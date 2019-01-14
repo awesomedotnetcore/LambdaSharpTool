@@ -55,7 +55,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "7E956A1050CB5B5A6B2E29CF959F3F76"
+      "Default": "A0C03694AC0C22958062D270A96D5EF7"
     }
   },
   "Resources": {
@@ -653,16 +653,16 @@
     "ModuleInfo": {
       "Value": "LambdaSharp.S3PackageLoader:0.5-WIP"
     },
-    "LambdaSharpS3UnzipPackage": {
+    "LambdaSharpS3Unzip": {
       "Value": {
         "Ref": "CustomResourceTopic"
       },
       "Export": {
         "Name": {
-          "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::S3::UnzipPackage"
+          "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::S3::Unzip"
         }
       },
-      "Description": "Custom resource for deploying packages to S3 buckets"
+      "Description": "Resource for deploying the contents of a zip file to an S3 bucket"
     }
   },
   "Conditions": {
@@ -925,7 +925,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "7E956A1050CB5B5A6B2E29CF959F3F76",
+      "Hash": "A0C03694AC0C22958062D270A96D5EF7",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [
@@ -935,41 +935,40 @@
         }
       ],
       "CustomResourceTypes": {
-        "LambdaSharp::S3::UnzipPackage": {
+        "LambdaSharp::S3::Unzip": {
+          "Description": "Resource for deploying the contents of a zip file to an S3 bucket",
           "Request": [
             {
               "Name": "DestinationBucket",
-              "Type": "String"
-            },
-            {
-              "Name": "DestinationBucketName",
-              "Type": "String"
-            },
-            {
-              "Name": "DestinationBucketArn",
-              "Type": "AWS::S3::Bucket"
+              "Description": "Destination S3 bucket ARN/name where to unzip the zip file to",
+              "Type": "String",
+              "Required": true
             },
             {
               "Name": "DestinationKeyPrefix",
-              "Type": "String"
+              "Description": "Destination S3 key prefix for all unzipped files",
+              "Type": "String",
+              "Required": true
             },
             {
               "Name": "SourceBucket",
-              "Type": "String"
-            },
-            {
-              "Name": "SourceBucketName",
-              "Type": "String"
+              "Description": "Source S3 bucket ARN/name for the zip file",
+              "Type": "String",
+              "Required": true
             },
             {
               "Name": "SourcePackageKey",
-              "Type": "String"
+              "Description": "Source S3 key for the zip file",
+              "Type": "String",
+              "Required": true
             }
           ],
           "Response": [
             {
               "Name": "Url",
-              "Type": "String"
+              "Description": "Destination S3 URL with destination bucket name and key prefix",
+              "Type": "String",
+              "Required": true
             }
           ]
         }

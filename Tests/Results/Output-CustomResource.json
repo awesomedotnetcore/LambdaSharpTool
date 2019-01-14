@@ -55,7 +55,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "AE197DC323CAE2A9FF02D2269083448E"
+      "Default": "0B5869EA5B57081D4FB22512E40EACBB"
     }
   },
   "Resources": {
@@ -792,7 +792,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "AE197DC323CAE2A9FF02D2269083448E",
+      "Hash": "0B5869EA5B57081D4FB22512E40EACBB",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
       "Assets": [],
       "Dependencies": [
@@ -803,30 +803,44 @@
       ],
       "CustomResourceTypes": {
         "TestModule::MyCustomLambdaResource": {
+          "Description": "A custom resource handler using a Lambda Function",
           "Request": [
             {
               "Name": "Foo",
-              "Type": "String"
+              "Type": "String",
+              "Required": true
             }
           ],
           "Response": [
             {
               "Name": "Bar",
-              "Type": "String"
+              "Type": "String",
+              "Required": true
             }
           ]
         },
         "TestModule::MyCustomSnsResource": {
+          "Description": "A custom resource handler using an SNS topic",
           "Request": [
             {
               "Name": "Foo",
-              "Type": "String"
+              "Description": "Foo request parameter",
+              "Type": "String",
+              "Required": true
+            },
+            {
+              "Name": "Zoo",
+              "Description": "Zoo request parameter",
+              "Type": "String",
+              "Required": false
             }
           ],
           "Response": [
             {
               "Name": "Bar",
-              "Type": "String"
+              "Description": "Bar response value",
+              "Type": "String",
+              "Required": true
             }
           ]
         }

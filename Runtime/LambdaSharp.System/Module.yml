@@ -200,35 +200,76 @@ Items:
     Handler: RegistrationTopic
     Properties:
       Request:
+
         - Name: ModuleId
+          Description: Module CloudFormation stack name
+          Type: String
           Required: true
+
         - Name: ModuleInfo
+          Description: Module full name and version
+          Type: String
           Required: true
+
       Response:
+
         - Name: Registration
+          Description:
+          Type: String
 
   - ResourceType: LambdaSharp::Registration::Function
     Description: Custom resources for registering LambdaSharp functions
     Handler: RegistrationTopic
     Properties:
       Request:
+
         - Name: ModuleId
+          Description: Module CloudFormation stack name
+          Type: String
           Required: true
+
         - Name: FunctionId
+          Description: Module function ARN
+          Type: String
           Required: true
+
         - Name: FunctionName
+          Description: Module function name
+          Type: String
           Required: true
+
         - Name: FunctionLogGroupName
+          Description: Module function CloudWatch log group name
+          Type: String
           Required: true
+
         - Name: FunctionMaxMemory
+          Description: Max memory for module function
+          Type: String
           Required: true
+
         - Name: FunctionMaxDuration
+          Description: Max duration for module function
+          Type: String
           Required: true
+
         - Name: FunctionPlatform
+          Description: Module function execution platform
+          Type: String
           Required: true
+
         - Name: FunctionFramework
+          Description: Module function execution framework
+          Type: String
           Required: true
+
         - Name: FunctionLanguage
+          Description: Module function programming language
+          Type: String
           Required: true
+
       Response:
+
         - Name: Registration
+          Description:
+          Type: String

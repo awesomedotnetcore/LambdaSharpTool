@@ -8,10 +8,21 @@ Items:
     Handler: ResourceValue
     Properties:
       Request:
+
         - Name: Foo
+          Description: Foo request parameter
           Type: String
+          Required: true
+
+        - Name: Zoo
+          Description: Zoo request parameter
+          Type: String
+          Required: false
+
       Response:
+
         - Name: Bar
+          Description: Bar response value
           Type: String
 
   - ResourceType: TestModule::MyCustomLambdaResource

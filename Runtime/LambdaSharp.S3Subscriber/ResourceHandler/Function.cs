@@ -45,6 +45,10 @@ namespace MindTouch.LambdaSharpS3Subscriber.ResourceHandler {
         public string Bucket { get; set; }
         public string Function { get; set; }
         public IList<Filter> Filters { get; set; }
+
+        public string BucketName => Bucket.StartsWith("arn:")
+            ? AwsConverters.ConvertBucketArnToName(Bucket)
+            : Bucket;
     }
 
     public class Filter {
@@ -76,7 +80,7 @@ namespace MindTouch.LambdaSharpS3Subscriber.ResourceHandler {
             var properties = request.ResourceProperties;
 
             // extract bucket name from arn (arn:aws:s3:::bucket_name)
-            var bucketName = AwsConverters.ConvertBucketArnToName(properties.Bucket);
+            var bucketName = properties.BucketName;
             var config = await _s3Client.GetBucketNotificationAsync(new GetBucketNotificationRequest {
                 BucketName = bucketName
             });
@@ -99,7 +103,7 @@ namespace MindTouch.LambdaSharpS3Subscriber.ResourceHandler {
             var properties = request.ResourceProperties;
 
             // extract bucket name from arn (arn:aws:s3:::bucket_name)
-            var bucketName = AwsConverters.ConvertBucketArnToName(properties.Bucket);
+            var bucketName = properties.BucketName;
             var config = await _s3Client.GetBucketNotificationAsync(new GetBucketNotificationRequest {
                 BucketName = bucketName
             });
@@ -117,7 +121,7 @@ namespace MindTouch.LambdaSharpS3Subscriber.ResourceHandler {
             var properties = request.ResourceProperties;
 
             // extract bucket name from arn (arn:aws:s3:::bucket_name)
-            var bucketName = AwsConverters.ConvertBucketArnToName(properties.Bucket);
+            var bucketName = properties.BucketName;
             var config = await _s3Client.GetBucketNotificationAsync(new GetBucketNotificationRequest {
                 BucketName = bucketName
             });
