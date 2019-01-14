@@ -55,7 +55,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "6266E73F99069F9B2DD42CC5D04C27F7"
+      "Default": "2A0619FE7C02C131A4648767A6F6CC0B"
     }
   },
   "Resources": {
@@ -2805,17 +2805,14 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "6266E73F99069F9B2DD42CC5D04C27F7",
+      "Hash": "2A0619FE7C02C131A4648767A6F6CC0B",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
-      "Assets": [],
       "Dependencies": [
         {
           "ModuleFullName": "LambdaSharp.System",
           "MinVersion": "0.5-WIP"
         }
       ],
-      "CustomResourceTypes": {},
-      "MacroNames": [],
       "ResourceNameMappings": {
         "NearTimeoutLogGroup": "NearTimeout::LogGroup",
         "NearOutOfMemoryLogGroup": "NearOutOfMemory::LogGroup",
@@ -2850,7 +2847,7 @@
         "JsThrowRegistration": "JsThrow::Registration",
         "JsThrowLogGroupSubscription": "JsThrow::LogGroupSubscription"
       },
-      "ResourceTypeNameMappings": {
+      "TypeNameMappings": {
         "Custom::LambdaSharpRegistrationModule": "LambdaSharp::Registration::Module",
         "Custom::LambdaSharpRegistrationFunction": "LambdaSharp::Registration::Function"
       }

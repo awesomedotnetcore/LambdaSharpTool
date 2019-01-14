@@ -55,7 +55,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "63F90F885188403E1F02B4E8E9AB2B22"
+      "Default": "E7430982A46DC4F8B810A8FED6BBCFFD"
     }
   },
   "Resources": {
@@ -749,17 +749,21 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "63F90F885188403E1F02B4E8E9AB2B22",
+      "Hash": "E7430982A46DC4F8B810A8FED6BBCFFD",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
-      "Assets": [],
       "Dependencies": [
         {
           "ModuleFullName": "LambdaSharp.System",
           "MinVersion": "0.5-WIP"
         }
       ],
-      "CustomResourceTypes": {},
-      "MacroNames": [],
+      "Outputs": [
+        {
+          "Name": "Function",
+          "Description": "My function",
+          "Type": "AWS::Lambda::Function"
+        }
+      ],
       "ResourceNameMappings": {
         "FunctionLogGroup": "Function::LogGroup",
         "ModuleRole": "Module::Role",
@@ -767,7 +771,7 @@
         "FunctionRegistration": "Function::Registration",
         "FunctionLogGroupSubscription": "Function::LogGroupSubscription"
       },
-      "ResourceTypeNameMappings": {
+      "TypeNameMappings": {
         "Custom::LambdaSharpRegistrationModule": "LambdaSharp::Registration::Module",
         "Custom::LambdaSharpRegistrationFunction": "LambdaSharp::Registration::Function"
       }

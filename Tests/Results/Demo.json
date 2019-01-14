@@ -60,7 +60,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "F14A706D3E7C1E8917DF328367DE263C"
+      "Default": "AF1212758EF06DB0BD7FB9849CBAE3A8"
     }
   },
   "Resources": {
@@ -1333,17 +1333,21 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "F14A706D3E7C1E8917DF328367DE263C",
+      "Hash": "AF1212758EF06DB0BD7FB9849CBAE3A8",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
-      "Assets": [],
       "Dependencies": [
         {
           "ModuleFullName": "LambdaSharp.System",
           "MinVersion": "0.5-WIP"
         }
       ],
-      "CustomResourceTypes": {},
-      "MacroNames": [],
+      "Outputs": [
+        {
+          "Name": "NotifyRecorderTopic",
+          "Description": "The topic for recording messages",
+          "Type": "AWS::SNS::Topic"
+        }
+      ],
       "ResourceNameMappings": {
         "RecordMessageLogGroup": "RecordMessage::LogGroup",
         "SlackCommandLogGroup": "SlackCommand::LogGroup",
@@ -1364,7 +1368,7 @@
         "ModuleRestApiDeploymentC39F09B8FD3EB1236787A152F8B12288": "Module::RestApi::DeploymentC39F09B8FD3EB1236787A152F8B12288",
         "ModuleRestApiStage": "Module::RestApi::Stage"
       },
-      "ResourceTypeNameMappings": {
+      "TypeNameMappings": {
         "Custom::LambdaSharpRegistrationModule": "LambdaSharp::Registration::Module",
         "Custom::LambdaSharpRegistrationFunction": "LambdaSharp::Registration::Function"
       }

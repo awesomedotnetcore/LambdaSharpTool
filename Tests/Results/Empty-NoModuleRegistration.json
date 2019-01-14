@@ -27,7 +27,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "D3359781B9699136DFE9CBA517309214"
+      "Default": "6B86EACD8E46488701CF5AC0CEC4A0E1"
     }
   },
   "Outputs": {
@@ -97,14 +97,8 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "D3359781B9699136DFE9CBA517309214",
-      "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
-      "Assets": [],
-      "Dependencies": [],
-      "CustomResourceTypes": {},
-      "MacroNames": [],
-      "ResourceNameMappings": {},
-      "ResourceTypeNameMappings": {}
+      "Hash": "6B86EACD8E46488701CF5AC0CEC4A0E1",
+      "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567"
     }
   }
 }

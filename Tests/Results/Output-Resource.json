@@ -27,7 +27,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "85A82F8A5E0D1B187BCAFDB9CC5E1E92"
+      "Default": "A437CE3BCB3CC5C9A6FABC3CB5D7DFF9"
     }
   },
   "Resources": {
@@ -128,21 +128,25 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "85A82F8A5E0D1B187BCAFDB9CC5E1E92",
+      "Hash": "A437CE3BCB3CC5C9A6FABC3CB5D7DFF9",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
-      "Assets": [],
       "Dependencies": [
         {
           "ModuleFullName": "LambdaSharp.System",
           "MinVersion": "0.5-WIP"
         }
       ],
-      "CustomResourceTypes": {},
-      "MacroNames": [],
+      "Outputs": [
+        {
+          "Name": "ResourceValue",
+          "Description": "ResourceValue description",
+          "Type": "AWS::SNS::Topic"
+        }
+      ],
       "ResourceNameMappings": {
         "ModuleRegistration": "Module::Registration"
       },
-      "ResourceTypeNameMappings": {
+      "TypeNameMappings": {
         "Custom::LambdaSharpRegistrationModule": "LambdaSharp::Registration::Module"
       }
     }

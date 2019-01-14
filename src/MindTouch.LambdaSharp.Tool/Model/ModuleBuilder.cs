@@ -983,9 +983,9 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         }
 
         public bool HasAttribute(AModuleItem item, string attribute) {
-            var dependency = _dependencies.Values.FirstOrDefault(d => d.Manifest?.CustomResourceTypes.ContainsKey(item.Type) ?? false);
+            var dependency = _dependencies.Values.FirstOrDefault(d => d.Manifest?.ResourceTypes.ContainsKey(item.Type) ?? false);
             if(dependency != null) {
-                return dependency.Manifest.CustomResourceTypes.TryGetValue(item.Type, out ModuleManifestCustomResource customResource)
+                return dependency.Manifest.ResourceTypes.TryGetValue(item.Type, out ModuleManifestCustomResource customResource)
                     && customResource.Response.Any(field => field.Name == attribute);
             }
             return item.HasAttribute(attribute);
@@ -1038,7 +1038,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             if(ResourceMapping.CloudformationSpec.ResourceTypes.TryGetValue(awsType, out ResourceType resource)) {
                 ValidateProperties("", resource, properties);
             } else if(!awsType.StartsWith("Custom::", StringComparison.Ordinal)) {
-                var dependency = _dependencies.Values.FirstOrDefault(d => d.Manifest?.CustomResourceTypes.ContainsKey(awsType) ?? false);
+                var dependency = _dependencies.Values.FirstOrDefault(d => d.Manifest?.ResourceTypes.ContainsKey(awsType) ?? false);
                 if(dependency == null) {
                     if(_dependencies.Values.Any(d => d.Manifest == null)) {
 
@@ -1048,7 +1048,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                         AddError($"unrecognized resource type {awsType}");
                     }
                 } else if(properties != null) {
-                    var definition = dependency.Manifest.CustomResourceTypes[awsType];
+                    var definition = dependency.Manifest.ResourceTypes[awsType];
                     if(definition != null) {
                         foreach(var key in properties.Keys) {
                             var stringKey = (string)key;

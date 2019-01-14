@@ -72,7 +72,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "DF1DCF2CC969EDA1269870C1DF735123"
+      "Default": "C7FF10E97D8C47D3094451893D1B875B"
     }
   },
   "Resources": {
@@ -966,11 +966,9 @@
         }
       ],
       "RuntimeCheck": false,
-      "Hash": "DF1DCF2CC969EDA1269870C1DF735123",
+      "Hash": "C7FF10E97D8C47D3094451893D1B875B",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
-      "Assets": [],
-      "Dependencies": [],
-      "CustomResourceTypes": {
+      "ResourceTypes": {
         "LambdaSharp::Registration::Function": {
           "Description": "Custom resources for registering LambdaSharp functions",
           "Request": [
@@ -1062,7 +1060,28 @@
           ]
         }
       },
-      "MacroNames": [],
+      "Outputs": [
+        {
+          "Name": "DeadLetterQueue",
+          "Description": "Dead Letter Queue (ARN)",
+          "Type": "AWS::SQS::Queue"
+        },
+        {
+          "Name": "DefaultSecretKey",
+          "Description": "Default Secret Key (ARN)",
+          "Type": "AWS::KMS::Key"
+        },
+        {
+          "Name": "LoggingStream",
+          "Description": "Logging Stream (ARN)",
+          "Type": "AWS::Kinesis::Stream"
+        },
+        {
+          "Name": "LoggingStreamRole",
+          "Description": "Role for writing CloudWatch logs to the Kinesis stream",
+          "Type": "AWS::IAM::Role"
+        }
+      ],
       "ResourceNameMappings": {
         "DeadLetterQueueResource": "DeadLetterQueue::Resource",
         "LoggingStreamResource": "LoggingStream::Resource",
@@ -1073,8 +1092,7 @@
         "ProcessLogEventsSource1EventMapping": "ProcessLogEvents::Source1EventMapping",
         "RegistrationSource1Subscription": "Registration::Source1Subscription",
         "RegistrationSource1Permission": "Registration::Source1Permission"
-      },
-      "ResourceTypeNameMappings": {}
+      }
     }
   }
 }

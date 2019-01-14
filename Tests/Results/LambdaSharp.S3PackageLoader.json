@@ -55,7 +55,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "A0C03694AC0C22958062D270A96D5EF7"
+      "Default": "983424C4E43B55FAE0FF5519B43BC4A7"
     }
   },
   "Resources": {
@@ -925,16 +925,15 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "A0C03694AC0C22958062D270A96D5EF7",
+      "Hash": "983424C4E43B55FAE0FF5519B43BC4A7",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
-      "Assets": [],
       "Dependencies": [
         {
           "ModuleFullName": "LambdaSharp.System",
           "MinVersion": "0.5-WIP"
         }
       ],
-      "CustomResourceTypes": {
+      "ResourceTypes": {
         "LambdaSharp::S3::Unzip": {
           "Description": "Resource for deploying the contents of a zip file to an S3 bucket",
           "Request": [
@@ -973,7 +972,6 @@
           ]
         }
       },
-      "MacroNames": [],
       "ResourceNameMappings": {
         "ResourceHandlerLogGroup": "ResourceHandler::LogGroup",
         "ModuleRole": "Module::Role",
@@ -983,7 +981,7 @@
         "ResourceHandlerSource1Subscription": "ResourceHandler::Source1Subscription",
         "ResourceHandlerSource1Permission": "ResourceHandler::Source1Permission"
       },
-      "ResourceTypeNameMappings": {
+      "TypeNameMappings": {
         "Custom::LambdaSharpRegistrationModule": "LambdaSharp::Registration::Module",
         "Custom::LambdaSharpRegistrationFunction": "LambdaSharp::Registration::Function"
       }

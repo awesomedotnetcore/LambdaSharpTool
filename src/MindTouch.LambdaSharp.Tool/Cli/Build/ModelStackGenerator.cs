@@ -102,15 +102,32 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     }).ToList(),
                 RuntimeCheck = module.HasRuntimeCheck,
                 Assets = module.Assets.ToList(),
-                Dependencies = module.Dependencies.Select(dependency => new ModuleManifestDependency {
-                    ModuleFullName = dependency.Value.ModuleFullName,
-                    MinVersion = dependency.Value.MinVersion,
-                    MaxVersion = dependency.Value.MaxVersion,
-                    BucketName = dependency.Value.BucketName
-                }).OrderBy(dependency => dependency.ModuleFullName).ToList(),
-                CustomResourceTypes = new Dictionary<string, ModuleManifestCustomResource>(module.CustomResourceTypes),
-                MacroNames = module.MacroNames.ToList(),
-                ResourceTypeNameMappings = module.ResourceTypeNameMappings
+                Dependencies = module.Dependencies
+                    .Select(dependency => new ModuleManifestDependency {
+                        ModuleFullName = dependency.Value.ModuleFullName,
+                        MinVersion = dependency.Value.MinVersion,
+                        MaxVersion = dependency.Value.MaxVersion,
+                        BucketName = dependency.Value.BucketName
+                    })
+                    .OrderBy(dependency => dependency.ModuleFullName)
+                    .ToList(),
+                ResourceTypes = new Dictionary<string, ModuleManifestCustomResource>(module.CustomResourceTypes),
+                Outputs = module.Items
+                    .Where(item => item.Scope.Any(scope => scope == "public"))
+                    .Select(item => new ModuleManifestOutput {
+                        Name = item.FullName,
+                        Description = item.Description,
+                        Type = item.Type
+                    })
+                    .OrderBy(output => output.Name)
+                    .ToList(),
+                Macros = module.MacroNames
+                    .Select(name => new ModuleManifestMacro {
+                        Name = name
+                    })
+                    .OrderBy(macro => macro.Name)
+                    .ToList(),
+                TypeNameMappings = module.ResourceTypeNameMappings
                     .Where(kv => _stack.Resources.Any(resource => resource.Value.AWSTypeName == kv.Key))
                     .ToDictionary(kv => kv.Key, kv => kv.Value),
                 ResourceNameMappings = module.Items
@@ -122,6 +139,32 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     .Where(item => item.LogicalId != item.FullName)
                     .ToDictionary(item => item.LogicalId, item => item.FullName)
             };
+
+            // remove empty collections, they are not needed
+            if(!manifest.ParameterSections.Any()) {
+                manifest.ParameterSections = null;
+            }
+            if(!manifest.Assets.Any()) {
+                manifest.Assets = null;
+            }
+            if(!manifest.Dependencies.Any()) {
+                manifest.Dependencies = null;
+            }
+            if(!manifest.ResourceTypes.Any()) {
+                manifest.ResourceTypes = null;
+            }
+            if(!manifest.Outputs.Any()) {
+                manifest.Outputs = null;
+            }
+            if(!manifest.Macros.Any()) {
+                manifest.Macros = null;
+            }
+            if(!manifest.TypeNameMappings.Any()) {
+                manifest.TypeNameMappings = null;
+            }
+            if(!manifest.ResourceNameMappings.Any()) {
+                manifest.ResourceNameMappings = null;
+            }
             _stack.AddTemplateMetadata("LambdaSharp::Manifest", manifest);
 
             // update template with template hash

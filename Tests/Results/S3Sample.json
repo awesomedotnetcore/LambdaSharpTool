@@ -55,7 +55,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "1E23A0B8E48C9254B2558A090113C7BA"
+      "Default": "69BDC51ED9A1F9035FFB940575023C6A"
     }
   },
   "Resources": {
@@ -958,9 +958,8 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "1E23A0B8E48C9254B2558A090113C7BA",
+      "Hash": "69BDC51ED9A1F9035FFB940575023C6A",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
-      "Assets": [],
       "Dependencies": [
         {
           "ModuleFullName": "LambdaSharp.S3Subscriber",
@@ -971,8 +970,6 @@
           "MinVersion": "0.5-WIP"
         }
       ],
-      "CustomResourceTypes": {},
-      "MacroNames": [],
       "ResourceNameMappings": {
         "MyFunctionLogGroup": "MyFunction::LogGroup",
         "ModuleRole": "Module::Role",
@@ -984,7 +981,7 @@
         "MyFunctionSource2Permission": "MyFunction::Source2Permission",
         "MyFunctionSource2Subscription": "MyFunction::Source2Subscription"
       },
-      "ResourceTypeNameMappings": {
+      "TypeNameMappings": {
         "Custom::LambdaSharpRegistrationModule": "LambdaSharp::Registration::Module",
         "Custom::LambdaSharpRegistrationFunction": "LambdaSharp::Registration::Function",
         "Custom::LambdaSharpS3Subscription": "LambdaSharp::S3::Subscription"

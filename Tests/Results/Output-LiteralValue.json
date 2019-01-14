@@ -27,7 +27,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "9F9D2FAC6626B81D21C1CF80BEBB09FA"
+      "Default": "277C730513BC5152E66ABEE9A5A09D9E"
     }
   },
   "Resources": {
@@ -122,21 +122,25 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "9F9D2FAC6626B81D21C1CF80BEBB09FA",
+      "Hash": "277C730513BC5152E66ABEE9A5A09D9E",
       "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
-      "Assets": [],
       "Dependencies": [
         {
           "ModuleFullName": "LambdaSharp.System",
           "MinVersion": "0.5-WIP"
         }
       ],
-      "CustomResourceTypes": {},
-      "MacroNames": [],
+      "Outputs": [
+        {
+          "Name": "LiteralValue",
+          "Description": "An exported literal value",
+          "Type": "String"
+        }
+      ],
       "ResourceNameMappings": {
         "ModuleRegistration": "Module::Registration"
       },
-      "ResourceTypeNameMappings": {
+      "TypeNameMappings": {
         "Custom::LambdaSharpRegistrationModule": "LambdaSharp::Registration::Module"
       }
     }
