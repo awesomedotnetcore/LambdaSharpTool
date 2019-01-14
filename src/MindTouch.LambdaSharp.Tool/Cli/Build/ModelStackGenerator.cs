@@ -219,7 +219,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             var value = JObject.Parse(json);
 
             // convert value to json, but sort the properties to achieve a stable hash
-            return JsonConvert.SerializeObject(OrderFields(value)).ToMD5Hash();
+            return OrderFields(value).ToString(Formatting.None).ToMD5Hash();
         }
 
         private JObject OrderFields(JObject value) {
@@ -232,6 +232,5 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             }
             return result;
         }
-
     }
 }

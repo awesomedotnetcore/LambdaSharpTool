@@ -41,46 +41,56 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
         //--- Methods --
         public void Register(CommandLineApplication app) {
-            app.Command("refresh-cloudformation-spec", cmd => {
+            app.Command("util", cmd => {
                 cmd.HelpOption();
-                cmd.Description = "Download CloudFormation JSON Specification";
-                cmd.ShowInHelpText = false;
-                cmd.OnExecute(async () => {
-                    Console.WriteLine($"{app.FullName} - {cmd.Description}");
+                cmd.Description = "Miscalenous AWS utilities";
 
-                    // determine destination folder
-                    var lambdaSharpFolder = System.Environment.GetEnvironmentVariable("LAMBDASHARP");
-                    if(lambdaSharpFolder == null) {
-                        AddError("LAMBDASHARP environment variable is not defined");
-                        return;
-                    }
-                    var destinationZipLocation = Path.Combine(lambdaSharpFolder, "src/MindTouch.LambdaSharp.Tool/Resources/CloudFormationResourceSpecification.json.gz");
-                    var destinationJsonLocation = Path.Combine(lambdaSharpFolder, "src/MindTouch.LambdaSharp.Tool/Docs/CloudFormationResourceSpecification.json");
+                // delete orphaned logs sub-command
+                cmd.Command("delete-orphan-lambda-logs", subCmd => {
+                    subCmd.HelpOption();
+                    subCmd.Description = "Delete orphaned Lambda CloudWatch logs";
+                    var dryRunOption = subCmd.Option("--dryrun", "(optional) Check which logs to delete without deleting them", CommandOptionType.NoValue);
 
                     // run command
-                    await Refresh(
-                        "https://d1uauaxba7bl26.cloudfront.net/latest/gzip/CloudFormationResourceSpecification.json",
-                        destinationZipLocation,
-                        destinationJsonLocation
-                    );
+                    subCmd.OnExecute(async () => {
+                        Console.WriteLine($"{app.FullName} - {subCmd.Description}");
+                        await DeleteOrphanLambdaLogs(dryRunOption.HasValue());
+                    });
                 });
-            });
 
-            app.Command("delete-orphan-lambda-logs", cmd => {
-                cmd.HelpOption();
-                cmd.Description = "Delete orphaned Lambda CloudWatch logs";
-                cmd.ShowInHelpText = false;
-                var dryRunOption = cmd.Option("--dryrun", "(optional) Check which logs to delete without deleting them", CommandOptionType.NoValue);
+                // download cloudformation specification sub-command
+                cmd.Command("download-cloudformation-spec", subCmd => {
+                    subCmd.HelpOption();
+                    subCmd.Description = "Download CloudFormation JSON specification to LAMBDASHARP development folder";
+                    subCmd.OnExecute(async () => {
+                        Console.WriteLine($"{app.FullName} - {subCmd.Description}");
 
-                // run command
-                cmd.OnExecute(async () => {
-                    Console.WriteLine($"{app.FullName} - {cmd.Description}");
-                    await DeleteOrphanLambdaLogs(dryRunOption.HasValue());
+                        // determine destination folder
+                        var lambdaSharpFolder = System.Environment.GetEnvironmentVariable("LAMBDASHARP");
+                        if(lambdaSharpFolder == null) {
+                            AddError("LAMBDASHARP environment variable is not defined");
+                            return;
+                        }
+                        var destinationZipLocation = Path.Combine(lambdaSharpFolder, "src/MindTouch.LambdaSharp.Tool/Resources/CloudFormationResourceSpecification.json.gz");
+                        var destinationJsonLocation = Path.Combine(lambdaSharpFolder, "src/MindTouch.LambdaSharp.Tool/Docs/CloudFormationResourceSpecification.json");
+
+                        // run command
+                        await RefreshCloudFormationSpec(
+                            "https://d1uauaxba7bl26.cloudfront.net/latest/gzip/CloudFormationResourceSpecification.json",
+                            destinationZipLocation,
+                            destinationJsonLocation
+                        );
+                    });
+                });
+
+                // show help text if no sub-command is provided
+                cmd.OnExecute(() => {
+                    Console.WriteLine(cmd.GetHelpText());
                 });
             });
         }
 
-        public async Task Refresh(
+        public async Task RefreshCloudFormationSpec(
             string specifcationUrl,
             string destinationZipLocation,
             string destinationJsonLocation
@@ -105,7 +115,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 .Where(attr => attr.Name == "Documentation")
                 .ToList()
                 .ForEach(attr => attr.Remove());
-            text = json.ToString();
+            json = OrderFields(json);
+            text = json.ToString(Formatting.None);
             Console.WriteLine($"Stripped size: {text.Length:N0}");
             File.WriteAllText(destinationJsonLocation, json.ToString(Formatting.Indented).Replace("\r\n", "\n"));
 
@@ -118,6 +129,18 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             var info = new FileInfo(destinationZipLocation);
             Console.WriteLine($"Stored compressed spec file {destinationZipLocation}");
             Console.WriteLine($"Compressed file size: {info.Length:N0}");
+
+            // local functions
+            JObject OrderFields(JObject value) {
+                var result = new JObject();
+                foreach(var property in value.Properties().ToList().OrderBy(property => property.Name)) {
+                    result.Add(property.Name, (property.Value is JObject propertyValue)
+                        ? OrderFields(propertyValue)
+                        : property.Value
+                    );
+                }
+                return result;
+            }
         }
 
         public async Task DeleteOrphanLambdaLogs(bool dryRun) {
