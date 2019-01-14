@@ -122,17 +122,18 @@ namespace MindTouch.LambdaSharp.Tool {
         public async Task<ModuleLocation> LocateAsync(string moduleOwner, string moduleName, VersionInfo minVersion, VersionInfo maxVersion, string bucketName) {
 
             // by default, attempt to find the module in the deployment bucket and then the regional lambdasharp bucket
-            var searchBuckets = (bucketName != null)
-                ? new[] {
-                    bucketName,
-                    $"{bucketName}-{Settings.AwsRegion}"
+            var searchBuckets = new List<string>();
+            if(bucketName != null) {
+                searchBuckets.Add(bucketName);
+                searchBuckets.Add($"{bucketName}-{Settings.AwsRegion}");
+            } else {
+                if(Settings.DeploymentBucketName != null) {
+                    searchBuckets.Add(Settings.DeploymentBucketName);
                 }
-                :  new[] {
-                    Settings.DeploymentBucketName,
 
-                    // TODO (2018-12-03, bjorg): do we still need to default to the 'lambdasharp` bucket?
-                    $"lambdasharp-{Settings.AwsRegion}"
-                };
+                // TODO (2018-12-03, bjorg): do we still need to default to the 'lambdasharp` bucket?
+                searchBuckets.Add($"lambdasharp-{Settings.AwsRegion}");
+            }
 
             // attempt to find a matching version
             VersionInfo foundVersion = null;

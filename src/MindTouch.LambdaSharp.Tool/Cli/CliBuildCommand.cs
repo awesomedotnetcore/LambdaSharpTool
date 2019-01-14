@@ -455,7 +455,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             string moduleSource
         ) {
             try {
-                await PopulateToolSettingsAsync(settings);
+                await PopulateToolSettingsAsync(settings, optional: true);
                 if(HasErrors) {
                     return false;
                 }

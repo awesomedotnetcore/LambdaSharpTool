@@ -212,7 +212,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             return false;
         }
 
-        protected async Task PopulateToolSettingsAsync(Settings settings) {
+        protected async Task PopulateToolSettingsAsync(Settings settings, bool optional = false) {
             if(
                 (settings.DeploymentBucketName == null)
                 || (settings.DeploymentNotificationsTopic == null)
@@ -222,7 +222,11 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 if(settings.ToolProfile != null) {
                     var lambdaSharpToolPath = $"/LambdaSharpTool/{settings.ToolProfile}/";
                     var lambdaSharpToolSettings = await settings.SsmClient.GetAllParametersByPathAsync(lambdaSharpToolPath);
-                    if(!VersionInfo.TryParse(GetLambdaSharpToolSetting("Version"), out VersionInfo lambdaSharpToolVersion)) {
+                    var lambdaSharpToolVersionText = GetLambdaSharpToolSetting("Version");
+                    if((lambdaSharpToolVersionText == null) && optional) {
+                        return;
+                    }
+                    if(!VersionInfo.TryParse(lambdaSharpToolVersionText, out VersionInfo lambdaSharpToolVersion)) {
                         AddError("LambdaSharp CLI is not configured propertly", new LambdaSharpToolConfigException(settings.ToolProfile));
                         return;
                     }
