@@ -1,7 +1,7 @@
 if [ -z "$1" ]; then
 
     # run everything
-    dotnet run -p $LAMBDASHARP/src/MindTouch.LambdaSharp.Tool/MindTouch.LambdaSharp.Tool.csproj -- info \
+    dotnet run -p $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csproj -- info \
         --verbose:exceptions \
         --tier Test \
         --aws-account-id 123456789012 \
@@ -16,7 +16,7 @@ if [ -z "$1" ]; then
     fi
 
     rm Results/*.json > /dev/null 2>&1
-    dotnet $LAMBDASHARP/src/MindTouch.LambdaSharp.Tool/bin/Debug/netcoreapp2.1/MindTouch.LambdaSharp.Tool.dll deploy \
+    dotnet $LAMBDASHARP/src/LambdaSharp.Tool/bin/Debug/netcoreapp2.1/LambdaSharp.Tool.dll deploy \
         --verbose:exceptions \
         --tier Test \
         --cfn-output Results/ \
@@ -82,9 +82,9 @@ if [ -z "$1" ]; then
         Condition-Scoped-Resource.yml \
         Condition-Function.yml \
         Condition-Condition.yml \
-        ../Runtime/Core \
-        ../Runtime/S3 \
-        ../Runtime/S3Subscriber \
+        ../Modules/LambdaSharp.Core \
+        ../Modules/LambdaSharp.S3 \
+        ../Modules/LambdaSharp.S3Subscriber \
         ../Samples/AlexaSample \
         ../Samples/ApiSample \
         ../Samples/CustomResourceSample \
@@ -104,7 +104,7 @@ else
 
     # run requested test
     rm Results/$1.json > /dev/null 2>&1
-    dotnet run -p $LAMBDASHARP/src/MindTouch.LambdaSharp.Tool/MindTouch.LambdaSharp.Tool.csproj -- deploy \
+    dotnet run -p $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csproj -- deploy \
         --verbose:exceptions \
         --tier Test \
         --cfn-output Results/$1.json \

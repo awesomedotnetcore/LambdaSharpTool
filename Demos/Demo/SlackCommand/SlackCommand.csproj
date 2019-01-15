@@ -3,7 +3,7 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <Deterministic>true</Deterministic>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
-    <RootNamespace>MindTouch.LambdaSharpDemo.SlackCommand</RootNamespace>
+    <RootNamespace>LambdaSharpDemo.SlackCommand</RootNamespace>
     <AWSProjectType>Lambda</AWSProjectType>
   </PropertyGroup>
   <ItemGroup>
@@ -13,8 +13,8 @@
     <PackageReference Include="Newtonsoft.Json" Version="12.0.1"/>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\MindTouch.LambdaSharp\MindTouch.LambdaSharp.csproj"/>
-    <ProjectReference Include="..\..\..\src\MindTouch.LambdaSharp.Slack\MindTouch.LambdaSharp.Slack.csproj"/>
+    <ProjectReference Include="..\..\..\src\LambdaSharp\LambdaSharp.csproj"/>
+    <ProjectReference Include="..\..\..\src\LambdaSharp.Slack\LambdaSharp.Slack.csproj"/>
     <ProjectReference Include="..\Common\Common.csproj"/>
   </ItemGroup>
   <ItemGroup>

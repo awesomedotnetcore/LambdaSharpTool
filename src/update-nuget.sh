@@ -21,12 +21,12 @@ update() {
         `ls bin/Release/*.nupkg`
 }
 
-# Update MindTouch.LambdaSharp
-cd MindTouch.LambdaSharp
+# Update LambdaSharp
+cd LambdaSharp
 update
 cd ..
 
-# Update MindTouch.LambdaSharp.Slack
-cd MindTouch.LambdaSharp.Slack
+# Update LambdaSharp.Slack
+cd LambdaSharp.Slack
 update
 cd ..

@@ -23,13 +23,13 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
-using MindTouch.LambdaSharpDemo.Common;
-using MindTouch.LambdaSharp;
+using LambdaSharpDemo.Common;
+using LambdaSharp;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
 
-namespace MindTouch.LambdaSharpDemo.RecordEvents {
+namespace LambdaSharpDemo.RecordEvents {
 
     public class Function : ALambdaEventFunction<Message> {
 

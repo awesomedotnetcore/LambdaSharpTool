@@ -26,7 +26,7 @@ using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 
-namespace MindTouch.LambdaSharpDemo.Common {
+namespace LambdaSharpDemo.Common {
 
     public class Message {
 

@@ -151,7 +151,7 @@
     * option `--prompt-all` prompts for all missing parameters, including those with default values
     * option `--prompts-as-errors` causes any prompt to be reported as an error instead
 
-* `MindTouch.LambdaSharp` assembly
+* `LambdaSharp` assembly
     * added `ALambdaFinalizerFunction` base class
     * **BREAKING CHANGE:** merged `ALambdaCustomResourceFunction` into LambdaSharp assembly
     * `ALambdaCustomResourceFunction` can be invoked via SNS or directly from a custom resource

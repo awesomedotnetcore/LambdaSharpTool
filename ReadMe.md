@@ -18,7 +18,7 @@ The objective of λ# is to accelerate the innovation velocity of serverless solu
 The λ# CLI is installed as a [.NET Global Tool](https://docs.microsoft.com/en-us/dotnet/core/tools/global-tools).
 
 ```bash
-dotnet tool install -g MindTouch.LambdaSharp.Tool --version 0.4.*
+dotnet tool install -g LambdaSharp.Tool --version 0.4.*
 ```
 
 Once installed, the λ# CLI needs to be configured.
@@ -93,7 +93,7 @@ namespace MySampleModule.MyFunction {
 ## Learn More
 
 1. [Setup λ#](Docs/)
-1. [λ# CLI Reference](src/MindTouch.LambdaSharp.Tool/)
+1. [λ# CLI Reference](src/LambdaSharp.Tool/)
 1. [λ# Samples](Samples/)
 1. [Module Definition Reference](Docs/Module.md)
 1. [Folder Structure Reference](Docs/FolderStructure.md)

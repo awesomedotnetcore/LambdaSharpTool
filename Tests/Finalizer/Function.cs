@@ -22,13 +22,13 @@
 using System.IO;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
-using MindTouch.LambdaSharp;
-using MindTouch.LambdaSharp.Finalizer;
+using LambdaSharp;
+using LambdaSharp.Finalizer;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
 
-namespace MindTouch.LambdaSharpTestModule.Finalizer {
+namespace LambdaSharpTestModule.Finalizer {
 
     public class Function : ALambdaFinalizerFunction {
 

@@ -57,7 +57,7 @@ With the addition of new sections to the module definition, and with an eye towa
 
 The λ# CLI is now a global dotnet tool, which makes it trivial to install. No more need to check-out the [LambdaSharpTool GitHub repository](https://github.com/LambdaSharp/LambdaSharpTool) for creating modules unless to contribute to it.
 ```bash
-dotnet tool install -g MindTouch.LambdaSharp.Tool --version 0.4.*
+dotnet tool install -g LambdaSharp.Tool --version 0.4.*
 ```
 
 As part of the λ# CLI setup procedure, the CLI must be configured for the AWS account. The configuration step creates a profile and resources required to deploy λ# modules. The profile information is stored in the AWS Parameter Store so that it can be shared with team members. Multiple CLI profiles can be configured when needed.
@@ -173,19 +173,19 @@ The pre-deployment check can be skipped with the `--force-deploy` option.
 
 The `info` command was enhanced to show information about other installed tools that λ# CLI depends on, such as `dotnet` and `git`. In addition, sensitive information--like the AWS account ID--are hidden unless `--show-sensitive` option is used.
 
-See the [updated documentation](../src/MindTouch.LambdaSharp.Tool/Docs/Tool-Info.md) for more details.
+See the [updated documentation](../src/LambdaSharp.Tool/Docs/Tool-Info.md) for more details.
 
 #### Encrypt Command
 
 The `encrypt` command was added to make it easier to encrypt sensitive information. The command can either use a specific KMS key or use the default KMS key for the deployment tier.
 
-See the [updated documentation](../src/MindTouch.LambdaSharp.Tool/Docs/Tool-Encrypt.md) for more details.
+See the [updated documentation](../src/LambdaSharp.Tool/Docs/Tool-Encrypt.md) for more details.
 
 ### New Function Command
 
 The `new function` command now allows specifying the target language when adding a function.
 
-See the [updated documentation](../src/MindTouch.LambdaSharp.Tool/Docs/Tool-NewFunction.md) for more details.
+See the [updated documentation](../src/LambdaSharp.Tool/Docs/Tool-NewFunction.md) for more details.
 
 
 ## New λ# Module Features
@@ -324,7 +324,7 @@ This concept is taken one step further with conditional resources, which are onl
 
 #### Module Secret Parameters
 
-In addition to the default CloudFormation parameter types, λ# modules can have parameters of type `Secret`. A secret parameter is passed in as base64-encoded string of the encrypted data (see [CLI `encrypt` command](../src/MindTouch.LambdaSharp.Tool/Docs/Tool-Encrypt.md)). To be able to decrypt the data, the KMS key must either be listed in the `Secrets` section or be passed in the `Secrets` parameter. Encrypted parameter values remain encrypted through the deployment process and are only decrypted in memory by the functions when accessed during initialization.
+In addition to the default CloudFormation parameter types, λ# modules can have parameters of type `Secret`. A secret parameter is passed in as base64-encoded string of the encrypted data (see [CLI `encrypt` command](../src/LambdaSharp.Tool/Docs/Tool-Encrypt.md)). To be able to decrypt the data, the KMS key must either be listed in the `Secrets` section or be passed in the `Secrets` parameter. Encrypted parameter values remain encrypted through the deployment process and are only decrypted in memory by the functions when accessed during initialization.
 
 ```yaml
 - Parameter: MyApiKey

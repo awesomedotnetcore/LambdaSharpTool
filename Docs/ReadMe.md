@@ -4,11 +4,11 @@
 
 ## Step 1: Installing λ# CLI
 
-As of v0.4, the λ# CLI can be installed as a global `dotnet` tool. Simply run the `dotnet` tool installation command:
+As of v0.4, the λ# CLI can be installed as a global `dotnet` tool by running the `dotnet` tool installation command:
 
 __Using PowerShell/Bash:__
 ```bash
-dotnet tool install -g MindTouch.LambdaSharp.Tool --version 0.5-WIP
+dotnet tool install -g LambdaSharp.Tool --version 0.5-WIP
 ```
 
 Alternatively, for λ# contributors, the CLI can be setup using the [GitHub repository](https://github.com/LambdaSharp/LambdaSharpTool). See the λ# contributor installation instructions below.
@@ -26,7 +26,7 @@ MindTouch LambdaSharp CLI (v0.4)
 
 Project Home: https://github.com/LambdaSharp/LambdaSharpTool
 
-Usage: MindTouch.LambdaSharp.Tool [options] [command]
+Usage: LambdaSharp.Tool [options] [command]
 
 Options:
   -?|-h|--help  Show help information
@@ -42,7 +42,7 @@ Commands:
   publish       Publish LambdaSharp module
   tool          Configure LambdaSharp CLI
 
-Run 'MindTouch.LambdaSharp.Tool [command] --help' for more information about a command.
+Run 'LambdaSharp.Tool [command] --help' for more information about a command.
 ```
 
 ## Step 2: Configure λ# CLI
@@ -118,7 +118,7 @@ The registrar is responsible for tracking the registration of all deployed modul
 
 The registrar can optionally be configured to send errors and warnings to [Rollbar](https://rollbar.com/). To enable this functionality, the registrar needs the _read_ and _write_ access tokens for the account, which can be found in the _Account Settings_ page.
 
-The registrar expects the access tokens to be encrypted, which can easily be done with the [`dotnet lash encrypt`](../src/MindTouch.LambdaSharp.Tool/Docs/Tool-Encrypt.md) command.
+The registrar expects the access tokens to be encrypted, which can easily be done with the [`dotnet lash encrypt`](../src/LambdaSharp.Tool/Docs/Tool-Encrypt.md) command.
 
 settings for the registrar have to be updated with the following va
 
@@ -143,14 +143,14 @@ __Using PowerShell:__
 ```powershell
 New-Variable -Name LAMBDASHARP -Value \Repos\LambdaSharpTool
 function lash {
-  dotnet run -p $LAMBDASHARP\src\MindTouch.LambdaSharp.Tool\MindTouch.LambdaSharp.Tool.csproj -- $args
+  dotnet run -p $LAMBDASHARP\src\LambdaSharp.Tool\LambdaSharp.Tool.csproj -- $args
 }
 ```
 
 __Using Bash:__
 ```bash
 export LAMBDASHARP=/Repos/LambdaSharpTool
-alias lash="dotnet run -p $LAMBDASHARP/src/MindTouch.LambdaSharp.Tool/MindTouch.LambdaSharp.Tool.csproj --"
+alias lash="dotnet run -p $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csproj --"
 ```
 
 __IMPORTANT:__ make sure to always use your  `lash` alias instead of the `dotnet lash` command.

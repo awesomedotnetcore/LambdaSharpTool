@@ -59,7 +59,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "2AD0D17F265B1F91F721999C43BCB733"
+      "Default": "A9BF322996E7CD18C699BBFCF803DC58"
     }
   },
   "Resources": {
@@ -188,7 +188,7 @@
             }
           }
         },
-        "Handler": "Function::MindTouch.LambdaSharpTestModule.Function.Function::FunctionHandlerAsync",
+        "Handler": "Function::LambdaSharpTestModule.Function.Function::FunctionHandlerAsync",
         "MemorySize": "128",
         "Role": {
           "Fn::GetAtt": [
@@ -978,7 +978,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "2AD0D17F265B1F91F721999C43BCB733",
+      "Hash": "A9BF322996E7CD18C699BBFCF803DC58",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

@@ -27,7 +27,7 @@ fi
 # Setup λ# in Contributor Mode
 
 lash() {
-    dotnet run -p $LAMBDASHARP/src/MindTouch.LambdaSharp.Tool/MindTouch.LambdaSharp.Tool.csproj -- $*
+    dotnet run -p $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csproj -- $*
 }
 
 SUFFIX=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 4 | head -n 1)
@@ -104,7 +104,7 @@ rm -rf Test$SUFFIX
 
 
 # Setup λ# in Nuget Mode
-cd src/MindTouch.LambdaSharp.Tool
+cd src/LambdaSharp.Tool
 
 SUFFIX=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 4 | head -n 1)
 LAMBDASHARP_TIER=TestNuget$SUFFIX
@@ -127,12 +127,12 @@ fi
 
 dotnet tool uninstall \
     --global \
-    MindTouch.LambdaSharp.Tool
+    LambdaSharp.Tool
 
 dotnet tool install \
     --global \
-    --add-source $LAMBDASHARP/src/MindTouch.LambdaSharp.Tool/ \
-    MindTouch.LambdaSharp.Tool \
+    --add-source $LAMBDASHARP/src/LambdaSharp.Tool/ \
+    LambdaSharp.Tool \
     --version 0.5.*
 if [ $? -ne 0 ]; then
     exit $?
@@ -172,4 +172,4 @@ rm -rf Test$SUFFIX
 
 dotnet tool uninstall \
     --global \
-    MindTouch.LambdaSharp.Tool \
+    LambdaSharp.Tool \

@@ -22,7 +22,7 @@
 using System;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
-using MindTouch.LambdaSharp;
+using LambdaSharp;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
@@ -38,7 +38,7 @@ namespace SnsSample.MyFunction {
     public class Function : ALambdaEventFunction<MyMessage> {
 
         //--- Methods ---
-        public override Task InitializeAsync(LambdaConfig config) 
+        public override Task InitializeAsync(LambdaConfig config)
             => Task.CompletedTask;
 
         public override async Task ProcessMessageAsync(MyMessage message, ILambdaContext context) {

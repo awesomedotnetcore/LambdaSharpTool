@@ -27,7 +27,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "5543A3F20C749BAAEC194191EAF0D80A"
+      "Default": "B43CE9BF6745F43E2AF310F162FE0B85"
     }
   },
   "Resources": {
@@ -51,7 +51,7 @@
             "LAMBDA_RUNTIME": "dotnetcore2.1"
           }
         },
-        "Handler": "Function::MindTouch.LambdaSharpTestModule.Function.Function::FunctionHandlerAsync",
+        "Handler": "Function::LambdaSharpTestModule.Function.Function::FunctionHandlerAsync",
         "MemorySize": "128",
         "Role": {
           "Fn::GetAtt": [
@@ -255,7 +255,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "5543A3F20C749BAAEC194191EAF0D80A",
+      "Hash": "B43CE9BF6745F43E2AF310F162FE0B85",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

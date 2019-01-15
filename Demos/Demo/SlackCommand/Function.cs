@@ -23,14 +23,14 @@ using System;
 using System.Threading.Tasks;
 using System.Linq;
 using Amazon.Lambda.Core;
-using MindTouch.LambdaSharp;
-using MindTouch.LambdaSharp.Slack;
-using MindTouch.LambdaSharpDemo.Common;
+using LambdaSharp;
+using LambdaSharp.Slack;
+using LambdaSharpDemo.Common;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
 
-namespace MindTouch.LambdaSharpDemo.SlackCommand {
+namespace LambdaSharpDemo.SlackCommand {
 
     public class Function : ALambdaSlackCommandFunction {
 

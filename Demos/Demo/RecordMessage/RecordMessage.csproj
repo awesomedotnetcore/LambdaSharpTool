@@ -3,7 +3,7 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <Deterministic>true</Deterministic>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
-    <RootNamespace>MindTouch.LambdaSharpDemo.RecordEvents</RootNamespace>
+    <RootNamespace>LambdaSharpDemo.RecordEvents</RootNamespace>
     <AWSProjectType>Lambda</AWSProjectType>
   </PropertyGroup>
   <ItemGroup>
@@ -13,7 +13,7 @@
     <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.15.4"/>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\MindTouch.LambdaSharp\MindTouch.LambdaSharp.csproj"/>
+    <ProjectReference Include="..\..\..\src\LambdaSharp\LambdaSharp.csproj"/>
     <ProjectReference Include="..\Common\Common.csproj"/>
   </ItemGroup>
   <ItemGroup>
