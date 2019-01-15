@@ -50,6 +50,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         //--- Methods ---
         public bool HasPragma(string pragma) => Pragmas?.Contains(pragma) == true;
-        public bool HasRuntimeCheck => !HasPragma("no-runtime-version-check");
+        public bool HasRuntimeCheck => !HasPragma("no-core-version-check");
     }
 }

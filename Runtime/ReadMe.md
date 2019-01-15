@@ -1,6 +1,6 @@
 ![λ#](../Docs/LambdaSharp_v2_small.png)
 
-# Setup LambdaSharp CLI & Runtime
+# Setup LambdaSharp CLI & Core
 
 ## Step 1: Installing λ# CLI
 
@@ -58,7 +58,7 @@ The λ# CLI can be configured for multiple CLI profiles using the `--cli-profile
 
 ## Step 3: Initialize λ# Deployment Tier
 
-λ# CLI must initialize each deployment tier (e.g. `Test`, `Stage`, `Prod`, etc.) with the λ# runtime before modules can be deployed.
+λ# CLI must initialize each deployment tier (e.g. `Test`, `Stage`, `Prod`, etc.) with the λ# Core before modules can be deployed.
 
 __Using Powershell/Bash:__
 ```bash

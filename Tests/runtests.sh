@@ -6,7 +6,7 @@ if [ -z "$1" ]; then
         --tier Test \
         --aws-account-id 123456789012 \
         --aws-region us-east-1 \
-        --runtime-version 0.5-WIP \
+        --core-version 0.5-WIP \
         --cli-version 0.5-WIP \
         --deployment-bucket-name lambdasharp-bucket-name \
         --deployment-notifications-topic  arn:aws:sns:us-east-1:123456789012:LambdaSharp-DeploymentNotificationTopic
@@ -25,7 +25,7 @@ if [ -z "$1" ]; then
         --aws-region us-east-1 \
         --git-sha 0123456789ABCDEF0123456789ABCDEF01234567 \
         --git-branch test-branch \
-        --runtime-version 0.5-WIP \
+        --core-version 0.5-WIP \
         --cli-version 0.5-WIP \
         --deployment-bucket-name lambdasharp-bucket-name \
         --deployment-notifications-topic  arn:aws:sns:us-east-1:123456789012:LambdaSharp-DeploymentNotificationTopic \
@@ -82,9 +82,9 @@ if [ -z "$1" ]; then
         Condition-Scoped-Resource.yml \
         Condition-Function.yml \
         Condition-Condition.yml \
-        ../Runtime/LambdaSharp.System \
-        ../Runtime/LambdaSharp.S3PackageLoader \
-        ../Runtime/LambdaSharp.S3Subscriber \
+        ../Runtime/Core \
+        ../Runtime/S3 \
+        ../Runtime/S3Subscriber \
         ../Samples/AlexaSample \
         ../Samples/ApiSample \
         ../Samples/CustomResourceSample \
@@ -113,7 +113,7 @@ else
         --aws-region us-east-1 \
         --git-sha 0123456789ABCDEF0123456789ABCDEF01234567 \
         --git-branch test-branch \
-        --runtime-version 0.5-WIP \
+        --core-version 0.5-WIP \
         --cli-version 0.5-WIP \
         --deployment-bucket-name lambdasharp-bucket-name \
         --deployment-notifications-topic  arn:aws:sns:us-east-1:123456789012:LambdaSharp-DeploymentNotificationTopic \

@@ -79,7 +79,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             Console.WriteLine($"    Deployment Notifications Topic: {ConcealAwsAccountId(settings.DeploymentNotificationsTopic ?? "<NOT SET>")}");
             Console.WriteLine($"LambdaSharp Deployment Tier");
             Console.WriteLine($"    Name: {settings.Tier ?? "<NOT SET>"}");
-            Console.WriteLine($"    Runtime Version: {settings.RuntimeVersion?.ToString() ?? "<NOT SET>"}");
+            Console.WriteLine($"    Core Version: {settings.CoreVersion?.ToString() ?? "<NOT SET>"}");
             Console.WriteLine($"Git");
             Console.WriteLine($"    Branch: {gitBranch ?? "<NOT SET>"}");
             Console.WriteLine($"    SHA: {gitSha ?? "<NOT SET>"}");

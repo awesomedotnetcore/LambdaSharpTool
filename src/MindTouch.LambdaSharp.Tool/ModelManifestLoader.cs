@@ -158,7 +158,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 } else if(maxVersion != null) {
                     versionConstraint = $"v{maxVersion} or earlier";
                 }
-                AddError($"could not find module: {moduleName} ({versionConstraint})");
+                AddError($"could not find module: {moduleOwner}.{moduleName} ({versionConstraint})");
                 return null;
             }
             return new ModuleLocation {

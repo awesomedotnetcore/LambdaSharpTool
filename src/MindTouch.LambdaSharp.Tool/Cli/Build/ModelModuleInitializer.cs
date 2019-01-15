@@ -159,7 +159,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 // add LambdaSharp Module Internal resource imports
                 var lambdasharp = _builder.AddUsing(
                     import: "LambdaSharp",
-                    description: "LambdaSharp Runtime Imports"
+                    description: "LambdaSharp Core Imports"
                 );
                 _builder.AddParameter(
                     parent: lambdasharp,
@@ -572,7 +572,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
             // add module registration
             if(_builder.HasModuleRegistration) {
-                _builder.AddDependency("LambdaSharp.System", Settings.ToolVersion, maxVersion: null, bucketName: null);
+                _builder.AddDependency("LambdaSharp.Core", Settings.ToolVersion, maxVersion: null, bucketName: null);
 
                 // create module registration
                 _builder.AddResource(

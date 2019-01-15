@@ -38,10 +38,10 @@
             * `no-dead-letter-queue`: don't add the DLQ to the function
             * `no-wildcard-scoped-variables`: don't include function for `*` scopes
         * Modules
-            * `no-runtime-version-check`: don't check if the λ# runtime and CLI versions match
+            * `no-core-version-check`: don't check if the λ# Core and CLI versions match
             * `no-module-registration`: don't register module with λ# registrar
             * `no-lambdasharp-dependencies`: don't reference λ# base resources (DLQ, Logging Stream, etc.)
-            * `Overrides`: provide alternative definitions for `Module::*` variables that are usually imported from `LambdaSharp.System`
+            * `Overrides`: provide alternative definitions for `Module::*` variables that are usually imported from `LambdaSharp.Core`
             ```yaml
                 - Overrides:
                     Module::DeadLetterQueue: !Ref DeadLetterQueue
@@ -158,7 +158,7 @@ __Topics__
 1. [Breaking Changes](#breaking-changes)
 1. [New λ# CLI Features](#new-λ-cli-features)
 1. [New λ# Module Features](#new-λ-module-features)
-1. [New λ# Runtime Features](#new-λ-runtime-features)
+1. [New λ# Core Features](#new-λ-core-features)
 1. [New λ# Assembly Features](#new-λ-assembly-features)
 1. [Internal Changes](#internal-changes)
 
@@ -188,7 +188,7 @@ The following change may impact modules created with previous releases.
 
 > TODO
 
-## New λ# Runtime Features
+## New λ# Core Features
 
 > TODO
 

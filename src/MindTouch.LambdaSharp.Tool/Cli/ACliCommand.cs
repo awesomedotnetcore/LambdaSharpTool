@@ -103,7 +103,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             var toolVersionOption = cmd.Option("--cli-version <VALUE>", "(test only) LambdaSharp CLI version for profile", CommandOptionType.SingleValue);
             var deploymentBucketNameOption = cmd.Option("--deployment-bucket-name <NAME>", "(test only) S3 Bucket name used to deploy modules (default: read from LambdaSharp CLI configuration)", CommandOptionType.SingleValue);
             var deploymentNotificationTopicOption = cmd.Option("--deployment-notifications-topic <ARN>", "(test only) SNS Topic for CloudFormation deployment notifications (default: read from LambdaSharp CLI configuration)", CommandOptionType.SingleValue);
-            var runtimeVersionOption = cmd.Option("--runtime-version <VERSION>", "(test only) LambdaSharp runtime version (default: read from deployment tier)", CommandOptionType.SingleValue);
+            var runtimeVersionOption = cmd.Option("--core-version <VERSION>", "(test only) LambdaSharp Core version (default: read from deployment tier)", CommandOptionType.SingleValue);
             awsAccountIdOption.ShowInHelpText = false;
             awsRegionOption.ShowInHelpText = false;
             toolVersionOption.ShowInHelpText = false;
@@ -167,7 +167,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         ToolVersion = Version,
                         ToolProfile = toolProfile,
                         ToolProfileExplicitlyProvided = toolProfileOption.HasValue(),
-                        RuntimeVersion = (runtimeVersion != null) ? VersionInfo.Parse(runtimeVersion) : null,
+                        CoreVersion = (runtimeVersion != null) ? VersionInfo.Parse(runtimeVersion) : null,
                         Tier = tier,
                         AwsRegion = awsAccount.GetValueOrDefault().Region,
                         AwsAccountId = awsAccount.GetValueOrDefault().AccountId,
@@ -247,7 +247,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
         }
 
         protected async Task PopulateRuntimeSettingsAsync(Settings settings) {
-            if((settings.RuntimeVersion == null) && (settings.Tier != null)) {
+            if((settings.CoreVersion == null) && (settings.Tier != null)) {
                 try {
 
                     // check version of base LambadSharp module
@@ -268,7 +268,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                             && (deployedOwner == "LambdaSharp")
                             && (deployedName == "Core")
                         ) {
-                            settings.RuntimeVersion = deployedVersion;
+                            settings.CoreVersion = deployedVersion;
                             return;
                         }
                     }

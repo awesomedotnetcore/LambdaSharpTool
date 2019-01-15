@@ -55,7 +55,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "2B6B8B7757A9BB7E9A7E6DC15565CC81"
+      "Default": "D12C587C1D43C6D84CB89C6E445CB0C8"
     }
   },
   "Resources": {
@@ -715,7 +715,7 @@
         },
         {
           "Label": {
-            "default": "LambdaSharp Runtime Imports"
+            "default": "LambdaSharp Core Imports"
           },
           "Parameters": [
             "LambdaSharpDeadLetterQueue",
@@ -754,7 +754,7 @@
           ]
         },
         {
-          "Title": "LambdaSharp Runtime Imports",
+          "Title": "LambdaSharp Core Imports",
           "Parameters": [
             {
               "Name": "DeadLetterQueue",
@@ -784,14 +784,14 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "2B6B8B7757A9BB7E9A7E6DC15565CC81",
+      "Hash": "D12C587C1D43C6D84CB89C6E445CB0C8",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
       "Dependencies": [
         {
-          "ModuleFullName": "LambdaSharp.System",
+          "ModuleFullName": "LambdaSharp.Core",
           "MinVersion": "0.5-WIP"
         }
       ],

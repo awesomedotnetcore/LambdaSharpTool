@@ -60,8 +60,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 var protectStackOption = cmd.Option("--protect", "(optional) Enable termination protection for the CloudFormation stack", CommandOptionType.NoValue);
                 var forceDeployOption = cmd.Option("--force-deploy", "(optional) Force module deployment", CommandOptionType.NoValue);
                 var versionOption = cmd.Option("--version <VERSION>", "(optional) Specify version for LambdaSharp modules (default: same as CLI version)", CommandOptionType.SingleValue);
-                var localOption = cmd.Option("--local <PATH>", "(optional) Provide a path to a local check-out of the LambdaSharp runtime modules (default: LAMBDASHARP environment variable)", CommandOptionType.SingleValue);
-                var usePublishedOption = cmd.Option("--use-published", "(optional) Force the init command to use the published LambdaSharp runtime modules", CommandOptionType.NoValue);
+                var localOption = cmd.Option("--local <PATH>", "(optional) Provide a path to a local check-out of the LambdaSharp modules (default: LAMBDASHARP environment variable)", CommandOptionType.SingleValue);
+                var usePublishedOption = cmd.Option("--use-published", "(optional) Force the init command to use the published LambdaSharp modules", CommandOptionType.NoValue);
                 var parametersFileOption = cmd.Option("--parameters <FILE>", "(optional) Specify source filename for module parameters (default: none)", CommandOptionType.SingleValue);
                 var forcePublishOption = CliBuildPublishDeployCommand.AddForcePublishOption(cmd);
                 var promptAllParametersOption = cmd.Option("--prompt-all", "(optional) Prompt for all missing parameters values (default: only prompt for missing parameters with no default value)", CommandOptionType.NoValue);
@@ -121,9 +121,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             // check if the module must be built and published first
             if(lambdaSharpPath != null) {
                 foreach(var module in new[] {
-                    "LambdaSharp.System",
-                    "LambdaSharp.S3Subscriber",
-                    "LambdaSharp.S3PackageLoader",
+                    "Core",
+                    "S3",
+                    "S3Subscriber"
                 }) {
                     var moduleSource = Path.Combine(lambdaSharpPath, "Runtime", module, "Module.yml");
                     settings.WorkingDirectory = Path.GetDirectoryName(moduleSource);
@@ -156,7 +156,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             await command.DeployStepAsync(
                 settings,
                 dryRun: null,
-                moduleReference: $"LambdaSharp.System:{version}",
+                moduleReference: $"LambdaSharp.Core:{version}",
                 instanceName: null,
                 allowDataLoos: allowDataLoos,
                 protectStack: protectStack,

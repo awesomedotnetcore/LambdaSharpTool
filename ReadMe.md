@@ -26,7 +26,7 @@ Once installed, the λ# CLI needs to be configured.
 dotnet lash config
 ```
 
-Finally, a deployment tier must be initialized with the λ# runtime.
+Finally, a deployment tier must be initialized with the λ# Core.
 ```bash
 dotnet lash init --tier Sandbox
 ```
