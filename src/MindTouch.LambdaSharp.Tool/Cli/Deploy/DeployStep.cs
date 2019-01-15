@@ -187,7 +187,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Deploy {
                     AddError($"deployed module name ({deployedFullName}) does not match {manifest.GetFullName()}; use --force-deploy to proceed anyway");
                     return (false, existing);
                 }
-                if(deployedVersion > VersionInfo.Parse(manifest.GetVersion())) {
+                if(deployedVersion > manifest.GetVersion()) {
                     AddError($"deployed module version (v{deployedVersion}) is newer than v{manifest.GetVersion()}; use --force-deploy to proceed anyway");
                     return (false, existing);
                 }

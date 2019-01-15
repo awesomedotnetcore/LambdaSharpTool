@@ -62,6 +62,21 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Publish {
                 return null;
             }
 
+            // verify that manifest is either a pre-release or its version has not been published yet
+            if(!manifest.ModuleInfo.TryParseModuleInfo(
+                out string moduleOwner,
+                out string moduleName,
+                out VersionInfo moduleVersion,
+                out string _
+            )) {
+                throw new ApplicationException("invalid module info");
+            }
+            var destinationKey = $"{moduleOwner}/Modules/{moduleName}/Versions/{moduleVersion}/cloudformation.json";
+            if(!moduleVersion.IsPreRelease && !forcePublish && await DoesS3ObjectExistsAsync(destinationKey)) {
+                AddError($"{moduleOwner}.{moduleName} (v{moduleVersion}) already exists");
+                return null;
+            }
+
             // upload assets
             for(var i = 0; i < manifest.Assets.Count; ++i) {
                 manifest.Assets[i] = await UploadPackageAsync(manifest, manifest.Assets[i], "asset");
@@ -71,19 +86,11 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Publish {
             var template = await UploadTemplateFileAsync(manifest, "template");
 
             // store copy of cloudformation template under version number
-            if(!manifest.ModuleInfo.TryParseModuleInfo(
-                out string moduleOwner,
-                out string moduleName,
-                out VersionInfo moduleVersion,
-                out string _
-            )) {
-                throw new ApplicationException("invalid module info");
-            }
             await Settings.S3Client.CopyObjectAsync(new CopyObjectRequest {
                 SourceBucket = Settings.DeploymentBucketName,
                 SourceKey = template,
                 DestinationBucket = Settings.DeploymentBucketName,
-                DestinationKey = $"{moduleOwner}/Modules/{moduleName}/Versions/{moduleVersion}/cloudformation.json",
+                DestinationKey = destinationKey,
                 ContentType = "application/json"
             });
             if(!_changesDetected) {
@@ -114,7 +121,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Publish {
                 throw new ApplicationException("invalid module info");
             }
             var key = $"{moduleOwner}/Modules/{moduleName}/Assets/cloudformation_v{moduleVersion}_{manifest.Hash}.json";
-            if(_forcePublish || !await S3ObjectExistsAsync(key)) {
+            if(_forcePublish || !await DoesS3ObjectExistsAsync(key)) {
                 Console.WriteLine($"=> Uploading {description}: s3://{Settings.DeploymentBucketName}/{key}");
                 await Settings.S3Client.PutObjectAsync(new PutObjectRequest {
                     BucketName = Settings.DeploymentBucketName,
@@ -140,7 +147,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Publish {
             var key = $"{moduleOwner}/Modules/{moduleName}/Assets/{Path.GetFileName(filePath)}";
 
             // only upload files that don't exist
-            if(_forcePublish || !await S3ObjectExistsAsync(key)) {
+            if(_forcePublish || !await DoesS3ObjectExistsAsync(key)) {
                 Console.WriteLine($"=> Uploading {description}: s3://{Settings.DeploymentBucketName}/{key}");
                 await _transferUtility.UploadAsync(filePath, Settings.DeploymentBucketName, key);
                 _changesDetected = true;
@@ -148,7 +155,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Publish {
             return key;
         }
 
-        private async Task<bool> S3ObjectExistsAsync(string key) {
+        private async Task<bool> DoesS3ObjectExistsAsync(string key) {
             var found = false;
             try {
                 await Settings.S3Client.GetObjectMetadataAsync(new GetObjectMetadataRequest {

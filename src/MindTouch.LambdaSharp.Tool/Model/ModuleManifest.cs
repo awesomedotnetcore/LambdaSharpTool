@@ -60,7 +60,31 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             return $"{moduleOwner}.{moduleName}";
         }
 
-        public string GetVersion() {
+        public string GetOwner() {
+            if(!ModuleInfo.TryParseModuleInfo(
+                out string moduleOwner,
+                out string _,
+                out VersionInfo _,
+                out string _
+            )) {
+                throw new ApplicationException("invalid module info");
+            }
+            return moduleOwner;
+        }
+
+        public string GetName() {
+            if(!ModuleInfo.TryParseModuleInfo(
+                out string _,
+                out string moduleName,
+                out VersionInfo _,
+                out string _
+            )) {
+                throw new ApplicationException("invalid module info");
+            }
+            return moduleName;
+        }
+
+        public VersionInfo GetVersion() {
             if(!ModuleInfo.TryParseModuleInfo(
                 out string _,
                 out string _,
@@ -69,7 +93,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             )) {
                 throw new ApplicationException("invalid module info");
             }
-            return moduleVersion.ToString();
+            return moduleVersion;
         }
     }
 
