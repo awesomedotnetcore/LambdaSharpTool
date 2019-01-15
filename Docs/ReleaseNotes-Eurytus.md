@@ -109,6 +109,9 @@
     * updated manifest format, includes: resource types, macros, and outputs
     * include `git` branch information in manifest and lambda function
 
+* Core
+    * added `LambdaSharp::S3::WriteJson` resource type
+
 * CLI
     * new module specification for deploying: `ModuleName[:Version][@Bucket]`
     * publish/deploy/init: added `--force-publish` option

@@ -37,7 +37,7 @@ using MindTouch.LambdaSharp.Reports;
 
 namespace MindTouch.LambdaSharp {
 
-    public abstract class ALambdaFunction {
+    public abstract class ALambdaFunction : ILambdaLogger {
 
         //--- Types ---
         private class GitInfo {
@@ -125,6 +125,7 @@ namespace MindTouch.LambdaSharp {
         protected string DefaultSecretKey { get; private set; }
         protected string RequestId { get; private set; }
         protected ErrorReporter ErrorReporter { get; private set; }
+        protected ILambdaLogger Logger => (ILambdaLogger)this;
 
         //--- Abstract Methods ---
         public abstract Task InitializeAsync(LambdaConfig config);
@@ -288,41 +289,40 @@ namespace MindTouch.LambdaSharp {
             string EnvToVarKey(string key) => "/" + key.Substring(4).Replace('_', '/');
         }
 
-        #region *** Logging ***
+        #region --- Logging ---
         protected virtual void RecordErrorReport(ErrorReport report) => LambdaLogger.Log(SerializeJson(report) + "\n");
         protected virtual void RecordException(Exception exception) => LambdaLogger.Log($"EXCEPTION: {exception}");
 
         protected void LogInfo(string format, params object[] args)
-            => Log(LambdaLogLevel.INFO, exception: null, format: format, args: args);
+            => Logger.LogInfo(format, args);
 
         protected void LogWarn(string format, params object[] args)
-            => Log(LambdaLogLevel.WARNING, exception: null, format: format, args: args);
+            => Logger.LogWarn(format, args);
 
         protected void LogError(Exception exception)
-            => Log(LambdaLogLevel.ERROR, exception, exception.Message, new object[0]);
+            => Logger.LogError(exception);
 
         protected void LogError(Exception exception, string format, params object[] args)
-            => Log(LambdaLogLevel.ERROR, exception, format, args);
+            => Logger.LogError(exception, format, args);
 
         protected void LogErrorAsInfo(Exception exception)
-            => Log(LambdaLogLevel.INFO, exception, exception.Message, new object[0]);
+            => Logger.LogErrorAsInfo(exception);
 
         protected void LogErrorAsInfo(Exception exception, string format, params object[] args)
-            => Log(LambdaLogLevel.INFO, exception, format, args);
+            => Logger.LogErrorAsInfo(exception, format, args);
 
         protected void LogErrorAsWarning(Exception exception)
-            => Log(LambdaLogLevel.WARNING, exception, exception.Message, new object[0]);
+            => Logger.LogErrorAsWarning(exception);
 
         protected void LogErrorAsWarning(Exception exception, string format, params object[] args)
-            => Log(LambdaLogLevel.WARNING, exception, format, args);
+            => Logger.LogErrorAsWarning(exception, format, args);
 
         protected void LogFatal(Exception exception, string format, params object[] args)
-            => Log(LambdaLogLevel.FATAL, exception, format, args);
+            => Logger.LogFatal(exception, format, args);
+        #endregion
 
-        private void Log(LambdaLogLevel level, string message, string extra)
-            => LambdaLogger.Log($"*** {level.ToString().ToUpperInvariant()}: {message} [{Stopwatch.Elapsed:c}]\n{extra}");
-
-        private void Log(LambdaLogLevel level, Exception exception, string format, params object[] args) {
+        #region --- ILambdaLogger Members ---
+        void ILambdaLogger.Log(LambdaLogLevel level, Exception exception, string format, params object[] args) {
             string message = ErrorReporter.FormatMessage(format, args) ?? exception?.Message;
             if((level >= LambdaLogLevel.WARNING) && (exception != null)) {
 
@@ -339,7 +339,7 @@ namespace MindTouch.LambdaSharp {
                     RecordException(exception);
                 }
             } else {
-                Log(level, $"{message}", exception?.ToString());
+                LambdaLogger.Log($"*** {level.ToString().ToUpperInvariant()}: {message} [{Stopwatch.Elapsed:c}]\n{exception?.ToString()}");
             }
         }
         #endregion

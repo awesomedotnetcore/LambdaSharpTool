@@ -24,7 +24,7 @@ Items:
 
   - ResourceType: LambdaSharp::S3::Unzip
     Description: Resource for deploying the contents of a zip file to an S3 bucket
-    Handler: CustomResourceTopic
+    Handler: S3WriterTopic
     Properties:
       Request:
 
@@ -51,7 +51,34 @@ Items:
       Response:
 
         - Name: Url
-          Description: Destination S3 URL with destination bucket name and key prefix
+          Description: S3 URL with destination bucket name and key-prefix path
+          Type: String
+
+  - ResourceType: LambdaSharp::S3::WriteJson
+    Description: Resource for writing a JSON file to an S3 bucket
+    Handler: S3WriterTopic
+    Properties:
+      Request:
+
+        - Name: Bucket
+          Description: S3 bucket ARN/name where to write the JSON file to
+          Type: String
+          Required: true
+
+        - Name: Key
+          Description: S3 key where to write the JSON file to
+          Type: String
+          Required: true
+
+        - Name: Contents
+          Description: JSON contents to be written
+          Type: Json
+          Required: true
+
+      Response:
+
+        - Name: Url
+          Description: S3 URL with destination bucket name and key path
           Type: String
 
   - Resource: DestinationBucketPermissions
@@ -66,8 +93,8 @@ Items:
     Allow: ReadOnly
     Value: !Sub "arn:aws:s3:::*"
 
-  - Resource: CustomResourceTopic
-    Description: Custom resource topic for deploying packages to S3 buckets
+  - Resource: S3WriterTopic
+    Description: Topic for S3Writer
     Type: AWS::SNS::Topic
     Allow: Subscribe
 
@@ -82,4 +109,4 @@ Items:
     Memory: 256
     Timeout: 300
     Sources:
-      - Topic: CustomResourceTopic
+      - Topic: S3WriterTopic
