@@ -44,7 +44,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
         public ModelStackGenerator(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
 
         //--- Methods ---
-        public string Generate(Module module, string gitSha) {
+        public string Generate(Module module, string gitSha, string gitBranch) {
             _module = module;
 
             // stack header
@@ -170,7 +170,12 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             // update template with template hash
             var templateHash = GenerateCloudFormationTemplateHash();
             manifest.Hash = templateHash;
-            manifest.GitSha = gitSha ?? "";
+            if((gitSha != null) || (gitBranch != null)) {
+                manifest.Git = new ModuleManifestGitInfo {
+                    SHA = gitSha,
+                    Branch = gitBranch
+                };
+            }
             _stack.Parameters["DeploymentChecksum"].Default = templateHash;
 
             // generate JSON template

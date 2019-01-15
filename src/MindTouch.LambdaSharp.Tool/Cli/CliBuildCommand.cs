@@ -55,7 +55,10 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             => cmd.Option("--configuration|-c <CONFIGURATION>", "(optional) Build configuration for function projects (default: \"Release\")", CommandOptionType.SingleValue);
 
         public static CommandOption AddGitShaOption(CommandLineApplication cmd)
-            => cmd.Option("--gitsha <VALUE>", "(optional) GitSha of most recent git commit (default: invoke `git rev-parse HEAD` command)", CommandOptionType.SingleValue);
+            => cmd.Option("--git-sha <VALUE>", "(optional) GitSha of most recent git commit (default: invoke `git rev-parse HEAD` command)", CommandOptionType.SingleValue);
+
+        public static CommandOption AddGitBranchOption(CommandLineApplication cmd)
+            => cmd.Option("--git-branch <VALUE>", "(optional) Current git branch name (default: invoke `git rev-parse --abbrev-ref HEAD` command)", CommandOptionType.SingleValue);
 
         public static CommandOption AddOutputPathOption(CommandLineApplication cmd)
             => cmd.Option("--output|-o <DIRECTORY>", "(optional) Path to output directory (default: bin)", CommandOptionType.SingleValue);
@@ -156,6 +159,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 var skipDependencyValidationOption = AddSkipDependencyValidationOption(cmd);
                 var buildConfigurationOption = AddBuildConfigurationOption(cmd);
                 var gitShaOption = AddGitShaOption(cmd);
+                var gitBranchOption = AddGitBranchOption(cmd);
                 var outputDirectoryOption = AddOutputPathOption(cmd);
                 var selectorOption = AddSelectorOption(cmd);
                 var outputCloudFormationPathOption = AddCloudFormationOutputOption(cmd);
@@ -208,6 +212,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                             skipAssemblyValidationOption.HasValue(),
                             dryRun == DryRunLevel.CloudFormation,
                             gitShaOption.Value() ?? GetGitShaValue(settings.WorkingDirectory),
+                            gitBranchOption.Value() ?? GetGitBranch(settings.WorkingDirectory, showWarningOnFailure: false),
                             buildConfigurationOption.Value() ?? "Release",
                             selectorOption.Value(),
                             moduleSource
@@ -232,6 +237,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 var skipDependencyValidationOption = AddSkipDependencyValidationOption(cmd);
                 var buildConfigurationOption = AddBuildConfigurationOption(cmd);
                 var gitShaOption = AddGitShaOption(cmd);
+                var gitBranchOption = AddGitBranchOption(cmd);
                 var outputDirectoryOption = AddOutputPathOption(cmd);
                 var selectorOption = AddSelectorOption(cmd);
                 var outputCloudFormationPathOption = AddCloudFormationOutputOption(cmd);
@@ -296,6 +302,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                                 skipAssemblyValidationOption.HasValue(),
                                 dryRun == DryRunLevel.CloudFormation,
                                 gitShaOption.Value() ?? GetGitShaValue(settings.WorkingDirectory),
+                                gitBranchOption.Value() ?? GetGitBranch(settings.WorkingDirectory, showWarningOnFailure: false),
                                 buildConfigurationOption.Value() ?? "Release",
                                 selectorOption.Value(),
                                 moduleSource
@@ -335,6 +342,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 var skipDependencyValidationOption = AddSkipDependencyValidationOption(cmd);
                 var buildConfigurationOption = AddBuildConfigurationOption(cmd);
                 var gitShaOption = AddGitShaOption(cmd);
+                var gitBranchOption = AddGitBranchOption(cmd);
                 var outputDirectoryOption = AddOutputPathOption(cmd);
                 var selectorOption = AddSelectorOption(cmd);
 
@@ -410,6 +418,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                                 skipAssemblyValidationOption.HasValue(),
                                 dryRun == DryRunLevel.CloudFormation,
                                 gitShaOption.Value() ?? GetGitShaValue(settings.WorkingDirectory),
+                                gitBranchOption.Value() ?? GetGitBranch(settings.WorkingDirectory, showWarningOnFailure: false),
                                 buildConfigurationOption.Value() ?? "Release",
                                 selectorOption.Value(),
                                 moduleSource
@@ -449,7 +458,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             string outputCloudFormationFilePath,
             bool noAssemblyValidation,
             bool noPackageBuild,
-            string gitsha,
+            string gitSha,
+            string gitBranch,
             string buildConfiguration,
             string selector,
             string moduleSource
@@ -463,7 +473,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     outputCloudFormationFilePath,
                     noAssemblyValidation,
                     noPackageBuild,
-                    gitsha,
+                    gitSha,
+                    gitBranch,
                     buildConfiguration,
                     selector
                 );

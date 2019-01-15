@@ -31,13 +31,15 @@ using System.Xml.Linq;
 using MindTouch.LambdaSharp.Tool.Internal;
 using MindTouch.LambdaSharp.Tool.Model;
 using Mono.Cecil;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
 
 namespace MindTouch.LambdaSharp.Tool.Cli.Build {
 
     public class ModelFunctionPackager : AModelProcessor {
 
         //--- Constants ---
-        private const string GITSHAFILE = "gitsha.txt";
+        private const string GIT_INFO_FILE = "git-info.json";
 
         //--- Types ---
         private class CustomAssemblyResolver : BaseAssemblyResolver {
@@ -82,7 +84,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             ModuleBuilder builder,
             bool noCompile,
             bool noAssemblyValidation,
-            string gitsha,
+            string gitSha,
+            string gitBranch,
             string buildConfiguration
         ) {
             _builder = builder;
@@ -101,7 +104,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         function,
                         noCompile,
                         noAssemblyValidation,
-                        gitsha,
+                        gitSha,
+                        gitBranch,
                         buildConfiguration
                     );
                 });
@@ -112,7 +116,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             FunctionItem function,
             bool noCompile,
             bool noAssemblyValidation,
-            string gitsha,
+            string gitSha,
+            string gitBranch,
             string buildConfiguration
         ) {
             switch(Path.GetExtension(function.Project).ToLowerInvariant()) {
@@ -125,7 +130,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     function,
                     noCompile,
                     noAssemblyValidation,
-                    gitsha,
+                    gitSha,
+                    gitBranch,
                     buildConfiguration
                 );
                 break;
@@ -134,7 +140,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     function,
                     noCompile,
                     noAssemblyValidation,
-                    gitsha,
+                    gitSha,
+                    gitBranch,
                     buildConfiguration
                 );
                 break;
@@ -148,7 +155,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             FunctionItem function,
             bool noCompile,
             bool noAssemblyValidation,
-            string gitsha,
+            string gitSha,
+            string gitBranch,
             string buildConfiguration
         ) {
             function.Language = "csharp";
@@ -238,7 +246,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                         ValidateEntryPoint(tempDirectory, handler);
                     }
                 }
-                var package = CreatePackage(function.Name, gitsha, tempDirectory);
+                var package = CreatePackage(function.Name, gitSha, gitBranch, tempDirectory);
                 _builder.AddAsset($"{function.FullName}::PackageName", package);
             } finally {
                 if(Directory.Exists(tempDirectory)) {
@@ -311,23 +319,27 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             FunctionItem function,
             bool noCompile,
             bool noAssemblyValidation,
-            string gitsha,
+            string gitSha,
+            string gitBranch,
             string buildConfiguration
         ) {
             if(noCompile) {
                 return;
             }
             Console.WriteLine($"=> Building function {function.Name} [{function.Function.Runtime}]");
-            var package = CreatePackage(function.Name, gitsha, Path.GetDirectoryName(function.Project));
+            var package = CreatePackage(function.Name, gitSha, gitBranch, Path.GetDirectoryName(function.Project));
             _builder.AddAsset($"{function.FullName}::PackageName", package);
         }
 
-        private string CreatePackage(string functionName, string gitsha, string folder) {
+        private string CreatePackage(string functionName, string gitSha, string gitBranch, string folder) {
             string package;
 
-            // add `gitsha.txt` if GitSha is supplied
-            if(gitsha != null) {
-                File.WriteAllText(Path.Combine(folder, GITSHAFILE), gitsha);
+            // add `git-info.json` if git sha or git branch is supplied
+            if((gitSha != null) || (gitBranch != null)) {
+                File.WriteAllText(Path.Combine(folder, GIT_INFO_FILE), JObject.FromObject(new ModuleManifestGitInfo {
+                    SHA = gitSha,
+                    Branch = gitBranch
+                }).ToString(Formatting.None));
             }
 
             // compress temp folder into new package
@@ -346,8 +358,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     var relativeFilePath = Path.GetRelativePath(folder, file);
                     var filename = Path.GetFileName(file);
 
-                    // don't include the `gitsha.txt` since it changes with every build
-                    if(filename != GITSHAFILE) {
+                    // don't include the `git-info.json` since it changes with every build
+                    if(filename != GIT_INFO_FILE) {
                         using(var stream = File.OpenRead(file)) {
                             bytes.AddRange(Encoding.UTF8.GetBytes(relativeFilePath));
                             var fileHash = md5.ComputeHash(stream);
@@ -375,9 +387,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                     return null;
                 }
             }
-            if(gitsha != null) {
+            if((gitSha != null) || (gitBranch != null)) {
                 try {
-                    File.Delete(Path.Combine(folder, GITSHAFILE));
+                    File.Delete(Path.Combine(folder, GIT_INFO_FILE));
                 } catch { }
             }
             if(!Directory.Exists(Settings.OutputDirectory)) {

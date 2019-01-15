@@ -290,23 +290,53 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     WorkingDirectory = workingDirectory
                 }
             };
-            string gitsha = null;
+            string gitSha = null;
             try {
                 process.Start();
-                gitsha = process.StandardOutput.ReadToEnd().Trim();
+                gitSha = process.StandardOutput.ReadToEnd().Trim();
                 process.WaitForExit();
                 if(process.ExitCode != 0) {
                     if(showWarningOnFailure) {
                         AddWarning($"unable to get git-sha `git rev-parse HEAD` failed with exit code = {process.ExitCode}");
                     }
-                    gitsha = null;
+                    gitSha = null;
                 }
             } catch {
                 if(showWarningOnFailure) {
-                    AddWarning("git is not installed; skipping git-sha fingerprint file");
+                    AddWarning("git is not installed; skipping git-sha detection");
                 }
             }
-            return gitsha;
+            return gitSha;
+        }
+
+        protected string GetGitBranch(string workingDirectory, bool showWarningOnFailure = true) {
+
+            // read the gitSha using `git` directly
+            var process = new Process {
+                StartInfo = new ProcessStartInfo("git", ArgumentEscaper.EscapeAndConcatenate(new[] { "rev-parse", "--abbrev-ref", "HEAD" })) {
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    WorkingDirectory = workingDirectory
+                }
+            };
+            string gitBranch = null;
+            try {
+                process.Start();
+                gitBranch = process.StandardOutput.ReadToEnd().Trim();
+                process.WaitForExit();
+                if(process.ExitCode != 0) {
+                    if(showWarningOnFailure) {
+                        AddWarning($"unable to get git branch `git rev-parse --abbrev-ref HEAD` failed with exit code = {process.ExitCode}");
+                    }
+                    gitBranch = null;
+                }
+            } catch {
+                if(showWarningOnFailure) {
+                    AddWarning("git is not installed; skipping git branch detection");
+                }
+            }
+            return gitBranch;
         }
     }
 }

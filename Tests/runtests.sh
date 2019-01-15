@@ -23,7 +23,8 @@ if [ -z "$1" ]; then
         --dryrun:cloudformation \
         --aws-account-id 123456789012 \
         --aws-region us-east-1 \
-        --gitsha 0123456789ABCDEF0123456789ABCDEF01234567 \
+        --git-sha 0123456789ABCDEF0123456789ABCDEF01234567 \
+        --git-branch test-branch \
         --runtime-version 0.5-WIP \
         --cli-version 0.5-WIP \
         --deployment-bucket-name lambdasharp-bucket-name \
@@ -110,7 +111,8 @@ else
         --dryrun:cloudformation \
         --aws-account-id 123456789012 \
         --aws-region us-east-1 \
-        --gitsha 0123456789ABCDEF0123456789ABCDEF01234567 \
+        --git-sha 0123456789ABCDEF0123456789ABCDEF01234567 \
+        --git-branch test-branch \
         --runtime-version 0.5-WIP \
         --cli-version 0.5-WIP \
         --deployment-bucket-name lambdasharp-bucket-name \

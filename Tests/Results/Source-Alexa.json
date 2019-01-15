@@ -820,7 +820,10 @@
       ],
       "RuntimeCheck": true,
       "Hash": "30185BA21DA7378FF00792A35FFA48C9",
-      "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
+      "Git": {
+        "Branch": "test-branch",
+        "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
+      },
       "Dependencies": [
         {
           "ModuleFullName": "LambdaSharp.System",

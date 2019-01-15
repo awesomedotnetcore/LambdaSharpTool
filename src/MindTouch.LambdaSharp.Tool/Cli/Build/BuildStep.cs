@@ -35,7 +35,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             string outputCloudFormationFilePath,
             bool noAssemblyValidation,
             bool noPackageBuild,
-            string gitsha,
+            string gitSha,
+            string gitBranch,
             string buildConfiguration,
             string selector
         ) {
@@ -80,7 +81,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
                 module,
                 noCompile: noPackageBuild,
                 noAssemblyValidation: noAssemblyValidation,
-                gitsha: gitsha,
+                gitSha: gitSha,
+                gitBranch: gitBranch,
                 buildConfiguration: buildConfiguration
             );
 
@@ -112,7 +114,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli.Build {
             }
 
             // generate & save cloudformation template
-            var template = new ModelStackGenerator(Settings, SourceFilename).Generate(module.ToModule(), gitsha);
+            var template = new ModelStackGenerator(Settings, SourceFilename).Generate(module.ToModule(), gitSha, gitBranch);
             if(HasErrors) {
                 return false;
             }

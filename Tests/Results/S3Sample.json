@@ -959,7 +959,10 @@
       ],
       "RuntimeCheck": true,
       "Hash": "69BDC51ED9A1F9035FFB940575023C6A",
-      "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
+      "Git": {
+        "Branch": "test-branch",
+        "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
+      },
       "Dependencies": [
         {
           "ModuleFullName": "LambdaSharp.S3Subscriber",

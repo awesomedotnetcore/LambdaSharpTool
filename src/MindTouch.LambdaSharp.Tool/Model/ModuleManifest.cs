@@ -38,7 +38,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public IList<ModuleManifestParameterSection> ParameterSections { get; set; } = new List<ModuleManifestParameterSection>();
         public bool RuntimeCheck { get; set; }
         public string Hash { get; set; }
-        public string GitSha { get; set; }
+        public ModuleManifestGitInfo Git { get; set; }
+        public string GitBranch { get; set; }
         public IList<string> Assets { get; set; } = new List<string>();
         public IList<ModuleManifestDependency> Dependencies { get; set; } = new List<ModuleManifestDependency>();
         public IDictionary<string, ModuleManifestCustomResource> ResourceTypes { get; set; } = new Dictionary<string, ModuleManifestCustomResource>();
@@ -95,6 +96,13 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             }
             return moduleVersion;
         }
+    }
+
+    public class ModuleManifestGitInfo {
+
+        //--- Properties ---
+        public string Branch { get; set; }
+        public string SHA { get; set; }
     }
 
     public class ModuleManifestCustomResource {

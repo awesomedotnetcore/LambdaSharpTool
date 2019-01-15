@@ -55,6 +55,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     await Info(
                         settings,
                         GetGitShaValue(Directory.GetCurrentDirectory(), showWarningOnFailure: false),
+                        GetGitBranch(Directory.GetCurrentDirectory(), showWarningOnFailure: false),
                         showSensitiveInformationOption.HasValue()
                     );
                 });
@@ -63,22 +64,25 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
         public async Task Info(
             Settings settings,
-            string gitsha,
+            string gitSha,
+            string gitBranch,
             bool showSensitive
         ) {
-            await PopulateToolSettingsAsync(settings);
+            await PopulateToolSettingsAsync(settings, optional: true);
             await PopulateRuntimeSettingsAsync(settings);
 
             // show LambdaSharp settings
             Console.WriteLine($"LambdaSharp CLI");
             Console.WriteLine($"    Profile: {settings.ToolProfile ?? "<NOT SET>"}");
             Console.WriteLine($"    Version: {settings.ToolVersion}");
-            Console.WriteLine($"    Module Deployment S3 Bucket: {settings.DeploymentBucketName ?? "<NOT SET>"}");
-            Console.WriteLine($"    Module Deployment Notifications Topic: {ConcealAwsAccountId(settings.DeploymentNotificationsTopic ?? "<NOT SET>")}");
+            Console.WriteLine($"    Deployment S3 Bucket: {settings.DeploymentBucketName ?? "<NOT SET>"}");
+            Console.WriteLine($"    Deployment Notifications Topic: {ConcealAwsAccountId(settings.DeploymentNotificationsTopic ?? "<NOT SET>")}");
             Console.WriteLine($"LambdaSharp Deployment Tier");
             Console.WriteLine($"    Name: {settings.Tier ?? "<NOT SET>"}");
             Console.WriteLine($"    Runtime Version: {settings.RuntimeVersion?.ToString() ?? "<NOT SET>"}");
-            Console.WriteLine($"Git SHA: {gitsha ?? "<NOT SET>"}");
+            Console.WriteLine($"Git");
+            Console.WriteLine($"    Branch: {gitBranch ?? "<NOT SET>"}");
+            Console.WriteLine($"    SHA: {gitSha ?? "<NOT SET>"}");
             Console.WriteLine($"AWS");
             Console.WriteLine($"    Region: {settings.AwsRegion ?? "<NOT SET>"}");
             Console.WriteLine($"    Account Id: {ConcealAwsAccountId(settings.AwsAccountId ?? "<NOT SET>")}");

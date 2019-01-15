@@ -107,6 +107,7 @@
             HVMG2: "ami-053cdd503598e4a9d"
         ```
     * updated manifest format, includes: resource types, macros, and outputs
+    * include `git` branch information in manifest and lambda function
 
 * CLI
     * new module specification for deploying: `ModuleName[:Version][@Bucket]`
@@ -122,6 +123,7 @@
     * BREAKING: changed `--inputs` to `--parameters` for consistency reasons
     * added `delete-orphan-lambda-logs` command to delete orphaned Lambda log groups
     * expose `util` commands
+    * added `--git-branch` option
 
 * Build Process
     * validate that function entry point exists after compiling assembly
@@ -134,6 +136,9 @@
     * warn on unused parameters
     * simplify references in `!Sub` expressions
     * validate that `!Ref` and `!GetAtt` references to conditional resources are only made from compatible, conditional resources
+
+* Publish process
+  * prevent re-publishing the same version unless the version has as suffix (i.e. pre-release)
 
 * Deploy Process
     * use change-sets for deploying stacks

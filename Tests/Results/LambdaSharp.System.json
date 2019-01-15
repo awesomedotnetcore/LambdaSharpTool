@@ -967,7 +967,10 @@
       ],
       "RuntimeCheck": false,
       "Hash": "C7FF10E97D8C47D3094451893D1B875B",
-      "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
+      "Git": {
+        "Branch": "test-branch",
+        "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
+      },
       "ResourceTypes": {
         "LambdaSharp::Registration::Function": {
           "Description": "Custom resources for registering LambdaSharp functions",

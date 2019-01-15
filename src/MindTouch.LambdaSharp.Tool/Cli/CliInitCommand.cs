@@ -135,7 +135,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         Path.Combine(settings.OutputDirectory, "cloudformation.json"),
                         noAssemblyValidation: true,
                         noPackageBuild: false,
-                        gitsha: null,
+                        gitSha: GetGitShaValue(settings.WorkingDirectory, showWarningOnFailure: false),
+                        gitBranch: GetGitBranch(settings.WorkingDirectory, showWarningOnFailure: false),
                         buildConfiguration: "Release",
                         selector: null,
                         moduleSource: moduleSource

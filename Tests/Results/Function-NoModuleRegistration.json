@@ -523,7 +523,10 @@
       ],
       "RuntimeCheck": true,
       "Hash": "35C4239165439208983A0AA7DEF7D2C3",
-      "GitSha": "0123456789ABCDEF0123456789ABCDEF01234567",
+      "Git": {
+        "Branch": "test-branch",
+        "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
+      },
       "ResourceNameMappings": {
         "FunctionLogGroup": "Function::LogGroup",
         "ModuleRole": "Module::Role"

@@ -39,6 +39,14 @@ namespace MindTouch.LambdaSharp {
 
     public abstract class ALambdaFunction {
 
+        //--- Types ---
+        private class GitInfo {
+
+            //--- Fields ---
+            public string Branch;
+            public string SHA;
+        }
+
         //--- Class Fields ---
         protected static JsonSerializer JsonSerializer = new JsonSerializer();
         private static readonly Stopwatch Stopwatch = Stopwatch.StartNew();
@@ -188,9 +196,16 @@ namespace MindTouch.LambdaSharp {
             LogInfo($"DEADLETTERQUEUE = {_deadLetterQueueUrl ?? "NONE"}");
             LogInfo($"DEFAULTSECRETKEY = {DefaultSecretKey ?? "NONE"}");
 
-            // read optional git-sha file
-            var gitsha = File.Exists("gitsha.txt") ? File.ReadAllText("gitsha.txt") : null;
-            LogInfo($"GITSHA = {gitsha ?? "NONE"}");
+            // read optional git-info file
+            string gitSha = null;
+            string gitBranch = null;
+            if(File.Exists("git-info.json")) {
+                var git = DeserializeJson<GitInfo>(File.ReadAllText("git-info.json"));
+                gitSha = git.SHA;
+                gitBranch = git.Branch;
+                LogInfo($"GIT-SHA = {gitSha ?? "NONE"}");
+                LogInfo($"GIT-BRANCH = {gitBranch ?? "NONE"}");
+            }
 
             // convert environment variables to lambda parameters
             _appConfig = new LambdaConfig(new LambdaDictionarySource(await ReadParametersFromEnvironmentVariables()));
@@ -202,8 +217,8 @@ namespace MindTouch.LambdaSharp {
                 FunctionId,
                 FunctionName,
                 framework,
-                gitsha,
-                gitBranch: null
+                gitSha,
+                gitBranch
             );
         }
 
