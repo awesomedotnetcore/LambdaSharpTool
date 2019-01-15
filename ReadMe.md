@@ -92,7 +92,7 @@ namespace MySampleModule.MyFunction {
 
 ## Learn More
 
-1. [Setup λ# CLI](Runtime/)
+1. [Setup λ#](Docs/)
 1. [λ# CLI Reference](src/MindTouch.LambdaSharp.Tool/)
 1. [λ# Samples](Samples/)
 1. [Module Definition Reference](Docs/Module.md)

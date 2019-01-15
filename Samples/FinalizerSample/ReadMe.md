@@ -2,7 +2,7 @@
 
 # LambdaSharp Finalizer
 
-Before you begin, make sure to [setup your λ# CLI](../../Runtime/).
+Before you begin, make sure to [setup your λ# CLI](../../Docs/).
 
 ## Module Definition
 

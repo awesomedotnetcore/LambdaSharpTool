@@ -70,7 +70,7 @@ Initializing a deployment tier has been streamlined into a single command, which
 dotnet lash init --tier Sandbox
 ```
 
-For complete instructions and options, check out the updated [setup documentation](../Runtime/).
+For complete instructions and options, check out the updated [setup documentation](../Docs/).
 
 ### Build, Publish, and Deploy
 
@@ -452,7 +452,7 @@ The newest runtime module is the `Registrar`, which is responsible for registeri
 
 The `Registrar` can optionally be configured to integrate with [Rollbar](https://rollbar.com/mindtouch/nexus-indexer/) to create tracking projects on module deployment.
 
-See the [λ# CLI & Runtime documentation](../Runtime/) for more details.
+See the [λ# CLI & Runtime documentation](../Docs/) for more details.
 
 ## New λ# Assembly Features
 
