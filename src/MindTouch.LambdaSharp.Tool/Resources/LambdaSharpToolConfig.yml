@@ -118,7 +118,7 @@ Resources:
         - !Ref DeploymentBucketName
 
   # SNS CloudFormation Notification Topic
-  DeploymentNotificationTopic:
+  DeploymentNotificationTopicResource:
     Type: AWS::SNS::Topic
     Condition: CreateDeploymentNotificationTopic
 
@@ -130,5 +130,5 @@ Resources:
       Type: String
       Value: !If
         - CreateDeploymentNotificationTopic
-        - !Ref DeploymentNotificationTopic
+        - !Ref DeploymentNotificationTopicResource
         - !Ref DeploymentNotificationTopic

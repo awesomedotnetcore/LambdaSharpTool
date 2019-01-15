@@ -196,7 +196,7 @@ Items:
       - Topic: RegistrationTopic
 
   - ResourceType: LambdaSharp::Registration::Module
-    Description: Custom resources for registering LambdaSharp modules
+    Description: Resource type for LambdaSharp module registrations
     Handler: RegistrationTopic
     Properties:
       Request:
@@ -218,7 +218,7 @@ Items:
           Type: String
 
   - ResourceType: LambdaSharp::Registration::Function
-    Description: Custom resources for registering LambdaSharp functions
+    Description: Resource type for LambdaSharp function registrations
     Handler: RegistrationTopic
     Properties:
       Request:
