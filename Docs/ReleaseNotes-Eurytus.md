@@ -108,6 +108,18 @@
         ```
     * updated manifest format, includes: resource types, macros, and outputs
     * include `git` branch information in manifest and lambda function
+    * custom resource `LambdaSharp::S3::WriteJson`
+    ```yaml
+    - Resource: WriteConfigFile
+      Type: LambdaSharp::S3::WriteFile
+      Properties:
+        Bucket: !Ref Website::Bucket
+        Key: config.json
+        Contents:
+          api:
+          invokeUrl: !Ref Api::DomainName
+          scheme: https
+    ```
 
 * Core
     * added `LambdaSharp::S3::WriteJson` resource type
