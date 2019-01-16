@@ -1,0 +1,54 @@
+Module: LambdaSharp.S3FilesSample
+Version: 1.0
+Description: Showcase how to write files to an S3 bucket
+Requires:
+
+  - Module: LambdaSharp.S3
+    Version: 0.5-WIP
+
+Items:
+
+  - Parameter: Title
+    Description: Website title
+
+  - Resource: WebsiteBucket
+    Type: AWS::S3::Bucket
+    Allow: ReadWrite
+    Properties:
+      AccessControl: PublicRead
+      WebsiteConfiguration:
+        IndexDocument: index.html
+
+  - Resource: BucketPolicy
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      PolicyDocument:
+        Id: WebsiteBucket
+        Version: 2012-10-17
+        Statement:
+          - Sid: PublicReadForGetBucketObjects
+            Effect: Allow
+            Principal: '*'
+            Action: s3:GetObject
+            Resource: !Sub "arn:aws:s3:::${WebsiteBucket}/*"
+      Bucket: !Ref WebsiteBucket
+
+  - Package: WebsiteContents
+    Description: Package of web site files
+    Files: assets/
+
+  - Resource: UnzipWebsiteContents
+    Type: LambdaSharp::S3::Unzip
+    Properties:
+      SourceBucket: !Ref DeploymentBucketName
+      SourcePackageKey: !Ref WebsiteContents
+      DestinationBucket: !Ref WebsiteBucket
+      DestinationKeyPrefix: ""
+
+  - Resource: WriteWebsiteConfigJson
+    Type: LambdaSharp::S3::WriteJson
+    Properties:
+      Bucket: !Ref WebsiteBucket
+      Key: js/config.json
+      Contents:
+        Title: !Ref Title

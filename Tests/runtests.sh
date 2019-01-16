@@ -91,7 +91,8 @@ if [ -z "$1" ]; then
         ../Samples/DynamoDBSample \
         ../Samples/KinesisSample \
         ../Samples/MacroSample \
-        ../Samples/S3Sample \
+        ../Samples/S3FilesSample \
+        ../Samples/S3SubscriptionSample \
         ../Samples/ScheduleSample \
         ../Samples/SlackCommandSample \
         ../Samples/SnsSample \

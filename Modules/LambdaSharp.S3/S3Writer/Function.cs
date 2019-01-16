@@ -34,6 +34,7 @@ namespace LambdaSharp.Core.S3Writer {
     public class RequestProperties {
 
         //--- Properties ---
+        public string ResourceType { get; set; }
 
         /*
          * LambdaSharp::S3::Unzip
@@ -59,15 +60,15 @@ namespace LambdaSharp.Core.S3Writer {
         public string Key { get; set; }
         public object Contents { get; set; }
 
-        public string DestinationBucketName => DestinationBucket.StartsWith("arn:")
+        public string DestinationBucketName => (DestinationBucket?.StartsWith("arn:") == true)
             ? AwsConverters.ConvertBucketArnToName(DestinationBucket)
             : DestinationBucket;
 
-        public string SourceBucketName => SourceBucket.StartsWith("arn:")
+        public string SourceBucketName => (SourceBucket?.StartsWith("arn:") == true)
             ? AwsConverters.ConvertBucketArnToName(SourceBucket)
             : SourceBucket;
 
-        public string BucketName => Bucket.StartsWith("arn:")
+        public string BucketName => (Bucket?.StartsWith("arn:") == true)
             ? AwsConverters.ConvertBucketArnToName(Bucket)
             : Bucket;
     }
@@ -95,7 +96,7 @@ namespace LambdaSharp.Core.S3Writer {
         }
 
         protected override async Task<Response<ResponseProperties>> HandleCreateResourceAsync(Request<RequestProperties> request) {
-            switch(request.ResourceType) {
+            switch(request.ResourceProperties.ResourceType) {
             case "LambdaSharp::S3::Unzip":
                 return await _unzipLogic.Create(request.ResourceProperties);
             case "LambdaSharp::S3::WriteJson":
@@ -106,7 +107,7 @@ namespace LambdaSharp.Core.S3Writer {
         }
 
         protected override async Task<Response<ResponseProperties>> HandleUpdateResourceAsync(Request<RequestProperties> request) {
-            switch(request.ResourceType) {
+            switch(request.ResourceProperties.ResourceType) {
             case "LambdaSharp::S3::Unzip":
                 return await _unzipLogic.Update(request.OldResourceProperties, request.ResourceProperties);
             case "LambdaSharp::S3::WriteJson":
@@ -117,14 +118,16 @@ namespace LambdaSharp.Core.S3Writer {
         }
 
         protected override async Task<Response<ResponseProperties>> HandleDeleteResourceAsync(Request<RequestProperties> request) {
-            switch(request.ResourceType) {
+            switch(request.ResourceProperties.ResourceType) {
             case "LambdaSharp::S3::Unzip":
                 return await _unzipLogic.Delete(request.ResourceProperties);
             case "LambdaSharp::S3::WriteJson":
                 return await _writeJsonLogic.Delete(request.ResourceProperties);
             default:
-                throw new InvalidOperationException($"unsupported resource type: {request.ResourceType}");
-            }
+
+                // nothing to do since we didn't process this request successfully in the first place!
+                return new Response<ResponseProperties>();
+           }
         }
     }
 }

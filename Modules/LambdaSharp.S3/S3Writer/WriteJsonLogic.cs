@@ -86,7 +86,7 @@ namespace LambdaSharp.Core.S3Writer {
             using(var stream = new MemoryStream()) {
                 _jsonSerializer.Serialize(contents, stream);
                 stream.Position = 0;
-                return Encoding.UTF8.GetString(stream.GetBuffer());
+                return Encoding.UTF8.GetString(stream.ToArray());
             }
         }
     }

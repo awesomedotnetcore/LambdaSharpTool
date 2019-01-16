@@ -23,7 +23,7 @@ Description: LambdaSharp S3 Utility Module
 Items:
 
   - ResourceType: LambdaSharp::S3::Unzip
-    Description: Resource for deploying the contents of a zip file to an S3 bucket
+    Description: Resource type for deploying a zip package to an S3 bucket
     Handler: S3WriterTopic
     Properties:
       Request:
