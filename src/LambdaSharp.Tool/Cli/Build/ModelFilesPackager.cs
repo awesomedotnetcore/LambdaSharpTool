@@ -39,11 +39,8 @@ namespace LambdaSharp.Tool.Cli.Build {
             public ForwardSlashEncoder() : base(true) { }
 
             //--- Methods ---
-            public override byte[] GetBytes(string text) {
-                var replaced = text.Replace(@"\", "/");
-Console.WriteLine("*** ENCODING: " + text + " => " + replaced);
-                return base.GetBytes(replaced);
-            }
+            public override byte[] GetBytes(string text)
+                => base.GetBytes(text.Replace(@"\", "/"));
         }
 
         //--- Fields ---
