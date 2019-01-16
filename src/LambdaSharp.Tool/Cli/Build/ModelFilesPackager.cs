@@ -81,6 +81,9 @@ namespace LambdaSharp.Tool.Cli.Build {
 
                 // create zip package
                 Console.WriteLine($"=> Building {parameter.Name} package");
+                if(!Directory.Exists(Settings.OutputDirectory)) {
+                    Directory.CreateDirectory(Settings.OutputDirectory);
+                }
                 using(var zipArchive = ZipFile.Open(package, ZipArchiveMode.Create)) {
                     foreach(var file in parameter.Files) {
                         zipArchive.CreateEntryFromFile(file.Value, file.Key);
