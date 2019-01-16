@@ -387,7 +387,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
 
                 // only list parameter sections that contain a parameter that requires a prompt
                 foreach(var parameterGroup in manifest.ParameterSections.Where(group => group.Parameters.Any(RequiresPrompt))) {
-                    Console.WriteLine($"=> {parameterGroup.Title.ToUpper()}");
+                    Console.WriteLine($"*** {parameterGroup.Title.ToUpper()} ***");
 
                     // only prompt for required parameters
                     foreach(var parameter in parameterGroup.Parameters.Where(RequiresPrompt)) {

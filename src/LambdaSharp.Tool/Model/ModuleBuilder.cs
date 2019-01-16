@@ -1089,7 +1089,7 @@ namespace LambdaSharp.Tool.Model {
                                 AddError($"property type mismatch for '{prefix + property.Key}', expected a list [{property.Value?.GetType().Name ?? "<null>"}]");
                             } else if(propertyType.ItemType != null) {
                                 var nestedResource = ResourceMapping.CloudformationSpec.PropertyTypes[awsType + "." + propertyType.ItemType];
-                                ValidateList(prefix + property.Key, nestedResource, ListToEnumerable(nestedList));
+                                ValidateList(prefix + property.Key + ".", nestedResource, ListToEnumerable(nestedList));
                             } else {
 
                                 // TODO (2018-12-06, bjorg): validate list items using the primitive type
@@ -1100,7 +1100,7 @@ namespace LambdaSharp.Tool.Model {
                                 AddError($"property type mismatch for '{prefix + property.Key}', expected a map [{property.Value?.GetType().FullName ?? "<null>"}]");
                             } else if(propertyType.ItemType != null) {
                                 var nestedResource = ResourceMapping.CloudformationSpec.PropertyTypes[awsType + "." + propertyType.ItemType];
-                                ValidateList(prefix + property.Key, nestedResource, DictionaryToEnumerable(nestedProperties1));
+                                ValidateList(prefix + property.Key + ".", nestedResource, DictionaryToEnumerable(nestedProperties1));
                             } else {
 
                                 // TODO (2018-12-06, bjorg): validate map entries using the primitive type
@@ -1128,7 +1128,7 @@ namespace LambdaSharp.Tool.Model {
                     if(!(item.Value is IDictionary nestedProperties)) {
                         AddError($"property type mismatch for '{prefix + item.Key}', expected a map [{item.Value?.GetType().FullName ?? "<null>"}]");
                     } else {
-                        ValidateProperties(prefix + item.Key, currentResource, nestedProperties);
+                        ValidateProperties(prefix + item.Key + ".", currentResource, nestedProperties);
                     }
                 }
             }
