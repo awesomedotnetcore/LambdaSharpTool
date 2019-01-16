@@ -113,7 +113,7 @@ namespace LambdaSharp.Core.ProcessLogEvents {
 
                     // fill-in error report with owner information
                     var report = new ErrorReport {
-                        ModuleInfo = owner.ModuleInfo,
+                        Module = owner.Module,
                         ModuleId = owner.ModuleId,
                         FunctionId = owner.FunctionId,
                         FunctionName = owner.FunctionName,

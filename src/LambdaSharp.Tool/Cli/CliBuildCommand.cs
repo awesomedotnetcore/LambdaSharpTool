@@ -506,30 +506,30 @@ namespace LambdaSharp.Tool.Cli {
             bool promptsAsErrors
         ) {
             try {
-            await PopulateToolSettingsAsync(settings);
-                        if(HasErrors) {
-                            return false;
-                        }
+                await PopulateToolSettingsAsync(settings);
+                if(HasErrors) {
+                    return false;
+                }
                 await PopulateRuntimeSettingsAsync(settings);
                 if(HasErrors) {
-                        return false;
-                    }
+                    return false;
+                }
                 return await new DeployStep(settings, moduleReference).DoAsync(
                     dryRun,
                     moduleReference,
-                            instanceName,
-                            allowDataLoos,
-                            protectStack,
-                            inputs,
+                    instanceName,
+                    allowDataLoos,
+                    protectStack,
+                    inputs,
                     forceDeploy,
                     promptAllParameters,
                     promptsAsErrors
-                        );
-                    } catch(Exception e) {
-                        AddError(e);
-                        return false;
-                    }
-                }
+                );
+            } catch(Exception e) {
+                AddError(e);
+                return false;
+            }
+        }
 
         public string GetOutputFilePath(Settings settings, CommandOption option, string moduleSource) {
             string result;

@@ -168,6 +168,8 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 var describe = await Settings.CfnClient.DescribeStacksAsync(new DescribeStacksRequest {
                     StackName = stackName
                 });
+
+                // make sure the stack is in a stable state (not updating and not failed)
                 var existing = describe.Stacks.FirstOrDefault();
                 switch(existing?.StackStatus) {
                 case null:
@@ -182,13 +184,10 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     return (false, existing);
                 }
 
-                // TODO (2019-01-15, bjorg): make sure the stack is in a stable state (not updating and not failed)
-
-                var deployedOutputs = existing?.Outputs;
-                var deployed = deployedOutputs?.FirstOrDefault(output => output.OutputKey == "ModuleInfo")?.OutputValue;
-
                 // validate existing module deployment
-                if(!deployed.TryParseModuleInfo(
+                var deployedOutputs = existing?.Outputs;
+                var deployed = deployedOutputs?.FirstOrDefault(output => output.OutputKey == "Module")?.OutputValue;
+                if(!deployed.TryParseModuleString(
                     out string deployedOwner,
                     out string deployedName,
                     out VersionInfo deployedVersion,
@@ -262,6 +261,8 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                             continue;
                         }
                         var nestedDependency = new DependencyRecord {
+
+                            // TODO (2019-01-15, bjorg): why is this commented out?
 //                            Owner = $"{current.ModuleOwner}.{current.ModuleName}",
                             Manifest = dependencyManifest,
                             Location = dependencyLocation
@@ -306,8 +307,8 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     StackName = ToStackName(dependency.ModuleFullName)
                 });
                 var deployedOutputs = describe.Stacks.FirstOrDefault()?.Outputs;
-                var deployedInfo = deployedOutputs?.FirstOrDefault(output => output.OutputKey == "ModuleInfo")?.OutputValue;
-                var success = deployedInfo.TryParseModuleInfo(
+                var deployedInfo = deployedOutputs?.FirstOrDefault(output => output.OutputKey == "Module")?.OutputValue;
+                var success = deployedInfo.TryParseModuleString(
                     out string deployedOwner,
                     out string deployedName,
                     out VersionInfo deployedVersion,
@@ -397,7 +398,6 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                         };
                     }
                 }
-                Console.WriteLine();
             }
             return stackParameters.Values.ToList();
 

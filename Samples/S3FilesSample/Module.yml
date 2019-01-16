@@ -1,5 +1,4 @@
-Module: LambdaSharp.S3FilesSample
-Version: 1.0
+Module: LambdaSharpSample.S3FilesSample
 Description: Showcase how to write files to an S3 bucket
 Requires:
 
@@ -10,6 +9,9 @@ Items:
 
   - Parameter: Title
     Description: Website title
+
+  - Parameter: Message
+    Description: Website message
 
   - Resource: WebsiteBucket
     Type: AWS::S3::Bucket
@@ -51,4 +53,10 @@ Items:
       Bucket: !Ref WebsiteBucket
       Key: js/config.json
       Contents:
-        Title: !Ref Title
+        title: !Ref Title
+        message: !Ref Message
+
+  - Variable: WebsiteUrl
+    Description: Website URL
+    Scope: public
+    Value: !GetAtt WebsiteBucket.WebsiteURL

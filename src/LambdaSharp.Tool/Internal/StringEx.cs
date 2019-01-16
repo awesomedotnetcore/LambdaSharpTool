@@ -95,7 +95,7 @@ namespace LambdaSharp.Tool.Internal {
             return true;
         }
 
-        public static bool TryParseModuleInfo(
+        public static bool TryParseModuleString(
             this string moduleReference,
             out string moduleOwner,
             out string moduleName,

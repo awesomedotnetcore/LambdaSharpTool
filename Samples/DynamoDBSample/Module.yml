@@ -1,4 +1,4 @@
-Module: LambdaSharp.DynamoDBSample
+Module: LambdaSharpSample.DynamoDBSample
 Description: A sample module using Kinesis streams
 Items:
 

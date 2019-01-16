@@ -34,7 +34,7 @@ namespace LambdaSharp.Tool.Model {
 
         //--- Properties ---
         public string Version { get; set; } = CurrentVersion;
-        public string ModuleInfo { get; set; }
+        public string Module { get; set; }
         public IList<ModuleManifestParameterSection> ParameterSections { get; set; } = new List<ModuleManifestParameterSection>();
         public bool RuntimeCheck { get; set; }
         public string Hash { get; set; }
@@ -50,7 +50,7 @@ namespace LambdaSharp.Tool.Model {
 
         //--- Methods ---
         public string GetFullName() {
-            if(!ModuleInfo.TryParseModuleInfo(
+            if(!Module.TryParseModuleString(
                 out string moduleOwner,
                 out string moduleName,
                 out VersionInfo _,
@@ -62,7 +62,7 @@ namespace LambdaSharp.Tool.Model {
         }
 
         public string GetOwner() {
-            if(!ModuleInfo.TryParseModuleInfo(
+            if(!Module.TryParseModuleString(
                 out string moduleOwner,
                 out string _,
                 out VersionInfo _,
@@ -74,7 +74,7 @@ namespace LambdaSharp.Tool.Model {
         }
 
         public string GetName() {
-            if(!ModuleInfo.TryParseModuleInfo(
+            if(!Module.TryParseModuleString(
                 out string _,
                 out string moduleName,
                 out VersionInfo _,
@@ -86,7 +86,7 @@ namespace LambdaSharp.Tool.Model {
         }
 
         public VersionInfo GetVersion() {
-            if(!ModuleInfo.TryParseModuleInfo(
+            if(!Module.TryParseModuleString(
                 out string _,
                 out string _,
                 out VersionInfo moduleVersion,

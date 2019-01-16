@@ -211,7 +211,7 @@ namespace LambdaSharp.Core.ProcessLogEvents {
                     Title = $"{report.FunctionName}: {report.Message}",
                     Custom = new {
                         report.Message,
-                        report.ModuleInfo,
+                        report.Module,
                         report.ModuleId,
                         report.FunctionId,
                         report.FunctionName,

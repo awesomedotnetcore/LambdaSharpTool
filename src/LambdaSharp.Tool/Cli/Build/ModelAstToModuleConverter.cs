@@ -56,7 +56,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 // ensure version is present
                 VersionInfo version;
                 if(module.Version == null) {
-                    version = VersionInfo.Parse("1.0");
+                    version = VersionInfo.Parse("1.0-WIP");
                 } else if(!VersionInfo.TryParse(module.Version, out version)) {
                     AddError("`Version` expected to have format: Major.Minor[.Build[.Revision]]");
                     version = VersionInfo.Parse("0.0");
@@ -426,7 +426,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     // validation
                     if(node.Source == null) {
                         AddError("missing 'Reference' attribute");
-                    } else if(!node.Source.TryParseModuleInfo(
+                    } else if(!node.Source.TryParseModuleString(
                         out string moduleOwner,
                         out string moduleName,
                         out VersionInfo moduleVersion,

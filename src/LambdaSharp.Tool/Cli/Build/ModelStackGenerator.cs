@@ -56,7 +56,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             };
 
             // add outputs
-            _stack.Add("ModuleInfo", new Humidifier.Output {
+            _stack.Add("Module", new Humidifier.Output {
                 Value = _module.FullName + ":" + _module.Version.ToString()
             });
 
@@ -71,7 +71,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 ["ParameterLabels"] = inputParameters.Where(input => (input.Label != null) || (input.Description != null)).ToDictionary(
                     input => input.LogicalId,
                     input => new Dictionary<string, object> {
-                        ["default"] = $"[{input.Type}] {input.Label ?? input.Description}"
+                        ["default"] = $"{input.Label ?? input.Description} [{input.Type}]"
                     }
                 ),
                 ["ParameterGroups"] = inputParameters
@@ -87,7 +87,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // add module manifest
             var manifest = new ModuleManifest {
-                ModuleInfo = module.Info,
+                Module = module.Info,
                 ParameterSections = inputParameters
                     .GroupBy(input => input.Section)
                     .Where(group => group.Key != "LambdaSharp Deployment Settings (DO NOT MODIFY)")

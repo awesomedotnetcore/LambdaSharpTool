@@ -2,7 +2,7 @@
 Module: %%MODULENAME%%
 
 # The Module Version is shown in the CloudFormation stack and Lambda function descriptions.
-Version: 1.0
+Version: 1.0-DEV
 
 # The Module Description is shown in the AWS CloudFormation console with the version number.
 Description: Module description

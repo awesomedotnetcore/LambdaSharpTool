@@ -68,7 +68,7 @@ namespace LambdaSharp {
             }
         }
 
-        private static void ParseModuleInfo(string moduleInfo, out string moduleOwner, out string moduleName, out string moduleVersion) {
+        private static void ParseModuleString(string moduleInfo, out string moduleOwner, out string moduleName, out string moduleVersion) {
             moduleOwner = null;
             moduleName = null;
             moduleVersion = null;
@@ -181,7 +181,7 @@ namespace LambdaSharp {
             // read configuration from environment variables
             ModuleId = envSource.Read("MODULE_ID");
             var moduleInfo = envSource.Read("MODULE_INFO");
-            ParseModuleInfo(moduleInfo, out string moduleOwner, out string moduleName, out string moduleVersion);
+            ParseModuleString(moduleInfo, out string moduleOwner, out string moduleName, out string moduleVersion);
             ModuleOwner = moduleOwner;
             ModuleName = moduleName;
             ModuleVersion = moduleVersion;

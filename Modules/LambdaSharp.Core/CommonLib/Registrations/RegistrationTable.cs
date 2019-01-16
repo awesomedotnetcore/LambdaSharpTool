@@ -42,8 +42,8 @@ namespace LambdaSharp.Core.Registrations {
                 return null;
             }
             return new OwnerMetaData {
+                Module = TryGetAsString("Module"),
                 ModuleId = TryGetAsString("ModuleId"),
-                ModuleInfo = TryGetAsString("ModuleInfo"),
                 FunctionId = TryGetAsString("FunctionId"),
                 FunctionName = TryGetAsString("FunctionName"),
                 FunctionLogGroupName = TryGetAsString("FunctionLogGroupName"),
@@ -70,8 +70,8 @@ namespace LambdaSharp.Core.Registrations {
         public async Task PutOwnerMetaDataAsync(string id, OwnerMetaData owner) {
             var document = new Document {
                 ["Id"] = id,
-                ["ModuleId"] = owner.ModuleId,
-                ["ModuleInfo"] = owner.ModuleInfo
+                ["Module"] = owner.Module,
+                ["ModuleId"] = owner.ModuleId
             };
             if(owner.FunctionId != null) {
                 document["FunctionId"] = owner.FunctionId;

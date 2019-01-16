@@ -63,7 +63,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
             }
 
             // verify that manifest is either a pre-release or its version has not been published yet
-            if(!manifest.ModuleInfo.TryParseModuleInfo(
+            if(!manifest.Module.TryParseModuleString(
                 out string moduleOwner,
                 out string moduleName,
                 out VersionInfo moduleVersion,
@@ -112,7 +112,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
             });
 
             // upload minified json
-            if(!manifest.ModuleInfo.TryParseModuleInfo(
+            if(!manifest.Module.TryParseModuleString(
                 out string moduleOwner,
                 out string moduleName,
                 out VersionInfo moduleVersion,
@@ -135,7 +135,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
         }
 
         private async Task<string> UploadPackageAsync(ModuleManifest manifest, string relativeFilePath, string description) {
-            if(!manifest.ModuleInfo.TryParseModuleInfo(
+            if(!manifest.Module.TryParseModuleString(
                 out string moduleOwner,
                 out string moduleName,
                 out VersionInfo _,

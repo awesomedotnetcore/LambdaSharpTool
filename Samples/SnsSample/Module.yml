@@ -1,4 +1,4 @@
-Module: LambdaSharp.SnsSample
+Module: LambdaSharpSample.SnsSample
 Description: A sample module using an SNS topic
 Items:
 

@@ -39,8 +39,8 @@ namespace LambdaSharp.Core.Registration {
 
         //--- Properties ---
         public string ResourceType { get; set; }
+        public string Module { get; set; }
         public string ModuleId { get; set; }
-        public string ModuleInfo { get; set; }
         public string FunctionId { get; set; }
         public string FunctionName { get; set; }
         public string FunctionLogGroupName { get; set; }
@@ -88,12 +88,12 @@ namespace LambdaSharp.Core.Registration {
             // determine the kind of registration that is requested
             switch(request.ResourceProperties.ResourceType) {
             case "LambdaSharp::Registration::Module": {
-                    LogInfo($"Adding Module: Id={properties.ModuleId}, Info={properties.ModuleInfo}");
+                    LogInfo($"Adding Module: Id={properties.ModuleId}, Info={properties.Module}");
                     var owner = PopulateOwnerMetaData(properties);
 
                     // create new rollbar project
                     if(_rollbarClient.HasTokens) {
-                        var name = _rollbarProjectPrefix + request.ResourceProperties.ModuleInfo;
+                        var name = _rollbarProjectPrefix + request.ResourceProperties.Module;
                         var project = await _rollbarClient.FindProjectByName(name)
                             ?? await _rollbarClient.CreateProject(name);
                         var tokens = await _rollbarClient.ListProjectTokens(project.Id);
@@ -125,7 +125,7 @@ namespace LambdaSharp.Core.Registration {
             var properties = request.ResourceProperties;
             switch(request.ResourceProperties.ResourceType) {
             case "LambdaSharp::Registration::Module": {
-                    LogInfo($"Removing Module: Id={properties.ModuleId}, Info={properties.ModuleInfo}");
+                    LogInfo($"Removing Module: Id={properties.ModuleId}, Info={properties.Module}");
 
                     // delete old rollbar project
 
@@ -175,7 +175,7 @@ namespace LambdaSharp.Core.Registration {
                 owner = new OwnerMetaData();
             }
             owner.ModuleId = properties.ModuleId ?? owner.ModuleId;
-            owner.ModuleInfo = properties.ModuleInfo ?? owner.ModuleInfo;
+            owner.Module = properties.Module ?? owner.Module;
             owner.FunctionId = properties.FunctionId ?? owner.FunctionId;
             owner.FunctionName = properties.FunctionName ?? owner.FunctionName;
             owner.FunctionLogGroupName = properties.FunctionLogGroupName ?? owner.FunctionLogGroupName;

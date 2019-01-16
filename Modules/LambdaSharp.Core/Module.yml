@@ -206,7 +206,7 @@ Items:
           Type: String
           Required: true
 
-        - Name: ModuleInfo
+        - Name: Module
           Description: Module full name and version
           Type: String
           Required: true

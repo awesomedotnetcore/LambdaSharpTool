@@ -69,6 +69,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
             var now = DateTime.UtcNow;
 
             // check if cloudformation stack already exists and is in a final state
+            Console.WriteLine();
             Console.WriteLine($"Deploying stack: {stackName} [{location.ModuleFullName}:{location.ModuleVersion}]");
             var mostRecentStackEventId = await Settings.CfnClient.GetMostRecentStackEventIdAsync(stackName);
 

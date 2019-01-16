@@ -256,9 +256,9 @@ namespace LambdaSharp.Tool.Cli {
                     });
                     var deployedOutputs = describe.Stacks.FirstOrDefault()?.Outputs;
                     if(deployedOutputs != null) {
-                        var deployed = deployedOutputs.FirstOrDefault(output => output.OutputKey == "ModuleInfo")?.OutputValue;
+                        var deployed = deployedOutputs.FirstOrDefault(output => output.OutputKey == "Module")?.OutputValue;
                         if(
-                            deployed.TryParseModuleInfo(
+                            deployed.TryParseModuleString(
                                 out string deployedOwner,
                                 out string deployedName,
                                 out VersionInfo deployedVersion,

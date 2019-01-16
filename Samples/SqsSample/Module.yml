@@ -1,4 +1,4 @@
-Module: LambdaSharp.SqsSample
+Module: LambdaSharpSample.SqsSample
 Description: A sample module using SQS queues
 Items:
 

@@ -130,8 +130,8 @@ namespace LambdaSharp.Reports {
                 .ToList();
             var timestamp = Convert.ToInt64((DateTime.UtcNow - _epoch).TotalSeconds);
             return new ErrorReport {
+                Module = _moduleInfo,
                 ModuleId = _moduleId,
-                ModuleInfo = _moduleInfo,
                 RequestId = requestId,
                 Level = level,
                 Fingerprint = fingerprint,

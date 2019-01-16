@@ -35,8 +35,8 @@ namespace LambdaSharp.Reports {
         public string Version { get; set; } = "2018-12-31";
 
         // Origin
+        public string Module { get; set; }
         public string ModuleId { get; set; }
-        public string ModuleInfo { get; set; }
         public string FunctionId { get; set; }
         public string FunctionName { get; set; }
         public string Platform { get; set; }
