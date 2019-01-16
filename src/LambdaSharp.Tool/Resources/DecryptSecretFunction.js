@@ -1,6 +1,6 @@
 const AWS = require('aws-sdk');
 const https = require('https');
-const URL = require('url').URL;
+const url = require('url');
 const kms = new AWS.KMS();
 
 var logInfo = message => console.log('*** INFO: ' + message);
@@ -14,10 +14,17 @@ exports.handler = (event, context) => {
         case 'Update':
             kms.decrypt({
                 CiphertextBlob: new Buffer(event.ResourceProperties.Ciphertext, 'base64')
-            }, (err, result) => {
-                if(err) {
-                    logError('decrypt failed: ' + JSON.stringify(err));
-                    send(event, context, 'FAILED', null, err.message);
+            }, (error, result) => {
+                if(error.name == 'InvalidCiphertextException') {
+                    const message = 'Cipher text is not a valid secret';
+                    logError('decrypt failed: ' + message);
+                    send(event, context, 'FAILED', null, message);
+                } else if(error.name == 'AccessDeniedException') {
+                    logError('decrypt failed: ' + error.message);
+                    send(event, context, 'FAILED', null, error.message);
+                } else if(error) {
+                    logError('decrypt failed: ' + error.toString());
+                    send(event, context, 'FAILED', null, error.toString());
                 } else {
                     send(event, context, 'SUCCESS', {
                         Plaintext: result.Plaintext.toString('utf8')
@@ -33,7 +40,7 @@ exports.handler = (event, context) => {
             break;
         }
     } catch(err) {
-        logError('internal error: ' + JSON.stringify(err));
+        logError('internal error: ' + err.message + '\n' + err.stack);
         send(event, context, 'FAILED', null, 'internal error');
     }
 };
