@@ -21,7 +21,7 @@
         }
     </style>
     <script>
-        window.fetch('js/config.json', { method: 'get' })
+        window.fetch('config.json', { method: 'get' })
             .then(response => response.json())
             .then(config => {
                 document.title = config.title;

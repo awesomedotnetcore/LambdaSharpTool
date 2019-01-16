@@ -9,9 +9,13 @@ Items:
 
   - Parameter: Title
     Description: Website title
+    Section: Website Settings
+    Label: Website Title
 
   - Parameter: Message
     Description: Website message
+    Section: Website Settings
+    Label: Website Message
 
   - Resource: WebsiteBucket
     Type: AWS::S3::Bucket
@@ -51,7 +55,7 @@ Items:
     Type: LambdaSharp::S3::WriteJson
     Properties:
       Bucket: !Ref WebsiteBucket
-      Key: js/config.json
+      Key: config.json
       Contents:
         title: !Ref Title
         message: !Ref Message
