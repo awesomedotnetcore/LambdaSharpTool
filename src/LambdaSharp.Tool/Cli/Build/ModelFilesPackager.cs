@@ -33,6 +33,19 @@ namespace LambdaSharp.Tool.Cli.Build {
 
     public class ModelFilesPackager : AModelProcessor {
 
+        private class ForwardSlashEncoder : UTF8Encoding {
+
+            //--- Constructors ---
+            public ForwardSlashEncoder() : base(true) { }
+
+            //--- Methods ---
+            public override byte[] GetBytes(string text) {
+                var replaced = text.Replace(@"\", "/");
+Console.WriteLine("*** ENCODING: " + text + " => " + replaced);
+                return base.GetBytes(replaced);
+            }
+        }
+
         //--- Fields ---
         private ModuleBuilder _builder;
 
@@ -84,7 +97,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 if(!Directory.Exists(Settings.OutputDirectory)) {
                     Directory.CreateDirectory(Settings.OutputDirectory);
                 }
-                using(var zipArchive = ZipFile.Open(package, ZipArchiveMode.Create)) {
+                using(var zipArchive = ZipFile.Open(package, ZipArchiveMode.Create, new ForwardSlashEncoder())) {
                     foreach(var file in parameter.Files) {
                         zipArchive.CreateEntryFromFile(file.Value, file.Key);
                     }
