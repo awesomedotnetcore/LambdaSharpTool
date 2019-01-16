@@ -14,17 +14,19 @@ exports.handler = (event, context) => {
         case 'Update':
             kms.decrypt({
                 CiphertextBlob: new Buffer(event.ResourceProperties.Ciphertext, 'base64')
-            }, (error, result) => {
-                if(error.name == 'InvalidCiphertextException') {
-                    const message = 'Cipher text is not a valid secret';
-                    logError('decrypt failed: ' + message);
-                    send(event, context, 'FAILED', null, message);
-                } else if(error.name == 'AccessDeniedException') {
-                    logError('decrypt failed: ' + error.message);
-                    send(event, context, 'FAILED', null, error.message);
-                } else if(error) {
-                    logError('decrypt failed: ' + error.toString());
-                    send(event, context, 'FAILED', null, error.toString());
+            }, (err, result) => {
+                if(err) {
+                    if(err.name == 'InvalidCiphertextException') {
+                        const message = 'Cipher text is not a valid secret';
+                        logError('decrypt failed: ' + message);
+                        send(event, context, 'FAILED', null, message);
+                    } else if(err.name == 'AccessDeniedException') {
+                        logError('decrypt failed: ' + err.message);
+                        send(event, context, 'FAILED', null, err.message);
+                    } else {
+                        logError('decrypt failed: ' + err.toString());
+                        send(event, context, 'FAILED', null, err.toString());
+                    }
                 } else {
                     send(event, context, 'SUCCESS', {
                         Plaintext: result.Plaintext.toString('utf8')
