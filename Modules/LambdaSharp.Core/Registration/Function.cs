@@ -38,6 +38,7 @@ namespace LambdaSharp.Core.Registration {
     public class RequestProperties {
 
         //--- Properties ---
+        public string ResourceType { get; set; }
         public string ModuleId { get; set; }
         public string ModuleInfo { get; set; }
         public string FunctionId { get; set; }
@@ -85,8 +86,8 @@ namespace LambdaSharp.Core.Registration {
             var properties = request.ResourceProperties;
 
             // determine the kind of registration that is requested
-            switch(request.ResourceType) {
-            case "Custom::LambdaSharpRegisterModule": {
+            switch(request.ResourceProperties.ResourceType) {
+            case "LambdaSharp::Registration::Module": {
                     LogInfo($"Adding Module: Id={properties.ModuleId}, Info={properties.ModuleInfo}");
                     var owner = PopulateOwnerMetaData(properties);
 
@@ -105,7 +106,7 @@ namespace LambdaSharp.Core.Registration {
                     await _registrations.PutOwnerMetaDataAsync($"M:{owner.ModuleId}", owner);
                     return Respond($"registration:module:{properties.ModuleId}");
                 }
-            case "Custom::LambdaSharpRegisterFunction": {
+            case "LambdaSharp::Registration::Function": {
                     LogInfo($"Adding Function: Id={properties.FunctionId}, Name={properties.FunctionName}");
                     var owner = await _registrations.GetOwnerMetaDataAsync($"M:{properties.ModuleId}");
                     if(owner == null) {
@@ -122,8 +123,8 @@ namespace LambdaSharp.Core.Registration {
 
         protected override async Task<Response<ResponseProperties>> HandleDeleteResourceAsync(Request<RequestProperties> request) {
             var properties = request.ResourceProperties;
-            switch(request.ResourceType) {
-            case "Custom::LambdaSharpRegisterModule": {
+            switch(request.ResourceProperties.ResourceType) {
+            case "LambdaSharp::Registration::Module": {
                     LogInfo($"Removing Module: Id={properties.ModuleId}, Info={properties.ModuleInfo}");
 
                     // delete old rollbar project
@@ -145,13 +146,15 @@ namespace LambdaSharp.Core.Registration {
                     await _registrations.DeleteOwnerMetaDataAsync($"M:{properties.ModuleId}");
                     break;
                 }
-            case "Custom::LambdaSharpRegisterFunction": {
+            case "LambdaSharp::Registration::Function": {
                     LogInfo($"Removing Function: Id={properties.FunctionId}, Name={properties.FunctionName}, LogGroup={properties.FunctionLogGroupName}");
                     await _registrations.DeleteOwnerMetaDataAsync($"F:{properties.FunctionId}");
                     break;
                 }
             default:
-                throw new RegistrarException("unrecognized resource type: {0}", request.ResourceType);
+
+                // nothing to do since we didn't process this request successfully in the first place!
+                break;
             }
             return new Response<ResponseProperties>();
         }
