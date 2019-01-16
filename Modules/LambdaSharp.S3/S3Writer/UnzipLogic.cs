@@ -53,15 +53,15 @@ namespace LambdaSharp.Core.S3Writer {
 
         //--- Methods ---
         public async Task<Response<ResponseProperties>> Create(RequestProperties properties) {
-            _logger.LogInfo($"uploading package s3://{properties.SourceBucketName}/{properties.SourcePackageKey} to S3 bucket {properties.DestinationBucketName}");
+            _logger.LogInfo($"uploading package s3://{properties.SourceBucketName}/{properties.SourceKey} to S3 bucket {properties.DestinationBucketName}");
 
             // download package and copy all files to destination bucket
             var files = new List<string>();
-            if(!await ProcessZipFileItemsAsync(properties.SourceBucketName, properties.SourcePackageKey, async entry => {
+            if(!await ProcessZipFileItemsAsync(properties.SourceBucketName, properties.SourceKey, async entry => {
                 using(var stream = entry.Open()) {
                     var memoryStream = new MemoryStream();
                     await stream.CopyToAsync(memoryStream);
-                    var destination = Path.Combine(properties.DestinationKeyPrefix, entry.FullName).Replace('\\', '/');
+                    var destination = Path.Combine(properties.DestinationKey, entry.FullName).Replace('\\', '/');
                     _logger.LogInfo($"uploading file: {destination}");
                     await _transferUtility.UploadAsync(
                         memoryStream,
@@ -85,12 +85,12 @@ namespace LambdaSharp.Core.S3Writer {
             await _transferUtility.UploadAsync(
                 manifestStream,
                 _manifestBucket,
-                $"{properties.DestinationBucketName}/{properties.SourcePackageKey}"
+                $"{properties.DestinationBucketName}/{properties.SourceKey}"
             );
             return new Response<ResponseProperties> {
-                PhysicalResourceId = $"s3unzip:{properties.DestinationBucketName}:{properties.DestinationKeyPrefix}:{properties.SourcePackageKey}",
+                PhysicalResourceId = $"s3unzip:{properties.DestinationBucketName}:{properties.DestinationKey}:{properties.SourceKey}",
                 Properties = new ResponseProperties {
-                    Url = $"s3://{properties.DestinationBucketName}/{properties.DestinationKeyPrefix}"
+                    Url = $"s3://{properties.DestinationBucketName}/{properties.DestinationKey}"
                 }
             };
         }
@@ -103,11 +103,11 @@ namespace LambdaSharp.Core.S3Writer {
         }
 
         public async Task<Response<ResponseProperties>> Delete(RequestProperties properties) {
-            _logger.LogInfo($"deleting package {properties.SourcePackageKey} from S3 bucket {properties.DestinationBucketName}");
+            _logger.LogInfo($"deleting package {properties.SourceKey} from S3 bucket {properties.DestinationBucketName}");
 
             // download package manifest
             var files = new List<string>();
-            var key = $"{properties.DestinationBucketName}/{properties.SourcePackageKey}";
+            var key = $"{properties.DestinationBucketName}/{properties.SourceKey}";
             if(!await ProcessZipFileItemsAsync(
                 _manifestBucket,
                 key,
@@ -125,7 +125,7 @@ namespace LambdaSharp.Core.S3Writer {
 
             // delete all files from manifest
             while(files.Any()) {
-                var batch = files.Take(MAX_BATCH_DELETE_OBJECTS).Select(file => Path.Combine(properties.DestinationKeyPrefix, file).Replace('\\', '/')).ToList();
+                var batch = files.Take(MAX_BATCH_DELETE_OBJECTS).Select(file => Path.Combine(properties.DestinationKey, file).Replace('\\', '/')).ToList();
                 _logger.LogInfo($"deleting files: {string.Join(", ", batch)}");
                 await _s3Client.DeleteObjectsAsync(new DeleteObjectsRequest {
                     BucketName = properties.DestinationBucketName,

@@ -15,9 +15,9 @@ Items:
       - no-type-validation
     Properties:
       DestinationBucket: !Ref MyBucket
-      DestinationKeyPrefix: Bucket/Folder/
+      DestinationKey: Bucket/Folder/
       SourceBucketName: !Ref DeploymentBucketName
-      SourcePackageKey: !Ref FilesPackage
+      SourceKey: !Ref FilesPackage
 
   - Function: Function
     Description: My function

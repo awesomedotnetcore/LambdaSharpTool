@@ -33,7 +33,7 @@ Items:
           Type: String
           Required: true
 
-        - Name: DestinationKeyPrefix
+        - Name: DestinationKey
           Description: Destination S3 key prefix for all unzipped files
           Type: String
           Required: true
@@ -43,7 +43,7 @@ Items:
           Type: String
           Required: true
 
-        - Name: SourcePackageKey
+        - Name: SourceKey
           Description: Source S3 key for the zip file
           Type: String
           Required: true

@@ -40,14 +40,14 @@ namespace LambdaSharp.Core.S3Writer {
          * LambdaSharp::S3::Unzip
          *
          * DestinationBucket: String
-         * DestinationKeyPrefix: String
+         * DestinationKey: String
          * SourceBucket: String
-         * SourcePackageKey: String
+         * SourceKey: String
          */
         public string DestinationBucket { get; set; }
-        public string DestinationKeyPrefix { get; set; }
+        public string DestinationKey { get; set; }
         public string SourceBucket { get; set; }
-        public string SourcePackageKey { get; set; }
+        public string SourceKey { get; set; }
 
         /*
          * LambdaSharp::S3::WriteJson

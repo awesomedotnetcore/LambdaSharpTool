@@ -43,9 +43,9 @@ Items:
     Type: LambdaSharp::S3::Unzip
     Properties:
       SourceBucket: !Ref DeploymentBucketName
-      SourcePackageKey: !Ref WebsiteContents
+      SourceKey: !Ref WebsiteContents
       DestinationBucket: !Ref WebsiteBucket
-      DestinationKeyPrefix: ""
+      DestinationKey: ""
 
   - Resource: WriteWebsiteConfigJson
     Type: LambdaSharp::S3::WriteJson
