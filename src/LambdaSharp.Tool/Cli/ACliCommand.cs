@@ -252,12 +252,11 @@ namespace LambdaSharp.Tool.Cli {
 
                     // check version of base LambadSharp module
                     var describe = await settings.CfnClient.DescribeStacksAsync(new DescribeStacksRequest {
-                        StackName = $"{settings.Tier}-LambdaSharp"
+                        StackName = $"{settings.Tier}-LambdaSharp-Core"
                     });
                     var deployedOutputs = describe.Stacks.FirstOrDefault()?.Outputs;
                     if(deployedOutputs != null) {
                         var deployed = deployedOutputs.FirstOrDefault(output => output.OutputKey == "ModuleInfo")?.OutputValue;
-
                         if(
                             deployed.TryParseModuleInfo(
                                 out string deployedOwner,

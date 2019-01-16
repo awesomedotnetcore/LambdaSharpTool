@@ -169,6 +169,21 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     StackName = stackName
                 });
                 var existing = describe.Stacks.FirstOrDefault();
+                switch(existing?.StackStatus) {
+                case null:
+                case "CREATE_COMPLETE":
+                case "ROLLBACK_COMPLETE":
+                case "UPDATE_COMPLETE":
+
+                    // we're good to go
+                    break;
+                default:
+                    AddError($"deployed module is not in a valid state; module deployment must be complete and successful (Status: {existing?.StackStatus})");
+                    return (false, existing);
+                }
+
+                // TODO (2019-01-15, bjorg): make sure the stack is in a stable state (not updating and not failed)
+
                 var deployedOutputs = existing?.Outputs;
                 var deployed = deployedOutputs?.FirstOrDefault(output => output.OutputKey == "ModuleInfo")?.OutputValue;
 

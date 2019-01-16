@@ -321,7 +321,8 @@ namespace LambdaSharp.Tool.Cli.Build {
 
                     // create import/cross-module reference item
                     var result = _builder.AddUsing(
-                        import: node.Using,
+                        name: node.Using,
+                        source: node.Source,
                         description: node.Description
                     );
 

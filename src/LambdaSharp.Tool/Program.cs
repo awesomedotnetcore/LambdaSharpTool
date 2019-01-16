@@ -51,7 +51,7 @@ namespace LambdaSharp.Tool {
         public static int Main(string[] args) {
             var app = new CommandLineApplication(throwOnUnexpectedArg: false) {
                 Name = Settings.Lash,
-                FullName = $"MindTouch LambdaSharp CLI (v{Version})",
+                FullName = $"LambdaSharp CLI (v{Version})",
                 Description = "Project Home: https://github.com/LambdaSharp/LambdaSharpTool"
             };
             app.HelpOption();

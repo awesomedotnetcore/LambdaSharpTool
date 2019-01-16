@@ -47,7 +47,10 @@ namespace Humidifier {
                 && !typeName.StartsWith("Custom::", StringComparison.Ordinal)
             ) {
                 if(!_properties.ContainsKey("ServiceToken")) {
-                    _properties["ServiceToken"] = FnImportValue(FnSub($"${{DeploymentPrefix}}CustomResource-{typeName}"));
+                    _properties["ServiceToken"] = FnImportValue(FnSub($"${{DeploymentPrefix}}{typeName}"));
+                }
+                if(!_properties.ContainsKey("ResourceType")) {
+                    _properties["ResourceType"] = typeName;
                 }
                 _awsTypeName = "Custom::" + typeName.Replace("::", "");
             } else {

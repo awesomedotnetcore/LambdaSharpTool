@@ -68,10 +68,10 @@ namespace LambdaSharp.Tool.Cli.Build {
             // add interface for presenting inputs
             var inputParameters = _module.Items.OfType<ParameterItem>();
             _stack.AddTemplateMetadata("AWS::CloudFormation::Interface", new Dictionary<string, object> {
-                ["ParameterLabels"] = inputParameters.ToDictionary(
+                ["ParameterLabels"] = inputParameters.Where(input => (input.Label != null) || (input.Description != null)).ToDictionary(
                     input => input.LogicalId,
                     input => new Dictionary<string, object> {
-                        ["default"] = $"[{input.Type}] {input.Label}"
+                        ["default"] = $"[{input.Type}] {input.Label ?? input.Description}"
                     }
                 ),
                 ["ParameterGroups"] = inputParameters
@@ -238,7 +238,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     Description = resourceTypeItem.Description,
                     Value = resourceTypeItem.Handler,
                     Export = new Dictionary<string, dynamic> {
-                        ["Name"] = Fn.Sub($"${{DeploymentPrefix}}CustomResource-{resourceTypeItem.CustomResourceType}")
+                        ["Name"] = Fn.Sub($"${{DeploymentPrefix}}{resourceTypeItem.CustomResourceType}")
                     }
                 });
                 break;

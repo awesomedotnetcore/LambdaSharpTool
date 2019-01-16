@@ -185,7 +185,10 @@ namespace LambdaSharp {
             ModuleOwner = moduleOwner;
             ModuleName = moduleName;
             ModuleVersion = moduleVersion;
-            _deadLetterQueueUrl = AwsConverters.ConvertQueueArnToUrl(envSource.Read("DEADLETTERQUEUE"));
+            var deadLetterQueueArn = envSource.Read("DEADLETTERQUEUE");
+            if(deadLetterQueueArn != null) {
+                _deadLetterQueueUrl = AwsConverters.ConvertQueueArnToUrl(deadLetterQueueArn);
+            }
             DefaultSecretKey = envSource.Read("DEFAULTSECRETKEY");
             FunctionId = AwsConverters.ConvertFunctionArnToName(context.InvokedFunctionArn);
             FunctionName = envSource.Read("LAMBDA_NAME");

@@ -119,6 +119,7 @@ namespace LambdaSharp.Tool.Model.AST {
             // nodes with optional nested items
             ["Using"] = new[] {
                 "Description",
+                "Source",
                 "Items"
             },
             ["Namespace"] = new[] {
@@ -174,10 +175,12 @@ namespace LambdaSharp.Tool.Model.AST {
 
         /*
          * Using: string
+         * Source: string
          * Description: string
-         * Imports: list<Parameter>
+         * Items: list<Parameter>
          */
         public string Using { get; set; }
+        public string Source { get; set; }
         public IList<ModuleItemNode> Items { get; set; }
 
         /*
@@ -231,7 +234,6 @@ namespace LambdaSharp.Tool.Model.AST {
          * Parameters: map
          */
         public string Module { get; set; }
-        public string Source { get; set; }
         public IDictionary<string, object> Parameters { get; set; }
 
         /*

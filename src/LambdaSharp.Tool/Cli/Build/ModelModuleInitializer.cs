@@ -158,7 +158,8 @@ namespace LambdaSharp.Tool.Cli.Build {
 
                 // add LambdaSharp Module Internal resource imports
                 var lambdasharp = _builder.AddUsing(
-                    import: "LambdaSharp",
+                    name: "LambdaSharp",
+                    source: "LambdaSharp.Core",
                     description: "LambdaSharp Core Imports"
                 );
                 _builder.AddParameter(

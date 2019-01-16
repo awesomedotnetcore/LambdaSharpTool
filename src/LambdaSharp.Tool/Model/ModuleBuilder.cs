@@ -296,7 +296,7 @@ namespace LambdaSharp.Tool.Model {
             if(parent != null) {
 
                 // default value for an imported parameter is always the cross-module reference
-                parameter.Default = "$" + result.FullName;
+                parameter.Default = $"${parent.Reference.ToString().Replace(".", "-")}::{name}";
 
                 // set default settings for import parameters
                 if(constraintDescription == null) {
@@ -384,16 +384,17 @@ namespace LambdaSharp.Tool.Model {
         }
 
         public AModuleItem AddUsing(
-            string import,
+            string name,
+            string source,
             string description
         ) {
             var result = AddVariable(
                 parent: null,
-                name: import,
-                description: description ?? $"{import} cross-module references",
+                name: name,
+                description: description ?? $"{name} cross-module references",
                 type: "String",
                 scope: null,
-                value: "",
+                value: source ?? name,
                 allow: null,
                 encryptionContext: null
             );
@@ -1052,7 +1053,10 @@ namespace LambdaSharp.Tool.Model {
                     if(definition != null) {
                         foreach(var key in properties.Keys) {
                             var stringKey = (string)key;
-                            if((stringKey != "ServiceToken") && !definition.Request.Any(field => field.Name == stringKey)) {
+                            if(
+                                (stringKey != "ServiceToken")
+                                && (stringKey != "ResourceType")
+                                && !definition.Request.Any(field => field.Name == stringKey)) {
                                 AddError($"unrecognized attribute '{key}' on type {awsType}");
                             }
                         }
