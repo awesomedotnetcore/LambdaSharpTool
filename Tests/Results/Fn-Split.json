@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "LambdaSharp CloudFormation Test (v1.0)",
+  "Description": "LambdaSharp CloudFormation Test (v1.0-DEV)",
   "Parameters": {
     "Secrets": {
       "Type": "String",
@@ -27,7 +27,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "1758F30F40AA0FC9ED1A1EF20807D449"
+      "Default": "E71F21E72D04B87F24806FC0C19A4DA0"
     }
   },
   "Resources": {
@@ -47,41 +47,42 @@
       "Properties": {
         "ServiceToken": {
           "Fn::ImportValue": {
-            "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::Registration::Module"
+            "Fn::Sub": "${DeploymentPrefix}LambdaSharp::Registration::Module"
           }
         },
+        "ResourceType": "LambdaSharp::Registration::Module",
+        "Module": "Test.TestModule:1.0-DEV",
         "ModuleId": {
           "Ref": "AWS::StackName"
-        },
-        "ModuleInfo": "Test.TestModule:1.0"
+        }
       }
     }
   },
   "Outputs": {
-    "ModuleInfo": {
-      "Value": "Test.TestModule:1.0"
+    "Module": {
+      "Value": "Test.TestModule:1.0-DEV"
     }
   },
   "Metadata": {
     "AWS::CloudFormation::Interface": {
       "ParameterLabels": {
         "Secrets": {
-          "default": "[String] Comma-separated list of optional secret keys"
+          "default": "Comma-separated list of optional secret keys [String]"
         },
         "DeploymentBucketName": {
-          "default": "[String] Deployment S3 bucket name"
+          "default": "Deployment S3 bucket name [String]"
         },
         "DeploymentPrefix": {
-          "default": "[String] Deployment tier prefix"
+          "default": "Deployment tier prefix [String]"
         },
         "DeploymentPrefixLowercase": {
-          "default": "[String] Deployment tier prefix (lowercase)"
+          "default": "Deployment tier prefix (lowercase) [String]"
         },
         "DeploymentParent": {
-          "default": "[String] Parent stack name for nested deployments, blank otherwise"
+          "default": "Parent stack name for nested deployments, blank otherwise [String]"
         },
         "DeploymentChecksum": {
-          "default": "[String] CloudFormation template MD5 checksum"
+          "default": "CloudFormation template MD5 checksum [String]"
         }
       },
       "ParameterGroups": [
@@ -109,7 +110,7 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2018-12-31",
-      "ModuleInfo": "Test.TestModule:1.0",
+      "Module": "Test.TestModule:1.0-DEV",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -124,7 +125,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "1758F30F40AA0FC9ED1A1EF20807D449",
+      "Hash": "E71F21E72D04B87F24806FC0C19A4DA0",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

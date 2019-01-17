@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "LambdaSharp CloudFormation Test (v1.0)",
+  "Description": "LambdaSharp CloudFormation Test (v1.0-DEV)",
   "Parameters": {
     "Secrets": {
       "Type": "String",
@@ -12,14 +12,14 @@
       "Description": "Dead Letter Queue (ARN)",
       "AllowedPattern": "^.+$",
       "ConstraintDescription": "must either be a cross-module import reference or a non-empty value",
-      "Default": "$LambdaSharp::DeadLetterQueue"
+      "Default": "$LambdaSharp-Core::DeadLetterQueue"
     },
     "LambdaSharpDefaultSecretKey": {
       "Type": "String",
       "Description": "Secret Key (ARN)",
       "AllowedPattern": "^.+$",
       "ConstraintDescription": "must either be a cross-module import reference or a non-empty value",
-      "Default": "$LambdaSharp::DefaultSecretKey"
+      "Default": "$LambdaSharp-Core::DefaultSecretKey"
     },
     "DeploymentBucketName": {
       "Type": "String",
@@ -41,7 +41,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "087A65DBED78BC03BCF1B9276765E858"
+      "Default": "15D214D78A687F2E794B627B864E894F"
     }
   },
   "Resources": {
@@ -58,13 +58,13 @@
           },
           "S3Key": "Test/Modules/TestModule/Assets/Finalizer-DRYRUN.zip"
         },
-        "Description": "My finalizer function (v1.0)",
+        "Description": "My finalizer function (v1.0-DEV)",
         "Environment": {
           "Variables": {
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "Test.TestModule:1.0",
+            "MODULE_INFO": "Test.TestModule:1.0-DEV",
             "LAMBDA_NAME": "Finalizer",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEFAULTSECRETKEY": {
@@ -120,10 +120,11 @@
             "Arn"
           ]
         },
+        "ResourceType": "Module::Finalizer",
         "DeploymentChecksum": {
           "Ref": "DeploymentChecksum"
         },
-        "ModuleVersion": "1.0"
+        "ModuleVersion": "1.0-DEV"
       },
       "DependsOn": [
         "Finalizer",
@@ -303,19 +304,20 @@
       "Properties": {
         "ServiceToken": {
           "Fn::ImportValue": {
-            "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::Registration::Module"
+            "Fn::Sub": "${DeploymentPrefix}LambdaSharp::Registration::Module"
           }
         },
+        "ResourceType": "LambdaSharp::Registration::Module",
+        "Module": "Test.TestModule:1.0-DEV",
         "ModuleId": {
           "Ref": "AWS::StackName"
-        },
-        "ModuleInfo": "Test.TestModule:1.0"
+        }
       }
     }
   },
   "Outputs": {
-    "ModuleInfo": {
-      "Value": "Test.TestModule:1.0"
+    "Module": {
+      "Value": "Test.TestModule:1.0-DEV"
     }
   },
   "Conditions": {
@@ -400,28 +402,28 @@
     "AWS::CloudFormation::Interface": {
       "ParameterLabels": {
         "Secrets": {
-          "default": "[String] Comma-separated list of optional secret keys"
+          "default": "Comma-separated list of optional secret keys [String]"
         },
         "LambdaSharpDeadLetterQueue": {
-          "default": "[String] Dead letter queue for functions"
+          "default": "Dead letter queue for functions [String]"
         },
         "LambdaSharpDefaultSecretKey": {
-          "default": "[String] Default secret key for functions"
+          "default": "Default secret key for functions [String]"
         },
         "DeploymentBucketName": {
-          "default": "[String] Deployment S3 bucket name"
+          "default": "Deployment S3 bucket name [String]"
         },
         "DeploymentPrefix": {
-          "default": "[String] Deployment tier prefix"
+          "default": "Deployment tier prefix [String]"
         },
         "DeploymentPrefixLowercase": {
-          "default": "[String] Deployment tier prefix (lowercase)"
+          "default": "Deployment tier prefix (lowercase) [String]"
         },
         "DeploymentParent": {
-          "default": "[String] Parent stack name for nested deployments, blank otherwise"
+          "default": "Parent stack name for nested deployments, blank otherwise [String]"
         },
         "DeploymentChecksum": {
-          "default": "[String] CloudFormation template MD5 checksum"
+          "default": "CloudFormation template MD5 checksum [String]"
         }
       },
       "ParameterGroups": [
@@ -458,7 +460,7 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2018-12-31",
-      "ModuleInfo": "Test.TestModule:1.0",
+      "Module": "Test.TestModule:1.0-DEV",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -478,19 +480,19 @@
               "Name": "DeadLetterQueue",
               "Type": "String",
               "Label": "Dead letter queue for functions",
-              "Default": "$LambdaSharp::DeadLetterQueue"
+              "Default": "$LambdaSharp-Core::DeadLetterQueue"
             },
             {
               "Name": "DefaultSecretKey",
               "Type": "String",
               "Label": "Default secret key for functions",
-              "Default": "$LambdaSharp::DefaultSecretKey"
+              "Default": "$LambdaSharp-Core::DefaultSecretKey"
             }
           ]
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "087A65DBED78BC03BCF1B9276765E858",
+      "Hash": "15D214D78A687F2E794B627B864E894F",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

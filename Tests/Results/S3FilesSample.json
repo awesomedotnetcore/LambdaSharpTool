@@ -1,10 +1,14 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "LambdaSharp CloudFormation Test (v1.0-DEV)",
+  "Description": "Showcase how to write files to an S3 bucket (v1.0-DEV)",
   "Parameters": {
-    "RootDomainName": {
+    "Title": {
       "Type": "String",
-      "Default": "example.org"
+      "Description": "Website title"
+    },
+    "Message": {
+      "Type": "String",
+      "Description": "Website message"
     },
     "Secrets": {
       "Type": "String",
@@ -31,57 +35,81 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "EF01F2A9756BF42407CCD63A910F7A58"
+      "Default": "9742A97C6840B82E8B897E0CC2B7092A"
     }
   },
   "Resources": {
-    "MyQueue": {
-      "Type": "AWS::SQS::Queue",
-      "Properties": {}
-    },
-    "MyResource": {
-      "Type": "Custom::Handler",
+    "WebsiteBucket": {
+      "Type": "AWS::S3::Bucket",
       "Properties": {
-        "Result1": {
-          "Fn::Sub": [
-            "www.${Domain}",
+        "AccessControl": "PublicRead",
+        "WebsiteConfiguration": {
+          "IndexDocument": "index.html"
+        }
+      }
+    },
+    "BucketPolicy": {
+      "Type": "AWS::S3::BucketPolicy",
+      "Properties": {
+        "PolicyDocument": {
+          "Id": "WebsiteBucket",
+          "Version": "2012-10-17",
+          "Statement": [
             {
-              "Domain": {
-                "Ref": "RootDomainName"
+              "Sid": "PublicReadForGetBucketObjects",
+              "Effect": "Allow",
+              "Principal": "*",
+              "Action": "s3:GetObject",
+              "Resource": {
+                "Fn::Sub": "arn:aws:s3:::${WebsiteBucket}/*"
               }
             }
           ]
         },
-        "Result2": {
-          "Fn::Sub": "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}"
+        "Bucket": {
+          "Ref": "WebsiteBucket"
+        }
+      }
+    },
+    "UnzipWebsiteContents": {
+      "Type": "Custom::LambdaSharpS3Unzip",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${DeploymentPrefix}LambdaSharp::S3::Unzip"
+          }
         },
-        "Result3": {
-          "Fn::Sub": "${MyQueue}/*"
+        "ResourceType": "LambdaSharp::S3::Unzip",
+        "SourceBucket": {
+          "Ref": "DeploymentBucketName"
         },
-        "Result4": {
-          "Fn::Sub": "${MyQueue.Arn}/*"
+        "SourceKey": "LambdaSharpSample/Modules/S3FilesSample/Assets/WebsiteContents-DRYRUN.zip",
+        "DestinationBucket": {
+          "Ref": "WebsiteBucket"
         },
-        "Result5": "Value: Hello,World",
-        "Result6": {
-          "Fn::Sub": [
-            "Value: ${P0}",
-            {
-              "P0": {
-                "Fn::Join": [
-                  ",",
-                  [
-                    "Queue ARN",
-                    {
-                      "Fn::GetAtt": [
-                        "MyQueue",
-                        "Arn"
-                      ]
-                    }
-                  ]
-                ]
-              }
-            }
-          ]
+        "DestinationKey": ""
+      }
+    },
+    "WriteWebsiteConfigJson": {
+      "Type": "Custom::LambdaSharpS3WriteJson",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${DeploymentPrefix}LambdaSharp::S3::WriteJson"
+          }
+        },
+        "ResourceType": "LambdaSharp::S3::WriteJson",
+        "Bucket": {
+          "Ref": "WebsiteBucket"
+        },
+        "Key": "config.json",
+        "Contents": {
+          "title": {
+            "Ref": "Title"
+          },
+          "message": {
+            "Ref": "Message"
+          }
         }
       }
     },
@@ -94,7 +122,7 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "Test.TestModule:1.0-DEV",
+        "Module": "LambdaSharpSample.S3FilesSample:1.0-DEV",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
@@ -103,12 +131,32 @@
   },
   "Outputs": {
     "Module": {
-      "Value": "Test.TestModule:1.0-DEV"
+      "Value": "LambdaSharpSample.S3FilesSample:1.0-DEV"
+    },
+    "WebsiteUrl": {
+      "Value": {
+        "Fn::GetAtt": [
+          "WebsiteBucket",
+          "WebsiteURL"
+        ]
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}::WebsiteUrl"
+        }
+      },
+      "Description": "Website URL"
     }
   },
   "Metadata": {
     "AWS::CloudFormation::Interface": {
       "ParameterLabels": {
+        "Title": {
+          "default": "Website Title [String]"
+        },
+        "Message": {
+          "default": "Website Message [String]"
+        },
         "Secrets": {
           "default": "Comma-separated list of optional secret keys [String]"
         },
@@ -131,10 +179,11 @@
       "ParameterGroups": [
         {
           "Label": {
-            "default": "Module Settings"
+            "default": "Website Settings"
           },
           "Parameters": [
-            "RootDomainName"
+            "Title",
+            "Message"
           ]
         },
         {
@@ -161,15 +210,20 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2018-12-31",
-      "Module": "Test.TestModule:1.0-DEV",
+      "Module": "LambdaSharpSample.S3FilesSample:1.0-DEV",
       "ParameterSections": [
         {
-          "Title": "Module Settings",
+          "Title": "Website Settings",
           "Parameters": [
             {
-              "Name": "RootDomainName",
+              "Name": "Title",
               "Type": "String",
-              "Default": "example.org"
+              "Label": "Website Title"
+            },
+            {
+              "Name": "Message",
+              "Type": "String",
+              "Label": "Website Message"
             }
           ]
         },
@@ -186,7 +240,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "EF01F2A9756BF42407CCD63A910F7A58",
+      "Hash": "9742A97C6840B82E8B897E0CC2B7092A",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
@@ -195,12 +249,26 @@
         {
           "ModuleFullName": "LambdaSharp.Core",
           "MinVersion": "0.5-WIP"
+        },
+        {
+          "ModuleFullName": "LambdaSharp.S3.IO",
+          "MinVersion": "0.5-WIP",
+          "MaxVersion": "0.5-WIP"
+        }
+      ],
+      "Outputs": [
+        {
+          "Name": "WebsiteUrl",
+          "Description": "Website URL",
+          "Type": "String"
         }
       ],
       "ResourceNameMappings": {
         "ModuleRegistration": "Module::Registration"
       },
       "TypeNameMappings": {
+        "Custom::LambdaSharpS3Unzip": "LambdaSharp::S3::Unzip",
+        "Custom::LambdaSharpS3WriteJson": "LambdaSharp::S3::WriteJson",
         "Custom::LambdaSharpRegistrationModule": "LambdaSharp::Registration::Module"
       }
     }

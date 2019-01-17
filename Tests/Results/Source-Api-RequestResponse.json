@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "LambdaSharp CloudFormation Test (v1.0)",
+  "Description": "LambdaSharp CloudFormation Test (v1.0-DEV)",
   "Parameters": {
     "Secrets": {
       "Type": "String",
@@ -12,28 +12,28 @@
       "Description": "Dead Letter Queue (ARN)",
       "AllowedPattern": "^.+$",
       "ConstraintDescription": "must either be a cross-module import reference or a non-empty value",
-      "Default": "$LambdaSharp::DeadLetterQueue"
+      "Default": "$LambdaSharp-Core::DeadLetterQueue"
     },
     "LambdaSharpLoggingStream": {
       "Type": "String",
       "Description": "Logging Stream (ARN)",
       "AllowedPattern": "^.+$",
       "ConstraintDescription": "must either be a cross-module import reference or a non-empty value",
-      "Default": "$LambdaSharp::LoggingStream"
+      "Default": "$LambdaSharp-Core::LoggingStream"
     },
     "LambdaSharpLoggingStreamRole": {
       "Type": "String",
       "Description": "Logging Stream Role (ARN)",
       "AllowedPattern": "^.+$",
       "ConstraintDescription": "must either be a cross-module import reference or a non-empty value",
-      "Default": "$LambdaSharp::LoggingStreamRole"
+      "Default": "$LambdaSharp-Core::LoggingStreamRole"
     },
     "LambdaSharpDefaultSecretKey": {
       "Type": "String",
       "Description": "Secret Key (ARN)",
       "AllowedPattern": "^.+$",
       "ConstraintDescription": "must either be a cross-module import reference or a non-empty value",
-      "Default": "$LambdaSharp::DefaultSecretKey"
+      "Default": "$LambdaSharp-Core::DefaultSecretKey"
     },
     "DeploymentBucketName": {
       "Type": "String",
@@ -55,7 +55,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "2348830E3980885977E72BFEF6E749B3"
+      "Default": "6DD3C5DB7A03D472656F4AF1F9721680"
     }
   },
   "Resources": {
@@ -100,13 +100,13 @@
             ]
           }
         },
-        "Description": "My function (v1.0)",
+        "Description": "My function (v1.0-DEV)",
         "Environment": {
           "Variables": {
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "Test.TestModule:1.0",
+            "MODULE_INFO": "Test.TestModule:1.0-DEV",
             "LAMBDA_NAME": "Function",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
@@ -363,13 +363,14 @@
       "Properties": {
         "ServiceToken": {
           "Fn::ImportValue": {
-            "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::Registration::Module"
+            "Fn::Sub": "${DeploymentPrefix}LambdaSharp::Registration::Module"
           }
         },
+        "ResourceType": "LambdaSharp::Registration::Module",
+        "Module": "Test.TestModule:1.0-DEV",
         "ModuleId": {
           "Ref": "AWS::StackName"
-        },
-        "ModuleInfo": "Test.TestModule:1.0"
+        }
       }
     },
     "FunctionRegistration": {
@@ -377,9 +378,10 @@
       "Properties": {
         "ServiceToken": {
           "Fn::ImportValue": {
-            "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::Registration::Function"
+            "Fn::Sub": "${DeploymentPrefix}LambdaSharp::Registration::Function"
           }
         },
+        "ResourceType": "LambdaSharp::Registration::Function",
         "ModuleId": {
           "Ref": "AWS::StackName"
         },
@@ -786,8 +788,8 @@
     }
   },
   "Outputs": {
-    "ModuleInfo": {
-      "Value": "Test.TestModule:1.0"
+    "Module": {
+      "Value": "Test.TestModule:1.0-DEV"
     }
   },
   "Conditions": {
@@ -940,34 +942,34 @@
     "AWS::CloudFormation::Interface": {
       "ParameterLabels": {
         "Secrets": {
-          "default": "[String] Comma-separated list of optional secret keys"
+          "default": "Comma-separated list of optional secret keys [String]"
         },
         "LambdaSharpDeadLetterQueue": {
-          "default": "[String] Dead letter queue for functions"
+          "default": "Dead letter queue for functions [String]"
         },
         "LambdaSharpLoggingStream": {
-          "default": "[String] Logging kinesis stream for functions"
+          "default": "Logging kinesis stream for functions [String]"
         },
         "LambdaSharpLoggingStreamRole": {
-          "default": "[String] Role for logging to kinesis stream for functions"
+          "default": "Role for logging to kinesis stream for functions [String]"
         },
         "LambdaSharpDefaultSecretKey": {
-          "default": "[String] Default secret key for functions"
+          "default": "Default secret key for functions [String]"
         },
         "DeploymentBucketName": {
-          "default": "[String] Deployment S3 bucket name"
+          "default": "Deployment S3 bucket name [String]"
         },
         "DeploymentPrefix": {
-          "default": "[String] Deployment tier prefix"
+          "default": "Deployment tier prefix [String]"
         },
         "DeploymentPrefixLowercase": {
-          "default": "[String] Deployment tier prefix (lowercase)"
+          "default": "Deployment tier prefix (lowercase) [String]"
         },
         "DeploymentParent": {
-          "default": "[String] Parent stack name for nested deployments, blank otherwise"
+          "default": "Parent stack name for nested deployments, blank otherwise [String]"
         },
         "DeploymentChecksum": {
-          "default": "[String] CloudFormation template MD5 checksum"
+          "default": "CloudFormation template MD5 checksum [String]"
         }
       },
       "ParameterGroups": [
@@ -1006,7 +1008,7 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2018-12-31",
-      "ModuleInfo": "Test.TestModule:1.0",
+      "Module": "Test.TestModule:1.0-DEV",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -1026,31 +1028,31 @@
               "Name": "DeadLetterQueue",
               "Type": "String",
               "Label": "Dead letter queue for functions",
-              "Default": "$LambdaSharp::DeadLetterQueue"
+              "Default": "$LambdaSharp-Core::DeadLetterQueue"
             },
             {
               "Name": "LoggingStream",
               "Type": "String",
               "Label": "Logging kinesis stream for functions",
-              "Default": "$LambdaSharp::LoggingStream"
+              "Default": "$LambdaSharp-Core::LoggingStream"
             },
             {
               "Name": "LoggingStreamRole",
               "Type": "String",
               "Label": "Role for logging to kinesis stream for functions",
-              "Default": "$LambdaSharp::LoggingStreamRole"
+              "Default": "$LambdaSharp-Core::LoggingStreamRole"
             },
             {
               "Name": "DefaultSecretKey",
               "Type": "String",
               "Label": "Default secret key for functions",
-              "Default": "$LambdaSharp::DefaultSecretKey"
+              "Default": "$LambdaSharp-Core::DefaultSecretKey"
             }
           ]
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "2348830E3980885977E72BFEF6E749B3",
+      "Hash": "6DD3C5DB7A03D472656F4AF1F9721680",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
