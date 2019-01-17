@@ -32,7 +32,7 @@ Pragmas:
 
 Items:
 
-  # LambdaSharp Tier
+  # Resource for LambdaSharp Tier
   - Parameter: DeadLetterQueue
     Scope: public
     Section: LambdaSharp Tier Settings
@@ -86,12 +86,20 @@ Items:
               - kms:*
             Resource: "*"
 
+  - Resource: DefaultSecretKeyAlias
+    Description: Alias for default secrets key
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub "alias/${DeploymentPrefix}LambdaSharpDefaultSecretKey"
+      TargetKeyId: !Ref DefaultSecretKey
+
   - Parameter: DefaultSecretKeyRotationEnabled
     Section: LambdaSharp Tier Settings
     Label: Enabled rotating KMS key automatically every 365 days
     Description: Default key rotation enabled
     Default: false
 
+  # Every CloudWatch log subscription needs a role that allows it to write to the Kinesis stream
   - Resource: LoggingStreamRole
     Scope: public
     Description: Role for writing CloudWatch logs to the Kinesis stream
@@ -114,13 +122,6 @@ Items:
                 Effect: Allow
                 Action: kinesis:PutRecord
                 Resource: !Ref LoggingStream
-
-  - Resource: DefaultSecretKeyAlias
-    Description: Alias for default secrets key
-    Type: AWS::KMS::Alias
-    Properties:
-      AliasName: !Sub "alias/${DeploymentPrefix}LambdaSharpDefaultSecretKey"
-      TargetKeyId: !Ref DefaultSecretKey
 
   # Rollbar Settings
   - Parameter: RollbarReadAccessToken
@@ -214,7 +215,7 @@ Items:
       Response:
 
         - Name: Registration
-          Description:
+          Description: Registration ID
           Type: String
 
   - ResourceType: LambdaSharp::Registration::Function
@@ -271,5 +272,5 @@ Items:
       Response:
 
         - Name: Registration
-          Description:
+          Description: Registration ID
           Type: String
