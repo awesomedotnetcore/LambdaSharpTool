@@ -24,15 +24,30 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using Amazon.S3;
 using Amazon.S3.Model;
 using Amazon.S3.Transfer;
 using LambdaSharp.CustomResource;
 
-namespace LambdaSharp.Core.S3Writer {
+namespace LambdaSharp.S3.IO.S3Writer {
 
     public class UnzipLogic {
+
+        //--- Class Methods ---
+        private static string ToHexString(IEnumerable<byte> bytes)
+            => string.Concat(bytes.Select(x => x.ToString("X2")));
+
+        private static string GetMD5Hash(MemoryStream stream) {
+            using(var md5 = MD5.Create()) {
+                stream.Position = 0;
+                var result = ToHexString(md5.ComputeHash(stream));
+                stream.Position = 0;
+                return result;
+            }
+        }
 
         //--- Constants ---
         private const int MAX_BATCH_DELETE_OBJECTS = 1000;
@@ -53,42 +68,33 @@ namespace LambdaSharp.Core.S3Writer {
 
         //--- Methods ---
         public async Task<Response<ResponseProperties>> Create(RequestProperties properties) {
-            _logger.LogInfo($"uploading package s3://{properties.SourceBucketName}/{properties.SourceKey} to S3 bucket {properties.DestinationBucketName}");
+            _logger.LogInfo($"copying package s3://{properties.SourceBucketName}/{properties.SourceKey} to S3 bucket {properties.DestinationBucketName}");
 
             // download package and copy all files to destination bucket
-            var files = new List<string>();
+            var fileEntries = new Dictionary<string, string>();
             if(!await ProcessZipFileItemsAsync(properties.SourceBucketName, properties.SourceKey, async entry => {
                 using(var stream = entry.Open()) {
                     var memoryStream = new MemoryStream();
                     await stream.CopyToAsync(memoryStream);
+                    var hash = GetMD5Hash(memoryStream);
                     var destination = Path.Combine(properties.DestinationKey, entry.FullName).Replace('\\', '/');
-                    _logger.LogInfo($"uploading file: {destination}");
+                    _logger.LogInfo($"uploading file: {destination} [{hash}]");
                     await _transferUtility.UploadAsync(
                         memoryStream,
                         properties.DestinationBucketName,
                         destination
                     );
-                    files.Add(entry.FullName);
+                    fileEntries.Add(entry.FullName, hash);
                 }
             })) {
                 throw new FileNotFoundException("Unable to download source package");
             }
-            _logger.LogInfo($"uploaded {files.Count:N0} files");
 
             // create package manifest for future deletion
-            var manifestStream = new MemoryStream();
-            using(var manifest = new ZipArchive(manifestStream, ZipArchiveMode.Create, leaveOpen: true))
-            using(var manifestEntryStream = manifest.CreateEntry("manifest.txt").Open())
-            using(var manifestEntryWriter = new StreamWriter(manifestEntryStream)) {
-                await manifestEntryWriter.WriteAsync(string.Join("\n", files));
-            }
-            await _transferUtility.UploadAsync(
-                manifestStream,
-                _manifestBucket,
-                $"{properties.DestinationBucketName}/{properties.SourceKey}"
-            );
+            _logger.LogInfo($"uploaded {fileEntries.Count:N0} files");
+            await WriteManifest(properties, fileEntries);
             return new Response<ResponseProperties> {
-                PhysicalResourceId = $"s3unzip:{properties.DestinationBucketName}:{properties.DestinationKey}:{properties.SourceKey}",
+                PhysicalResourceId = $"s3unzip:{properties.DestinationBucketName}:{properties.DestinationKey}",
                 Properties = new ResponseProperties {
                     Url = $"s3://{properties.DestinationBucketName}/{properties.DestinationKey}"
                 }
@@ -97,54 +103,86 @@ namespace LambdaSharp.Core.S3Writer {
 
         public async Task<Response<ResponseProperties>> Update(RequestProperties oldProperties, RequestProperties properties) {
 
-            // TODO (2019-01-15, bjorg): only update changed files
-            await Delete(oldProperties);
-            return await Create(properties);
+            // check if the unzip properties have changed
+            if(
+                (oldProperties.DestinationBucketName != properties.DestinationBucketName)
+                || (oldProperties.DestinationKey != properties.DestinationKey)
+            ) {
+                _logger.LogInfo($"replacing package s3://{properties.SourceBucketName}/{properties.SourceKey} in S3 bucket {properties.DestinationBucketName}");
+
+                // remove old file and upload new ones; don't try to compute a diff
+                await Delete(oldProperties);
+                return await Create(properties);
+            } else {
+                _logger.LogInfo($"updating package {properties.SourceKey} in S3 bucket {properties.DestinationBucketName}");
+
+                // download old package manifest
+                var oldFileEntries = await ReadAndDeleteManifest(oldProperties);
+                if(oldFileEntries == null) {
+
+                    // unable to download the old manifest; continue with uploading new files
+                    return await Create(properties);
+                }
+
+                // download new source package
+                var newFileEntries = new Dictionary<string, string>();
+                var uploadedCount = 0;
+                var skippedCount = 0;
+                if(!await ProcessZipFileItemsAsync(properties.SourceBucketName, properties.SourceKey, async entry => {
+                    using(var stream = entry.Open()) {
+                        var memoryStream = new MemoryStream();
+                        await stream.CopyToAsync(memoryStream);
+                        var hash = GetMD5Hash(memoryStream);
+
+                        // only upload file if new or the contents have changed
+                        if(!oldFileEntries.TryGetValue(entry.FullName, out string existingHash) || (existingHash != hash)) {
+                            var destination = Path.Combine(properties.DestinationKey, entry.FullName).Replace('\\', '/');
+                            _logger.LogInfo($"uploading file: {destination} [{hash}] [OLD: {existingHash}]");
+                            await _transferUtility.UploadAsync(
+                                memoryStream,
+                                properties.DestinationBucketName,
+                                destination
+                            );
+                            ++uploadedCount;
+                        } else {
+                           ++skippedCount;
+                        }
+                        newFileEntries.Add(entry.FullName, hash);
+                    }
+                })) {
+                    throw new FileNotFoundException("Unable to download source package");
+                }
+
+                // create package manifest for future deletion
+                _logger.LogInfo($"uploaded {uploadedCount:N0} files");
+                _logger.LogInfo($"skipped {skippedCount:N0} unchanged files");
+                await WriteManifest(properties, newFileEntries);
+
+                // delete files that are no longer needed
+                await BatchDeleteFiles(properties.DestinationBucketName, oldFileEntries.Where(kv => !newFileEntries.ContainsKey(kv.Key)).Select(kv => Path.Combine(properties.DestinationKey, kv.Key)).ToList());
+                return new Response<ResponseProperties> {
+                    PhysicalResourceId = $"s3unzip:{properties.DestinationBucketName}:{properties.DestinationKey}",
+                    Properties = new ResponseProperties {
+                        Url = $"s3://{properties.DestinationBucketName}/{properties.DestinationKey}"
+                    }
+                };
+            }
         }
 
         public async Task<Response<ResponseProperties>> Delete(RequestProperties properties) {
             _logger.LogInfo($"deleting package {properties.SourceKey} from S3 bucket {properties.DestinationBucketName}");
 
             // download package manifest
-            var files = new List<string>();
-            var key = $"{properties.DestinationBucketName}/{properties.SourceKey}";
-            if(!await ProcessZipFileItemsAsync(
-                _manifestBucket,
-                key,
-                async entry => {
-                    using(var stream = entry.Open())
-                    using(var reader = new StreamReader(stream)) {
-                        var manifest = await reader.ReadToEndAsync();
-                        files.AddRange(manifest.Split('\n'));
-                    }
-                }
-            )) {
-                _logger.LogWarn($"unable to dowload zip file from s3://{_manifestBucket}/{key}");
+            var fileEntries = await ReadAndDeleteManifest(properties);
+            if(fileEntries == null) {
+                return new Response<ResponseProperties>();
             }
-            _logger.LogInfo($"found {files.Count:N0} files to delete");
 
             // delete all files from manifest
-            while(files.Any()) {
-                var batch = files.Take(MAX_BATCH_DELETE_OBJECTS).Select(file => Path.Combine(properties.DestinationKey, file).Replace('\\', '/')).ToList();
-                _logger.LogInfo($"deleting files: {string.Join(", ", batch)}");
-                await _s3Client.DeleteObjectsAsync(new DeleteObjectsRequest {
-                    BucketName = properties.DestinationBucketName,
-                    Objects = batch.Select(filepath => new KeyVersion {
-                        Key = filepath
-                    }).ToList()
-                });
-                files = files.Skip(MAX_BATCH_DELETE_OBJECTS).ToList();
-            }
-
-            // delete manifest file
-            try {
-                await _s3Client.DeleteObjectAsync(new DeleteObjectRequest {
-                    BucketName = _manifestBucket,
-                    Key = key
-                });
-            } catch {
-                _logger.LogWarn($"unable to delete manifest file at s3://{_manifestBucket}/{key}");
-            }
+            await BatchDeleteFiles(
+                properties.DestinationBucketName,
+                fileEntries.Select(kv => Path.Combine(properties.DestinationKey, kv.Key)).ToList()
+            );
             return new Response<ResponseProperties>();
         }
 
@@ -174,5 +212,78 @@ namespace LambdaSharp.Core.S3Writer {
             }
             return true;
         }
+
+        private async Task WriteManifest(RequestProperties properties, Dictionary<string, string> fileEntries) {
+            var manifestStream = new MemoryStream();
+            using(var manifest = new ZipArchive(manifestStream, ZipArchiveMode.Create, leaveOpen: true))
+            using(var manifestEntryStream = manifest.CreateEntry("manifest.txt").Open())
+            using(var manifestEntryWriter = new StreamWriter(manifestEntryStream)) {
+                await manifestEntryWriter.WriteAsync(string.Join("\n", fileEntries.Select(file => $"{file.Key}\t{file.Value}")));
+            }
+            await _transferUtility.UploadAsync(
+                manifestStream,
+                _manifestBucket,
+                $"{properties.DestinationBucketName}/{properties.SourceKey}"
+            );
+       }
+
+        private async Task<Dictionary<string, string>> ReadAndDeleteManifest(RequestProperties properties) {
+
+            // download package manifest
+            var fileEntries = new Dictionary<string, string>();
+            var key = $"{properties.DestinationBucketName}/{properties.SourceKey}";
+            if(!await ProcessZipFileItemsAsync(
+                _manifestBucket,
+                key,
+                async entry => {
+                    using(var stream = entry.Open())
+                    using(var reader = new StreamReader(stream)) {
+                        var manifest = await reader.ReadToEndAsync();
+                        foreach(var line in manifest.Split('\n')) {
+                            var columns = line.Split('\t');
+                            fileEntries.Add(columns[0], columns[1]);
+                        }
+                    }
+                }
+            )) {
+                _logger.LogWarn($"unable to dowload zip file from s3://{_manifestBucket}/{key}");
+                return null;
+            }
+
+            // delete manifest after reading it
+            try {
+                await _s3Client.DeleteObjectAsync(new DeleteObjectRequest {
+                    BucketName = _manifestBucket,
+                    Key = key
+                });
+            } catch {
+                _logger.LogWarn($"unable to delete manifest file at s3://{_manifestBucket}/{key}");
+            }
+           return fileEntries;
+        }
+
+        private async Task BatchDeleteFiles(string bucketName, IEnumerable<string> keys) {
+            if(!keys.Any()) {
+                return;
+            }
+            _logger.LogInfo($"deleting {keys.Count():N0} files");
+
+            // delete all files from manifest
+            while(keys.Any()) {
+                var batch = keys
+                    .Take(MAX_BATCH_DELETE_OBJECTS)
+                    .Select(key => key.Replace('\\', '/'))
+                    .ToList();
+                _logger.LogInfo($"deleting files: {string.Join(", ", batch)}");
+                await _s3Client.DeleteObjectsAsync(new DeleteObjectsRequest {
+                    BucketName = bucketName,
+                    Objects = batch.Select(filepath => new KeyVersion {
+                        Key = filepath
+                    }).ToList(),
+                    Quiet = true
+                });
+                keys = keys.Skip(MAX_BATCH_DELETE_OBJECTS).ToList();
+            }
+       }
     }
 }

@@ -21,7 +21,6 @@
 
 using System;
 using System.IO;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -31,7 +30,7 @@ using Amazon.S3;
 using Amazon.S3.Model;
 using LambdaSharp.CustomResource;
 
-namespace LambdaSharp.Core.S3Writer {
+namespace LambdaSharp.S3.IO.S3Writer {
 
     public class WriteJsonLogic {
 

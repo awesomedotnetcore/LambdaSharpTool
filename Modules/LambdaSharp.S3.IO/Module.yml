@@ -81,6 +81,23 @@ Items:
           Description: S3 URL with destination bucket name and key path
           Type: String
 
+  - ResourceType: LambdaSharp::S3::EmptyBucket
+    Description: Resource for emptying an S3 bucket on deletion
+    Handler: S3WriterTopic
+    Properties:
+      Request:
+
+        - Name: Bucket
+          Description: S3 bucket ARN/name where to write the JSON file to
+          Type: String
+          Required: true
+
+      Response:
+
+        - Name: BucketName
+          Description: S3 bucket name
+          Type: String
+
   - Resource: DestinationBucketPermissions
     Description: LambdaSharpS3PackageLoader requires read-write access to all S3 buckets
     Type: AWS::S3::Bucket

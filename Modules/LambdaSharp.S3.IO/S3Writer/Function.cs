@@ -29,7 +29,7 @@ using LambdaSharp.CustomResource;
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
 
-namespace LambdaSharp.Core.S3Writer {
+namespace LambdaSharp.S3.IO.S3Writer {
 
     public class RequestProperties {
 
@@ -60,6 +60,12 @@ namespace LambdaSharp.Core.S3Writer {
         public string Key { get; set; }
         public object Contents { get; set; }
 
+        /*
+         * LambdaSharp::S3::EmptyBucket
+         *
+         * Bucket: String
+         */
+
         public string DestinationBucketName => (DestinationBucket?.StartsWith("arn:") == true)
             ? AwsConverters.ConvertBucketArnToName(DestinationBucket)
             : DestinationBucket;
@@ -77,6 +83,7 @@ namespace LambdaSharp.Core.S3Writer {
 
         //--- Properties ---
         public string Url { get; set; }
+        public string BucketName { get; set; }
     }
 
     public class Function : ALambdaCustomResourceFunction<RequestProperties, ResponseProperties> {
@@ -86,6 +93,7 @@ namespace LambdaSharp.Core.S3Writer {
         private IAmazonS3 _s3Client;
         private UnzipLogic _unzipLogic;
         private WriteJsonLogic _writeJsonLogic;
+        private EmptyBucketLogic _emptyBucketLogic;
 
         //--- Methods ---
         public override async Task InitializeAsync(LambdaConfig config) {
@@ -93,6 +101,7 @@ namespace LambdaSharp.Core.S3Writer {
             _s3Client = new AmazonS3Client();
             _unzipLogic = new UnzipLogic(Logger, _manifestBucket, _s3Client);
             _writeJsonLogic = new WriteJsonLogic(Logger, _s3Client);
+            _emptyBucketLogic = new EmptyBucketLogic(Logger, _s3Client);
         }
 
         protected override async Task<Response<ResponseProperties>> HandleCreateResourceAsync(Request<RequestProperties> request) {
@@ -101,6 +110,8 @@ namespace LambdaSharp.Core.S3Writer {
                 return await _unzipLogic.Create(request.ResourceProperties);
             case "LambdaSharp::S3::WriteJson":
                 return await _writeJsonLogic.Create(request.ResourceProperties);
+            case "LambdaSharp::S3::EmptyBucket":
+                return await _emptyBucketLogic.Create(request.ResourceProperties);
             default:
                 throw new InvalidOperationException($"unsupported resource type: {request.ResourceType}");
             }
@@ -112,6 +123,8 @@ namespace LambdaSharp.Core.S3Writer {
                 return await _unzipLogic.Update(request.OldResourceProperties, request.ResourceProperties);
             case "LambdaSharp::S3::WriteJson":
                 return await _writeJsonLogic.Update(request.OldResourceProperties, request.ResourceProperties);
+            case "LambdaSharp::S3::EmptyBucket":
+                return await _emptyBucketLogic.Update(request.OldResourceProperties, request.ResourceProperties);
             default:
                 throw new InvalidOperationException($"unsupported resource type: {request.ResourceType}");
             }
@@ -123,6 +136,8 @@ namespace LambdaSharp.Core.S3Writer {
                 return await _unzipLogic.Delete(request.ResourceProperties);
             case "LambdaSharp::S3::WriteJson":
                 return await _writeJsonLogic.Delete(request.ResourceProperties);
+            case "LambdaSharp::S3::EmptyBucket":
+                return await _emptyBucketLogic.Delete(request.ResourceProperties);
             default:
 
                 // nothing to do since we didn't process this request successfully in the first place!

@@ -24,6 +24,12 @@ Items:
       AccessControl: PublicRead
       WebsiteConfiguration:
         IndexDocument: index.html
+        ErrorDocument: error.html
+
+  - Resource: EmptyBucket
+    Type: LambdaSharp::S3::EmptyBucket
+    Properties:
+      Bucket: !Ref WebsiteBucket
 
   - Resource: BucketPolicy
     Type: AWS::S3::BucketPolicy
