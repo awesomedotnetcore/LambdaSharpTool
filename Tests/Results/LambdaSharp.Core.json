@@ -72,7 +72,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "EEF92F25CB0884042DB51AFAFA5C644A"
+      "Default": "F935397AC6D6A6276B4953F6EBD5B21E"
     }
   },
   "Resources": {
@@ -650,7 +650,7 @@
     }
   },
   "Outputs": {
-    "ModuleInfo": {
+    "Module": {
       "Value": "LambdaSharp.Core:0.5-WIP"
     },
     "DeadLetterQueue": {
@@ -739,7 +739,7 @@
       },
       "Export": {
         "Name": {
-          "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::Registration::Module"
+          "Fn::Sub": "${DeploymentPrefix}LambdaSharp::Registration::Module"
         }
       },
       "Description": "Resource type for LambdaSharp module registrations"
@@ -750,7 +750,7 @@
       },
       "Export": {
         "Name": {
-          "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::Registration::Function"
+          "Fn::Sub": "${DeploymentPrefix}LambdaSharp::Registration::Function"
         }
       },
       "Description": "Resource type for LambdaSharp function registrations"
@@ -794,49 +794,49 @@
     "AWS::CloudFormation::Interface": {
       "ParameterLabels": {
         "DeadLetterQueue": {
-          "default": "[AWS::SQS::Queue] Dead letter queue for functions (leave blank to create a new queue)"
+          "default": "Dead letter queue for functions (leave blank to create a new queue) [AWS::SQS::Queue]"
         },
         "LoggingStream": {
-          "default": "[AWS::Kinesis::Stream] Logging Kinesis stream for functions (leave blank to create a new stream)"
+          "default": "Logging Kinesis stream for functions (leave blank to create a new stream) [AWS::Kinesis::Stream]"
         },
         "LoggingStreamRetentionPeriodHours": {
-          "default": "[String] Size of the Logging stream buffer (in hours)"
+          "default": "Size of the Logging stream buffer (in hours) [String]"
         },
         "LoggingStreamShardCount": {
-          "default": "[String] Number of Kinesis shards for the logging streams"
+          "default": "Number of Kinesis shards for the logging streams [String]"
         },
         "DefaultSecretKey": {
-          "default": "[AWS::KMS::Key] Default secret key for functions (leave blank to create a new encryption key)"
+          "default": "Default secret key for functions (leave blank to create a new encryption key) [AWS::KMS::Key]"
         },
         "DefaultSecretKeyRotationEnabled": {
-          "default": "[String] Enabled rotating KMS key automatically every 365 days"
+          "default": "Enabled rotating KMS key automatically every 365 days [String]"
         },
         "RollbarReadAccessToken": {
-          "default": "[Secret] Account-level token for read operations (keep blank to disable Rollbar integration)"
+          "default": "Account-level token for read operations (keep blank to disable Rollbar integration) [Secret]"
         },
         "RollbarWriteAccessToken": {
-          "default": "[Secret] Account-level token for write operations (keep blank to disable Rollbar integration)"
+          "default": "Account-level token for write operations (keep blank to disable Rollbar integration) [Secret]"
         },
         "RollbarProjectPrefix": {
-          "default": "[String] Optional prefix when creating Rollbar projects (e.g. \"LambdaSharp-\")"
+          "default": "Optional prefix when creating Rollbar projects (e.g. \"LambdaSharp-\") [String]"
         },
         "Secrets": {
-          "default": "[String] Comma-separated list of optional secret keys"
+          "default": "Comma-separated list of optional secret keys [String]"
         },
         "DeploymentBucketName": {
-          "default": "[String] Deployment S3 bucket name"
+          "default": "Deployment S3 bucket name [String]"
         },
         "DeploymentPrefix": {
-          "default": "[String] Deployment tier prefix"
+          "default": "Deployment tier prefix [String]"
         },
         "DeploymentPrefixLowercase": {
-          "default": "[String] Deployment tier prefix (lowercase)"
+          "default": "Deployment tier prefix (lowercase) [String]"
         },
         "DeploymentParent": {
-          "default": "[String] Parent stack name for nested deployments, blank otherwise"
+          "default": "Parent stack name for nested deployments, blank otherwise [String]"
         },
         "DeploymentChecksum": {
-          "default": "[String] CloudFormation template MD5 checksum"
+          "default": "CloudFormation template MD5 checksum [String]"
         }
       },
       "ParameterGroups": [
@@ -887,7 +887,7 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2018-12-31",
-      "ModuleInfo": "LambdaSharp.Core:0.5-WIP",
+      "Module": "LambdaSharp.Core:0.5-WIP",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Tier Settings",
@@ -966,7 +966,7 @@
         }
       ],
       "RuntimeCheck": false,
-      "Hash": "EEF92F25CB0884042DB51AFAFA5C644A",
+      "Hash": "F935397AC6D6A6276B4953F6EBD5B21E",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
@@ -1048,7 +1048,7 @@
               "Required": true
             },
             {
-              "Name": "ModuleInfo",
+              "Name": "Module",
               "Description": "Module full name and version",
               "Type": "String",
               "Required": true

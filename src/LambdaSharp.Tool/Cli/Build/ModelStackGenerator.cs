@@ -111,7 +111,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     })
                     .OrderBy(dependency => dependency.ModuleFullName)
                     .ToList(),
-                ResourceTypes = new Dictionary<string, ModuleManifestCustomResource>(module.CustomResourceTypes),
+                ResourceTypes = new Dictionary<string, ModuleManifestResourceType>(module.CustomResourceTypes),
                 Outputs = module.Items
                     .Where(item => item.Scope.Any(scope => scope == "public"))
                     .Select(item => new ModuleManifestOutput {

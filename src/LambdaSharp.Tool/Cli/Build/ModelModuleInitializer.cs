@@ -528,7 +528,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                         }
                     }.ToList()
                 },
-                resourceArnAttribute: null,
+                resourceExportAttribute: null,
                 dependsOn: null,
                 condition: null,
                 pragmas: null
@@ -644,7 +644,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                                     LogGroupName = FnRef($"{function.FullName}::LogGroup"),
                                     RoleArn = FnRef("Module::LoggingStreamRole")
                                 },
-                                resourceArnAttribute: null,
+                                resourceExportAttribute: null,
                                 dependsOn: null,
                                 condition: function.Condition,
                                 pragmas: null

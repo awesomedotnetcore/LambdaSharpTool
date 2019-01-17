@@ -47,7 +47,7 @@ namespace LambdaSharp.Tool.Model {
         private IList<Humidifier.Statement> _resourceStatements = new List<Humidifier.Statement>();
         private IList<string> _assets;
         private IDictionary<string, ModuleDependency> _dependencies;
-        private IDictionary<string, ModuleManifestCustomResource> _customResourceTypes;
+        private IDictionary<string, ModuleManifestResourceType> _customResourceTypes;
         private IList<string> _macroNames;
         private IDictionary<string, string> _resourceTypeNameMappings;
 
@@ -66,8 +66,8 @@ namespace LambdaSharp.Tool.Model {
                 ? new Dictionary<string, ModuleDependency>(module.Dependencies)
                 : new Dictionary<string, ModuleDependency>();
             _customResourceTypes = (module.CustomResourceTypes != null)
-                ? new Dictionary<string, ModuleManifestCustomResource>(module.CustomResourceTypes)
-                : new Dictionary<string, ModuleManifestCustomResource>();
+                ? new Dictionary<string, ModuleManifestResourceType>(module.CustomResourceTypes)
+                : new Dictionary<string, ModuleManifestResourceType>();
             _macroNames = new List<string>(module.MacroNames ?? new string[0]);
             _resourceTypeNameMappings = module.ResourceTypeNameMappings ?? new Dictionary<string, string>();
 
@@ -333,7 +333,7 @@ namespace LambdaSharp.Tool.Model {
                     description: null,
                     scope: null,
                     resource: CreateDecryptSecretResourceFor(result),
-                    resourceArnAttribute: null,
+                    resourceExportAttribute: null,
                     dependsOn: null,
                     condition: null,
                     pragmas: null
@@ -405,12 +405,12 @@ namespace LambdaSharp.Tool.Model {
             string customResourceType,
             string description,
             string handler,
-            ModuleManifestCustomResource properties
+            ModuleManifestResourceType properties
         ) {
 
             // TODO (2018-09-20, bjorg): add custom resource name validation
             AddItem(new ResourceTypeItem(customResourceType, description, FnRef(handler)));
-            _customResourceTypes.Add(customResourceType, properties ?? new ModuleManifestCustomResource());
+            _customResourceTypes.Add(customResourceType, properties ?? new ModuleManifestResourceType());
         }
 
         public AModuleItem AddMacro(string macroName, string description, string handler) {
@@ -443,7 +443,7 @@ namespace LambdaSharp.Tool.Model {
                     Description = description ?? "",
                     FunctionName = FnRef(handler)
                 },
-                resourceArnAttribute: null,
+                resourceExportAttribute: null,
                 dependsOn: null,
                 condition: null,
                 pragmas: null
@@ -492,7 +492,7 @@ namespace LambdaSharp.Tool.Model {
                     description: null,
                     scope: null,
                     resource: CreateDecryptSecretResourceFor(result),
-                    resourceArnAttribute: null,
+                    resourceExportAttribute: null,
                     dependsOn: null,
                     condition: null,
                     pragmas: null
@@ -514,18 +514,36 @@ namespace LambdaSharp.Tool.Model {
             string description,
             IList<string> scope,
             Humidifier.Resource resource,
-            string resourceArnAttribute,
+            string resourceExportAttribute,
             IList<string> dependsOn,
             object condition,
             IList<object> pragmas
         ) {
+
+            // set a default export attribute if none is provided
+            if(resourceExportAttribute == null) {
+                var resourceTypeName = (resource is Humidifier.CustomResource customResource)
+                    ? customResource.OriginalTypeName
+                    : resource.AWSTypeName;
+                if(ResourceMapping.HasAttribute(resourceTypeName, "Arn")) {
+
+                    // for built-in type, use the 'Arn' attribute if it exists
+                    resourceExportAttribute = "Arn";
+                } else if(TryGetResourceType(resourceTypeName, out ModuleManifestResourceType resourceType)) {
+
+                    // for custom resource types, use the first defined response attribute
+                    resourceExportAttribute = resourceType.Response.FirstOrDefault()?.Name;
+                }
+            }
+
+            // create resource
             var result = new ResourceItem(
                 parent: parent,
                 name: name,
                 description: description,
                 scope: scope,
                 resource: resource,
-                resourceArnAttribute: resourceArnAttribute,
+                resourceExportAttribute: resourceExportAttribute,
                 dependsOn: dependsOn,
                 condition: null,
                 pragmas: pragmas
@@ -569,7 +587,7 @@ namespace LambdaSharp.Tool.Model {
                 description: description,
                 scope: scope,
                 resource: customResource,
-                resourceArnAttribute: arnAttribute,
+                resourceExportAttribute: arnAttribute,
                 dependsOn: dependsOn,
                 condition: condition,
                 pragmas: pragmas
@@ -632,7 +650,7 @@ namespace LambdaSharp.Tool.Model {
                     // TODO (2018-11-29, bjorg): make timeout configurable
                     TimeoutInMinutes = 5
                 },
-                resourceArnAttribute: null,
+                resourceExportAttribute: null,
                 dependsOn: ConvertToStringList(dependsOn),
                 condition: null,
                 pragmas: null
@@ -801,7 +819,7 @@ namespace LambdaSharp.Tool.Model {
                         ["DeploymentChecksum"] = FnRef("DeploymentChecksum"),
                         ["ModuleVersion"] = _version.ToString()
                     }),
-                    resourceArnAttribute: null,
+                    resourceExportAttribute: null,
                     dependsOn: null,
                     condition: condition,
                     pragmas: null
@@ -821,7 +839,7 @@ namespace LambdaSharp.Tool.Model {
                         //  see https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutRetentionPolicy.html
                         RetentionInDays = 30
                     },
-                    resourceArnAttribute: null,
+                    resourceExportAttribute: null,
                     dependsOn: null,
                     condition: condition,
                     pragmas: null
@@ -984,12 +1002,10 @@ namespace LambdaSharp.Tool.Model {
         }
 
         public bool HasAttribute(AModuleItem item, string attribute) {
-            var dependency = _dependencies.Values.FirstOrDefault(d => d.Manifest?.ResourceTypes.ContainsKey(item.Type) ?? false);
-            if(dependency != null) {
-                return dependency.Manifest.ResourceTypes.TryGetValue(item.Type, out ModuleManifestCustomResource customResource)
-                    && customResource.Response.Any(field => field.Name == attribute);
+            if(TryGetResourceType(item.Type, out ModuleManifestResourceType resourceType)) {
+                return resourceType.Response.Any(field => field.Name == attribute);
             }
-            return item.HasAttribute(attribute);
+            return ResourceMapping.HasAttribute(item.Type, attribute);
         }
 
         public Module ToModule() {
@@ -1162,6 +1178,29 @@ namespace LambdaSharp.Tool.Model {
                 _resourceTypeNameMappings[customResource.AWSTypeName] = customResource.OriginalTypeName;
             }
             return customResource;
+        }
+
+        private bool TryGetResourceType(string resourceTypeName, out ModuleManifestResourceType resourceType) {
+            var matches = _dependencies
+                .Select(kv => {
+                    ModuleManifestResourceType foundResourceType = null;
+                    kv.Value.Manifest?.ResourceTypes.TryGetValue(resourceTypeName, out foundResourceType);
+                    return foundResourceType;
+                })
+                .Where(foundResourceType => foundResourceType != null)
+                .ToArray();
+            switch(matches.Length) {
+            case 0:
+                resourceType = null;
+                return false;
+            case 1:
+                resourceType = matches[0];
+                return true;
+            default:
+                AddWarning($"ambiguous resource type '{resourceTypeName}'");
+                resourceType = matches[0];
+                return true;
+            }
         }
     }
 }

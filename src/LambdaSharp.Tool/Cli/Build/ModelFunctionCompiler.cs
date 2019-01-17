@@ -80,7 +80,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                             Description = "${Module::FullName} API (v${Module::Version})",
                             FailOnWarnings = true
                         },
-                        resourceArnAttribute: null,
+                        resourceExportAttribute: null,
                         dependsOn: null,
                         condition: null,
                         pragmas: null
@@ -154,7 +154,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 }
                             }.ToList()
                         },
-                        resourceArnAttribute: null,
+                        resourceExportAttribute: null,
                         dependsOn: null,
                         condition: null,
                         pragmas: null
@@ -169,7 +169,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                         resource: new Humidifier.ApiGateway.Account {
                             CloudWatchRoleArn = FnGetAtt("Module::RestApi::Role", "Arn")
                         },
-                        resourceArnAttribute: null,
+                        resourceExportAttribute: null,
                         dependsOn: null,
                         condition: null,
                         pragmas: null
@@ -186,7 +186,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                             RestApiId = FnRef("Module::RestApi"),
                             Description = FnSub($"${{AWS::StackName}} API [{methodsHash}]")
                         },
-                        resourceArnAttribute: null,
+                        resourceExportAttribute: null,
                         dependsOn: apiMethods.Select(kv => kv.Key).ToArray(),
                         condition: null,
                         pragmas: null
@@ -213,7 +213,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 }
                             }.ToList()
                         },
-                        resourceArnAttribute: null,
+                        resourceExportAttribute: null,
                         dependsOn: new[] { "Module::RestApi::Account" },
                         condition: null,
                         pragmas: null
@@ -247,7 +247,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     description: null,
                     scope: null,
                     resource: apiMethod,
-                    resourceArnAttribute: null,
+                    resourceExportAttribute: null,
                     dependsOn: null,
 
                     // TODO (2018-12-28, bjorg): handle conditional function
@@ -267,7 +267,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                         Principal = "apigateway.amazonaws.com",
                         SourceArn = FnSub($"arn:aws:execute-api:${{AWS::Region}}:${{AWS::AccountId}}:${{Module::RestApi}}/LATEST/{method.Method}/{string.Join("/", method.Path)}")
                     },
-                    resourceArnAttribute: null,
+                    resourceExportAttribute: null,
                     dependsOn: null,
                     condition: method.Function.Condition,
                     pragmas: null
@@ -294,7 +294,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                         ParentId = parentId,
                         PathPart = subRoute.Key
                     },
-                    resourceArnAttribute: null,
+                    resourceExportAttribute: null,
                     dependsOn: null,
 
                     // TODO (2018-12-28, bjorg): handle conditional function
@@ -400,7 +400,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                                     ? JsonConvert.SerializeObject(topicSource.Filters)
                                     : null
                             },
-                            resourceArnAttribute: null,
+                            resourceExportAttribute: null,
                             dependsOn: null,
                             condition: function.Condition,
                             pragmas: null
@@ -416,7 +416,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 Principal = "sns.amazonaws.com",
                                 SourceArn = arn
                             },
-                            resourceArnAttribute: null,
+                            resourceExportAttribute: null,
                             dependsOn: null,
                             condition: function.Condition,
                             pragmas: null
@@ -458,7 +458,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                                     }
                                 }.ToList()
                             },
-                            resourceArnAttribute: null,
+                            resourceExportAttribute: null,
                             dependsOn: null,
                             condition: function.Condition,
                             pragmas: null
@@ -474,7 +474,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 Principal = "events.amazonaws.com",
                                 SourceArn = FnGetAtt(schedule.ResourceName, "Arn")
                             },
-                            resourceArnAttribute: null,
+                            resourceExportAttribute: null,
                             dependsOn: null,
                             condition: function.Condition,
                             pragmas: null
@@ -506,7 +506,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 SourceAccount = FnRef("AWS::AccountId"),
                                 SourceArn = arn
                             },
-                            resourceArnAttribute: null,
+                            resourceExportAttribute: null,
                             dependsOn: null,
                             condition: function.Condition,
                             pragmas: null
@@ -561,7 +561,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 EventSourceArn = arn,
                                 FunctionName = FnRef(function.ResourceName)
                             },
-                            resourceArnAttribute: null,
+                            resourceExportAttribute: null,
                             dependsOn: null,
                             condition: function.Condition,
                             pragmas: null
@@ -607,7 +607,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 Principal = "alexa-appkit.amazon.com",
                                 EventSourceToken = eventSourceToken
                             },
-                            resourceArnAttribute: null,
+                            resourceExportAttribute: null,
                             dependsOn: null,
                             condition: function.Condition,
                             pragmas: null
@@ -628,7 +628,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 EventSourceArn = arn,
                                 FunctionName = FnRef(function.ResourceName)
                             },
-                            resourceArnAttribute: null,
+                            resourceExportAttribute: null,
                             dependsOn: null,
                             condition: function.Condition,
                             pragmas: null
@@ -649,7 +649,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 EventSourceArn = arn,
                                 FunctionName = FnRef(function.ResourceName)
                             },
-                            resourceArnAttribute: null,
+                            resourceExportAttribute: null,
                             dependsOn: null,
                             condition: function.Condition,
                             pragmas: null

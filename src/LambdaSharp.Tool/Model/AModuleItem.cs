@@ -76,7 +76,6 @@ namespace LambdaSharp.Tool.Model {
 
         //--- Methods ---
         public virtual object GetExportReference() => Reference;
-        public virtual bool HasAttribute(string attribute) => false;
         public virtual bool HasPragma(string pragma) => false;
         public virtual void Visit(ModuleVisitorDelegate visitor) {
             Reference = visitor(this, Reference);
@@ -180,7 +179,6 @@ namespace LambdaSharp.Tool.Model {
             }
         }
 
-        public override bool HasAttribute(string attribute) => ResourceMapping.HasAttribute(Type, attribute);
         public override bool HasPragma(string pragma) => Pragmas.Contains(pragma);
     }
 
@@ -193,18 +191,18 @@ namespace LambdaSharp.Tool.Model {
             string description,
             IList<string> scope,
             Humidifier.Resource resource,
-            string resourceArnAttribute,
+            string resourceExportAttribute,
             IList<string> dependsOn,
             string condition,
             IList<object> pragmas
         ) : base(parent, name, description, (resource is Humidifier.CustomResource customResource) ? customResource.OriginalTypeName : resource.AWSTypeName, scope, reference: null, dependsOn, condition, pragmas) {
             Resource = resource ?? throw new ArgumentNullException(nameof(resource));
-            ResourceArnAttribute = resourceArnAttribute;
+            ResourceExportAttribute = resourceExportAttribute;
         }
 
         //--- Properties ---
         public Humidifier.Resource Resource { get; set; }
-        public string ResourceArnAttribute { get; set; }
+        public string ResourceExportAttribute { get; set; }
 
         //--- Methods ---
         public override void Visit(ModuleVisitorDelegate visitor) {
@@ -213,10 +211,8 @@ namespace LambdaSharp.Tool.Model {
         }
 
         public override object GetExportReference()
-            => (ResourceArnAttribute != null)
-                ? FnGetAtt(FullName, ResourceArnAttribute)
-                : HasAttribute("Arn")
-                ? FnGetAtt(FullName, "Arn")
+            => (ResourceExportAttribute != null)
+                ? FnGetAtt(FullName, ResourceExportAttribute)
                 : FnRef(FullName);
     }
 

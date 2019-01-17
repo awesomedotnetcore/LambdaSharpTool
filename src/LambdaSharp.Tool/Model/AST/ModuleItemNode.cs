@@ -60,7 +60,7 @@ namespace LambdaSharp.Tool.Model.AST {
                 "DependsOn",
                 "Description",
                 "Parameters",
-                "Reference"
+                "Source"
             },
             ["Function"] = new[] {
                 "Description",

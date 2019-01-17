@@ -56,7 +56,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 // ensure version is present
                 VersionInfo version;
                 if(module.Version == null) {
-                    version = VersionInfo.Parse("1.0-WIP");
+                    version = VersionInfo.Parse("1.0-DEV");
                 } else if(!VersionInfo.TryParse(module.Version, out version)) {
                     AddError("`Version` expected to have format: Major.Minor[.Build[.Revision]]");
                     version = VersionInfo.Parse("0.0");
@@ -612,13 +612,13 @@ namespace LambdaSharp.Tool.Cli.Build {
             case "ResourceType":
                 Validate(node.Handler != null, "missing 'Handler' attribute");
                 AtLocation(node.ResourceType, () => {
-                    ModuleManifestCustomResource properties = null;
+                    ModuleManifestResourceType properties = null;
                     if(node.Properties != null) {
                         AtLocation("Properties", () => {
                             try {
                                 properties = JObject.FromObject(node.Properties, new JsonSerializer {
                                     NullValueHandling = NullValueHandling.Ignore
-                                }).ToObject<ModuleManifestCustomResource>();
+                                }).ToObject<ModuleManifestResourceType>();
 
                                 // validate fields
                                 Validate((properties.Request?.Count() ?? 0) > 0, "missing or empty 'Request' section");

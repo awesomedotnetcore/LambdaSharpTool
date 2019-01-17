@@ -182,11 +182,10 @@ namespace LambdaSharp.Tool.Model {
             if(awsType.StartsWith("Custom::", StringComparison.Ordinal)) {
                 return true;
             }
-            if(!CloudformationSpec.ResourceTypes.TryGetValue(awsType, out ResourceType resource)) {
-                Settings.AddWarning($"unable to validate attribute '{attribute}' for resource {awsType}");
-                return true;
-            }
-            return resource.Attributes?.ContainsKey(attribute) == true;
+
+            // check if type exists and contains attribute
+            return CloudformationSpec.ResourceTypes.TryGetValue(awsType, out ResourceType resource)
+                && (resource.Attributes?.ContainsKey(attribute) == true);
         }
 
         public static bool IsCloudFormationType(string awsType) => CloudformationSpec.ResourceTypes.ContainsKey(awsType);

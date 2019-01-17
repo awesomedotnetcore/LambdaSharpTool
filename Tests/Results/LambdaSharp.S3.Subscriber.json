@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "LambdaSharp S3 Utility Module (v0.5-WIP)",
+  "Description": "LambdaSharp S3 Lambda Function Subscriber (v0.5-WIP)",
   "Parameters": {
     "Secrets": {
       "Type": "String",
@@ -12,28 +12,28 @@
       "Description": "Dead Letter Queue (ARN)",
       "AllowedPattern": "^.+$",
       "ConstraintDescription": "must either be a cross-module import reference or a non-empty value",
-      "Default": "$LambdaSharp::DeadLetterQueue"
+      "Default": "$LambdaSharp-Core::DeadLetterQueue"
     },
     "LambdaSharpLoggingStream": {
       "Type": "String",
       "Description": "Logging Stream (ARN)",
       "AllowedPattern": "^.+$",
       "ConstraintDescription": "must either be a cross-module import reference or a non-empty value",
-      "Default": "$LambdaSharp::LoggingStream"
+      "Default": "$LambdaSharp-Core::LoggingStream"
     },
     "LambdaSharpLoggingStreamRole": {
       "Type": "String",
       "Description": "Logging Stream Role (ARN)",
       "AllowedPattern": "^.+$",
       "ConstraintDescription": "must either be a cross-module import reference or a non-empty value",
-      "Default": "$LambdaSharp::LoggingStreamRole"
+      "Default": "$LambdaSharp-Core::LoggingStreamRole"
     },
     "LambdaSharpDefaultSecretKey": {
       "Type": "String",
       "Description": "Secret Key (ARN)",
       "AllowedPattern": "^.+$",
       "ConstraintDescription": "must either be a cross-module import reference or a non-empty value",
-      "Default": "$LambdaSharp::DefaultSecretKey"
+      "Default": "$LambdaSharp-Core::DefaultSecretKey"
     },
     "DeploymentBucketName": {
       "Type": "String",
@@ -55,26 +55,22 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "7E73403191FB70226A4AD9C7D8B9F3B3"
+      "Default": "8F896EAEF90A375664E93E63ECE2476C"
     }
   },
   "Resources": {
-    "S3WriterTopic": {
+    "CustomResourceTopic": {
       "Type": "AWS::SNS::Topic",
       "Properties": {}
     },
-    "ManifestBucket": {
-      "Type": "AWS::S3::Bucket",
-      "Properties": {}
-    },
-    "S3Writer": {
+    "ResourceHandler": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
         "Code": {
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "LambdaSharp/Modules/S3/Assets/S3Writer-DRYRUN.zip"
+          "S3Key": "LambdaSharp/Modules/S3.Subscriber/Assets/ResourceHandler-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -108,14 +104,14 @@
             ]
           }
         },
-        "Description": "LambdaSharp S3 Package Loader handler (v0.5-WIP)",
+        "Description": "LambdaSharp S3 Subscription handler (v0.5-WIP)",
         "Environment": {
           "Variables": {
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharp.S3:0.5-WIP",
-            "LAMBDA_NAME": "S3Writer",
+            "MODULE_INFO": "LambdaSharp.S3.Subscriber:0.5-WIP",
+            "LAMBDA_NAME": "ResourceHandler",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
               "Fn::If": [
@@ -176,17 +172,12 @@
                   "Ref": "LambdaSharpDefaultSecretKey"
                 }
               ]
-            },
-            "STR_MANIFESTBUCKET": {
-              "Fn::GetAtt": [
-                "ManifestBucket",
-                "Arn"
-              ]
             }
           }
         },
-        "Handler": "S3Writer::LambdaSharp.Core.S3Writer.Function::FunctionHandlerAsync",
-        "MemorySize": "256",
+        "Handler": "ResourceHandler::LambdaSharpS3Subscriber.ResourceHandler.Function::FunctionHandlerAsync",
+        "MemorySize": "128",
+        "ReservedConcurrentExecutions": "1",
         "Role": {
           "Fn::GetAtt": [
             "ModuleRole",
@@ -194,14 +185,14 @@
           ]
         },
         "Runtime": "dotnetcore2.1",
-        "Timeout": "300"
+        "Timeout": "30"
       }
     },
-    "S3WriterLogGroup": {
+    "ResourceHandlerLogGroup": {
       "Type": "AWS::Logs::LogGroup",
       "Properties": {
         "LogGroupName": {
-          "Fn::Sub": "/aws/lambda/${S3Writer}"
+          "Fn::Sub": "/aws/lambda/${ResourceHandler}"
         },
         "RetentionInDays": 30
       }
@@ -228,33 +219,11 @@
               "Version": "2012-10-17",
               "Statement": [
                 {
-                  "Sid": "DestinationBucketPermissions",
+                  "Sid": "S3BucketPermissions",
                   "Effect": "Allow",
                   "Action": [
-                    "s3:AbortMultipartUpload",
-                    "s3:CreateBucket",
-                    "s3:DeleteObject",
-                    "s3:DeleteObjectTagging",
-                    "s3:DeleteObjectVersion",
-                    "s3:DeleteObjectVersionTagging",
-                    "s3:GetBucketLocation",
-                    "s3:GetObject",
-                    "s3:GetObjectAcl",
-                    "s3:GetObjectTagging",
-                    "s3:GetObjectTorrent",
-                    "s3:GetObjectVersion",
-                    "s3:GetObjectVersionAcl",
-                    "s3:GetObjectVersionTagging",
-                    "s3:GetObjectVersionTorrent",
-                    "s3:ListBucket",
-                    "s3:ListBucketMultipartUploads",
-                    "s3:ListMultipartUploadParts",
-                    "s3:PutObject",
-                    "s3:PutObjectAcl",
-                    "s3:PutObjectTagging",
-                    "s3:PutObjectVersionAcl",
-                    "s3:PutObjectVersionTagging",
-                    "s3:RestoreObject"
+                    "s3:GetBucketNotification",
+                    "s3:PutBucketNotification"
                   ],
                   "Resource": [
                     {
@@ -274,92 +243,14 @@
                   ]
                 },
                 {
-                  "Sid": "SourceBucketPermissions",
-                  "Effect": "Allow",
-                  "Action": [
-                    "s3:GetObject",
-                    "s3:GetObjectAcl",
-                    "s3:GetObjectTagging",
-                    "s3:GetObjectTorrent",
-                    "s3:GetObjectVersion",
-                    "s3:GetObjectVersionAcl",
-                    "s3:GetObjectVersionTagging",
-                    "s3:GetObjectVersionTorrent"
-                  ],
-                  "Resource": [
-                    "arn:aws:s3:::*",
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          "arn:aws:s3:::*",
-                          "/*"
-                        ]
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "Sid": "S3WriterTopic",
+                  "Sid": "CustomResourceTopic",
                   "Effect": "Allow",
                   "Action": [
                     "sns:Subscribe"
                   ],
                   "Resource": {
-                    "Ref": "S3WriterTopic"
+                    "Ref": "CustomResourceTopic"
                   }
-                },
-                {
-                  "Sid": "ManifestBucket",
-                  "Effect": "Allow",
-                  "Action": [
-                    "s3:AbortMultipartUpload",
-                    "s3:CreateBucket",
-                    "s3:DeleteObject",
-                    "s3:DeleteObjectTagging",
-                    "s3:DeleteObjectVersion",
-                    "s3:DeleteObjectVersionTagging",
-                    "s3:GetBucketLocation",
-                    "s3:GetObject",
-                    "s3:GetObjectAcl",
-                    "s3:GetObjectTagging",
-                    "s3:GetObjectTorrent",
-                    "s3:GetObjectVersion",
-                    "s3:GetObjectVersionAcl",
-                    "s3:GetObjectVersionTagging",
-                    "s3:GetObjectVersionTorrent",
-                    "s3:ListBucket",
-                    "s3:ListBucketMultipartUploads",
-                    "s3:ListMultipartUploadParts",
-                    "s3:PutObject",
-                    "s3:PutObjectAcl",
-                    "s3:PutObjectTagging",
-                    "s3:PutObjectVersionAcl",
-                    "s3:PutObjectVersionTagging",
-                    "s3:RestoreObject"
-                  ],
-                  "Resource": [
-                    {
-                      "Fn::GetAtt": [
-                        "ManifestBucket",
-                        "Arn"
-                      ]
-                    },
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          {
-                            "Fn::GetAtt": [
-                              "ManifestBucket",
-                              "Arn"
-                            ]
-                          },
-                          "/*"
-                        ]
-                      ]
-                    }
-                  ]
                 },
                 {
                   "Sid": "ModuleDeadLetterQueueLogging",
@@ -511,44 +402,46 @@
       "Properties": {
         "ServiceToken": {
           "Fn::ImportValue": {
-            "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::Registration::Module"
+            "Fn::Sub": "${DeploymentPrefix}LambdaSharp::Registration::Module"
           }
         },
+        "ResourceType": "LambdaSharp::Registration::Module",
+        "Module": "LambdaSharp.S3.Subscriber:0.5-WIP",
         "ModuleId": {
           "Ref": "AWS::StackName"
-        },
-        "ModuleInfo": "LambdaSharp.S3:0.5-WIP"
+        }
       }
     },
-    "S3WriterRegistration": {
+    "ResourceHandlerRegistration": {
       "Type": "Custom::LambdaSharpRegistrationFunction",
       "Properties": {
         "ServiceToken": {
           "Fn::ImportValue": {
-            "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::Registration::Function"
+            "Fn::Sub": "${DeploymentPrefix}LambdaSharp::Registration::Function"
           }
         },
+        "ResourceType": "LambdaSharp::Registration::Function",
         "ModuleId": {
           "Ref": "AWS::StackName"
         },
         "FunctionId": {
-          "Ref": "S3Writer"
+          "Ref": "ResourceHandler"
         },
-        "FunctionName": "S3Writer",
+        "FunctionName": "ResourceHandler",
         "FunctionLogGroupName": {
-          "Fn::Sub": "/aws/lambda/${S3Writer}"
+          "Fn::Sub": "/aws/lambda/${ResourceHandler}"
         },
         "FunctionPlatform": "AWS Lambda",
         "FunctionFramework": "dotnetcore2.1",
         "FunctionLanguage": "csharp",
-        "FunctionMaxMemory": "256",
-        "FunctionMaxDuration": "300"
+        "FunctionMaxMemory": "128",
+        "FunctionMaxDuration": "30"
       },
       "DependsOn": [
         "ModuleRegistration"
       ]
     },
-    "S3WriterLogGroupSubscription": {
+    "ResourceHandlerLogGroupSubscription": {
       "Type": "AWS::Logs::SubscriptionFilter",
       "Properties": {
         "DestinationArn": {
@@ -583,7 +476,7 @@
         },
         "FilterPattern": "-\"*** \"",
         "LogGroupName": {
-          "Ref": "S3WriterLogGroup"
+          "Ref": "ResourceHandlerLogGroup"
         },
         "RoleArn": {
           "Fn::If": [
@@ -617,63 +510,52 @@
         }
       }
     },
-    "S3WriterSource1Subscription": {
+    "ResourceHandlerSource1Subscription": {
       "Type": "AWS::SNS::Subscription",
       "Properties": {
         "Endpoint": {
           "Fn::GetAtt": [
-            "S3Writer",
+            "ResourceHandler",
             "Arn"
           ]
         },
         "Protocol": "lambda",
         "TopicArn": {
-          "Ref": "S3WriterTopic"
+          "Ref": "CustomResourceTopic"
         }
       }
     },
-    "S3WriterSource1Permission": {
+    "ResourceHandlerSource1Permission": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
           "Fn::GetAtt": [
-            "S3Writer",
+            "ResourceHandler",
             "Arn"
           ]
         },
         "Principal": "sns.amazonaws.com",
         "SourceArn": {
-          "Ref": "S3WriterTopic"
+          "Ref": "CustomResourceTopic"
         }
       }
     }
   },
   "Outputs": {
-    "ModuleInfo": {
-      "Value": "LambdaSharp.S3:0.5-WIP"
+    "Module": {
+      "Value": "LambdaSharp.S3.Subscriber:0.5-WIP"
     },
-    "LambdaSharpS3Unzip": {
+    "LambdaSharpS3Subscription": {
       "Value": {
-        "Ref": "S3WriterTopic"
+        "Ref": "CustomResourceTopic"
       },
       "Export": {
         "Name": {
-          "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::S3::Unzip"
+          "Fn::Sub": "${DeploymentPrefix}LambdaSharp::S3::Subscription"
         }
       },
-      "Description": "Resource for deploying the contents of a zip file to an S3 bucket"
-    },
-    "LambdaSharpS3WriteJson": {
-      "Value": {
-        "Ref": "S3WriterTopic"
-      },
-      "Export": {
-        "Name": {
-          "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::S3::WriteJson"
-        }
-      },
-      "Description": "Resource for writing a JSON file to an S3 bucket"
+      "Description": "Custom resource for S3 bucket subscriptions"
     }
   },
   "Conditions": {
@@ -826,34 +708,34 @@
     "AWS::CloudFormation::Interface": {
       "ParameterLabels": {
         "Secrets": {
-          "default": "[String] Comma-separated list of optional secret keys"
+          "default": "Comma-separated list of optional secret keys [String]"
         },
         "LambdaSharpDeadLetterQueue": {
-          "default": "[String] Dead letter queue for functions"
+          "default": "Dead letter queue for functions [String]"
         },
         "LambdaSharpLoggingStream": {
-          "default": "[String] Logging kinesis stream for functions"
+          "default": "Logging kinesis stream for functions [String]"
         },
         "LambdaSharpLoggingStreamRole": {
-          "default": "[String] Role for logging to kinesis stream for functions"
+          "default": "Role for logging to kinesis stream for functions [String]"
         },
         "LambdaSharpDefaultSecretKey": {
-          "default": "[String] Default secret key for functions"
+          "default": "Default secret key for functions [String]"
         },
         "DeploymentBucketName": {
-          "default": "[String] Deployment S3 bucket name"
+          "default": "Deployment S3 bucket name [String]"
         },
         "DeploymentPrefix": {
-          "default": "[String] Deployment tier prefix"
+          "default": "Deployment tier prefix [String]"
         },
         "DeploymentPrefixLowercase": {
-          "default": "[String] Deployment tier prefix (lowercase)"
+          "default": "Deployment tier prefix (lowercase) [String]"
         },
         "DeploymentParent": {
-          "default": "[String] Parent stack name for nested deployments, blank otherwise"
+          "default": "Parent stack name for nested deployments, blank otherwise [String]"
         },
         "DeploymentChecksum": {
-          "default": "[String] CloudFormation template MD5 checksum"
+          "default": "CloudFormation template MD5 checksum [String]"
         }
       },
       "ParameterGroups": [
@@ -892,7 +774,7 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2018-12-31",
-      "ModuleInfo": "LambdaSharp.S3:0.5-WIP",
+      "Module": "LambdaSharp.S3.Subscriber:0.5-WIP",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -912,31 +794,31 @@
               "Name": "DeadLetterQueue",
               "Type": "String",
               "Label": "Dead letter queue for functions",
-              "Default": "$LambdaSharp::DeadLetterQueue"
+              "Default": "$LambdaSharp-Core::DeadLetterQueue"
             },
             {
               "Name": "LoggingStream",
               "Type": "String",
               "Label": "Logging kinesis stream for functions",
-              "Default": "$LambdaSharp::LoggingStream"
+              "Default": "$LambdaSharp-Core::LoggingStream"
             },
             {
               "Name": "LoggingStreamRole",
               "Type": "String",
               "Label": "Role for logging to kinesis stream for functions",
-              "Default": "$LambdaSharp::LoggingStreamRole"
+              "Default": "$LambdaSharp-Core::LoggingStreamRole"
             },
             {
               "Name": "DefaultSecretKey",
               "Type": "String",
               "Label": "Default secret key for functions",
-              "Default": "$LambdaSharp::DefaultSecretKey"
+              "Default": "$LambdaSharp-Core::DefaultSecretKey"
             }
           ]
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "7E73403191FB70226A4AD9C7D8B9F3B3",
+      "Hash": "8F896EAEF90A375664E93E63ECE2476C",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
@@ -948,69 +830,32 @@
         }
       ],
       "ResourceTypes": {
-        "LambdaSharp::S3::Unzip": {
-          "Description": "Resource for deploying the contents of a zip file to an S3 bucket",
-          "Request": [
-            {
-              "Name": "DestinationBucket",
-              "Description": "Destination S3 bucket ARN/name where to unzip the zip file to",
-              "Type": "String",
-              "Required": true
-            },
-            {
-              "Name": "DestinationKeyPrefix",
-              "Description": "Destination S3 key prefix for all unzipped files",
-              "Type": "String",
-              "Required": true
-            },
-            {
-              "Name": "SourceBucket",
-              "Description": "Source S3 bucket ARN/name for the zip file",
-              "Type": "String",
-              "Required": true
-            },
-            {
-              "Name": "SourcePackageKey",
-              "Description": "Source S3 key for the zip file",
-              "Type": "String",
-              "Required": true
-            }
-          ],
-          "Response": [
-            {
-              "Name": "Url",
-              "Description": "S3 URL with destination bucket name and key-prefix path",
-              "Type": "String",
-              "Required": true
-            }
-          ]
-        },
-        "LambdaSharp::S3::WriteJson": {
-          "Description": "Resource for writing a JSON file to an S3 bucket",
+        "LambdaSharp::S3::Subscription": {
+          "Description": "Custom resource for S3 bucket subscriptions",
           "Request": [
             {
               "Name": "Bucket",
-              "Description": "S3 bucket ARN/name where to write the JSON file to",
+              "Description": "S3 bucket ARN/name to subscribe to",
               "Type": "String",
               "Required": true
             },
             {
-              "Name": "Key",
-              "Description": "S3 key where to write the JSON file to",
+              "Name": "Function",
+              "Description": "Lambda ARN that the S3 bucket will invoke with the events",
               "Type": "String",
               "Required": true
             },
             {
-              "Name": "Contents",
-              "Description": "JSON contents to be written",
-              "Type": "Json",
+              "Name": "Filters",
+              "Description": "List of filters for S3 events to subscribe to",
+              "Type": "List",
               "Required": true
             }
           ],
           "Response": [
             {
-              "Name": "Url",
-              "Description": "S3 URL with destination bucket name and key path",
+              "Name": "Result",
+              "Description": "S3 bucker URL",
               "Type": "String",
               "Required": true
             }
@@ -1018,13 +863,13 @@
         }
       },
       "ResourceNameMappings": {
-        "S3WriterLogGroup": "S3Writer::LogGroup",
+        "ResourceHandlerLogGroup": "ResourceHandler::LogGroup",
         "ModuleRole": "Module::Role",
         "ModuleRegistration": "Module::Registration",
-        "S3WriterRegistration": "S3Writer::Registration",
-        "S3WriterLogGroupSubscription": "S3Writer::LogGroupSubscription",
-        "S3WriterSource1Subscription": "S3Writer::Source1Subscription",
-        "S3WriterSource1Permission": "S3Writer::Source1Permission"
+        "ResourceHandlerRegistration": "ResourceHandler::Registration",
+        "ResourceHandlerLogGroupSubscription": "ResourceHandler::LogGroupSubscription",
+        "ResourceHandlerSource1Subscription": "ResourceHandler::Source1Subscription",
+        "ResourceHandlerSource1Permission": "ResourceHandler::Source1Permission"
       },
       "TypeNameMappings": {
         "Custom::LambdaSharpRegistrationModule": "LambdaSharp::Registration::Module",
