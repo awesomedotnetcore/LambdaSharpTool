@@ -41,6 +41,7 @@
             * `no-core-version-check`: don't check if the λ# Core and CLI versions match
             * `no-module-registration`: don't register module with λ# registrar
             * `no-lambdasharp-dependencies`: don't reference λ# base resources (DLQ, Logging Stream, etc.)
+            * `sam-transform`: add SAM template transform to output
             * `Overrides`: provide alternative definitions for `Module::*` variables that are usually imported from `LambdaSharp.Core`
             ```yaml
                 - Overrides:
@@ -167,6 +168,11 @@
     * added `ALambdaFinalizerFunction` base class
     * **BREAKING CHANGE:** merged `ALambdaCustomResourceFunction` into LambdaSharp assembly
     * `ALambdaCustomResourceFunction` can be invoked via SNS or directly from a custom resource
+
+* LambdaSharp.S3.IO
+    * `LambdaSharp::S3::WriteJson`
+    * `LambdaSharp::S3::EmptyBucket`
+    * `LambdaSharp::S3::Unzip` only upload changed files
 
 
 __Topics__

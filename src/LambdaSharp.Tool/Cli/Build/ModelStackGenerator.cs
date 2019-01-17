@@ -55,6 +55,11 @@ namespace LambdaSharp.Tool.Cli.Build {
                     : null
             };
 
+            // check if we need to add the SAM transform to the output template
+            if(module.HasPragma("sam-transform")) {
+                _stack.Transform = "AWS::Serverless-2016-10-31";
+            }
+
             // add outputs
             _stack.Add("Module", new Humidifier.Output {
                 Value = _module.FullName + ":" + _module.Version.ToString()
