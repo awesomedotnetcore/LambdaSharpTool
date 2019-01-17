@@ -55,7 +55,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "CD603BBCEB097F1F0EAA8A3E1C9B246E"
+      "Default": "26AA74FECE69450896A0D680E0DFEB45"
     }
   },
   "Resources": {
@@ -668,16 +668,16 @@
           "default": "Comma-separated list of optional secret keys [String]"
         },
         "LambdaSharpDeadLetterQueue": {
-          "default": "Dead letter queue for functions [String]"
+          "default": "Dead Letter Queue (ARN) [String]"
         },
         "LambdaSharpLoggingStream": {
-          "default": "Logging kinesis stream for functions [String]"
+          "default": "Logging Stream (ARN) [String]"
         },
         "LambdaSharpLoggingStreamRole": {
-          "default": "Role for logging to kinesis stream for functions [String]"
+          "default": "Logging Stream Role (ARN) [String]"
         },
         "LambdaSharpDefaultSecretKey": {
-          "default": "Default secret key for functions [String]"
+          "default": "Secret Key (ARN) [String]"
         },
         "DeploymentBucketName": {
           "default": "Deployment S3 bucket name [String]"
@@ -750,32 +750,32 @@
             {
               "Name": "DeadLetterQueue",
               "Type": "String",
-              "Label": "Dead letter queue for functions",
+              "Label": "Dead Letter Queue (ARN)",
               "Default": "$LambdaSharp-Core::DeadLetterQueue"
             },
             {
               "Name": "LoggingStream",
               "Type": "String",
-              "Label": "Logging kinesis stream for functions",
+              "Label": "Logging Stream (ARN)",
               "Default": "$LambdaSharp-Core::LoggingStream"
             },
             {
               "Name": "LoggingStreamRole",
               "Type": "String",
-              "Label": "Role for logging to kinesis stream for functions",
+              "Label": "Logging Stream Role (ARN)",
               "Default": "$LambdaSharp-Core::LoggingStreamRole"
             },
             {
               "Name": "DefaultSecretKey",
               "Type": "String",
-              "Label": "Default secret key for functions",
+              "Label": "Secret Key (ARN)",
               "Default": "$LambdaSharp-Core::DefaultSecretKey"
             }
           ]
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "CD603BBCEB097F1F0EAA8A3E1C9B246E",
+      "Hash": "26AA74FECE69450896A0D680E0DFEB45",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

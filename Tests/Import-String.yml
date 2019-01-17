@@ -3,10 +3,11 @@ Description: LambdaSharp CloudFormation Test
 Items:
 
   - Using: OtherModule
+    Source: Some.OtherModule
     Description: Cross-Module References
     Items:
 
-      - Parameter: Value
+      - Import: Value
         Description: cross-module import reference
         Scope: "*"
 

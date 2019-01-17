@@ -243,7 +243,6 @@ namespace LambdaSharp.Tool.Model {
         }
 
         public AModuleItem AddParameter(
-            AModuleItem parent,
             string name,
             string section,
             string label,
@@ -281,9 +280,9 @@ namespace LambdaSharp.Tool.Model {
                 NoEcho = noEcho
             };
             var result = AddItem(new ParameterItem(
-                parent: parent,
+                parent: null,
                 name: name,
-                section: section ?? parent?.Description,
+                section: section,
                 label: label,
                 description: description,
                 type: type,
@@ -291,39 +290,6 @@ namespace LambdaSharp.Tool.Model {
                 reference: null,
                 parameter: parameter
             ));
-
-            // check if parameter belongs to an import statement
-            if(parent != null) {
-
-                // default value for an imported parameter is always the cross-module reference
-                parameter.Default = $"${parent.Reference.ToString().Replace(".", "-")}::{name}";
-
-                // set default settings for import parameters
-                if(constraintDescription == null) {
-                    parameter.ConstraintDescription = "must either be a cross-module import reference or a non-empty value";
-                }
-                if(allowedPattern == null) {
-                    parameter.AllowedPattern =  @"^.+$";
-                }
-
-                // register import parameter reference
-                var condition = AddCondition(
-                    parent: result,
-                    name: "IsImported",
-                    description: null,
-                    value: FnAnd(
-                        FnNot(FnEquals(FnRef(result.ResourceName), "")),
-                        FnEquals(FnSelect("0", FnSplit("$", FnRef(result.ResourceName))), "")
-                    )
-                );
-                result.Reference = FnIf(
-                    condition.ResourceName,
-                    FnImportValue(FnSub("${DeploymentPrefix}${Import}", new Dictionary<string, object> {
-                        ["Import"] = FnSelect("1", FnSplit("$", FnRef(result.ResourceName)))
-                    })),
-                    FnRef(result.ResourceName)
-                );
-            }
 
             // check if a resource-type is associated with the input parameter
             if(result.HasSecretType) {
@@ -379,6 +345,87 @@ namespace LambdaSharp.Tool.Model {
 
                 // request input parameter or conditional managed resource grants
                 AddGrant(instance.LogicalId, type, result.Reference, allow);
+            }
+            return result;
+        }
+
+        public AModuleItem AddImport(
+            AModuleItem parent,
+            string name,
+            string description,
+            string type,
+            IList<string> scope,
+            bool? noEcho,
+            object allow,
+            string arnAttribute,
+            IDictionary<string, string> encryptionContext
+        ) {
+
+            // create input parameter item
+            var parameter = new Humidifier.Parameter {
+                Type = ResourceMapping.ToCloudFormationParameterType(type),
+                Description = description,
+                NoEcho = noEcho
+            };
+            var result = AddItem(new ParameterItem(
+                parent: parent,
+                name: name.Replace("::", ""),
+                section: parent.Description,
+                label: description,
+                description: description,
+                type: type,
+                scope: scope,
+                reference: null,
+                parameter: parameter
+            ));
+
+            // default value for an imported parameter is always the cross-module reference
+            parameter.Default = $"${parent.Reference.ToString().Replace(".", "-")}::{name}";
+
+            // set default settings for import parameters
+            parameter.ConstraintDescription = "must either be a cross-module import reference or a non-empty value";
+            parameter.AllowedPattern =  @"^.+$";
+
+            // register import parameter reference
+            var condition = AddCondition(
+                parent: result,
+                name: "IsImported",
+                description: null,
+                value: FnAnd(
+                    FnNot(FnEquals(FnRef(result.ResourceName), "")),
+                    FnEquals(FnSelect("0", FnSplit("$", FnRef(result.ResourceName))), "")
+                )
+            );
+            result.Reference = FnIf(
+                condition.ResourceName,
+                FnImportValue(FnSub("${DeploymentPrefix}${Import}", new Dictionary<string, object> {
+                    ["Import"] = FnSelect("1", FnSplit("$", FnRef(result.ResourceName)))
+                })),
+                FnRef(result.ResourceName)
+            );
+
+            // check if imported values requires additional permissions/processing
+            if(result.HasSecretType) {
+                var decoder = AddResource(
+                    parent: result,
+                    name: "Plaintext",
+                    description: null,
+                    scope: null,
+                    resource: CreateDecryptSecretResourceFor(result),
+                    resourceExportAttribute: null,
+                    dependsOn: null,
+                    condition: null,
+                    pragmas: null
+                );
+                decoder.Reference = FnGetAtt(decoder.ResourceName, "Plaintext");
+                decoder.DiscardIfNotReachable = true;
+            } else if(!result.HasAwsType) {
+
+                // nothing to do
+            } else {
+
+                // request input parameter resource grants
+                AddGrant(result.LogicalId, type, result.Reference, allow);
             }
             return result;
         }

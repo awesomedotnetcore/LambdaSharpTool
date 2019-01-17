@@ -122,7 +122,6 @@ namespace LambdaSharp.Tool.Cli.Build {
             // add LambdaSharp Module Options
             var section = "LambdaSharp Module Options";
             _builder.AddParameter(
-                parent: null,
                 name: "Secrets",
                 section: section,
                 label: "Comma-separated list of optional secret keys",
@@ -162,109 +161,61 @@ namespace LambdaSharp.Tool.Cli.Build {
                     source: "LambdaSharp.Core",
                     description: "LambdaSharp Core Imports"
                 );
-                _builder.AddParameter(
+                _builder.AddImport(
                     parent: lambdasharp,
                     name: "DeadLetterQueue",
-                    section: null,
-                    label: "Dead letter queue for functions",
                     description: "Dead Letter Queue (ARN)",
 
                     // TODO (2018-12-01, bjorg): consider using 'AWS::SQS::Queue'
                     type: "String",
                     scope: null,
                     noEcho: null,
-                    defaultValue: null,
-                    constraintDescription: null,
-                    allowedPattern: null,
-                    allowedValues: null,
-                    maxLength: null,
-                    maxValue: null,
-                    minLength: null,
-                    minValue: null,
                     allow: null /* new[] {
                         "sqs:SendMessage"
                     }*/,
-                    properties: null,
                     arnAttribute: null,
-                    encryptionContext: null,
-                    pragmas: null
+                    encryptionContext: null
                 ).DiscardIfNotReachable = true;
-                _builder.AddParameter(
+                _builder.AddImport(
                     parent: lambdasharp,
                     name: "LoggingStream",
-                    section: null,
-                    label: "Logging kinesis stream for functions",
                     description: "Logging Stream (ARN)",
 
                     // NOTE (2018-12-11, bjorg): we use type 'String' to be more flexible with the type of values we're willing to take
                     type: "String",
                     scope: null,
                     noEcho: null,
-                    defaultValue: null,
-                    constraintDescription: null,
-                    allowedPattern: null,
-                    allowedValues: null,
-                    maxLength: null,
-                    maxValue: null,
-                    minLength: null,
-                    minValue: null,
                     allow: null,
-                    properties: null,
                     arnAttribute: null,
-                    encryptionContext: null,
-                    pragmas: null
+                    encryptionContext: null
                 ).DiscardIfNotReachable = true;
-                _builder.AddParameter(
+                _builder.AddImport(
                     parent: lambdasharp,
                     name: "LoggingStreamRole",
-                    section: null,
-                    label: "Role for logging to kinesis stream for functions",
                     description: "Logging Stream Role (ARN)",
 
                     // NOTE (2018-12-11, bjorg): we use type 'String' to be more flexible with the type of values we're willing to take
                     type: "String",
                     scope: null,
                     noEcho: null,
-                    defaultValue: null,
-                    constraintDescription: null,
-                    allowedPattern: null,
-                    allowedValues: null,
-                    maxLength: null,
-                    maxValue: null,
-                    minLength: null,
-                    minValue: null,
                     allow: null,
-                    properties: null,
                     arnAttribute: null,
-                    encryptionContext: null,
-                    pragmas: null
+                    encryptionContext: null
                 ).DiscardIfNotReachable = true;
-                _builder.AddParameter(
+                _builder.AddImport(
                     parent: lambdasharp,
                     name: "DefaultSecretKey",
-                    section: null,
-                    label: "Default secret key for functions",
                     description: "Secret Key (ARN)",
 
                     // TODO (2018-12-01, bjorg): consider using 'AWS::KMS::Key'
                     type: "String",
                     scope: null,
                     noEcho: null,
-                    defaultValue: null,
-                    constraintDescription: null,
-                    allowedPattern: null,
-                    allowedValues: null,
-                    maxLength: null,
-                    maxValue: null,
-                    minLength: null,
-                    minValue: null,
 
                     // NOTE (2018-12-11, bjorg): we grant decryption access later as part of a bulk permissioning operation
                     allow: null,
-                    properties: null,
                     arnAttribute: null,
-                    encryptionContext: null,
-                    pragmas: null
+                    encryptionContext: null
                 ).DiscardIfNotReachable = true;
             }
 
@@ -383,7 +334,6 @@ namespace LambdaSharp.Tool.Cli.Build {
             // add LambdaSharp Deployment Settings
             section = "LambdaSharp Deployment Settings (DO NOT MODIFY)";
             _builder.AddParameter(
-                parent: null,
                 name: "DeploymentBucketName",
                 section: section,
                 label: "Deployment S3 bucket name",
@@ -406,7 +356,6 @@ namespace LambdaSharp.Tool.Cli.Build {
                 pragmas: null
             );
             _builder.AddParameter(
-                parent: null,
                 name: "DeploymentPrefix",
                 section: section,
                 label: "Deployment tier prefix",
@@ -429,7 +378,6 @@ namespace LambdaSharp.Tool.Cli.Build {
                 pragmas: null
             );
             _builder.AddParameter(
-                parent: null,
                 name: "DeploymentPrefixLowercase",
                 section: section,
                 label: "Deployment tier prefix (lowercase)",
@@ -452,7 +400,6 @@ namespace LambdaSharp.Tool.Cli.Build {
                 pragmas: null
             );
             _builder.AddParameter(
-                parent: null,
                 name: "DeploymentParent",
                 section: section,
                 label: "Parent stack name for nested deployments, blank otherwise",
@@ -475,7 +422,6 @@ namespace LambdaSharp.Tool.Cli.Build {
                 pragmas: null
             );
             _builder.AddParameter(
-                parent: null,
                 name: "DeploymentChecksum",
                 section: section,
                 label: "CloudFormation template MD5 checksum",

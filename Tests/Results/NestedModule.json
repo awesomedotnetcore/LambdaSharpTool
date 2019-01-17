@@ -48,7 +48,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "B0EB27C8CA0EDDA469A1409886B2397D"
+      "Default": "E9C609D92E16C4F92E505CA553A7D5E0"
     }
   },
   "Resources": {
@@ -301,13 +301,13 @@
           "default": "Comma-separated list of optional secret keys [String]"
         },
         "LambdaSharpDeadLetterQueue": {
-          "default": "Dead letter queue for functions [String]"
+          "default": "Dead Letter Queue (ARN) [String]"
         },
         "LambdaSharpLoggingStream": {
-          "default": "Logging kinesis stream for functions [String]"
+          "default": "Logging Stream (ARN) [String]"
         },
         "LambdaSharpDefaultSecretKey": {
-          "default": "Default secret key for functions [String]"
+          "default": "Secret Key (ARN) [String]"
         },
         "DeploymentBucketName": {
           "default": "Deployment S3 bucket name [String]"
@@ -379,26 +379,26 @@
             {
               "Name": "DeadLetterQueue",
               "Type": "String",
-              "Label": "Dead letter queue for functions",
+              "Label": "Dead Letter Queue (ARN)",
               "Default": "$LambdaSharp-Core::DeadLetterQueue"
             },
             {
               "Name": "LoggingStream",
               "Type": "String",
-              "Label": "Logging kinesis stream for functions",
+              "Label": "Logging Stream (ARN)",
               "Default": "$LambdaSharp-Core::LoggingStream"
             },
             {
               "Name": "DefaultSecretKey",
               "Type": "String",
-              "Label": "Default secret key for functions",
+              "Label": "Secret Key (ARN)",
               "Default": "$LambdaSharp-Core::DefaultSecretKey"
             }
           ]
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "B0EB27C8CA0EDDA469A1409886B2397D",
+      "Hash": "E9C609D92E16C4F92E505CA553A7D5E0",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

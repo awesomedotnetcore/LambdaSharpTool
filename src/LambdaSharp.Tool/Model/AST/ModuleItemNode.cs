@@ -52,6 +52,14 @@ namespace LambdaSharp.Tool.Model.AST {
                 "Section",
                 "Type"
             },
+            ["Import"] = new[] {
+                "Allow",
+                "Description",
+                "EncryptionContext",
+                "NoEcho",
+                "Scope",
+                "Type"
+            },
             ["Condition"] = new[] {
                 "Description",
                 "Value"
@@ -182,6 +190,17 @@ namespace LambdaSharp.Tool.Model.AST {
         public string Using { get; set; }
         public string Source { get; set; }
         public IList<ModuleItemNode> Items { get; set; }
+
+        /*
+         * Import: string
+         * Description: string
+         * Type: string
+         * Scope: string -or- list<string>
+         * NoEcho: bool
+         * Allow: string or list<string>
+         * EncryptionContext: map
+         */
+        public string Import { get; set; }
 
         /*
          * Variable: string

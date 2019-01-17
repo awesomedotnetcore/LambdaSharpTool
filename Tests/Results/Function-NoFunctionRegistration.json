@@ -41,7 +41,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "CE814FBAB574BE4063C111F74A03BB78"
+      "Default": "A4608F6DC333FF7B3214E7CB8E5EECF5"
     }
   },
   "Resources": {
@@ -450,10 +450,10 @@
           "default": "Comma-separated list of optional secret keys [String]"
         },
         "LambdaSharpDeadLetterQueue": {
-          "default": "Dead letter queue for functions [String]"
+          "default": "Dead Letter Queue (ARN) [String]"
         },
         "LambdaSharpDefaultSecretKey": {
-          "default": "Default secret key for functions [String]"
+          "default": "Secret Key (ARN) [String]"
         },
         "DeploymentBucketName": {
           "default": "Deployment S3 bucket name [String]"
@@ -524,20 +524,20 @@
             {
               "Name": "DeadLetterQueue",
               "Type": "String",
-              "Label": "Dead letter queue for functions",
+              "Label": "Dead Letter Queue (ARN)",
               "Default": "$LambdaSharp-Core::DeadLetterQueue"
             },
             {
               "Name": "DefaultSecretKey",
               "Type": "String",
-              "Label": "Default secret key for functions",
+              "Label": "Secret Key (ARN)",
               "Default": "$LambdaSharp-Core::DefaultSecretKey"
             }
           ]
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "CE814FBAB574BE4063C111F74A03BB78",
+      "Hash": "A4608F6DC333FF7B3214E7CB8E5EECF5",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

@@ -6,7 +6,7 @@ Items:
     Description: Cross-Module References
     Items:
 
-      - Parameter: Resource
+      - Import: Resource
         Scope: "*"
         Type: AWS::DynamoDB::Table
         Allow: ReadOnly

@@ -65,7 +65,6 @@ if [ -z "$1" ]; then
         Parameter-Secret.yml \
         Import-String.yml \
         Import-Resource.yml \
-        Import-ConditionalResource.yml \
         Import-Secret.yml \
         Output-LiteralValue.yml \
         Output-Variable.yml \

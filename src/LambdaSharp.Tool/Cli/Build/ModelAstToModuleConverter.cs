@@ -289,10 +289,10 @@ namespace LambdaSharp.Tool.Cli.Build {
                         Validate(node.Type != null, "'Type' attribute is required");
                     }
                     Validate((node.Allow == null) || (node.Type == "AWS") || ResourceMapping.IsCloudFormationType(node.Type), "'Allow' attribute can only be used with AWS resource types");
+                    Validate(parent == null, "'Parameter' cannot be nested");
 
                     // create input parameter item
                     _builder.AddParameter(
-                        parent: parent,
                         name: node.Parameter,
                         section: node.Section,
                         label: node.Label,
@@ -326,8 +326,28 @@ namespace LambdaSharp.Tool.Cli.Build {
                         description: node.Description
                     );
 
-                    // recurse, but only allow 'Parameter' nodes
-                    ConvertItems(result, new[] { "Parameter" });
+                    // recurse, but only allow 'Import' nodes
+                    ConvertItems(result, new[] { "Import" });
+                });
+                break;
+            case "Import":
+                AtLocation(node.Import, () => {
+
+                    // validation
+                    Validate((node.Allow == null) || (node.Type == "AWS") || ResourceMapping.IsCloudFormationType(node.Type), "'Allow' attribute can only be used with AWS resource types");
+
+                    // create input parameter item
+                    _builder.AddImport(
+                        parent: parent,
+                        name: node.Import,
+                        description: node.Description,
+                        type: node.Type ?? "String",
+                        scope: ConvertScope(node.Scope),
+                        noEcho: node.NoEcho,
+                        allow: node.Allow,
+                        arnAttribute: node.DefaultAttribute,
+                        encryptionContext: node.EncryptionContext
+                    );
                 });
                 break;
             case "Variable":
