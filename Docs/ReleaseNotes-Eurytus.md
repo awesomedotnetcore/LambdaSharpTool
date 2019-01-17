@@ -55,7 +55,7 @@
     * entry type `Module`
         ```yaml
         - Module: MyNestedModule
-          Source: LambdaSharp.S3FooBar:1.0
+          Source: LambdaSharp.S3.FooBar:1.0
           Parameters:
             ...
           DependsOn: ...

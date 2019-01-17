@@ -122,8 +122,8 @@ namespace LambdaSharp.Tool.Cli {
             if(lambdaSharpPath != null) {
                 foreach(var module in new[] {
                     "LambdaSharp.Core",
-                    "LambdaSharp.S3",
-                    "LambdaSharp.S3Subscriber"
+                    "LambdaSharp.S3.IO",
+                    "LambdaSharp.S3.Subscriber"
                 }) {
                     var moduleSource = Path.Combine(lambdaSharpPath, "Modules", module, "Module.yml");
                     settings.WorkingDirectory = Path.GetDirectoryName(moduleSource);

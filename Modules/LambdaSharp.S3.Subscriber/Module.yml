@@ -17,7 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-Module: LambdaSharp.S3Subscriber
+Module: LambdaSharp.S3.Subscriber
 Version: 0.5-WIP
 Description: LambdaSharp S3 Lambda Function Subscriber
 Items:

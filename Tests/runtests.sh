@@ -83,8 +83,8 @@ if [ -z "$1" ]; then
         Condition-Function.yml \
         Condition-Condition.yml \
         ../Modules/LambdaSharp.Core \
-        ../Modules/LambdaSharp.S3 \
-        ../Modules/LambdaSharp.S3Subscriber \
+        ../Modules/LambdaSharp.S3.IO \
+        ../Modules/LambdaSharp.S3.Subscriber \
         ../Samples/AlexaSample \
         ../Samples/ApiSample \
         ../Samples/CustomResourceSample \
