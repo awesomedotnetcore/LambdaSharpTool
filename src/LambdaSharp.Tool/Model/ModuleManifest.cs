@@ -50,7 +50,7 @@ namespace LambdaSharp.Tool.Model {
 
         //--- Methods ---
         public string GetFullName() {
-            if(!Module.TryParseModuleString(
+            if(!Module.TryParseModuleDescriptor(
                 out string moduleOwner,
                 out string moduleName,
                 out VersionInfo _,
@@ -62,7 +62,7 @@ namespace LambdaSharp.Tool.Model {
         }
 
         public string GetOwner() {
-            if(!Module.TryParseModuleString(
+            if(!Module.TryParseModuleDescriptor(
                 out string moduleOwner,
                 out string _,
                 out VersionInfo _,
@@ -74,7 +74,7 @@ namespace LambdaSharp.Tool.Model {
         }
 
         public string GetName() {
-            if(!Module.TryParseModuleString(
+            if(!Module.TryParseModuleDescriptor(
                 out string _,
                 out string moduleName,
                 out VersionInfo _,
@@ -86,7 +86,7 @@ namespace LambdaSharp.Tool.Model {
         }
 
         public VersionInfo GetVersion() {
-            if(!Module.TryParseModuleString(
+            if(!Module.TryParseModuleDescriptor(
                 out string _,
                 out string _,
                 out VersionInfo moduleVersion,

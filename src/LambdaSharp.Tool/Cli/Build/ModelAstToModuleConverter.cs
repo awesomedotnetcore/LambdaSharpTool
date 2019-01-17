@@ -426,7 +426,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     // validation
                     if(node.Source == null) {
                         AddError("missing 'Reference' attribute");
-                    } else if(!node.Source.TryParseModuleString(
+                    } else if(!node.Source.TryParseModuleDescriptor(
                         out string moduleOwner,
                         out string moduleName,
                         out VersionInfo moduleVersion,

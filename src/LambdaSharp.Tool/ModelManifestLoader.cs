@@ -98,7 +98,7 @@ namespace LambdaSharp.Tool {
             // * s3://bucket-name/{ModuleOwner}/Modules/{ModuleName}/Versions/{Version}/
             // * s3://bucket-name/{ModuleOwner}/Modules/{ModuleName}/Versions/{Version}/cloudformation.json
 
-            if(!moduleReference.TryParseModuleString(
+            if(!moduleReference.TryParseModuleDescriptor(
                 out string moduleOwner,
                 out string moduleName,
                 out VersionInfo moduleVersion,

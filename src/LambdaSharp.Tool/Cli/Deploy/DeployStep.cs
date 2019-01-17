@@ -187,7 +187,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 // validate existing module deployment
                 var deployedOutputs = existing?.Outputs;
                 var deployed = deployedOutputs?.FirstOrDefault(output => output.OutputKey == "Module")?.OutputValue;
-                if(!deployed.TryParseModuleString(
+                if(!deployed.TryParseModuleDescriptor(
                     out string deployedOwner,
                     out string deployedName,
                     out VersionInfo deployedVersion,
@@ -308,7 +308,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 });
                 var deployedOutputs = describe.Stacks.FirstOrDefault()?.Outputs;
                 var deployedInfo = deployedOutputs?.FirstOrDefault(output => output.OutputKey == "Module")?.OutputValue;
-                var success = deployedInfo.TryParseModuleString(
+                var success = deployedInfo.TryParseModuleDescriptor(
                     out string deployedOwner,
                     out string deployedName,
                     out VersionInfo deployedVersion,

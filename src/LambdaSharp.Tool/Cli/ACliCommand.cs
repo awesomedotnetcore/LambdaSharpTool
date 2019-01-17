@@ -258,7 +258,7 @@ namespace LambdaSharp.Tool.Cli {
                     if(deployedOutputs != null) {
                         var deployed = deployedOutputs.FirstOrDefault(output => output.OutputKey == "Module")?.OutputValue;
                         if(
-                            deployed.TryParseModuleString(
+                            deployed.TryParseModuleDescriptor(
                                 out string deployedOwner,
                                 out string deployedName,
                                 out VersionInfo deployedVersion,
