@@ -1,27 +1,34 @@
 ![λ#](../../Docs/LambdaSharp_v2_small.png)
 
-# LambdaSharp CloudFormation Custom Resource Function
-
+# LambdaSharp Custom Resource Type Definition
 
 Before you begin, make sure to [setup your λ# CLI](../../Docs/).
 
 ## Module Definition
 
-A [CloudFormation Custom Resource](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/template-custom-resources.html) is defined with the `CustomResource` attribute in the `Outputs` section. The Custom resource definition is global to the deployment tier, which means that the associated resource type (e.g. `MyNamespace::MyResource`) can only be defined once.
+A custom resource type is defined with the `ResourceType` attribute. The resource type definition is global to the deployment tier, which means that the associated resource type (e.g. `MyNamespace::MyResource`) can only be defined once.
 
 ```yaml
-Module: CustomResourceSample
+Module: LambdaSharpSample.CustomResourceTypeSample
 Description: A sample module for defining a custom resource
-Entries:
+Items:
 
   - ResourceType: MyNamespace::MyResource
-    Description: Handler for MyNamespace::MyResource custom resource
+    Description: Definition for MyNamespace::MyResource resource
     Handler: ResourceHandler
     Properties:
       Request:
+
         - Name: SampleInput
+          Description: SampleInput description
+          Type: String
+          Required: true
+
       Response:
+
         - Name: SampleOutput
+          Description: SampleOutput description
+          Type: String
 
   - Function: ResourceHandler
     Description: This function is invoked by CloudFormation
@@ -33,12 +40,20 @@ The custom resource can then be used by other modules by using its resource type
 ```yaml
 Module: MyModule
 Description: A sample module that uses a custom resource
-Entries:
+Requires:
+
+    - Module: LambdaSharpSample.CustomResourceTypeSample
+
+Items:
 
   - Resource: MyCustomResource
-    Types: MyNamespace::MyResource
+    Type: MyNamespace::MyResource
     Properties:
-      # add custom resource properties if needed
+        SampleInput: 123
+
+  - Variable: MyOutput
+    Scope: public
+    Value: !GetAtt MyCustomResource.SampleOutput
 ```
 
 ## Function Code

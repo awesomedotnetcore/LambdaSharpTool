@@ -1,6 +1,6 @@
 ![λ#](../../Docs/LambdaSharp_v2_small.png)
 
-# LambdaSharp Slack Command Function
+# LambdaSharp Slack Command Source
 
 Before you begin, make sure to [setup your λ# CLI](../../Docs/).
 
@@ -11,9 +11,9 @@ An invocations schedule is created by adding a `Schedule` source to each functio
 A [Slack](https://slack.com) command integration is created by adding the `SlackCommand` source to a function. The λ# CLI automatically generates the API Gateway scaffolding including resources, methods, stages, and a RestApi deployment. In addition, the Slack command requests are converted into asynchronous invocation to avoid timeout errors for slow functions. Additional details on the Slack Command integration can be [found below](#reference).
 
 ```yaml
-Module: SlackCommandSample
+Module: LambdaSharpSample.SlackCommandSample
 Description: A sample module integrating with Slack
-Entries:
+Items:
 
   - Parameter: SlackToken
     Description: Slack verification token

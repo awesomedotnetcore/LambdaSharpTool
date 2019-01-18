@@ -31,7 +31,7 @@ using LambdaSharp;
 
 namespace LambdaSharpDemo.RecordEvents {
 
-    public class Function : ALambdaEventFunction<Message> {
+    public class Function : ALambdaTopicFunction<Message> {
 
         //-- Fields ---
         private MessageTable _table;

@@ -1,6 +1,6 @@
 ![λ#](../../Docs/LambdaSharp_v2_small.png)
 
-# LambdaSharp Finalizer
+# LambdaSharp Module Finalizer
 
 Before you begin, make sure to [setup your λ# CLI](../../Docs/).
 
@@ -8,14 +8,14 @@ Before you begin, make sure to [setup your λ# CLI](../../Docs/).
 
 A λ# module can have a `Finalizer` function that is invoked as the last step of a CloudFormation stack creation and the first step of a CloudFormation stack deletion.
 
-The `Finalizer` is useful to clean resources before CloudFormation attempts to delete them. Similarly, it can also be used to delete resources that were created dynamically during the lifetime of the CloudFormation stack.
+The `Finalizer` is useful to clean resources before CloudFormation attempts to delete them. Similarly, it can also be used to delete resources that were created dynamically during the lifetime of the module.
 
 In this example, the `Finalizer` is used to delete all objects from an S3 bucket. Once deleted, the function returns, which allows CloudFormation to continue its clean-up operations, including deleting the S3 bucket.
 
 ```yaml
-Module: FinalizerSample
+Module: LambdaSharpSample.FinalizerSample
 Description: A sample module with a finalizer function
-Entries:
+Items:
 
   - Resource: MyBucket
     Description: A sample resource being created before the finalizer is invoked
@@ -26,7 +26,7 @@ Entries:
   - Function: Finalizer
     Description: This function is invoked once all other resources have been created/updated
     Memory: 128
-    Timeout: 30
+    Timeout: 600
 ```
 
 ## Function Code

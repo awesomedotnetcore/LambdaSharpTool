@@ -19,7 +19,7 @@
 
 Module: LambdaSharp.Core
 Version: 0.5-WIP
-Description: LambdaSharp Resources and Services
+Description: LambdaSharp Core Resources and Services
 Pragmas:
   - no-core-version-check
   - no-lambdasharp-dependencies

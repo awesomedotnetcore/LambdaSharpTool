@@ -1,19 +1,19 @@
 ![λ#](../../Docs/LambdaSharp_v2_small.png)
 
-# LambdaSharp S3 Bucket Notifications Function
+# LambdaSharp S3 Bucket Events Source
 
 Before you begin, make sure to [setup your λ# CLI](../../Docs/).
 
 ## Module Definition
 
-Creating a function that is invoked by a S3 bucket events requires two steps. First, the S3 topic must be created in the `Variables` section. Referencing an existing S3 bucket does not work. Second, the function must reference the parameter name in its `Sources` section using the `S3` attribute.
+Creating a function that is invoked by a S3 bucket events requires two steps. First, either create or reference an S3 bucket in the `Items` section. Second, the function must reference the bucket in its `Sources` section using the `S3` attribute.
 
 Optionally, the `S3` attribute can specify specific [S3 events](https://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html#notification-how-to-event-types-and-destinations) to listen to, an S3 key prefix and suffix.
 
 ```yaml
-Module: S3Sample
+Module: LambdaSharpSample.S3SubscriptionSample
 Description: A sample module integrating with S3 Bucket events
-Entries:
+Items:
 
   - Resource: MyFirstBucket
     Description: The S3 Bucket the function is listening to

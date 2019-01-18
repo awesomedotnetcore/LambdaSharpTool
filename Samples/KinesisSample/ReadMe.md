@@ -1,19 +1,19 @@
 ![λ#](../../Docs/LambdaSharp_v2_small.png)
 
-# LambdaSharp Kinesis Stream Function
+# LambdaSharp Kinesis Stream Source
 
 Before you begin, make sure to [setup your λ# CLI](../../Docs/).
 
 ## Module Definition
 
-Creating a function that is invoked by a Kinesis stream requires two steps. First, the Kinesis stream must either be created or referenced in the `Variables` section. Second, the function must reference the parameter name in its `Sources` section using the `Kinesis` attribute.
+Creating a function that is invoked by a Kinesis stream requires two steps. First, the Kinesis stream must either be created or referenced in the `Items` section. Second, the function must reference the parameter name in its `Sources` section using the `Kinesis` attribute.
 
 Optionally, the `Kinesis` attribute can specify the maximum number of messages to read from Kinesis using `BatchSize`.
 
 ```yaml
-Module: KinesisSample
+Module: LambdaSharpSample.KinesisSample
 Description: A sample module using Kinesis streams
-Entries:
+Items:
 
   - Resource: Stream
     Description: Description for Kinesis stream
@@ -33,7 +33,7 @@ Entries:
 
 ## Function Code
 
-SQS events can be parsed into a `SQSEvent` message instance by using the `ALambdaFunction<T>` base class and including the `Amazon.Lambda.SQSEvents` nuget package.
+Kinesis stream events can be parsed into a `KinesisEvent` message instance by using the `ALambdaFunction<T>` base class and including the `Amazon.Lambda.KinesisEvents` nuget package.
 
 ```csharp
 public class Function : ALambdaFunction<KinesisEvent, string> {

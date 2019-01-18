@@ -1,6 +1,6 @@
 ![λ#](../../Docs/LambdaSharp_v2_small.png)
 
-# LambdaSharp Alexa Skill Function
+# LambdaSharp Alexa Skill Source
 
 Before you begin, make sure to [setup your λ# CLI](../../Docs/).
 
@@ -11,9 +11,9 @@ Creating a function that is invoked by an [Alexa Skill](https://developer.amazon
 Optionally, the `Alexa` attribute can specify an Alexa Skill ID to restrict invocation to a specific Alexa Skill.
 
 ```yaml
-Module: AlexaSample
+Module: LambdaSharpSample.AlexaSample
 Description: A sample module using an Alexa skill
-Entries:
+Items:
 
   - Parameter: AlexaSkillID
     Description: Alexa Skill ID
@@ -29,7 +29,7 @@ Entries:
 
 ## Function Code
 
-Alexa Skill requests can be parsed using the excellent [Alexa.NET](https://github.com/timheuer/alexa-skills-dotnet) library by Tim Heuer and by deriving the function from the `ALambdaFunction<T>` base class.
+Alexa Skill requests can be parsed using the [Alexa.NET](https://github.com/timheuer/alexa-skills-dotnet) library by Tim Heuer and by deriving the function from the `ALambdaFunction<T>` base class.
 
 ```csharp
 public class Function : ALambdaFunction<SkillRequest, SkillResponse> {
@@ -56,4 +56,20 @@ public class Function : ALambdaFunction<SkillRequest, SkillResponse> {
         });
     }
 }
+```
+
+## Reference
+
+The λ# CLI automatically creates the required permissions to allow the Alexa skill to invoke the Lambda function. The `EventSourceToken` attribute is omitted if the `Alexa` attribute is set to `"*"` in the module definition.
+
+Thw following YAML shows the permission granted to the Alexa service.
+
+```yaml
+FunctionAlexaPermission:
+  Type: AWS::Lambda::Permission
+  Properties:
+    Action: lambda:InvokeFunction
+    EventSourceToken: !Ref AlexaSkillID
+    FunctionName: !GetAtt Function.Arn
+    Principal: alexa-appkit.amazon.com
 ```

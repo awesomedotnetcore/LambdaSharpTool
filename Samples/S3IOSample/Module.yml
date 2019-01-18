@@ -7,6 +7,7 @@ Requires:
 
 Items:
 
+  # Get site configuration settings
   - Parameter: Title
     Description: Website title
     Section: Website Settings
@@ -17,6 +18,17 @@ Items:
     Section: Website Settings
     Label: Website Message
 
+  # Write the site configuration settings to a JSON file in the S3 bucket
+  - Resource: WriteWebsiteConfigJson
+    Type: LambdaSharp::S3::WriteJson
+    Properties:
+      Bucket: !Ref WebsiteBucket
+      Key: config.json
+      Contents:
+        title: !Ref Title
+        message: !Ref Message
+
+  # Create S3 bucket, make it publicly accessible, and register it for automatic emptying
   - Resource: WebsiteBucket
     Type: AWS::S3::Bucket
     Allow: ReadWrite
@@ -25,11 +37,6 @@ Items:
       WebsiteConfiguration:
         IndexDocument: index.html
         ErrorDocument: error.html
-
-  - Resource: EmptyBucket
-    Type: LambdaSharp::S3::EmptyBucket
-    Properties:
-      Bucket: !Ref WebsiteBucket
 
   - Resource: BucketPolicy
     Type: AWS::S3::BucketPolicy
@@ -45,6 +52,12 @@ Items:
             Resource: !Sub "arn:aws:s3:::${WebsiteBucket}/*"
       Bucket: !Ref WebsiteBucket
 
+  - Resource: EmptyBucket
+    Type: LambdaSharp::S3::EmptyBucket
+    Properties:
+      Bucket: !Ref WebsiteBucket
+
+  # Upload the HTML assets and copy them to the bucket
   - Package: WebsiteContents
     Description: Package of web site files
     Files: assets/
@@ -56,15 +69,6 @@ Items:
       SourceKey: !Ref WebsiteContents
       DestinationBucket: !Ref WebsiteBucket
       DestinationKey: ""
-
-  - Resource: WriteWebsiteConfigJson
-    Type: LambdaSharp::S3::WriteJson
-    Properties:
-      Bucket: !Ref WebsiteBucket
-      Key: config.json
-      Contents:
-        title: !Ref Title
-        message: !Ref Message
 
   - Variable: WebsiteUrl
     Description: Website URL

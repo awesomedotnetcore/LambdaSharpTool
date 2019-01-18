@@ -35,7 +35,7 @@ namespace SnsSample.MyFunction {
         public string Text { get; set; }
     }
 
-    public class Function : ALambdaEventFunction<MyMessage> {
+    public class Function : ALambdaTopicFunction<MyMessage> {
 
         //--- Methods ---
         public override Task InitializeAsync(LambdaConfig config)

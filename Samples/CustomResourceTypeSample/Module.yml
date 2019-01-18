@@ -1,15 +1,23 @@
-Module: LambdaSharpSample.CustomResourceSample
+Module: LambdaSharpSample.CustomResourceTypeSample
 Description: A sample module for defining a custom resource
 Items:
 
   - ResourceType: MyNamespace::MyResource
-    Description: Handler for MyNamespace::MyResource custom resource
+    Description: Definition for MyNamespace::MyResource resource
     Handler: ResourceHandler
     Properties:
       Request:
+
         - Name: SampleInput
+          Description: SampleInput description
+          Type: String
+          Required: true
+
       Response:
+
         - Name: SampleOutput
+          Description: SampleOutput description
+          Type: String
 
   - Function: ResourceHandler
     Description: This function is invoked by CloudFormation

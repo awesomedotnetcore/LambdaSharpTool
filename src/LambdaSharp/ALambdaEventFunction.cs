@@ -29,12 +29,12 @@ using Newtonsoft.Json;
 
 namespace LambdaSharp {
 
-    public abstract class ALambdaEventFunction<TMessage> : ALambdaFunction {
+    public abstract class ALambdaTopicFunction<TMessage> : ALambdaFunction {
 
         //--- Constructors ---
-        protected ALambdaEventFunction() : this(LambdaFunctionConfiguration.Instance) { }
+        protected ALambdaTopicFunction() : this(LambdaFunctionConfiguration.Instance) { }
 
-        protected ALambdaEventFunction(LambdaFunctionConfiguration configuration) : base(configuration) { }
+        protected ALambdaTopicFunction(LambdaFunctionConfiguration configuration) : base(configuration) { }
 
         //--- Abstract Methods ---
         public abstract Task ProcessMessageAsync(TMessage message, ILambdaContext context);
