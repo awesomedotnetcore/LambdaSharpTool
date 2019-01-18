@@ -26,6 +26,21 @@ The `init` command is used to both initialize a new deployment tier and update a
 <dt><code>--use-published</code></dt>
 <dd>(optional) Force the init command to use the published LambdaSharp modules</dd>
 
+<dt><code>--parameters &lt;FILE&gt;</code></dt>
+<dd>(optional) Specify filename to read module parameters from (default: none)</dd>
+
+<dt><code>--force-publish</code></dt>
+<dd>(optional) Publish modules and their assets even when no changes were detected</dd>
+
+<dt><code>--prompt-all</code></dt>
+<dd>(optional) Prompt for all missing parameters values (default: only prompt for missing parameters with no default value)</dd>
+
+<dt><code>--prompts-as-errors</code></dt>
+<dd>(optional) Missing parameters cause an error instead of a prompts (use for CI/CD to avoid unattended prompts)</dd>
+
+<dt><code>--tier|-T &lt;NAME&gt;</code></dt>
+<dd>(optional) Name of deployment tier (default: <code>LAMBDASHARP_TIER</code> environment variable)</dd>
+
 <dt><code>--cli-profile|-CLI &lt;NAME&gt;</code></dt>
 <dd>(optional) Use a specific LambdaSharp CLI profile (default: Default)</dd>
 
@@ -41,33 +56,40 @@ The `init` command is used to both initialize a new deployment tier and update a
 
 ### Create a new deployment tier or update an existing one
 
-__Using Powershell/Bash:__
+__Using PowerShell/Bash:__
 ```bash
 dotnet lash init --tier Sandbox
 ```
 
 Output:
 ```
-MindTouch LambdaSharp CLI (v0.4) - Initialize LambdaSharp deployment tier
+LambdaSharp CLI (v0.5) - Initialize LambdaSharp deployment tier
 Creating new deployment tier 'Sandbox'
-Deploying stack: Sandbox-LambdaSharp [LambdaSharp]
-=> Stack creation initiated for Sandbox-LambdaSharp
-CREATE_IN_PROGRESS                  AWS::CloudFormation::Stack                              Sandbox-LambdaSharp (User Initiated)
-CREATE_IN_PROGRESS                  AWS::SQS::Queue                                         DeadLetterQueue
-CREATE_IN_PROGRESS                  AWS::SQS::Queue                                         DeadLetterQueue (Resource creation Initiated)
-CREATE_IN_PROGRESS                  AWS::KMS::Key                                           DefaultSecretKey
-...
-CREATE_IN_PROGRESS                  AWS::Logs::SubscriptionFilter                           ResourceHandlerLogGroupSubscription (Resource creation Initiated)
-CREATE_COMPLETE                     AWS::Logs::SubscriptionFilter                           ResourceHandlerLogGroupSubscription
-CREATE_COMPLETE                     AWS::Lambda::Permission                                 ResourceHandlerCustomResourceTopicSnsPermission
-CREATE_COMPLETE                     AWS::CloudFormation::Stack                              Sandbox-LambdaSharpS3PackageLoader
-=> Stack creation finished (finished: 2018-10-26 12:55:34)
-Stack output values:
-=> Custom resource for for deploying packages to S3 buckets: arn:aws:sns:us-west-2:254924790709:Sandbox-LambdaSharpS3PackageLoader-CustomResourceTopic-1LKRGDWA8M5XV
-=> ModuleName: LambdaSharpS3PackageLoader
-=> ModuleVersion: 0.4
+Resolving module reference: LambdaSharp.Core:0.5
+=> Validating module for deployment tier
 
-Done (duration: 00:05:41.6557981)
+Deploying stack: Sandbox--LambdaSharp-Core [LambdaSharp.Core:0.5]
+=> Stack create initiated for Sandbox--LambdaSharp-Core [CAPABILITY_IAM]
+REVIEW_IN_PROGRESS                  AWS::CloudFormation::Stack                              Sandbox--LambdaSharp-Core (User Initiated)
+CREATE_IN_PROGRESS                  AWS::CloudFormation::Stack                              Sandbox--LambdaSharp-Core (User Initiated)
+CREATE_IN_PROGRESS                  AWS::SQS::Queue                                         DeadLetterQueue::Resource
+CREATE_IN_PROGRESS                  AWS::SNS::Topic                                         UsageReportTopic
+...
+CREATE_COMPLETE                     AWS::Lambda::Permission                                 Registration::Source1Permission
+CREATE_IN_PROGRESS                  AWS::KMS::Alias                                         DefaultSecretKeyAlias (Resource creation Initiated)
+CREATE_COMPLETE                     AWS::KMS::Alias                                         DefaultSecretKeyAlias
+CREATE_COMPLETE                     AWS::CloudFormation::Stack                              Sandbox-LambdaSharp-Core
+=> Stack create finished
+Stack output values:
+=> Dead Letter Queue (ARN): arn:aws:sqs:us-east-1:123456789012:Sandbox-LambdaSharp-Core-DeadLetterQueueResource-1RU4L5WQ0VWEZ
+=> Default Secret Key (ARN): arn:aws:kms:us-east-1:123456789012:key/42f85bb4-c254-43b1-90de-afa986bb906c
+=> Resource type for LambdaSharp function registrations: arn:aws:sns:us-east-1:123456789012:Sandbox-LambdaSharp-Core-RegistrationTopic-OYSNGOC85DP7
+=> Resource type for LambdaSharp module registrations: arn:aws:sns:us-east-1:123456789012:Sandbox-LambdaSharp-Core-RegistrationTopic-OYSNGOC85DP7
+=> Logging Stream (ARN): arn:aws:kinesis:us-east-1:123456789012:stream/Sandbox-LambdaSharp-Core-LoggingStreamResource-131NRS53BQZBN
+=> Role for writing CloudWatch logs to the Kinesis stream: arn:aws:iam::123456789012:role/Sandbox-LambdaSharp-Core-LoggingStreamRole-159RDENYID067
+=> Module: LambdaSharp.Core:0.5
+
+Done (finished: 1/18/2019 6:54:05 AM; duration: 00:02:22.8247619)
 ```
 
 ## For λ# Contributors

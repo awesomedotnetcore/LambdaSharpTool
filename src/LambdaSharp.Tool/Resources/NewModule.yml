@@ -7,12 +7,9 @@ Version: 1.0-DEV
 # The Module Description is shown in the AWS CloudFormation console with the version number.
 Description: Module description
 
-# The Variables section defines values and resources for the module.
-Variables:
+# The Items section defines values and resources for the module.
+Items:
 
-  - Var: MyVariable
+  - Variable: MyVariable
     Description: Variable description
     Value: A sample variable value for the module
-
-# The Functions section lists functions to compile, package, and deploy.
-Functions:

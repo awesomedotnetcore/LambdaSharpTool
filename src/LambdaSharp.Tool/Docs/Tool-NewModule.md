@@ -9,7 +9,7 @@ The `new module` command is used to create a new module definition.
 The `new module` command takes a single argument that specifies the module name.
 
 ```bash
-lash new module MyNewModule
+dotnet lash new module My.NewModule
 ```
 
 ## Options
@@ -25,15 +25,15 @@ lash new module MyNewModule
 
 ### Create a new module in the current folder
 
-__Using Powershell/Bash:__
+__Using PowerShell/Bash:__
 ```bash
-dotnet lash new module MyNewModule
+dotnet lash new module My.NewModule
 ```
 
 Output:
 ```
-MindTouch LambdaSharp CLI (v0.4) - Create new LambdaSharp module or function
+LambdaSharp CLI (v0.5) - Create new LambdaSharp module or function
 Created module definition: Module.yml
 
-Done (duration: 00:00:00.0168295)
+Done (finished: 1/18/2019 1:13:58 PM; duration: 00:00:00.0143553)
 ```

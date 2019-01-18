@@ -29,32 +29,32 @@ The `encrypt` command is used to encrypt sensitive information using a managed e
 
 ### Encrypt command line argument using the default LambdaSharp secrets key
 
-__Using Powershell/Bash:__
+__Using PowerShell/Bash:__
 ```bash
 dotnet lash encrypt --tier Sandbox "My private API key"
 ```
 
 Output:
 ```
-MindTouch LambdaSharp CLI (v0.5) - Encrypt Value
+LambdaSharp CLI (v0.5) - Encrypt Value
 
-AQICAHgSrVOcRYhYRlcuUe2MsGsBpVM/uMqHGnk3lkiOr+Z4zQEcazWl2Yj7k4FOaQvxigjlAAAAYTBfBgkqhkiG9w0BBwagUjBQAgEAMEsGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMLkz18nq708B6qAwLAgEQgB6R8WTqQOGsd3unH3aJom9G7cFIiVZcI6B/H69AlEc=
+AQICAHh7n6rans2ZnBXULLCW2KSdUUy7RTem4YuI0CcwDz0FoQGkGadrZzSIDzll+mhZDv4PAAAAcDBuBgkqhkiG9w0BBwagYTBfAgEAMFoGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMPVWgBIicHN7OoJ8cAgEQgC1Lv5Z54jaH9xrYGFgLOfZ1CUTV5KLsFUex50bNBZZlIWNzIJ7Tb+OkHcVF7gs=
 
-Done (duration: 00:00:00.7073050)
+Done (finished: 1/18/2019 1:19:29 PM; duration: 00:00:00.9495032)
 ```
 
 ### Encrypt file using a specific key
 
-__Using Powershell/Bash:__
+__Using PowerShell/Bash:__
 ```bash
-dotnet lash encrypt --key alias/MyOtherKey < api-key.txt
+dotnet lash encrypt --key alias/Sandbox-LambdaSharpDefaultSecretKey --tier Sandbox < api-key.txt
 ```
 
 Output:
 ```
-MindTouch LambdaSharp CLI (v0.5) - Encrypt Value
+LambdaSharp CLI (v0.5) - Encrypt Value
 
-AQICAHgSrVOcRYhYRlcuUe2MsGsBpVM/uMqHGnk3lkiOr+Z4zQGny1unpOQD2gXQetH+kePVAAAAYTBfBgkqhkiG9w0BBwagUjBQAgEAMEsGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMcuq8txyppwr47P/zAgEQgB5GsXDieoaObT6YaCxPEUGrlSy8Yvu8P9FWnIoEvgs=
+AQICAHh7n6rans2ZnBXULLCW2KSdUUy7RTem4YuI0CcwDz0FoQHUw/OCuEEIRMyqYb0pR9WBAAAAcjBwBgkqhkiG9w0BBwagYzBhAgEAMFwGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMOIUjrz5+SAYgcVsWAgEQgC+ZetbV40nNwQFf3CMWJkEdoDrfECWor3TwSMogNcTgFSknmXYElw3+xo1y2qIGqw==
 
-Done (duration: 00:00:00.7421492)
+Done (finished: 1/18/2019 1:23:54 PM; duration: 00:00:00.9146055)
 ```

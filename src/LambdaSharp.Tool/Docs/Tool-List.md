@@ -26,22 +26,20 @@ The `list` command is used to list all deployed modules on a deployment tier.
 
 ### List all deployed modules
 
-__Using Powershell/Bash:__
+__Using PowerShell/Bash:__
 ```bash
 dotnet lash list --tier Sandbox
 ```
 
 Output:
 ```
-MindTouch LambdaSharp CLI (v0.4) - List deployed LambdaSharp modules
+LambdaSharp CLI (v0.5) - List deployed LambdaSharp modules
 
-MODULE                        STATUS                DATE
-LambdaSharp                   [UPDATE_COMPLETE]     2018-10-25 13:57:12
-LambdaSharpRegistrar          [UPDATE_COMPLETE]     2018-10-25 13:58:56
-LambdaSharpS3Subscriber       [UPDATE_COMPLETE]     2018-10-25 13:59:47
-LambdaSharpS3PackageLoader    [UPDATE_COMPLETE]     2018-10-25 14:00:20
+MODULE               STATUS             DATE
+LambdaSharp-Core     [CREATE_COMPLETE]  2019-01-18 11:17:25
+LambdaSharp-S3-IO    [CREATE_COMPLETE]  2019-01-18 11:28:25
 
-Found 4 modules for deployment tier 'Sandbox'
+Found 2 modules for deployment tier 'Sandbox'
 
-Done (duration: 00:00:01.7553089)
+Done (finished: 1/18/2019 11:29:44 AM; duration: 00:00:00.9423924)
 ```

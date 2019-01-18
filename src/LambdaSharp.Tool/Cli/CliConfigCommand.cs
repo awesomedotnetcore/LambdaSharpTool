@@ -60,7 +60,8 @@ namespace LambdaSharp.Tool.Cli {
                 cmd.Description = "Configure LambdaSharp CLI";
 
                 // tool options
-                var moduleS3BucketNameOption = cmd.Option("--module-s3-bucket-name <NAME>", "(optional) Existing S3 bucket name for module deployments", CommandOptionType.SingleValue);
+                var existingS3BucketNameOption = cmd.Option("--existing-s3-bucket-name <NAME>", "(optional) Existing S3 bucket name for module deployments (blank value creates new bucket)", CommandOptionType.SingleValue);
+                var requestedS3BucketNameOption = cmd.Option("--requested-s3-bucket-name <NAME>", "(optional) Requested S3 bucket name for module deployments (blank value assigns automatic name)", CommandOptionType.SingleValue);
                 var cloudFormationNotificationsTopicOption = cmd.Option("--cloudformation-notifications-topic <ARN>", "(optional) Existing SNS topic ARN for CloudFormation notifications ", CommandOptionType.SingleValue);
                 var protectStackOption = cmd.Option("--protect", "(optional) Enable termination protection for the CloudFormation stack", CommandOptionType.NoValue);
                 var forceUpdateOption = cmd.Option("--force-update", "(optional) Force CLI profile update", CommandOptionType.NoValue);
@@ -77,8 +78,11 @@ namespace LambdaSharp.Tool.Cli {
                         ["LambdaSharpToolVersion"] = Version.ToString(),
                         ["LambdaSharpToolProfile"] = settings.ToolProfile
                     };
-                    if(moduleS3BucketNameOption.HasValue()) {
-                        parameters.Add("DeploymentBucketName", moduleS3BucketNameOption.Value());
+                    if(existingS3BucketNameOption.HasValue()) {
+                        parameters.Add("DeploymentBucketName", existingS3BucketNameOption.Value());
+                    }
+                    if(requestedS3BucketNameOption.HasValue()) {
+                        parameters.Add("RequestedBucketName", requestedS3BucketNameOption.Value());
                     }
                     if(cloudFormationNotificationsTopicOption.HasValue()) {
                         parameters.Add("DeploymentNotificationTopic", cloudFormationNotificationsTopicOption.Value());

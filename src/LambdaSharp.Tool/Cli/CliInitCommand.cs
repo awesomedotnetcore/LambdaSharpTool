@@ -93,7 +93,9 @@ namespace LambdaSharp.Tool.Cli {
                         protectStackOption.HasValue(),
                         forceDeployOption.HasValue(),
                         versionOption.HasValue() ? VersionInfo.Parse(versionOption.Value()) : Version,
-                        localOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP"),
+                        usePublishedOption.HasValue()
+                            ? null
+                            : (localOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP")),
                         inputs,
                         forcePublishOption.HasValue(),
                         promptAllParametersOption.HasValue(),

@@ -29,10 +29,10 @@ lash new function MyNewFunction
 <dd>(optional) Select programming language for generated code (default: csharp)</dd>
 
 <dt><code>--use-project-reference</code></dt>
-<dd>Reference LambdaSharp libraries using a project reference (default behavior when LAMBDASHARP environment variable is set)</dd>
+<dd>(optional) Reference LambdaSharp libraries using a project reference (default behavior when LAMBDASHARP environment variable is set)</dd>
 
 <dt><code>--use-nuget-reference</code></dt>
-<dd>Reference LambdaSharp libraries using nuget references</dd>
+<dd>(optional) Reference LambdaSharp libraries using nuget references</dd>
 
 </dl>
 
@@ -40,31 +40,31 @@ lash new function MyNewFunction
 
 ### Create a new C# function
 
-__Using Powershell/Bash:__
+__Using PowerShell/Bash:__
 ```bash
 dotnet lash new function MyNewFunction
 ```
 
 Output:
 ```
-MindTouch LambdaSharp CLI (v0.4) - Create new LambdaSharp module or function
+LambdaSharp CLI (v0.5) - Create new LambdaSharp module or function
 Created project file: MyNewFunction\MyNewFunction.csproj
 Created function file: MyNewFunction\Function.cs
 
-Done (duration: 00:00:00.0869566)
+Done (finished: 1/18/2019 1:17:14 PM; duration: 00:00:00.1047835)
 ```
 
 ### Create a new Javascript function
 
-__Using Powershell/Bash:__
+__Using PowerShell/Bash:__
 ```bash
 dotnet lash new function --language javascript MyNewFunction
 ```
 
 Output:
 ```
-MindTouch LambdaSharp CLI (v0.4) - Create new LambdaSharp module or function
+LambdaSharp CLI (v0.5) - Create new LambdaSharp module or function
 Created function file: MyNewFunction\index.js
 
-Done (duration: 00:00:00.1011796)
+Done (finished: 1/18/2019 1:17:47 PM; duration: 00:00:00.1073753
 ```

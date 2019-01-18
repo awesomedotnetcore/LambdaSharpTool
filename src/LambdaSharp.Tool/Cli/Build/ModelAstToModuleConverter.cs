@@ -64,7 +64,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
                 // ensure owner is present
                 if(!module.Module.TryParseModuleOwnerName(out string moduleOwner, out string moduleName)) {
-                    AddError("invalid value for 'Module' attribute");
+                    AddError("'Module' attribute must have format 'Owner.Name'");
                 }
 
                 // initialize module

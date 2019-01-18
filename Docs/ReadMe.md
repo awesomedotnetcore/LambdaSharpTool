@@ -15,7 +15,7 @@ Alternatively, for λ# contributors, the CLI can be setup using the [GitHub repo
 
 Once installed, validate that the command works by running it.
 
-__Using Powershell/Bash:__
+__Using PowerShell/Bash:__
 ```bash
 dotnet lash
 ```
@@ -50,7 +50,7 @@ Run 'dotnet lash [command] --help' for more information about a command.
 
 The λ# CLI must be configured before it can be used. The configuration step optionally creates needed resources for deploying λ# modules and captures deployment preferences.
 
-__Using Powershell/Bash:__
+__Using PowerShell/Bash:__
 ```bash
 dotnet lash config
 ```
@@ -61,7 +61,7 @@ The λ# CLI can be configured for multiple CLI profiles using the `--cli-profile
 
 The λ# CLI must initialize each deployment tier (e.g. `Test`, `Stage`, `Prod`, etc.) with the λ# Core module before additional modules can be deployed.
 
-__Using Powershell/Bash:__
+__Using PowerShell/Bash:__
 ```bash
 dotnet lash init --tier Sandbox
 ```
@@ -70,7 +70,7 @@ __NOTE:__ This step must to be repeated for each deployment tier (e.g. `Test`, `
 
 Run the `list` command to confirm that all λ# modules were deployed successfully:
 
-__Using Powershell/Bash:__
+__Using PowerShell/Bash:__
 ```bash
 dotnet lash list --tier Sandbox
 ```
@@ -132,7 +132,7 @@ The λ# Core module expects the access tokens to be encrypted, which can easily 
 
 λ# is distributed as [GitHub repository](https://github.com/LambdaSharp/LambdaSharpTool). Switch to your preferred folder for Git projects and create a clone of the λ# repository.
 
-__Using Powershell/Bash:__
+__Using PowerShell/Bash:__
 ```bash
 git clone https://github.com/LambdaSharp/LambdaSharpTool.git
 ```

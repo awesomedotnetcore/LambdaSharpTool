@@ -48,7 +48,7 @@ exports.handler = (event, context) => {
 };
 
 function send(event, context, status, data, reason) {
-    var body = {
+    const body = {
         Status: status,
         Reason: (status == 'FAILED') ? (reason || 'operation failed') : '',
         PhysicalResourceId: 'decrypted:' + event.LogicalResourceId,

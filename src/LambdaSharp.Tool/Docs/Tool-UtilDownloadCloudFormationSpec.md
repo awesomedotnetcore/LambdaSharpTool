@@ -10,7 +10,7 @@ The `util download-cloudformation-spec` is used by λ# contributors to download 
 
 ### Update CloudFormation Types Specification
 
-__Using Powershell/Bash:__
+__Using PowerShell/Bash:__
 ```bash
 dotnet lash util download-cloudformation-spec
 ```

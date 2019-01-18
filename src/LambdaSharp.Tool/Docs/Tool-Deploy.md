@@ -87,7 +87,7 @@ If the argument refers to a module definition, the `deploy` command invokes the 
 
 ### Build, publish, and deploy module in current folder
 
-__Using Powershell/Bash:__
+__Using PowerShell/Bash:__
 ```bash
 dotnet lash deploy
 ```
@@ -130,7 +130,7 @@ Done (finished: 1/17/2019 4:12:13 PM; duration: 00:02:23.5535481)
 
 ### Deploy a published module
 
-__Using Powershell/Bash:__
+__Using PowerShell/Bash:__
 ```bash
 dotnet lash deploy Demo/bin/manifest.json
 ```
@@ -182,7 +182,7 @@ Secrets:
     - alias/MySecretKey
 ```
 
-__Using Powershell/Bash:__
+__Using PowerShell/Bash:__
 ```bash
 dotnet lash deploy --inputs inputs.yml Demo
 ```

@@ -29,7 +29,7 @@ The `info` command is used to show information about the current CLI profile, λ
 
 ### Show information for Default profile and Sandbox tier
 
-__Using Powershell/Bash:__
+__Using PowerShell/Bash:__
 ```bash
 dotnet lash info --tier Sandbox
 ```

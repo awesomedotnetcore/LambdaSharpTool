@@ -68,8 +68,8 @@ namespace LambdaSharp.Tool.Cli {
                     var languageOption = subCmd.Option("--language|-l <LANGUAGE>", "(optional) Select programming language for generated code (default: csharp)", CommandOptionType.SingleValue);
                     var inputFileOption = cmd.Option("--input <FILE>", "(optional) File path to YAML module definition (default: Module.yml)", CommandOptionType.SingleValue);
                     inputFileOption.ShowInHelpText = false;
-                    var useProjectReferenceOption = subCmd.Option("--use-project-reference", "Reference LambdaSharp libraries using a project reference (default behavior when LAMBDASHARP environment variable is set)", CommandOptionType.NoValue);
-                    var useNugetReferenceOption = subCmd.Option("--use-nuget-reference", "Reference LambdaSharp libraries using nuget references", CommandOptionType.NoValue);
+                    var useProjectReferenceOption = subCmd.Option("--use-project-reference", "(optional) Reference LambdaSharp libraries using a project reference (default behavior when LAMBDASHARP environment variable is set)", CommandOptionType.NoValue);
+                    var useNugetReferenceOption = subCmd.Option("--use-nuget-reference", "(optional) Reference LambdaSharp libraries using nuget references", CommandOptionType.NoValue);
                     var cmdArgument = subCmd.Argument("<NAME>", "Name of new project (e.g. MyFunction)");
                     subCmd.OnExecute(() => {
                         Console.WriteLine($"{app.FullName} - {cmd.Description}");
@@ -129,10 +129,10 @@ namespace LambdaSharp.Tool.Cli {
                     subCmd.Description = "Create new LambdaSharp module";
 
                     // sub-command options
-                    var nameOption = subCmd.Option("--name|-n <NAME>", "Name of new module (e.g. MyModule)", CommandOptionType.SingleValue);
+                    var nameOption = subCmd.Option("--name|-n <NAME>", "Name of new module (e.g. My.NewModule)", CommandOptionType.SingleValue);
                     nameOption.ShowInHelpText = false;
                     var directoryOption = subCmd.Option("--working-directory|-wd <PATH>", "(optional) New module directory (default: current directory)", CommandOptionType.SingleValue);
-                    var cmdArgument = subCmd.Argument("<NAME>", "Name of new module (e.g. MyModule)");
+                    var cmdArgument = subCmd.Argument("<NAME>", "Name of new module (e.g. My.NewModule)");
                     subCmd.OnExecute(() => {
                         Console.WriteLine($"{app.FullName} - {cmd.Description}");
                         if(cmdArgument.Values.Any() && nameOption.HasValue()) {
@@ -147,6 +147,11 @@ namespace LambdaSharp.Tool.Cli {
                         } else {
                             AddError("missing module name argument");
                             return;
+                        }
+
+                        // prepend default owner string
+                        if(!moduleName.Contains('.')) {
+                            moduleName = "Owner." + moduleName;
                         }
                         NewModule(
                             moduleName,

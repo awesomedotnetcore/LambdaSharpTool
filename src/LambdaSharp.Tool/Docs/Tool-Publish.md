@@ -54,51 +54,41 @@ lash new function MyNewFunction
 
 ### Build and publish module in current folder
 
-__Using Powershell/Bash:__
+__Using PowerShell/Bash:__
 ```bash
 dotnet lash publish
 ```
 
 Output:
 ```
-MindTouch LambdaSharp CLI (v0.4) - Publish LambdaSharp module
+LambdaSharp CLI (v0.5) - Publish LambdaSharp module
 
 Compiling module: Module.yml
-Building function RecordMessage [netcoreapp2.1, Release]
-=> Restoring project dependencies
-=> Building AWS Lambda package
-=> Decompressing AWS Lambda package
-=> Finalizing AWS Lambda package
-Building function SlackCommand [netcoreapp2.1, Release]
-=> Restoring project dependencies
-=> Building AWS Lambda package
-=> Decompressing AWS Lambda package
-=> Finalizing AWS Lambda package
-=> Module compilation done
-Publishing module: Demo
-=> Uploading function: s3://lambdasharp-bucket-name/Modules/Demo/Assets/function_RecordMessage_4E05BDFA74DAC87A05165A4D5B609B39.zip
-=> Uploading function: s3://lambdasharp-bucket-name/Modules/Demo/Assets/function_SlackCommand_8207022C95970006F597FF6060366C34.zip
-=> Uploading template: s3://lambdasharp-bucket-name/Modules/Demo/Assets/cloudformation_v1.0_F2E9DA098FB8B0EB118F5839947467A6.json
-=> Uploading manifest: s3://lambdasharp-bucket-name/Modules/Demo/Assets/manifest_v1.0_F2E9DA098FB8B0EB118F5839947467A6.json
+=> Building function RecordMessage [netcoreapp2.1, Release]
+=> Building function SlackCommand [netcoreapp2.1, Release]
+=> Module compilation done: C:\MindTouch\LambdaSharpTool\Demos\Demo\bin\cloudformation.json
+Publishing module: LambdaSharp.Demo
+=> Uploading asset: s3://lambdasharptool-default-deploymentbucket-1epwlxer67jmx/LambdaSharp/Modules/Demo/Assets/function_RecordMessage_8A0A4D0DA5B090BD33D779EF16FE7470.zip
+=> Uploading asset: s3://lambdasharptool-default-deploymentbucket-1epwlxer67jmx/LambdaSharp/Modules/Demo/Assets/function_SlackCommand_30C238770176A7AE6955A519FC6A283A.zip
+=> Uploading template: s3://lambdasharptool-default-deploymentbucket-1epwlxer67jmx/LambdaSharp/Modules/Demo/Assets/cloudformation_v1.0-DEV_A556D13161D90F32959CDE5EC121B7D0.json
 
-Done (duration: 00:00:27.8416454)
+Done (finished: 1/18/2019 1:26:33 PM; duration: 00:00:12.9332067)
 ```
 
 ### Publish manifest
 
-__Using Powershell/Bash:__
+__Using PowerShell/Bash:__
 ```bash
-dotnet lash publish Demo/bin/manifest.json
+dotnet lash publish Demo/bin/cloudformation.json
 ```
 
 Output:
 ```
-MindTouch LambdaSharp CLI (v0.4) - Publish LambdaSharp module
-Publishing module: Demo
-=> Uploading function: s3://lambdasharp-bucket-name/Modules/Demo/Assets/function_RecordMessage_4E05BDFA74DAC87A05165A4D5B609B39.zip
-=> Uploading function: s3://lambdasharp-bucket-name/Modules/Demo/Assets/function_SlackCommand_8207022C95970006F597FF6060366C34.zip
-=> Uploading template: s3://lambdasharp-bucket-name/Modules/Demo/Assets/cloudformation_v1.0_F2E9DA098FB8B0EB118F5839947467A6.json
-=> Uploading manifest: s3://lambdasharp-bucket-name/Modules/Demo/Assets/manifest_v1.0_F2E9DA098FB8B0EB118F5839947467A6.json
+LambdaSharp CLI (v0.5) - Publish LambdaSharp module
+Publishing module: LambdaSharp.Demo
+=> Uploading asset: s3://lambdasharptool-default-deploymentbucket-1epwlxer67jmx/LambdaSharp/Modules/Demo/Assets/function_RecordMessage_8A0A4D0DA5B090BD33D779EF16FE7470.zip
+=> Uploading asset: s3://lambdasharptool-default-deploymentbucket-1epwlxer67jmx/LambdaSharp/Modules/Demo/Assets/function_SlackCommand_30C238770176A7AE6955A519FC6A283A.zip
+=> Uploading template: s3://lambdasharptool-default-deploymentbucket-1epwlxer67jmx/LambdaSharp/Modules/Demo/Assets/cloudformation_v1.0-DEV_A556D13161D90F32959CDE5EC121B7D0.json
 
-Done (duration: 00:00:16.6464580)
+Done (finished: 1/18/2019 1:28:06 PM; duration: 00:00:02.9318400)
 ```
