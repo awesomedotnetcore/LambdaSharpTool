@@ -55,10 +55,10 @@ namespace LambdaSharp.Tool.Cli {
             => cmd.Option("--configuration|-c <CONFIGURATION>", "(optional) Build configuration for function projects (default: \"Release\")", CommandOptionType.SingleValue);
 
         public static CommandOption AddGitShaOption(CommandLineApplication cmd)
-            => cmd.Option("--git-sha <VALUE>", "(optional) GitSha of most recent git commit (default: invoke `git rev-parse HEAD` command)", CommandOptionType.SingleValue);
+            => cmd.Option("--git-sha <VALUE>", "(optional) Git SHA of most recent git commit (default: invoke `git rev-parse HEAD` command)", CommandOptionType.SingleValue);
 
         public static CommandOption AddGitBranchOption(CommandLineApplication cmd)
-            => cmd.Option("--git-branch <VALUE>", "(optional) Current git branch name (default: invoke `git rev-parse --abbrev-ref HEAD` command)", CommandOptionType.SingleValue);
+            => cmd.Option("--git-branch <VALUE>", "(optional) Git branch name (default: invoke `git rev-parse --abbrev-ref HEAD` command)", CommandOptionType.SingleValue);
 
         public static CommandOption AddOutputPathOption(CommandLineApplication cmd)
             => cmd.Option("--output|-o <DIRECTORY>", "(optional) Path to output directory (default: bin)", CommandOptionType.SingleValue);

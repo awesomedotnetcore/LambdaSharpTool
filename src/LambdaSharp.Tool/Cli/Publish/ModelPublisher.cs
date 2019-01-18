@@ -51,9 +51,9 @@ namespace LambdaSharp.Tool.Cli.Publish {
             _forcePublish = forcePublish;
             _changesDetected = false;
 
-            // verify that all files referenced by manifest exist
-            foreach(var file in manifest.Assets.Append(SourceFilename)) {
-                var filepath =Path.Combine(Settings.OutputDirectory, file);
+            // verify that all files referenced by manifest exist (NOTE: source file was already checked)
+            foreach(var file in manifest.Assets) {
+                var filepath = Path.Combine(Settings.OutputDirectory, file);
                 if(!File.Exists(filepath)) {
                     AddError($"could not find: '{filepath}'");
                 }

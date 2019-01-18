@@ -43,7 +43,7 @@ namespace LambdaSharp.Tool.Cli {
         public void Register(CommandLineApplication app) {
             app.Command("util", cmd => {
                 cmd.HelpOption();
-                cmd.Description = "Miscalenous AWS utilities";
+                cmd.Description = "Miscellaneous AWS utilities";
 
                 // delete orphaned logs sub-command
                 cmd.Command("delete-orphan-lambda-logs", subCmd => {
@@ -201,7 +201,7 @@ namespace LambdaSharp.Tool.Cli {
             if((deletedLogGroups > 0) || (skippedLogGroups > 0)) {
                 Console.WriteLine();
             }
-            Console.WriteLine($"Found {totalLogGroups:N0} log groups. Deleted {deletedLogGroups:N0}. Skipped {skippedLogGroups:N0}");
+            Console.WriteLine($"Found {totalLogGroups:N0} log groups. Deleted {deletedLogGroups:N0}. Skipped {skippedLogGroups:N0}.");
         }
     }
 }
