@@ -36,22 +36,24 @@ dotnet lash info --tier Sandbox
 
 Output:
 ```
-MindTouch LambdaSharp CLI (v0.4) - Show LambdaSharp information
+LambdaSharp CLI (v0.5) - Show LambdaSharp information
 LambdaSharp CLI
-    Profile: Default
-    Version: 0.4
+    Profile: Sandbox
+    Version: 0.5
     Module Deployment S3 Bucket: lambdasharp-bucket-name
-    Module Deployment Notifications Topic: arn:aws:sns:us-west-2:************:LambdaSharpTool-Sandbox-DeploymentNotificationTopic-1V8UD7UQVW3KD
+    Deployment Notifications Topic: arn:aws:sns:us-east-1:************:LambdaSharpTool-Sandbox-DeploymentNotificationTopicResource-QMM6DIP3K4N4
 LambdaSharp Deployment Tier
     Name: Sandbox
-    Core Version: 0.4
-Git SHA: dd84a2a4b87dcf2e4a802b79d12c489c30836623
+    Core Version: 0.5
+Git
+    Branch: Docs
+    SHA: ae537bc2214710eed89f5c3b5819d809c065856f
 AWS
-    Region: us-west-2
+    Region: us-east-1
     Account Id: ************
 Tools
-    .NET Core CLI Version: 2.1.402
+    .NET Core CLI Version: 2.1.403
     Git CLI Version: 2.18.0.windows.1
 
-Done (duration: 00:00:01.3788826)
+Done (finished: 1/17/2019 4:27:54 PM; duration: 00:00:06.2172050)
 ```

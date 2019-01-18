@@ -4,11 +4,11 @@
 
 ## Step 1: Installing λ# CLI
 
-As of v0.4, the λ# CLI can be installed as a global `dotnet` tool by running the `dotnet` tool installation command:
+The λ# CLI can be installed as a global `dotnet` tool by running the `dotnet` tool installation command:
 
 __Using PowerShell/Bash:__
 ```bash
-dotnet tool install -g LambdaSharp.Tool --version 0.5-WIP
+dotnet tool install -g LambdaSharp.Tool
 ```
 
 Alternatively, for λ# contributors, the CLI can be setup using the [GitHub repository](https://github.com/LambdaSharp/LambdaSharpTool). See the λ# contributor installation instructions below.
@@ -22,17 +22,18 @@ dotnet lash
 
 The following text should appear (or similar):
 ```
-MindTouch LambdaSharp CLI (v0.4)
+LambdaSharp CLI (v0.5)
 
 Project Home: https://github.com/LambdaSharp/LambdaSharpTool
 
-Usage: LambdaSharp.Tool [options] [command]
+Usage: dotnet lash [options] [command]
 
 Options:
   -?|-h|--help  Show help information
 
 Commands:
   build         Build LambdaSharp module
+  config        Configure LambdaSharp CLI
   deploy        Deploy LambdaSharp module
   encrypt       Encrypt Value
   info          Show LambdaSharp information
@@ -40,14 +41,14 @@ Commands:
   list          List deployed LambdaSharp modules
   new           Create new LambdaSharp module or function
   publish       Publish LambdaSharp module
-  tool          Configure LambdaSharp CLI
+  util          Miscellaneous AWS utilities
 
-Run 'LambdaSharp.Tool [command] --help' for more information about a command.
+Run 'dotnet lash [command] --help' for more information about a command.
 ```
 
 ## Step 2: Configure λ# CLI
 
-Before the λ# CLI can be used, it must be configured. The configuration step optionally creates needed resources for deploying λ# modules and captures deployment preferences.
+The λ# CLI must be configured before it can be used. The configuration step optionally creates needed resources for deploying λ# modules and captures deployment preferences.
 
 __Using Powershell/Bash:__
 ```bash
@@ -58,7 +59,7 @@ The λ# CLI can be configured for multiple CLI profiles using the `--cli-profile
 
 ## Step 3: Initialize λ# Deployment Tier
 
-λ# CLI must initialize each deployment tier (e.g. `Test`, `Stage`, `Prod`, etc.) with the λ# Core before modules can be deployed.
+The λ# CLI must initialize each deployment tier (e.g. `Test`, `Stage`, `Prod`, etc.) with the λ# Core module before additional modules can be deployed.
 
 __Using Powershell/Bash:__
 ```bash
@@ -76,18 +77,17 @@ dotnet lash list --tier Sandbox
 
 The following text should appear (or similar):
 ```
-MindTouch LambdaSharp CLI (v0.4) - List deployed LambdaSharp modules
+LambdaSharp CLI (v0.5) - List deployed LambdaSharp modules
 
-MODULE                        STATUS                DATE
-LambdaSharp                   [UPDATE_COMPLETE]     2018-10-25 13:57:12
-LambdaSharpRegistrar          [UPDATE_COMPLETE]     2018-10-25 13:58:56
-LambdaSharpS3Subscriber       [UPDATE_COMPLETE]     2018-10-25 13:59:47
-LambdaSharpS3PackageLoader    [UPDATE_COMPLETE]     2018-10-25 14:00:20
+MODULE               STATUS             DATE
+LambdaSharp-Core     [CREATE_COMPLETE]  2019-01-15 20:40:53
 
-Found 4 modules for deployment tier 'Sandbox'
+Found 1 modules for deployment tier 'Default'
+
+Done (finished: 1/17/2019 3:09:22 PM; duration: 00:00:03.5455994)
 ```
 
-## Optional: λ# Environment Variables
+## Optional: Define Environment Variables
 
 The following environment variables are checked when their corresponding options are omitted from the λ# command line.
 * `LAMBDASHARP_TIER`: Replaces the need for the `--tier` option.
@@ -103,24 +103,24 @@ __Using Bash:__
 export LAMBDASHARP_TIER=Sandbox
 ```
 
-## Optional: Customize LambdaSharp Settings
+## Optional: Customize LambdaSharp Core Settings
+
+The following λ# Core module settings can be adjusted int the AWS console by updating the deployed CloudFormation stack.
 
 |Parameter|Description|Default|
 |---|---|---|
 |`LoggingStreamRetentionPeriod`|How long logging stream entries are kept before they are lost|24|
 |`DefaultSecretKeyRotationEnabled`|Rotate KMS key automatically every 365 days|false|
 
-## Optional: Customize LambdaSharpRegistrar Settings
+## Optional: Subscribe to `ErrorReportTopic` Topic
 
-The registrar is responsible for tracking the registration of all deployed modules and functions. Once registered, the registrar processes the CloudWatch logs of all functions and sends errors/warnings to the SNS `ErrorReportTopic`.
+The λ# Core module analyzes the output of all deployed functions. When an issue occurs, the Core module sends a notification on the SNS `ErrorReportTopic`.
 
-### Rollbar Settings
+## Optional: Setup Rollbar Integration
 
-The registrar can optionally be configured to send errors and warnings to [Rollbar](https://rollbar.com/). To enable this functionality, the registrar needs the _read_ and _write_ access tokens for the account, which can be found in the _Account Settings_ page.
+The λ# Core module can optionally be configured to send errors and warnings to [Rollbar](https://rollbar.com/). To enable this functionality, the λ# Core module needs the _read_ and _write_ access tokens for the account, which can be found in the _Account Settings_ page.
 
-The registrar expects the access tokens to be encrypted, which can easily be done with the [`dotnet lash encrypt`](../src/LambdaSharp.Tool/Docs/Tool-Encrypt.md) command.
-
-settings for the registrar have to be updated with the following va
+The λ# Core module expects the access tokens to be encrypted, which can easily be done with the [`dotnet lash encrypt`](../src/LambdaSharp.Tool/Docs/Tool-Encrypt.md) command.
 
 |Parameter|Description|Default|
 |---|---|---|
@@ -128,7 +128,7 @@ settings for the registrar have to be updated with the following va
 |`RollbarWriteAccessToken`|Account-level token for write operations|""|
 |`RollbarProjectPrefix`|Optional prefix when creating Rollbar projects|""|
 
-## For λ# Contributors: Installing λ# from GitHub
+# For λ# Contributors: Installing λ# from GitHub
 
 λ# is distributed as [GitHub repository](https://github.com/LambdaSharp/LambdaSharpTool). Switch to your preferred folder for Git projects and create a clone of the λ# repository.
 

@@ -1,24 +1,24 @@
 ﻿![λ#](Docs/LambdaSharp_v2_small.png)
 
-# LambdaSharp CLI & Framework (v0.4.0.4)
+# LambdaSharp CLI & Framework (v0.5)
 
-**[Read what's new in the 0.4 "Damo" release.](Docs/ReleaseNotes-Damo.md)**
+**[Read what's new in the 0.5 "Eurytus" release.](Docs/ReleaseNotes-Eurytus.md)**
 
-λ# is a CLI and a framework for rapid serverless application development. λ# uses a simple declarative syntax to generate sophisticated CloudFormation template that provide simple, yet flexible, deployment options.
+λ# is a CLI and a framework for rapid serverless application development. λ# uses a simple declarative syntax to generate sophisticated CloudFormation templates that provide simple, yet flexible, deployment options.
 
 The objective of λ# is to accelerate the innovation velocity of serverless solutions. It allows developers to focus on solving business problems while deploying scalable, observable solutions that follow DevOps best practices.
 
 ## Prerequisite
 
-1. [Configure AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html)
-1. [Install .NET Core 2.x](https://www.microsoft.com/net/download)
+1. [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html)
+1. [.NET Core 2.1+](https://www.microsoft.com/net/download)
 
 ## Getting Started
 
-The λ# CLI is installed as a [.NET Global Tool](https://docs.microsoft.com/en-us/dotnet/core/tools/global-tools).
+The λ# CLI is installed as a .NET Global Tool.
 
 ```bash
-dotnet tool install -g LambdaSharp.Tool --version 0.4.*
+dotnet tool install -g LambdaSharp.Tool
 ```
 
 Once installed, the λ# CLI needs to be configured.
@@ -50,9 +50,7 @@ The λ# CLI uses a YAML file to compile the C# projects, upload assets, and depl
 
 ```yaml
 Module: MySampleModule
-Version: 1.0
-
-Functions:
+Items:
 
  - Function: MyFunction
    Memory: 128
@@ -101,7 +99,7 @@ namespace MySampleModule.MyFunction {
 
 ## License
 
-> Copyright (c) 2018 MindTouch
+> Copyright (c) 2018,2019 MindTouch
 >
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.
