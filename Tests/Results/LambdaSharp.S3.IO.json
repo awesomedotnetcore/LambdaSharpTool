@@ -55,7 +55,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "94F89C24787F0A195E501B204C0ED3DC"
+      "Default": "EE302A477B4FAB0722EC4D91A1E93C1C"
     }
   },
   "Resources": {
@@ -185,7 +185,7 @@
             }
           }
         },
-        "Handler": "S3Writer::LambdaSharp.Core.S3Writer.Function::FunctionHandlerAsync",
+        "Handler": "S3Writer::LambdaSharp.S3.IO.S3Writer.Function::FunctionHandlerAsync",
         "MemorySize": "256",
         "Role": {
           "Fn::GetAtt": [
@@ -676,6 +676,17 @@
         }
       },
       "Description": "Resource for writing a JSON file to an S3 bucket"
+    },
+    "LambdaSharpS3EmptyBucket": {
+      "Value": {
+        "Ref": "S3WriterTopic"
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${DeploymentPrefix}LambdaSharp::S3::EmptyBucket"
+        }
+      },
+      "Description": "Resource for emptying an S3 bucket on deletion"
     }
   },
   "Conditions": {
@@ -938,7 +949,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "94F89C24787F0A195E501B204C0ED3DC",
+      "Hash": "EE302A477B4FAB0722EC4D91A1E93C1C",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
@@ -950,6 +961,25 @@
         }
       ],
       "ResourceTypes": {
+        "LambdaSharp::S3::EmptyBucket": {
+          "Description": "Resource for emptying an S3 bucket on deletion",
+          "Request": [
+            {
+              "Name": "Bucket",
+              "Description": "S3 bucket ARN/name where to write the JSON file to",
+              "Type": "String",
+              "Required": true
+            }
+          ],
+          "Response": [
+            {
+              "Name": "BucketName",
+              "Description": "S3 bucket name",
+              "Type": "String",
+              "Required": true
+            }
+          ]
+        },
         "LambdaSharp::S3::Unzip": {
           "Description": "Resource type for deploying a zip package to an S3 bucket",
           "Request": [

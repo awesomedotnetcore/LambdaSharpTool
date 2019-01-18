@@ -86,11 +86,12 @@ if [ -z "$1" ]; then
         ../Modules/LambdaSharp.S3.Subscriber \
         ../Samples/AlexaSample \
         ../Samples/ApiSample \
-        ../Samples/CustomResourceSample \
+        ../Samples/CustomResourceTypeSample \
         ../Samples/DynamoDBSample \
+        ../Samples/FinalizerSample \
         ../Samples/KinesisSample \
         ../Samples/MacroSample \
-        ../Samples/S3FilesSample \
+        ../Samples/S3IOSample \
         ../Samples/S3SubscriptionSample \
         ../Samples/ScheduleSample \
         ../Samples/SlackCommandSample \
@@ -100,6 +101,7 @@ if [ -z "$1" ]; then
         ../Demos/DemoS3BucketSupscription/DemoS3Bucket \
         ../Demos/DemoS3BucketSupscription/DemoS3Subscriber \
         ../Demos/BadModule
+
 else
 
     # run requested test

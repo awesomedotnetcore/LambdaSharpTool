@@ -55,7 +55,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "C83C7E0BD30361898322B125C0A8F3B8"
+      "Default": "67DE47B81C2120C9770DC15DCC9B8D85"
     }
   },
   "Resources": {
@@ -66,7 +66,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "LambdaSharpSample/Modules/CustomResourceSample/Assets/ResourceHandler-DRYRUN.zip"
+          "S3Key": "LambdaSharpSample/Modules/CustomResourceTypeSample/Assets/ResourceHandler-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -106,7 +106,7 @@
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharpSample.CustomResourceSample:1.0-DEV",
+            "MODULE_INFO": "LambdaSharpSample.CustomResourceTypeSample:1.0-DEV",
             "LAMBDA_NAME": "ResourceHandler",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
@@ -367,7 +367,7 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "LambdaSharpSample.CustomResourceSample:1.0-DEV",
+        "Module": "LambdaSharpSample.CustomResourceTypeSample:1.0-DEV",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
@@ -474,7 +474,7 @@
   },
   "Outputs": {
     "Module": {
-      "Value": "LambdaSharpSample.CustomResourceSample:1.0-DEV"
+      "Value": "LambdaSharpSample.CustomResourceTypeSample:1.0-DEV"
     },
     "MyNamespaceMyResource": {
       "Value": {
@@ -485,7 +485,7 @@
           "Fn::Sub": "${DeploymentPrefix}MyNamespace::MyResource"
         }
       },
-      "Description": "Handler for MyNamespace::MyResource custom resource"
+      "Description": "Definition for MyNamespace::MyResource resource"
     }
   },
   "Conditions": {
@@ -704,7 +704,7 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2018-12-31",
-      "Module": "LambdaSharpSample.CustomResourceSample:1.0-DEV",
+      "Module": "LambdaSharpSample.CustomResourceTypeSample:1.0-DEV",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -748,7 +748,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "C83C7E0BD30361898322B125C0A8F3B8",
+      "Hash": "67DE47B81C2120C9770DC15DCC9B8D85",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
@@ -761,10 +761,11 @@
       ],
       "ResourceTypes": {
         "MyNamespace::MyResource": {
-          "Description": "Handler for MyNamespace::MyResource custom resource",
+          "Description": "Definition for MyNamespace::MyResource resource",
           "Request": [
             {
               "Name": "SampleInput",
+              "Description": "SampleInput description",
               "Type": "String",
               "Required": true
             }
@@ -772,6 +773,7 @@
           "Response": [
             {
               "Name": "SampleOutput",
+              "Description": "SampleOutput description",
               "Type": "String",
               "Required": true
             }

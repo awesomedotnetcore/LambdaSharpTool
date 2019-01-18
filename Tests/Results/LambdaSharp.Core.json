@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "LambdaSharp Resources and Services (v0.5-WIP)",
+  "Description": "LambdaSharp Core Resources and Services (v0.5-WIP)",
   "Parameters": {
     "DeadLetterQueue": {
       "Type": "String",
@@ -72,7 +72,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "F935397AC6D6A6276B4953F6EBD5B21E"
+      "Default": "CAC673682E1D11E2FD8FA882F671E8C1"
     }
   },
   "Resources": {
@@ -118,6 +118,28 @@
                 "kms:*"
               ],
               "Resource": "*"
+            }
+          ]
+        }
+      }
+    },
+    "DefaultSecretKeyAlias": {
+      "Type": "AWS::KMS::Alias",
+      "Properties": {
+        "AliasName": {
+          "Fn::Sub": "alias/${DeploymentPrefix}LambdaSharpDefaultSecretKey"
+        },
+        "TargetKeyId": {
+          "Fn::If": [
+            "DefaultSecretKeyIsCreated",
+            {
+              "Fn::GetAtt": [
+                "DefaultSecretKeyResource",
+                "Arn"
+              ]
+            },
+            {
+              "Ref": "DefaultSecretKey"
             }
           ]
         }
@@ -172,28 +194,6 @@
             }
           }
         ]
-      }
-    },
-    "DefaultSecretKeyAlias": {
-      "Type": "AWS::KMS::Alias",
-      "Properties": {
-        "AliasName": {
-          "Fn::Sub": "alias/${DeploymentPrefix}LambdaSharpDefaultSecretKey"
-        },
-        "TargetKeyId": {
-          "Fn::If": [
-            "DefaultSecretKeyIsCreated",
-            {
-              "Fn::GetAtt": [
-                "DefaultSecretKeyResource",
-                "Arn"
-              ]
-            },
-            {
-              "Ref": "DefaultSecretKey"
-            }
-          ]
-        }
       }
     },
     "ProcessLogEvents": {
@@ -966,7 +966,7 @@
         }
       ],
       "RuntimeCheck": false,
-      "Hash": "F935397AC6D6A6276B4953F6EBD5B21E",
+      "Hash": "CAC673682E1D11E2FD8FA882F671E8C1",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
@@ -1033,6 +1033,7 @@
           "Response": [
             {
               "Name": "Registration",
+              "Description": "Registration ID",
               "Type": "String",
               "Required": true
             }
@@ -1057,6 +1058,7 @@
           "Response": [
             {
               "Name": "Registration",
+              "Description": "Registration ID",
               "Type": "String",
               "Required": true
             }

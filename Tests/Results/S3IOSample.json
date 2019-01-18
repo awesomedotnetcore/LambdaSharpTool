@@ -35,16 +35,40 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "9742A97C6840B82E8B897E0CC2B7092A"
+      "Default": "E02276544407FC753B70348EFFBC75E1"
     }
   },
   "Resources": {
+    "WriteWebsiteConfigJson": {
+      "Type": "Custom::LambdaSharpS3WriteJson",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${DeploymentPrefix}LambdaSharp::S3::WriteJson"
+          }
+        },
+        "ResourceType": "LambdaSharp::S3::WriteJson",
+        "Bucket": {
+          "Ref": "WebsiteBucket"
+        },
+        "Key": "config.json",
+        "Contents": {
+          "title": {
+            "Ref": "Title"
+          },
+          "message": {
+            "Ref": "Message"
+          }
+        }
+      }
+    },
     "WebsiteBucket": {
       "Type": "AWS::S3::Bucket",
       "Properties": {
         "AccessControl": "PublicRead",
         "WebsiteConfiguration": {
-          "IndexDocument": "index.html"
+          "IndexDocument": "index.html",
+          "ErrorDocument": "error.html"
         }
       }
     },
@@ -71,6 +95,20 @@
         }
       }
     },
+    "EmptyBucket": {
+      "Type": "Custom::LambdaSharpS3EmptyBucket",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${DeploymentPrefix}LambdaSharp::S3::EmptyBucket"
+          }
+        },
+        "ResourceType": "LambdaSharp::S3::EmptyBucket",
+        "Bucket": {
+          "Ref": "WebsiteBucket"
+        }
+      }
+    },
     "UnzipWebsiteContents": {
       "Type": "Custom::LambdaSharpS3Unzip",
       "Properties": {
@@ -88,29 +126,6 @@
           "Ref": "WebsiteBucket"
         },
         "DestinationKey": ""
-      }
-    },
-    "WriteWebsiteConfigJson": {
-      "Type": "Custom::LambdaSharpS3WriteJson",
-      "Properties": {
-        "ServiceToken": {
-          "Fn::ImportValue": {
-            "Fn::Sub": "${DeploymentPrefix}LambdaSharp::S3::WriteJson"
-          }
-        },
-        "ResourceType": "LambdaSharp::S3::WriteJson",
-        "Bucket": {
-          "Ref": "WebsiteBucket"
-        },
-        "Key": "config.json",
-        "Contents": {
-          "title": {
-            "Ref": "Title"
-          },
-          "message": {
-            "Ref": "Message"
-          }
-        }
       }
     },
     "ModuleRegistration": {
@@ -240,7 +255,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "9742A97C6840B82E8B897E0CC2B7092A",
+      "Hash": "E02276544407FC753B70348EFFBC75E1",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
@@ -267,8 +282,9 @@
         "ModuleRegistration": "Module::Registration"
       },
       "TypeNameMappings": {
-        "Custom::LambdaSharpS3Unzip": "LambdaSharp::S3::Unzip",
         "Custom::LambdaSharpS3WriteJson": "LambdaSharp::S3::WriteJson",
+        "Custom::LambdaSharpS3EmptyBucket": "LambdaSharp::S3::EmptyBucket",
+        "Custom::LambdaSharpS3Unzip": "LambdaSharp::S3::Unzip",
         "Custom::LambdaSharpRegistrationModule": "LambdaSharp::Registration::Module"
       }
     }
