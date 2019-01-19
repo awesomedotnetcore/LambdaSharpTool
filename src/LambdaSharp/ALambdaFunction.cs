@@ -43,8 +43,8 @@ namespace LambdaSharp {
         private class GitInfo {
 
             //--- Fields ---
-            public string Branch;
-            public string SHA;
+            public string Branch { get; set; }
+            public string SHA { get; set; }
         }
 
         //--- Class Fields ---
