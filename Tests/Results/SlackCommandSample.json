@@ -60,7 +60,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "D8167DE4937244D0532D60516225A81B"
+      "Default": "43407A9302A24CEBD02B441F4BC1948A"
     }
   },
   "Resources": {
@@ -71,7 +71,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "LambdaSharpSample/Modules/SlackCommandSample/Assets/MyFunction-DRYRUN.zip"
+          "S3Key": "LambdaSharp/Modules/Sample.SlackCommand/Assets/MyFunction-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -111,7 +111,7 @@
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharpSample.SlackCommandSample:1.0-DEV",
+            "MODULE_INFO": "LambdaSharp.Sample.SlackCommand:1.0-DEV",
             "LAMBDA_NAME": "MyFunction",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
@@ -375,7 +375,7 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "LambdaSharpSample.SlackCommandSample:1.0-DEV",
+        "Module": "LambdaSharp.Sample.SlackCommand:1.0-DEV",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
@@ -657,7 +657,7 @@
   },
   "Outputs": {
     "Module": {
-      "Value": "LambdaSharpSample.SlackCommandSample:1.0-DEV"
+      "Value": "LambdaSharp.Sample.SlackCommand:1.0-DEV"
     }
   },
   "Conditions": {
@@ -887,7 +887,7 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2018-12-31",
-      "Module": "LambdaSharpSample.SlackCommandSample:1.0-DEV",
+      "Module": "LambdaSharp.Sample.SlackCommand:1.0-DEV",
       "ParameterSections": [
         {
           "Title": "Module Settings",
@@ -941,7 +941,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "D8167DE4937244D0532D60516225A81B",
+      "Hash": "43407A9302A24CEBD02B441F4BC1948A",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

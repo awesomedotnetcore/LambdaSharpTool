@@ -1,4 +1,4 @@
-Module: LambdaSharpSample.S3SubscriptionSample
+Module: LambdaSharp.Sample.S3.Subscription
 Description: A sample module integrating with S3 Bucket events
 Items:
 

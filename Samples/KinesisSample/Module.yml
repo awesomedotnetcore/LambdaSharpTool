@@ -1,4 +1,4 @@
-Module: LambdaSharpSample.KinesisSample
+Module: LambdaSharp.Sample.Kinesis
 Description: A sample module using Kinesis streams
 Items:
 

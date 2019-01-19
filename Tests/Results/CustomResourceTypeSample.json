@@ -55,7 +55,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "67DE47B81C2120C9770DC15DCC9B8D85"
+      "Default": "7B8FD7F1739D84F59C79D9D7C6E3065A"
     }
   },
   "Resources": {
@@ -66,7 +66,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "LambdaSharpSample/Modules/CustomResourceTypeSample/Assets/ResourceHandler-DRYRUN.zip"
+          "S3Key": "LambdaSharp/Modules/Sample.CustomResourceType/Assets/ResourceHandler-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -106,7 +106,7 @@
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharpSample.CustomResourceTypeSample:1.0-DEV",
+            "MODULE_INFO": "LambdaSharp.Sample.CustomResourceType:1.0-DEV",
             "LAMBDA_NAME": "ResourceHandler",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
@@ -367,7 +367,7 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "LambdaSharpSample.CustomResourceTypeSample:1.0-DEV",
+        "Module": "LambdaSharp.Sample.CustomResourceType:1.0-DEV",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
@@ -474,7 +474,7 @@
   },
   "Outputs": {
     "Module": {
-      "Value": "LambdaSharpSample.CustomResourceTypeSample:1.0-DEV"
+      "Value": "LambdaSharp.Sample.CustomResourceType:1.0-DEV"
     },
     "MyNamespaceMyResource": {
       "Value": {
@@ -704,7 +704,7 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2018-12-31",
-      "Module": "LambdaSharpSample.CustomResourceTypeSample:1.0-DEV",
+      "Module": "LambdaSharp.Sample.CustomResourceType:1.0-DEV",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -748,7 +748,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "67DE47B81C2120C9770DC15DCC9B8D85",
+      "Hash": "7B8FD7F1739D84F59C79D9D7C6E3065A",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

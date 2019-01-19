@@ -41,7 +41,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "7A375764BDEFB9E2C57595CB6196011C"
+      "Default": "F85EDD71ECCA5872EA7D04CC2F1DFC9A"
     }
   },
   "Resources": {
@@ -56,7 +56,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "LambdaSharpSample/Modules/FinalizerSample/Assets/Finalizer-DRYRUN.zip"
+          "S3Key": "LambdaSharp/Modules/Sample.Finalizer/Assets/Finalizer-DRYRUN.zip"
         },
         "Description": "This function is invoked once all other resources have been created/updated (v1.0-DEV)",
         "Environment": {
@@ -64,7 +64,7 @@
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharpSample.FinalizerSample:1.0-DEV",
+            "MODULE_INFO": "LambdaSharp.Sample.Finalizer:1.0-DEV",
             "LAMBDA_NAME": "Finalizer",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEFAULTSECRETKEY": {
@@ -366,7 +366,7 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "LambdaSharpSample.FinalizerSample:1.0-DEV",
+        "Module": "LambdaSharp.Sample.Finalizer:1.0-DEV",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
@@ -375,7 +375,7 @@
   },
   "Outputs": {
     "Module": {
-      "Value": "LambdaSharpSample.FinalizerSample:1.0-DEV"
+      "Value": "LambdaSharp.Sample.Finalizer:1.0-DEV"
     }
   },
   "Conditions": {
@@ -518,7 +518,7 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2018-12-31",
-      "Module": "LambdaSharpSample.FinalizerSample:1.0-DEV",
+      "Module": "LambdaSharp.Sample.Finalizer:1.0-DEV",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -550,7 +550,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "7A375764BDEFB9E2C57595CB6196011C",
+      "Hash": "F85EDD71ECCA5872EA7D04CC2F1DFC9A",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

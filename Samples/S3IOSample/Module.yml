@@ -1,4 +1,4 @@
-Module: LambdaSharpSample.S3FilesSample
+Module: LambdaSharp.Sample.S3.IO
 Description: Showcase how to write files to an S3 bucket
 Requires:
 

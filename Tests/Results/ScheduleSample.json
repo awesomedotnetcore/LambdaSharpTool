@@ -55,7 +55,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "00FAEFAE44CADF3D66DACE47F9BDB9E6"
+      "Default": "18421F046D99A5B658FB809842EFB808"
     }
   },
   "Resources": {
@@ -66,7 +66,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "LambdaSharpSample/Modules/ScheduleSample/Assets/MyFunction-DRYRUN.zip"
+          "S3Key": "LambdaSharp/Modules/Sample.ScheduledEvent/Assets/MyFunction-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -106,7 +106,7 @@
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharpSample.ScheduleSample:1.0-DEV",
+            "MODULE_INFO": "LambdaSharp.Sample.ScheduledEvent:1.0-DEV",
             "LAMBDA_NAME": "MyFunction",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
@@ -367,7 +367,7 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "LambdaSharpSample.ScheduleSample:1.0-DEV",
+        "Module": "LambdaSharp.Sample.ScheduledEvent:1.0-DEV",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
@@ -621,7 +621,7 @@
   },
   "Outputs": {
     "Module": {
-      "Value": "LambdaSharpSample.ScheduleSample:1.0-DEV"
+      "Value": "LambdaSharp.Sample.ScheduledEvent:1.0-DEV"
     }
   },
   "Conditions": {
@@ -840,7 +840,7 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2018-12-31",
-      "Module": "LambdaSharpSample.ScheduleSample:1.0-DEV",
+      "Module": "LambdaSharp.Sample.ScheduledEvent:1.0-DEV",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -884,7 +884,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "00FAEFAE44CADF3D66DACE47F9BDB9E6",
+      "Hash": "18421F046D99A5B658FB809842EFB808",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

@@ -1,4 +1,4 @@
-Module: LambdaSharpSample.AlexaSample
+Module: LambdaSharp.Sample.Alexa
 Description: A sample module using an Alexa skill
 Items:
 

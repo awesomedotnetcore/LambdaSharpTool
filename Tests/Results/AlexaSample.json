@@ -60,7 +60,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "39BFC5C0FB21F2C9114A060326182E25"
+      "Default": "9E6EECB1F0BD8063132EB41B59D910AF"
     }
   },
   "Resources": {
@@ -71,7 +71,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "LambdaSharpSample/Modules/AlexaSample/Assets/MyFunction-DRYRUN.zip"
+          "S3Key": "LambdaSharp/Modules/Sample.Alexa/Assets/MyFunction-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -111,7 +111,7 @@
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharpSample.AlexaSample:1.0-DEV",
+            "MODULE_INFO": "LambdaSharp.Sample.Alexa:1.0-DEV",
             "LAMBDA_NAME": "MyFunction",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
@@ -372,7 +372,7 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "LambdaSharpSample.AlexaSample:1.0-DEV",
+        "Module": "LambdaSharp.Sample.Alexa:1.0-DEV",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
@@ -503,7 +503,7 @@
   },
   "Outputs": {
     "Module": {
-      "Value": "LambdaSharpSample.AlexaSample:1.0-DEV"
+      "Value": "LambdaSharp.Sample.Alexa:1.0-DEV"
     }
   },
   "Conditions": {
@@ -741,7 +741,7 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2018-12-31",
-      "Module": "LambdaSharpSample.AlexaSample:1.0-DEV",
+      "Module": "LambdaSharp.Sample.Alexa:1.0-DEV",
       "ParameterSections": [
         {
           "Title": "Module Settings",
@@ -795,7 +795,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "39BFC5C0FB21F2C9114A060326182E25",
+      "Hash": "9E6EECB1F0BD8063132EB41B59D910AF",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

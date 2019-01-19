@@ -55,7 +55,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "56E82C8708B5DECAF81D8DD073D90C48"
+      "Default": "FB6DC93236084D477C927B059A59CBDC"
     }
   },
   "Resources": {
@@ -90,7 +90,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "LambdaSharpSample/Modules/MacroSample/Assets/MyFunction-DRYRUN.zip"
+          "S3Key": "LambdaSharp/Modules/Sample.Macro/Assets/MyFunction-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -130,7 +130,7 @@
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharpSample.MacroSample:1.0-DEV",
+            "MODULE_INFO": "LambdaSharp.Sample.Macro:1.0-DEV",
             "LAMBDA_NAME": "MyFunction",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
@@ -391,7 +391,7 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "LambdaSharpSample.MacroSample:1.0-DEV",
+        "Module": "LambdaSharp.Sample.Macro:1.0-DEV",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
@@ -498,7 +498,7 @@
   },
   "Outputs": {
     "Module": {
-      "Value": "LambdaSharpSample.MacroSample:1.0-DEV"
+      "Value": "LambdaSharp.Sample.Macro:1.0-DEV"
     }
   },
   "Conditions": {
@@ -717,7 +717,7 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2018-12-31",
-      "Module": "LambdaSharpSample.MacroSample:1.0-DEV",
+      "Module": "LambdaSharp.Sample.Macro:1.0-DEV",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -761,7 +761,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "56E82C8708B5DECAF81D8DD073D90C48",
+      "Hash": "FB6DC93236084D477C927B059A59CBDC",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

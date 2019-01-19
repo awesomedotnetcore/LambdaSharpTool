@@ -55,7 +55,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "234E46114DF6DBB57CD6F5F21665774C"
+      "Default": "CC4389B9247E82E8F2C4854C2EFC5797"
     }
   },
   "Resources": {
@@ -74,7 +74,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "LambdaSharpSample/Modules/S3SubscriptionSample/Assets/MyFunction-DRYRUN.zip"
+          "S3Key": "LambdaSharp/Modules/Sample.S3.Subscription/Assets/MyFunction-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -114,7 +114,7 @@
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharpSample.S3SubscriptionSample:1.0-DEV",
+            "MODULE_INFO": "LambdaSharp.Sample.S3.Subscription:1.0-DEV",
             "LAMBDA_NAME": "MyFunction",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
@@ -479,7 +479,7 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "LambdaSharpSample.S3SubscriptionSample:1.0-DEV",
+        "Module": "LambdaSharp.Sample.S3.Subscription:1.0-DEV",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
@@ -699,7 +699,7 @@
   },
   "Outputs": {
     "Module": {
-      "Value": "LambdaSharpSample.S3SubscriptionSample:1.0-DEV"
+      "Value": "LambdaSharp.Sample.S3.Subscription:1.0-DEV"
     }
   },
   "Conditions": {
@@ -918,7 +918,7 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2018-12-31",
-      "Module": "LambdaSharpSample.S3SubscriptionSample:1.0-DEV",
+      "Module": "LambdaSharp.Sample.S3.Subscription:1.0-DEV",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -962,7 +962,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "234E46114DF6DBB57CD6F5F21665774C",
+      "Hash": "CC4389B9247E82E8F2C4854C2EFC5797",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

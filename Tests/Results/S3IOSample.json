@@ -35,7 +35,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "E02276544407FC753B70348EFFBC75E1"
+      "Default": "4B6FE75E35AF23815C3175E664E7633D"
     }
   },
   "Resources": {
@@ -121,7 +121,7 @@
         "SourceBucket": {
           "Ref": "DeploymentBucketName"
         },
-        "SourceKey": "LambdaSharpSample/Modules/S3FilesSample/Assets/WebsiteContents-DRYRUN.zip",
+        "SourceKey": "LambdaSharp/Modules/Sample.S3.IO/Assets/WebsiteContents-DRYRUN.zip",
         "DestinationBucket": {
           "Ref": "WebsiteBucket"
         },
@@ -137,7 +137,7 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "LambdaSharpSample.S3FilesSample:1.0-DEV",
+        "Module": "LambdaSharp.Sample.S3.IO:1.0-DEV",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
@@ -146,7 +146,7 @@
   },
   "Outputs": {
     "Module": {
-      "Value": "LambdaSharpSample.S3FilesSample:1.0-DEV"
+      "Value": "LambdaSharp.Sample.S3.IO:1.0-DEV"
     },
     "WebsiteUrl": {
       "Value": {
@@ -225,7 +225,7 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2018-12-31",
-      "Module": "LambdaSharpSample.S3FilesSample:1.0-DEV",
+      "Module": "LambdaSharp.Sample.S3.IO:1.0-DEV",
       "ParameterSections": [
         {
           "Title": "Website Settings",
@@ -255,7 +255,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "E02276544407FC753B70348EFFBC75E1",
+      "Hash": "4B6FE75E35AF23815C3175E664E7633D",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

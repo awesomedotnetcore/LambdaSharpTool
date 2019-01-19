@@ -1,4 +1,4 @@
-Module: LambdaSharpSample.ApiSample
+Module: LambdaSharp.Sample.ApiGateway
 Description: A sample module integrating with API Gateway
 Items:
 

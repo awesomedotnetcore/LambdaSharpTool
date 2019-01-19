@@ -55,7 +55,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "5650476D3D561D8208812729563B913A"
+      "Default": "0247DF9EACE410A212077073FBFBAACB"
     }
   },
   "Resources": {
@@ -87,7 +87,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "LambdaSharpSample/Modules/DynamoDBSample/Assets/MyFunction-DRYRUN.zip"
+          "S3Key": "LambdaSharp/Modules/Sample.DynamoDB/Assets/MyFunction-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -127,7 +127,7 @@
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharpSample.DynamoDBSample:1.0-DEV",
+            "MODULE_INFO": "LambdaSharp.Sample.DynamoDB:1.0-DEV",
             "LAMBDA_NAME": "MyFunction",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
@@ -440,7 +440,7 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "LambdaSharpSample.DynamoDBSample:1.0-DEV",
+        "Module": "LambdaSharp.Sample.DynamoDB:1.0-DEV",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
@@ -564,7 +564,7 @@
   },
   "Outputs": {
     "Module": {
-      "Value": "LambdaSharpSample.DynamoDBSample:1.0-DEV"
+      "Value": "LambdaSharp.Sample.DynamoDB:1.0-DEV"
     }
   },
   "Conditions": {
@@ -783,7 +783,7 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2018-12-31",
-      "Module": "LambdaSharpSample.DynamoDBSample:1.0-DEV",
+      "Module": "LambdaSharp.Sample.DynamoDB:1.0-DEV",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -827,7 +827,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "5650476D3D561D8208812729563B913A",
+      "Hash": "0247DF9EACE410A212077073FBFBAACB",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

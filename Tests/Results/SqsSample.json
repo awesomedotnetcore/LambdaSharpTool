@@ -55,7 +55,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "3CA76552A52298C2943B650D32DD5690"
+      "Default": "2BB6D08E6E109578D10C21356792C921"
     }
   },
   "Resources": {
@@ -74,7 +74,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "LambdaSharpSample/Modules/SqsSample/Assets/MyFunction-DRYRUN.zip"
+          "S3Key": "LambdaSharp/Modules/Sample.Sqs/Assets/MyFunction-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -114,7 +114,7 @@
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharpSample.SqsSample:1.0-DEV",
+            "MODULE_INFO": "LambdaSharp.Sample.Sqs:1.0-DEV",
             "LAMBDA_NAME": "MyFunction",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
@@ -415,7 +415,7 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "LambdaSharpSample.SqsSample:1.0-DEV",
+        "Module": "LambdaSharp.Sample.Sqs:1.0-DEV",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
@@ -554,7 +554,7 @@
   },
   "Outputs": {
     "Module": {
-      "Value": "LambdaSharpSample.SqsSample:1.0-DEV"
+      "Value": "LambdaSharp.Sample.Sqs:1.0-DEV"
     }
   },
   "Conditions": {
@@ -773,7 +773,7 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2018-12-31",
-      "Module": "LambdaSharpSample.SqsSample:1.0-DEV",
+      "Module": "LambdaSharp.Sample.Sqs:1.0-DEV",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -817,7 +817,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "3CA76552A52298C2943B650D32DD5690",
+      "Hash": "2BB6D08E6E109578D10C21356792C921",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

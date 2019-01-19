@@ -9,7 +9,7 @@ Before you begin, make sure to [setup your λ# CLI](../../Docs/).
 A custom resource type is defined with the `ResourceType` attribute. The resource type definition is global to the deployment tier, which means that the associated resource type (e.g. `MyNamespace::MyResource`) can only be defined once.
 
 ```yaml
-Module: LambdaSharpSample.CustomResourceTypeSample
+Module: LambdaSharp.Sample.CustomResourceType
 Description: A sample module for defining a custom resource
 Items:
 
@@ -42,7 +42,7 @@ Module: MyModule
 Description: A sample module that uses a custom resource
 Requires:
 
-    - Module: LambdaSharpSample.CustomResourceTypeSample
+    - Module: LambdaSharp.Sample.CustomResourceType
 
 Items:
 
