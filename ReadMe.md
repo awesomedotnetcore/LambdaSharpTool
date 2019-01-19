@@ -96,6 +96,7 @@ namespace MySampleModule.MyFunction {
 1. [Module Definition Reference](Docs/Module.md)
 1. [Folder Structure Reference](Docs/FolderStructure.md)
 1. [Release Notes](Docs/ReadMe.md)
+1. [Module IAM Short-hands](src/LambdaSharp.Tool/Resources/IAM-Mappings.yml)
 
 ## License
 

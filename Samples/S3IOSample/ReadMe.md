@@ -28,7 +28,7 @@ Description: Showcase how to write files to an S3 bucket
 Requires:
 
   - Module: LambdaSharp.S3.IO
-    Version: 0.5-WIP
+    Version: 0.5
 
 Items:
 

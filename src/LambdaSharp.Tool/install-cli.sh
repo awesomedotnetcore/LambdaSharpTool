@@ -15,4 +15,4 @@ dotnet tool install \
     --global \
     --add-source $LAMBDASHARP/src/LambdaSharp.Tool/ \
     LambdaSharp.Tool \
-    --version 0.5-WIP.*
+    --version 0.5-WIP
