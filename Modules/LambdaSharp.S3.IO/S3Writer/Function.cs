@@ -64,7 +64,9 @@ namespace LambdaSharp.S3.IO.S3Writer {
          * LambdaSharp::S3::EmptyBucket
          *
          * Bucket: String
+         * Enabled: Boolean
          */
+        public bool? Enabled { get; set; }
 
         public string DestinationBucketName => (DestinationBucket?.StartsWith("arn:") == true)
             ? AwsConverters.ConvertBucketArnToName(DestinationBucket)

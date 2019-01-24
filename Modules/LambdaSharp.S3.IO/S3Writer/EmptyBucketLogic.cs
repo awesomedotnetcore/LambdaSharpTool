@@ -56,6 +56,11 @@ namespace LambdaSharp.S3.IO.S3Writer {
             => Create(properties);
 
         public async Task<Response<ResponseProperties>> Delete(RequestProperties properties) {
+            if(properties.Enabled == false) {
+
+                // don't do anything if disabled
+                return new Response<ResponseProperties>();
+            }
             var bucketName = properties.BucketName;
             _logger.LogInfo($"emptying bucket: {bucketName}");
 

@@ -85,9 +85,14 @@ Items:
     Properties:
 
       - Name: Bucket
-        Description: S3 bucket ARN/name where to write the JSON file to
+        Description: S3 bucket ARN/name to empty on deletion
         Type: String
         Required: true
+
+      - Name: Enabled
+        Description: Enable/disable the emptying behavior on deletion.
+        Type: Boolean
+        Required: false
 
     Attributes:
 
