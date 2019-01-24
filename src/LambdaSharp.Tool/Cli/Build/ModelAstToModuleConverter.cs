@@ -263,7 +263,6 @@ namespace LambdaSharp.Tool.Cli.Build {
         private void ConvertItem(int index, ModuleItemNode node)
             => ConvertItem(null, index, node, new[] {
                 "Condition",
-                "Export",
                 "Function",
                 "Macro",
                 "Mapping",
@@ -387,7 +386,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     );
 
                     // recurse
-                    ConvertItems(result);
+                    ConvertItems(result, expectedTypes);
                 });
                 break;
             case "Resource":
@@ -560,11 +559,11 @@ namespace LambdaSharp.Tool.Cli.Build {
                         pragmas: node.Pragmas,
                         timeout: node.Timeout,
                         runtime: runtime,
-                        reservedConcurrency: node.ReservedConcurrency,
                         memory: node.Memory,
                         handler: handler,
                         subnets: node.VPC?.SubnetIds,
-                        securityGroups: node.VPC?.SecurityGroupIds
+                        securityGroups: node.VPC?.SecurityGroupIds,
+                        properties: node.Properties
                     );
                 });
                 break;
@@ -665,8 +664,8 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
 
             // local functions
-            void ConvertItems(AModuleItem result, IEnumerable<string> nestedExpectedTypes = null) {
-                ForEach("Declarations", node.Items, (i, p) => ConvertItem(result, i, p, nestedExpectedTypes ?? expectedTypes));
+            void ConvertItems(AModuleItem result, IEnumerable<string> nestedExpectedTypes) {
+                ForEach("Items", node.Items, (i, p) => ConvertItem(result, i, p, nestedExpectedTypes));
             }
 
             void ValidateARN(object arn) {

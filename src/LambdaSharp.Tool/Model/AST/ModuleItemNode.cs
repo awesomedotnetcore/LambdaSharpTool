@@ -79,7 +79,7 @@ namespace LambdaSharp.Tool.Model.AST {
                 "Memory",
                 "Pragmas",
                 "Project",
-                "ReservedConcurrency",
+                "Properties",
                 "Runtime",
                 "Scope",
                 "Sources",
@@ -142,9 +142,9 @@ namespace LambdaSharp.Tool.Model.AST {
 
         /*
          * Parameter: string
+         * Description: string
          * Section: string
          * Label: string
-         * Description: string
          * Type: string
          * Scope: string -or- list<string>
          * NoEcho: bool
@@ -275,11 +275,11 @@ namespace LambdaSharp.Tool.Model.AST {
          * Runtime: string
          * Language: string
          * Handler: string
-         * ReservedConcurrency: int
          * VPC:
          *   SubnetIds: string -or- list<string>
          *   SecurityGroupIds: string -or- list<string>
          * Environment: map
+         * Properties: map
          * Sources: list<function-source>
          * Pragmas: list<any>
          */
@@ -289,7 +289,6 @@ namespace LambdaSharp.Tool.Model.AST {
         public string Project { get; set; }
         public string Runtime { get; set; }
         public string Language { get; set; }
-        public string ReservedConcurrency { get; set; }
         public FunctionVpcNode VPC { get; set; }
         public Dictionary<string, object> Environment { get; set; }
         public IList<FunctionSourceNode> Sources { get; set; }

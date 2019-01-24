@@ -14852,18 +14852,18 @@
       "Properties": {
         "Key": {
           "PrimitiveType": "String",
-          "Required": false,
+          "Required": true,
           "UpdateType": "Mutable"
         },
         "Value": {
           "PrimitiveType": "String",
-          "Required": false,
+          "Required": true,
           "UpdateType": "Mutable"
         }
       }
     }
   },
-  "ResourceSpecificationVersion": "2.19.0",
+  "ResourceSpecificationVersion": "2.20.0",
   "ResourceTypes": {
     "Alexa::ASK::Skill": {
       "Properties": {
@@ -23873,6 +23873,30 @@
         "LicenseInfo": {
           "PrimitiveType": "String",
           "Required": false,
+          "UpdateType": "Immutable"
+        }
+      }
+    },
+    "AWS::Lambda::LayerVersionPermission": {
+      "Properties": {
+        "Action": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        },
+        "LayerVersionArn": {
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        },
+        "OrganizationId": {
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Immutable"
+        },
+        "Principal": {
+          "PrimitiveType": "String",
+          "Required": true,
           "UpdateType": "Immutable"
         }
       }

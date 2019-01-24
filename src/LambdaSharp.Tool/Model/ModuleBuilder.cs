@@ -671,6 +671,7 @@ namespace LambdaSharp.Tool.Model {
             AtLocation("Parameters", () => {
                 OptionalAdd("LambdaSharpDeadLetterQueue", FnRef("Module::DeadLetterQueue"));
                 OptionalAdd("LambdaSharpLoggingStream", FnRef("Module::LoggingStream"));
+                OptionalAdd("LambdaSharpLoggingStreamRole", FnRef("Module::LoggingStreamRole"));
                 OptionalAdd("LambdaSharpDefaultSecretKey", FnRef("Module::DefaultSecretKey"));
                 MandatoryAdd("DeploymentBucketName", sourceBucketName);
                 MandatoryAdd("DeploymentPrefix", FnRef("DeploymentPrefix"));
@@ -767,12 +768,57 @@ namespace LambdaSharp.Tool.Model {
             IList<object> pragmas,
             string timeout,
             string runtime,
-            string reservedConcurrency,
             string memory,
             string handler,
             object subnets,
-            object securityGroups
+            object securityGroups,
+            object properties
         ) {
+
+            // initialize function resource definition from properties
+            var resource = (properties != null)
+                ? JObject.FromObject(properties).ToObject<Humidifier.Lambda.Function>()
+                : new Humidifier.Lambda.Function();
+
+            // set optional function resource properties
+            if(description != null) {
+
+                // append version number to function description
+                resource.Description = description.TrimEnd() + $" (v{_version})";
+            }
+            if(timeout != null) {
+                resource.Timeout = timeout;
+            }
+            if(runtime != null) {
+                resource.Runtime = runtime;
+            }
+            if(memory != null) {
+                resource.MemorySize = memory;
+            }
+            if(handler != null) {
+                resource.Handler = handler;
+            }
+            if((subnets != null) && (securityGroups != null)) {
+                resource.VpcConfig = new Humidifier.Lambda.FunctionTypes.VpcConfig {
+                    SubnetIds = subnets,
+                    SecurityGroupIds = securityGroups
+                };
+            }
+
+            // set function resource properties to defaults when not defined
+            if(resource.Role == null) {
+                resource.Role = FnGetAtt("Module::Role", "Arn");
+            }
+            if(resource.Environment == null) {
+                resource.Environment = new Humidifier.Lambda.FunctionTypes.Environment {
+                    Variables = new Dictionary<string, dynamic>()
+                };
+            }
+            if(resource.Code == null) {
+                resource.Code = new Humidifier.Lambda.FunctionTypes.Code {
+                    S3Bucket = FnRef("DeploymentBucketName")
+                };
+            }
 
             // create function item
             var function = new FunctionItem(
@@ -786,33 +832,7 @@ namespace LambdaSharp.Tool.Model {
                 sources: sources ?? new AFunctionSource[0],
                 condition: null,
                 pragmas: pragmas ?? new object[0],
-                function: new Humidifier.Lambda.Function {
-
-                    // append version number to function description
-                    Description = (description != null)
-                        ? description.TrimEnd() + $" (v{_version})"
-                        : null,
-                    Timeout = timeout,
-                    Runtime = runtime,
-                    ReservedConcurrentExecutions = reservedConcurrency,
-                    MemorySize = memory,
-                    Handler = handler,
-
-                    // create optional VPC configuration
-                    VpcConfig = ((subnets != null) && (securityGroups != null))
-                        ? new Humidifier.Lambda.FunctionTypes.VpcConfig {
-                            SubnetIds = subnets,
-                            SecurityGroupIds = securityGroups
-                        }
-                        : null,
-                    Role = FnGetAtt("Module::Role", "Arn"),
-                    Environment = new Humidifier.Lambda.FunctionTypes.Environment {
-                        Variables = new Dictionary<string, dynamic>()
-                    },
-                    Code = new Humidifier.Lambda.FunctionTypes.Code {
-                        S3Bucket = FnRef("DeploymentBucketName")
-                    }
-                }
+                function: resource
             );
             AddItem(function);
 

@@ -1,3 +1,5 @@
+> TODO
+
 ![λ#](LambdaSharp_v2_small.png)
 
 # LambdaSharp Module - Resource Section
@@ -46,11 +48,11 @@ The <code>DefaultAttribute</code> attribute specifies the name of the resource a
 
 <dt><code>DependsOn</code></dt>
 <dd>
-The <code>DependsOn</code> attribute identifies resources that must be created in a specific order. Variable name must match another Variable name within the module that is generating a resource. For additional information, see <a href="https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-attribute-dependson.html">CloudFormation DependsOn Attribute</a>.
+The <code>DependsOn</code> attribute identifies items that must be created prior. For additional information, see <a href="https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-attribute-dependson.html">CloudFormation DependsOn Attribute</a>.
 
 <i>Required</i>: No
 
-<i>Type</i>: List of String (VariableNames)
+<i>Type</i>: List of String
 </dd>
 
 <dt><code>Properties</code></dt>

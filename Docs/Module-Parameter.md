@@ -1,8 +1,10 @@
+> TODO
+
 ![λ#](LambdaSharp_v2_small.png)
 
-# LambdaSharp Module -  Parameter Definition
+# LambdaSharp Module -  Parameter
 
-Module parameters are specified at module deployment time by the λ# CLI. Module parameters can be modified subsequently by updating the CloudFormation stack in the AWS console.
+The `Parameter` definition specifies a value that is supplied at module deployment time either by the λ# CLI or a parent module. Module parameters can be modified subsequently by updating the CloudFormation stack in the AWS console.
 
 __Topics__
 * [Syntax](#syntax)
@@ -13,9 +15,9 @@ __Topics__
 
 ```yaml
 Parameter: String
+Description: String
 Section: String
 Label: String
-Description: String
 Scope: ScopeDefinition
 NoEcho: Boolean
 Default: String
@@ -27,13 +29,29 @@ MaxLength: Int
 MaxValue: Int
 MinLength: Int
 MinValue: Int
-Resource:
-  ResourceDefinition
+Pragmas:
+  - PragmaDefinition
+Type: String
+Allow: AllowDefinition
+DefaultAttribute: String
+Properties:
+  ResourceProperties
+EncryptionContext:
+  Key-Value Mapping
 ```
 
 ## Properties
 
 <dl>
+
+<dt><code>Allow</code></dt>
+<dd>
+The <code>Allow</code> attribute can either a comma-separated, single string value or a list of string values. String values that contain a colon (<code>:</code>) are interpreted as IAM permission and used as is (e.g. <code>dynamodb:GetItem</code>, <code>s3:GetObject*</code>, etc.). Otherwise, the value is interpreted as a λ# shorthand (see <a href="../src/LambdaSharp.Tool/Resources/IAM-Mappings.yml">λ# Shorthand by Resource Type</a>). Both notations can be used simultaneously within a single <code>Allow</code> section. Duplicate IAM permissions, after λ# shorthand resolution, are removed.
+
+<i>Required</i>: No
+
+<i>Type</i>: Either String or List of String
+</dd>
 
 <dt><code>AllowedPattern</code></dt>
 <dd>
@@ -71,6 +89,15 @@ The <code>Default</code> attribute specifies a value to use when no value is pro
 <i>Type</i>: String
 </dd>
 
+<dt><code>DefaultAttribute</code></dt>
+<dd>
+The <code>DefaultAttribute</code> attribute specifies the name of the resource attribute to use in a <code>!GetAtt</code> expression to obtain the resource ARN. By default, the λ# CLI automatically maps known AWS resource types to the appropriate ARN attribute name. However, if no such mapping is defined, the λ# CLI generates a <code>!Ref</code> expression instead. The ARN is required for associating IAM permissions with the resource.
+
+<i>Required</i>: No
+
+<i>Type</i>: String
+</dd>
+
 <dt><code>Description</code></dt>
 <dd>
 The <code>Description</code> attribute specifies the parameter description. The description is shown in the AWS Console when creating or updating the CloudFormation stack.
@@ -78,6 +105,15 @@ The <code>Description</code> attribute specifies the parameter description. The 
 <i>Required</i>: No
 
 <i>Type</i>: String
+</dd>
+
+<dt><code>EncryptionContext</code></dt>
+<dd>
+The <code>EncryptionContext</code> section is an optional mapping of key-value pairs used for decrypting a variable of type <code>Secret</code>. For all other types, specifying <code>EncryptionContext</code> will a compilation error.
+
+<i>Required</i>: No
+
+<i>Type</i>: Key-Value Pair Mapping
 </dd>
 
 <dt><code>Label</code></dt>
@@ -143,13 +179,24 @@ The <code>Parameter</code> attribute specifies the parameter name.
 <i>Type</i>: String
 </dd>
 
-<dt><code>Resource</code></dt>
+<dt><code>Pragmas</code></dt>
 <dd>
-The <code>Resource</code> section specifies the AWS resource type and its IAM access permissions for the parameter. The resource definition is used to create new resource in case the parameter has a <code>Default</code> attribute and no parameter value was provided.
+The <code>Pragmas</code> section specifies directives that change the default compiler behavior.
+
+<i>Required:</i> No
+
+<i>Type:</i> List of [Pragma Definition](Module-Inputs.md)
+</dd>
+
+<dt><code>Properties</code></dt>
+<dd>
+The <code>Properties</code> section specifies additional options that can be specified for a managed resource. This section is copied verbatim into the CloudFormation template and can use <a href="https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference.html">CloudFormation intrinsic functions</a> (e.g. <code>!Ref</code>, <code>!Join</code>, <code>!Sub</code>, etc.) for referencing other resources.
+
+The <code>Properties</code> section cannot be specified for referenced resources. For a list of all additional options, see <a href="https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html">AWS Resource Types Reference</a>.
 
 <i>Required</i>: No
 
-<i>Type</i>: [Resource Definition](Module-Resource.md)
+<i>Type</i>: Map
 </dd>
 
 <dt><code>Scope</code></dt>
@@ -230,9 +277,8 @@ The following parameter types are supported:
 ```yaml
 - Parameter: MyTopic
   Description: A topic ARN
-  Resource:
-    Type: AWS::SNS::Topic
-    Allow: Publish
+  Type: AWS::SNS::Topic
+  Allow: Publish
 ```
 
 ### An optional parameter that generates a resource on default value
@@ -240,8 +286,7 @@ The following parameter types are supported:
 ```yaml
 - Parameter: MyTopic
   Description: A topic ARN
+  Type: AWS::SNS::Topic
+  Allow: Publish
   Default: ""
-  Resource:
-    Type: AWS::SNS::Topic
-    Allow: Publish
 ```

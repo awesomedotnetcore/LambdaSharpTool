@@ -90,13 +90,14 @@ namespace MySampleModule.MyFunction {
 
 ## Learn More
 
-1. [Setup λ#](Docs/)
+1. [Installing λ#](Docs/)
 1. [λ# CLI Reference](src/LambdaSharp.Tool/)
 1. [λ# Samples](Samples/)
-1. [Module Definition Reference](Docs/Module.md)
+1. [λ# Modules](Docs/Module.md)
+1. [λ# Global Variables](Docs/Module-Global-Variables.md)
 1. [Folder Structure Reference](Docs/FolderStructure.md)
 1. [Release Notes](Docs/ReadMe.md)
-1. [Module IAM Short-hands](src/LambdaSharp.Tool/Resources/IAM-Mappings.yml)
+1. [λ# IAM Short-hands](src/LambdaSharp.Tool/Resources/IAM-Mappings.yml)
 
 ## License
 

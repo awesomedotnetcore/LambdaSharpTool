@@ -21,6 +21,13 @@
       "ConstraintDescription": "must either be a cross-module import reference or a non-empty value",
       "Default": "$LambdaSharp-Core::LoggingStream"
     },
+    "LambdaSharpLoggingStreamRole": {
+      "Type": "String",
+      "Description": "Logging Stream Role (ARN)",
+      "AllowedPattern": "^.+$",
+      "ConstraintDescription": "must either be a cross-module import reference or a non-empty value",
+      "Default": "$LambdaSharp-Core::LoggingStreamRole"
+    },
     "LambdaSharpDefaultSecretKey": {
       "Type": "String",
       "Description": "Secret Key (ARN)",
@@ -48,7 +55,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "E9C609D92E16C4F92E505CA553A7D5E0"
+      "Default": "1F0C0A307392BBA5584F61BB2DBC1ACD"
     }
   },
   "Resources": {
@@ -117,6 +124,36 @@
               },
               {
                 "Ref": "LambdaSharpLoggingStream"
+              }
+            ]
+          },
+          "LambdaSharpLoggingStreamRole": {
+            "Fn::If": [
+              "LambdaSharpLoggingStreamRoleIsImported",
+              {
+                "Fn::ImportValue": {
+                  "Fn::Sub": [
+                    "${DeploymentPrefix}${Import}",
+                    {
+                      "Import": {
+                        "Fn::Select": [
+                          "1",
+                          {
+                            "Fn::Split": [
+                              "$",
+                              {
+                                "Ref": "LambdaSharpLoggingStreamRole"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "Ref": "LambdaSharpLoggingStreamRole"
               }
             ]
           },
@@ -259,6 +296,40 @@
         }
       ]
     },
+    "LambdaSharpLoggingStreamRoleIsImported": {
+      "Fn::And": [
+        {
+          "Fn::Not": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "LambdaSharpLoggingStreamRole"
+                },
+                ""
+              ]
+            }
+          ]
+        },
+        {
+          "Fn::Equals": [
+            {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "$",
+                    {
+                      "Ref": "LambdaSharpLoggingStreamRole"
+                    }
+                  ]
+                }
+              ]
+            },
+            ""
+          ]
+        }
+      ]
+    },
     "LambdaSharpDefaultSecretKeyIsImported": {
       "Fn::And": [
         {
@@ -306,6 +377,9 @@
         "LambdaSharpLoggingStream": {
           "default": "Logging Stream (ARN) [String]"
         },
+        "LambdaSharpLoggingStreamRole": {
+          "default": "Logging Stream Role (ARN) [String]"
+        },
         "LambdaSharpDefaultSecretKey": {
           "default": "Secret Key (ARN) [String]"
         },
@@ -341,6 +415,7 @@
           "Parameters": [
             "LambdaSharpDeadLetterQueue",
             "LambdaSharpLoggingStream",
+            "LambdaSharpLoggingStreamRole",
             "LambdaSharpDefaultSecretKey"
           ]
         },
@@ -389,6 +464,12 @@
               "Default": "$LambdaSharp-Core::LoggingStream"
             },
             {
+              "Name": "LoggingStreamRole",
+              "Type": "String",
+              "Label": "Logging Stream Role (ARN)",
+              "Default": "$LambdaSharp-Core::LoggingStreamRole"
+            },
+            {
               "Name": "DefaultSecretKey",
               "Type": "String",
               "Label": "Secret Key (ARN)",
@@ -398,7 +479,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "E9C609D92E16C4F92E505CA553A7D5E0",
+      "Hash": "1F0C0A307392BBA5584F61BB2DBC1ACD",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

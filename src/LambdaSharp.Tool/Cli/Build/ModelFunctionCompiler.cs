@@ -177,7 +177,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
                     // NOTE (2018-06-21, bjorg): the RestApi deployment resource depends on ALL methods resources having been created;
                     //  a new name is used for the deployment to force the stage to be updated
-                    var deployment = _builder.AddResource(
+                    var deploymentWithHash = _builder.AddResource(
                         parent: restApiItem,
                         name: "Deployment" + methodsHash,
                         description: "Module REST API Deployment",
@@ -191,6 +191,17 @@ namespace LambdaSharp.Tool.Cli.Build {
                         condition: null,
                         pragmas: null
                     );
+                    var deployment = _builder.AddVariable(
+                        parent: restApiItem,
+                        name: "Deployment",
+                        description: "Module REST API Deployment",
+                        type: "String",
+                        scope: null,
+                        value: FnRef(deploymentWithHash.FullName),
+                        allow: null,
+                        encryptionContext: null
+                    );
+
 
                     // RestApi stage depends on API gateway deployment and API gateway account
                     // NOTE (2018-06-21, bjorg): the stage resource depends on the account resource having been granted
