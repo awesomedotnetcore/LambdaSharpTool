@@ -1,5 +1,3 @@
-> TODO
-
 ![λ#](LambdaSharp_v2_small.png)
 
 # LambdaSharp Module -  Parameter
@@ -46,7 +44,7 @@ EncryptionContext:
 
 <dt><code>Allow</code></dt>
 <dd>
-The <code>Allow</code> attribute can either a comma-separated, single string value or a list of string values. String values that contain a colon (<code>:</code>) are interpreted as IAM permission and used as is (e.g. <code>dynamodb:GetItem</code>, <code>s3:GetObject*</code>, etc.). Otherwise, the value is interpreted as a λ# shorthand (see <a href="../src/LambdaSharp.Tool/Resources/IAM-Mappings.yml">λ# Shorthand by Resource Type</a>). Both notations can be used simultaneously within a single <code>Allow</code> section. Duplicate IAM permissions, after λ# shorthand resolution, are removed.
+The <code>Allow</code> attribute can be either a comma-separated, single string value, or a list of string values. String values that contain a colon (<code>:</code>) are interpreted as IAM permission and used as is (e.g. <code>dynamodb:GetItem</code>, <code>s3:GetObject*</code>, etc.). Otherwise, the value is interpreted as a λ# shorthand (see <a href="../src/LambdaSharp.Tool/Resources/IAM-Mappings.yml">λ# Shorthand by Resource Type</a>). Both notations can be used simultaneously within a single <code>Allow</code> section. Duplicate IAM permissions, after λ# shorthand resolution, are removed.
 
 <i>Required</i>: No
 
@@ -91,7 +89,7 @@ The <code>Default</code> attribute specifies a value to use when no value is pro
 
 <dt><code>DefaultAttribute</code></dt>
 <dd>
-The <code>DefaultAttribute</code> attribute specifies the name of the resource attribute to use in a <code>!GetAtt</code> expression to obtain the resource ARN. By default, the λ# CLI automatically maps known AWS resource types to the appropriate ARN attribute name. However, if no such mapping is defined, the λ# CLI generates a <code>!Ref</code> expression instead. The ARN is required for associating IAM permissions with the resource.
+The <code>DefaultAttribute</code> attribute specifies the resource attribute to use when exporting the resource from the module or to a Lambda function. By default, the λ# CLI automatically selects the <code>Arn</code> attribute when available. Otherwise, it uses the return value of a <code>!Ref</code> expressions. This behavior can be overwritten by specifying a <code>DefaultAttribute</code> attribute.
 
 <i>Required</i>: No
 
@@ -109,7 +107,7 @@ The <code>Description</code> attribute specifies the parameter description. The 
 
 <dt><code>EncryptionContext</code></dt>
 <dd>
-The <code>EncryptionContext</code> section is an optional mapping of key-value pairs used for decrypting a variable of type <code>Secret</code>. For all other types, specifying <code>EncryptionContext</code> will a compilation error.
+The <code>EncryptionContext</code> section is an optional mapping of key-value pairs used for decrypting a variable of type <code>Secret</code>. For all other types, specifying <code>EncryptionContext</code> will produce a compilation error.
 
 <i>Required</i>: No
 
@@ -172,7 +170,7 @@ The <code>NoEcho</code> attribute specifies whether to mask the parameter value 
 
 <dt><code>Parameter</code></dt>
 <dd>
-The <code>Parameter</code> attribute specifies the parameter name.
+The <code>Parameter</code> attribute specifies the parameter name. The name must start with a letter and followed only by letters or digits. Punctuation marks are not allowed. All names are case-sensitive.
 
 <i>Required</i>: Yes
 
@@ -185,7 +183,7 @@ The <code>Pragmas</code> section specifies directives that change the default co
 
 <i>Required:</i> No
 
-<i>Type:</i> List of [Pragma Definition](Module-Inputs.md)
+<i>Type:</i> List of [Pragma Definition](Module-Pragmas.md)
 </dd>
 
 <dt><code>Properties</code></dt>
@@ -201,11 +199,11 @@ The <code>Properties</code> section cannot be specified for referenced resources
 
 <dt><code>Scope</code></dt>
 <dd>
-The <code>Scope</code> attribute specifies which functions need to have access to this parameter. The <code>Scope</code> attribute can be a comma-separated list or a YAML list of function names. If all function need the parameter, then <code>"*"</code> can be used as a wildcard.
+The <code>Scope</code> attribute specifies which functions need to have access to this item. The <code>Scope</code> attribute can be a comma-separated list or a YAML list of function names. If all function need the item, then <code>"*"</code> can be used as a wildcard. In addition, the <code>public</code> can be used to export the item from the module.
 
 <i>Required</i>: No
 
-<i>Type</i>: Either String or List of String
+<i>Type</i>: Comma-delimited String or List of String
 </dd>
 
 <dt><code>Section</code></dt>
@@ -289,4 +287,6 @@ The following parameter types are supported:
   Type: AWS::SNS::Topic
   Allow: Publish
   Default: ""
+  Properties:
+    DisplayName: New topic display name
 ```

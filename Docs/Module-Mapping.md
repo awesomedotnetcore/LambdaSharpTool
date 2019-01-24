@@ -70,8 +70,6 @@ The <code>Value</code> attribute specifies the mapping associations. Within the 
     Night:
       Text: Good night
 
-# ...
-
 - Parameter: SelectedTime
   Description: Parameter for selecting the time of day
   AllowedValues:

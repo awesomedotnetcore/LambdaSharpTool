@@ -64,8 +64,6 @@ The <code>Macro</code> attribute specifies the name of the macro. Macros are glo
   Description: CloudFormation macro for converting a string to uppercase
   Handler: StringOpFunction
 
-# ...
-
 - Function: StringOpFunction
   Memory: 128
   Timeout: 15

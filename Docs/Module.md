@@ -73,7 +73,7 @@ The <code>Pragmas</code> section specifies directives that change the default co
 
 <i>Required:</i> No
 
-<i>Type:</i> List of [Pragma Definition](Module-Inputs.md)
+<i>Type:</i> List of [Pragma Definition](Module-Pragmas.md)
 </dd>
 
 <dt><code>Requires</code></dt>

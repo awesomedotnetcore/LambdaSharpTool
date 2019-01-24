@@ -69,8 +69,6 @@ The <code>Namespace</code> attribute specifies the item name. The name must star
     - Resource: ReportTopic
       Type: AWS::SNS::Topic
 
-# ...
-
 - Variable: TopicForAccountingReports
   Value: !Ref Accounting::ReportTopic
 ```

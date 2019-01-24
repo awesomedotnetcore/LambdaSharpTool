@@ -1,5 +1,3 @@
-> TODO
-
 ![λ#](LambdaSharp_v2_small.png)
 
 # LambdaSharp Module - Package

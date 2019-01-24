@@ -1,10 +1,8 @@
-> TODO
-
 ![λ#](LambdaSharp_v2_small.png)
 
 # LambdaSharp Module - Items
 
-The `Items` section, in the [λ# Module](Module.md), defines parameters, variables, resources, functions, and more.
+The `Items` section, in the [λ# Module](Module.md), defines parameters, variables, resources, functions, etc.
 
 __Definitions__
 * [Condition](Module-Condition.md)
