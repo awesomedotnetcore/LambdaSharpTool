@@ -97,9 +97,9 @@ namespace MySampleModule.MyFunction {
 1. [λ# Module Global Variables](Docs/Module-Global-Variables.md)
 1. [λ# Module IAM Short-hands](src/LambdaSharp.Tool/Resources/IAM-Mappings.yml)
 1. LambdaSharp.S3.IO Resource Types
-    1. [LambdaSharp::S3::EmptyBucket](Docs/Lambdasharp-S3-EmptyBucket.md)
-    1. [LambdaSharp::S3::Unzip](Docs/Lambdasharp-S3-Unzip.md)
-    1. [LambdaSharp::S3::WriteJson](Docs/Lambdasharp-S3-WriteJson.md)
+    1. [LambdaSharp::S3::EmptyBucket](Docs/LambdaSharp-S3-EmptyBucket.md)
+    1. [LambdaSharp::S3::Unzip](Docs/LambdaSharp-S3-Unzip.md)
+    1. [LambdaSharp::S3::WriteJson](Docs/LambdaSharp-S3-WriteJson.md)
 
 ### Reference
 
