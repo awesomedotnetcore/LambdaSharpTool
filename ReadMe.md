@@ -8,12 +8,7 @@
 
 The objective of λ# is to accelerate the innovation velocity of serverless solutions. It allows developers to focus on solving business problems while deploying scalable, observable solutions that follow DevOps best practices.
 
-## Prerequisite
-
-1. [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html)
-1. [.NET Core 2.1+](https://www.microsoft.com/net/download)
-
-## Getting Started
+## Install λ# CLI
 
 The λ# CLI is installed as a .NET Global Tool.
 
@@ -31,7 +26,7 @@ Finally, a deployment tier must be initialized with the λ# Core.
 dotnet lash init --tier Sandbox
 ```
 
-## Deploy your First λ# Module
+## Deploy a λ# Module
 
 Creating modules with Lambda functions and deploying them only requires a few steps.
 
@@ -90,14 +85,26 @@ namespace MySampleModule.MyFunction {
 
 ## Learn More
 
-1. [Installing λ#](Docs/)
-1. [λ# CLI Reference](src/LambdaSharp.Tool/)
+### Getting Started
+
+1. [Setup λ#](Docs/)
 1. [λ# Samples](Samples/)
-1. [λ# Modules](Docs/Module.md)
-1. [λ# Global Variables](Docs/Module-Global-Variables.md)
+
+### References
+
+1. [λ# CLI Reference](src/LambdaSharp.Tool/)
+1. [λ# Module Notation](Docs/Module.md)
+1. [λ# Module Global Variables](Docs/Module-Global-Variables.md)
+1. [λ# Module IAM Short-hands](src/LambdaSharp.Tool/Resources/IAM-Mappings.yml)
+1. LambdaSharp.S3.IO Resource Types
+    1. [LambdaSharp::S3::EmptyBucket](Docs/Lambdasharp-S3-EmptyBucket.md)
+    1. [LambdaSharp::S3::Unzip](Docs/Lambdasharp-S3-Unzip.md)
+    1. [LambdaSharp::S3::WriteJson](Docs/Lambdasharp-S3-WriteJson.md)
+
+### Reference
+
 1. [Folder Structure Reference](Docs/FolderStructure.md)
 1. [Release Notes](Docs/ReadMe.md)
-1. [λ# IAM Short-hands](src/LambdaSharp.Tool/Resources/IAM-Mappings.yml)
 
 ## License
 

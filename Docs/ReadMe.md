@@ -2,6 +2,15 @@
 
 # Setup LambdaSharp
 
+## Step 0: Prerequisite
+
+To get started, make sure you have signed-up for an AWS account and downloaded the required tools.
+
+1. [AWS Account](https://portal.aws.amazon.com/billing/signup#/start)
+1. [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html)
+1. [.NET Core 2.1+](https://www.microsoft.com/net/download)
+
+
 ## Step 1: Installing λ# CLI
 
 The λ# CLI can be installed as a global `dotnet` tool by running the `dotnet` tool installation command:
