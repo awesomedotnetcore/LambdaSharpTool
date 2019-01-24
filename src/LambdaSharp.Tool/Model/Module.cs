@@ -40,7 +40,7 @@ namespace LambdaSharp.Tool.Model {
         public IEnumerable<AModuleItem> Items { get; set; }
         public IEnumerable<string> Assets { get; set; }
         public IEnumerable<KeyValuePair<string, ModuleDependency>> Dependencies { get; set; }
-        public IEnumerable<KeyValuePair<string, ModuleManifestResourceType>> CustomResourceTypes { get; set; }
+        public IEnumerable<ModuleManifestResourceType> CustomResourceTypes { get; set; }
         public IEnumerable<string> MacroNames { get; set; }
         public IDictionary<string, string> ResourceTypeNameMappings { get; set; }
 

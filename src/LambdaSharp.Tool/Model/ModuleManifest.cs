@@ -42,7 +42,7 @@ namespace LambdaSharp.Tool.Model {
         public string GitBranch { get; set; }
         public IList<string> Assets { get; set; } = new List<string>();
         public IList<ModuleManifestDependency> Dependencies { get; set; } = new List<ModuleManifestDependency>();
-        public IDictionary<string, ModuleManifestResourceType> ResourceTypes { get; set; } = new Dictionary<string, ModuleManifestResourceType>();
+        public IList<ModuleManifestResourceType> ResourceTypes { get; set; } = new List<ModuleManifestResourceType>();
         public IList<ModuleManifestOutput> Outputs { get; set; } = new List<ModuleManifestOutput>();
         public IList<ModuleManifestMacro> Macros { get; set; } = new List<ModuleManifestMacro>();
         public IDictionary<string, string> ResourceNameMappings { get; set; } = new Dictionary<string, string>();
@@ -108,9 +108,10 @@ namespace LambdaSharp.Tool.Model {
     public class ModuleManifestResourceType {
 
        //--- Properties ---
+       public string Type { get; set; }
        public string Description { get; set; }
-       public IEnumerable<ModuleManifestResourceProperty> Request { get; set; } = new List<ModuleManifestResourceProperty>();
-       public IEnumerable<ModuleManifestResourceProperty> Response { get; set; } = new List<ModuleManifestResourceProperty>();
+       public IEnumerable<ModuleManifestResourceProperty> Properties { get; set; } = new List<ModuleManifestResourceProperty>();
+       public IEnumerable<ModuleManifestResourceProperty> Attributes { get; set; } = new List<ModuleManifestResourceProperty>();
     }
 
     public class ModuleManifestResourceProperty {

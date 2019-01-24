@@ -55,7 +55,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "ACE6ACA1728442A8972CE9EA0C3DCF62"
+      "Default": "0D946A6F813F4418A0B75DB9E793D60A"
     }
   },
   "Resources": {
@@ -818,7 +818,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "ACE6ACA1728442A8972CE9EA0C3DCF62",
+      "Hash": "0D946A6F813F4418A0B75DB9E793D60A",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
@@ -829,10 +829,11 @@
           "MinVersion": "0.5-WIP"
         }
       ],
-      "ResourceTypes": {
-        "LambdaSharp::S3::Subscription": {
+      "ResourceTypes": [
+        {
+          "Type": "LambdaSharp::S3::Subscription",
           "Description": "Custom resource for S3 bucket subscriptions",
-          "Request": [
+          "Properties": [
             {
               "Name": "Bucket",
               "Description": "S3 bucket ARN/name to subscribe to",
@@ -852,7 +853,7 @@
               "Required": true
             }
           ],
-          "Response": [
+          "Attributes": [
             {
               "Name": "Result",
               "Description": "S3 bucker URL",
@@ -861,7 +862,7 @@
             }
           ]
         }
-      },
+      ],
       "ResourceNameMappings": {
         "ResourceHandlerLogGroup": "ResourceHandler::LogGroup",
         "ModuleRole": "Module::Role",

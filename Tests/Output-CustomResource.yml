@@ -7,34 +7,35 @@ Items:
     Description: A custom resource handler using an SNS topic
     Handler: ResourceValue
     Properties:
-      Request:
 
-        - Name: Foo
-          Description: Foo request parameter
-          Type: String
-          Required: true
+      - Name: Foo
+        Description: Foo request parameter
+        Type: String
+        Required: true
 
-        - Name: Zoo
-          Description: Zoo request parameter
-          Type: String
-          Required: false
+      - Name: Zoo
+        Description: Zoo request parameter
+        Type: String
+        Required: false
 
-      Response:
+    Attributes:
 
-        - Name: Bar
-          Description: Bar response value
-          Type: String
+      - Name: Bar
+        Description: Bar response value
+        Type: String
 
   - ResourceType: TestModule::MyCustomLambdaResource
     Description: A custom resource handler using a Lambda Function
     Handler: Function
     Properties:
-      Request:
-        - Name: Foo
-          Type: String
-      Response:
-        - Name: Bar
-          Type: String
+
+      - Name: Foo
+        Type: String
+
+    Attributes:
+
+      - Name: Bar
+        Type: String
 
   - Resource: ResourceValue
     Description: ResourceValue description

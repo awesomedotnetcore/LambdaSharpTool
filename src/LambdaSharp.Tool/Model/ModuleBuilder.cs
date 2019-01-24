@@ -47,7 +47,7 @@ namespace LambdaSharp.Tool.Model {
         private IList<Humidifier.Statement> _resourceStatements = new List<Humidifier.Statement>();
         private IList<string> _assets;
         private IDictionary<string, ModuleDependency> _dependencies;
-        private IDictionary<string, ModuleManifestResourceType> _customResourceTypes;
+        private IList<ModuleManifestResourceType> _customResourceTypes;
         private IList<string> _macroNames;
         private IDictionary<string, string> _resourceTypeNameMappings;
 
@@ -66,8 +66,8 @@ namespace LambdaSharp.Tool.Model {
                 ? new Dictionary<string, ModuleDependency>(module.Dependencies)
                 : new Dictionary<string, ModuleDependency>();
             _customResourceTypes = (module.CustomResourceTypes != null)
-                ? new Dictionary<string, ModuleManifestResourceType>(module.CustomResourceTypes)
-                : new Dictionary<string, ModuleManifestResourceType>();
+                ? new List<ModuleManifestResourceType>(module.CustomResourceTypes)
+                : new List<ModuleManifestResourceType>();
             _macroNames = new List<string>(module.MacroNames ?? new string[0]);
             _resourceTypeNameMappings = module.ResourceTypeNameMappings ?? new Dictionary<string, string>();
 
@@ -449,15 +449,25 @@ namespace LambdaSharp.Tool.Model {
         }
 
         public void AddResourceType(
-            string customResourceType,
+            string resourceType,
             string description,
             string handler,
-            ModuleManifestResourceType properties
+            IEnumerable<ModuleManifestResourceProperty> properties,
+            IEnumerable<ModuleManifestResourceProperty> attributes
         ) {
-
             // TODO (2018-09-20, bjorg): add custom resource name validation
-            AddItem(new ResourceTypeItem(customResourceType, description, FnRef(handler)));
-            _customResourceTypes.Add(customResourceType, properties ?? new ModuleManifestResourceType());
+            if(_customResourceTypes.Any(existing => existing.Type == resourceType)) {
+                AddError($"Resource type '{resourceType}' is already defined.");
+            }
+
+            // add resource type definition
+            AddItem(new ResourceTypeItem(resourceType, description, FnRef(handler)));
+            _customResourceTypes.Add(new ModuleManifestResourceType {
+                Type = resourceType,
+                Description = description,
+                Properties = properties ?? Enumerable.Empty<ModuleManifestResourceProperty>(),
+                Attributes = attributes ?? Enumerable.Empty<ModuleManifestResourceProperty>()
+            });
         }
 
         public AModuleItem AddMacro(string macroName, string description, string handler) {
@@ -579,7 +589,7 @@ namespace LambdaSharp.Tool.Model {
                 } else if(TryGetResourceType(resourceTypeName, out ModuleManifestResourceType resourceType)) {
 
                     // for custom resource types, use the first defined response attribute
-                    resourceExportAttribute = resourceType.Response.FirstOrDefault()?.Name;
+                    resourceExportAttribute = resourceType.Attributes.FirstOrDefault()?.Name;
                 }
             }
 
@@ -1070,7 +1080,7 @@ namespace LambdaSharp.Tool.Model {
 
         public bool HasAttribute(AModuleItem item, string attribute) {
             if(TryGetResourceType(item.Type, out ModuleManifestResourceType resourceType)) {
-                return resourceType.Response.Any(field => field.Name == attribute);
+                return resourceType.Attributes.Any(field => field.Name == attribute);
             }
             return ResourceMapping.HasAttribute(item.Type, attribute);
         }
@@ -1092,7 +1102,7 @@ namespace LambdaSharp.Tool.Model {
                 Items = _items,
                 Assets = _assets.OrderBy(value => value).ToList(),
                 Dependencies = _dependencies.OrderBy(kv => kv.Key).ToList(),
-                CustomResourceTypes = _customResourceTypes.OrderBy(kv => kv.Key).ToList(),
+                CustomResourceTypes = _customResourceTypes.OrderBy(resourceType => resourceType.Type).ToList(),
                 MacroNames = _macroNames.OrderBy(value => value).ToList(),
                 ResourceTypeNameMappings = _resourceTypeNameMappings
             };
@@ -1122,7 +1132,7 @@ namespace LambdaSharp.Tool.Model {
             if(ResourceMapping.CloudformationSpec.ResourceTypes.TryGetValue(awsType, out ResourceType resource)) {
                 ValidateProperties("", resource, properties);
             } else if(!awsType.StartsWith("Custom::", StringComparison.Ordinal)) {
-                var dependency = _dependencies.Values.FirstOrDefault(d => d.Manifest?.ResourceTypes.ContainsKey(awsType) ?? false);
+                var dependency = _dependencies.Values.FirstOrDefault(d => d.Manifest?.ResourceTypes.Any(existing => existing.Type == awsType) ?? false);
                 if(dependency == null) {
                     if(_dependencies.Values.Any(d => d.Manifest == null)) {
 
@@ -1132,14 +1142,14 @@ namespace LambdaSharp.Tool.Model {
                         AddError($"unrecognized resource type {awsType}");
                     }
                 } else if(properties != null) {
-                    var definition = dependency.Manifest.ResourceTypes[awsType];
+                    var definition = dependency.Manifest.ResourceTypes.FirstOrDefault(existing => existing.Type == awsType);
                     if(definition != null) {
                         foreach(var key in properties.Keys) {
                             var stringKey = (string)key;
                             if(
                                 (stringKey != "ServiceToken")
                                 && (stringKey != "ResourceType")
-                                && !definition.Request.Any(field => field.Name == stringKey)) {
+                                && !definition.Properties.Any(field => field.Name == stringKey)) {
                                 AddError($"unrecognized attribute '{key}' on type {awsType}");
                             }
                         }
@@ -1249,11 +1259,7 @@ namespace LambdaSharp.Tool.Model {
 
         private bool TryGetResourceType(string resourceTypeName, out ModuleManifestResourceType resourceType) {
             var matches = _dependencies
-                .Select(kv => {
-                    ModuleManifestResourceType foundResourceType = null;
-                    kv.Value.Manifest?.ResourceTypes.TryGetValue(resourceTypeName, out foundResourceType);
-                    return foundResourceType;
-                })
+                .Select(kv => kv.Value.Manifest?.ResourceTypes.FirstOrDefault(existing => existing.Type == resourceTypeName))
                 .Where(foundResourceType => foundResourceType != null)
                 .ToArray();
             switch(matches.Length) {

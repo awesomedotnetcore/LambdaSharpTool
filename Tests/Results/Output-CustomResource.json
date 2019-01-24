@@ -55,7 +55,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "45F9BFDBC1E28CF375F1B21AC115A270"
+      "Default": "5560C8ABEFAEAE8F12C693E1551CC50F"
     }
   },
   "Resources": {
@@ -794,7 +794,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "45F9BFDBC1E28CF375F1B21AC115A270",
+      "Hash": "5560C8ABEFAEAE8F12C693E1551CC50F",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
@@ -805,17 +805,18 @@
           "MinVersion": "0.5-WIP"
         }
       ],
-      "ResourceTypes": {
-        "TestModule::MyCustomLambdaResource": {
+      "ResourceTypes": [
+        {
+          "Type": "TestModule::MyCustomLambdaResource",
           "Description": "A custom resource handler using a Lambda Function",
-          "Request": [
+          "Properties": [
             {
               "Name": "Foo",
               "Type": "String",
               "Required": true
             }
           ],
-          "Response": [
+          "Attributes": [
             {
               "Name": "Bar",
               "Type": "String",
@@ -823,9 +824,10 @@
             }
           ]
         },
-        "TestModule::MyCustomSnsResource": {
+        {
+          "Type": "TestModule::MyCustomSnsResource",
           "Description": "A custom resource handler using an SNS topic",
-          "Request": [
+          "Properties": [
             {
               "Name": "Foo",
               "Description": "Foo request parameter",
@@ -839,7 +841,7 @@
               "Required": false
             }
           ],
-          "Response": [
+          "Attributes": [
             {
               "Name": "Bar",
               "Description": "Bar response value",
@@ -848,7 +850,7 @@
             }
           ]
         }
-      },
+      ],
       "ResourceNameMappings": {
         "FunctionLogGroup": "Function::LogGroup",
         "ModuleRole": "Module::Role",

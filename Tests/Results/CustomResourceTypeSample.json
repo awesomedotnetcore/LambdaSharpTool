@@ -55,7 +55,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "7B8FD7F1739D84F59C79D9D7C6E3065A"
+      "Default": "531C1555193539B840DFF9A212B38655"
     }
   },
   "Resources": {
@@ -748,7 +748,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "7B8FD7F1739D84F59C79D9D7C6E3065A",
+      "Hash": "531C1555193539B840DFF9A212B38655",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
@@ -759,10 +759,11 @@
           "MinVersion": "0.5-WIP"
         }
       ],
-      "ResourceTypes": {
-        "MyNamespace::MyResource": {
+      "ResourceTypes": [
+        {
+          "Type": "MyNamespace::MyResource",
           "Description": "Definition for MyNamespace::MyResource resource",
-          "Request": [
+          "Properties": [
             {
               "Name": "SampleInput",
               "Description": "SampleInput description",
@@ -770,7 +771,7 @@
               "Required": true
             }
           ],
-          "Response": [
+          "Attributes": [
             {
               "Name": "SampleOutput",
               "Description": "SampleOutput description",
@@ -779,7 +780,7 @@
             }
           ]
         }
-      },
+      ],
       "ResourceNameMappings": {
         "ResourceHandlerLogGroup": "ResourceHandler::LogGroup",
         "ModuleRole": "Module::Role",

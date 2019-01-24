@@ -55,7 +55,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "EE302A477B4FAB0722EC4D91A1E93C1C"
+      "Default": "7B5D3BD59614AF0937DF69A0019AB135"
     }
   },
   "Resources": {
@@ -949,7 +949,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "EE302A477B4FAB0722EC4D91A1E93C1C",
+      "Hash": "7B5D3BD59614AF0937DF69A0019AB135",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
@@ -960,10 +960,11 @@
           "MinVersion": "0.5-WIP"
         }
       ],
-      "ResourceTypes": {
-        "LambdaSharp::S3::EmptyBucket": {
+      "ResourceTypes": [
+        {
+          "Type": "LambdaSharp::S3::EmptyBucket",
           "Description": "Resource for emptying an S3 bucket on deletion",
-          "Request": [
+          "Properties": [
             {
               "Name": "Bucket",
               "Description": "S3 bucket ARN/name where to write the JSON file to",
@@ -971,7 +972,7 @@
               "Required": true
             }
           ],
-          "Response": [
+          "Attributes": [
             {
               "Name": "BucketName",
               "Description": "S3 bucket name",
@@ -980,9 +981,10 @@
             }
           ]
         },
-        "LambdaSharp::S3::Unzip": {
+        {
+          "Type": "LambdaSharp::S3::Unzip",
           "Description": "Resource type for deploying a zip package to an S3 bucket",
-          "Request": [
+          "Properties": [
             {
               "Name": "DestinationBucket",
               "Description": "Destination S3 bucket ARN/name where to unzip the zip file to",
@@ -1008,7 +1010,7 @@
               "Required": true
             }
           ],
-          "Response": [
+          "Attributes": [
             {
               "Name": "Url",
               "Description": "S3 URL with destination bucket name and key-prefix path",
@@ -1017,9 +1019,10 @@
             }
           ]
         },
-        "LambdaSharp::S3::WriteJson": {
+        {
+          "Type": "LambdaSharp::S3::WriteJson",
           "Description": "Resource for writing a JSON file to an S3 bucket",
-          "Request": [
+          "Properties": [
             {
               "Name": "Bucket",
               "Description": "S3 bucket ARN/name where to write the JSON file to",
@@ -1039,7 +1042,7 @@
               "Required": true
             }
           ],
-          "Response": [
+          "Attributes": [
             {
               "Name": "Url",
               "Description": "S3 URL with destination bucket name and key path",
@@ -1048,7 +1051,7 @@
             }
           ]
         }
-      },
+      ],
       "ResourceNameMappings": {
         "S3WriterLogGroup": "S3Writer::LogGroup",
         "ModuleRole": "Module::Role",

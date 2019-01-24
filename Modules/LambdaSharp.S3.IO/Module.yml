@@ -26,77 +26,74 @@ Items:
     Description: Resource type for deploying a zip package to an S3 bucket
     Handler: S3WriterTopic
     Properties:
-      Request:
 
-        - Name: DestinationBucket
-          Description: Destination S3 bucket ARN/name where to unzip the zip file to
-          Type: String
-          Required: true
+      - Name: DestinationBucket
+        Description: Destination S3 bucket ARN/name where to unzip the zip file to
+        Type: String
+        Required: true
 
-        - Name: DestinationKey
-          Description: Destination S3 key prefix for all unzipped files
-          Type: String
-          Required: true
+      - Name: DestinationKey
+        Description: Destination S3 key prefix for all unzipped files
+        Type: String
+        Required: true
 
-        - Name: SourceBucket
-          Description: Source S3 bucket ARN/name for the zip file
-          Type: String
-          Required: true
+      - Name: SourceBucket
+        Description: Source S3 bucket ARN/name for the zip file
+        Type: String
+        Required: true
 
-        - Name: SourceKey
-          Description: Source S3 key for the zip file
-          Type: String
-          Required: true
+      - Name: SourceKey
+        Description: Source S3 key for the zip file
+        Type: String
+        Required: true
 
-      Response:
+    Attributes:
 
-        - Name: Url
-          Description: S3 URL with destination bucket name and key-prefix path
-          Type: String
+      - Name: Url
+        Description: S3 URL with destination bucket name and key-prefix path
+        Type: String
 
   - ResourceType: LambdaSharp::S3::WriteJson
     Description: Resource for writing a JSON file to an S3 bucket
     Handler: S3WriterTopic
     Properties:
-      Request:
 
-        - Name: Bucket
-          Description: S3 bucket ARN/name where to write the JSON file to
-          Type: String
-          Required: true
+      - Name: Bucket
+        Description: S3 bucket ARN/name where to write the JSON file to
+        Type: String
+        Required: true
 
-        - Name: Key
-          Description: S3 key where to write the JSON file to
-          Type: String
-          Required: true
+      - Name: Key
+        Description: S3 key where to write the JSON file to
+        Type: String
+        Required: true
 
-        - Name: Contents
-          Description: JSON contents to be written
-          Type: Json
-          Required: true
+      - Name: Contents
+        Description: JSON contents to be written
+        Type: Json
+        Required: true
 
-      Response:
+    Attributes:
 
-        - Name: Url
-          Description: S3 URL with destination bucket name and key path
-          Type: String
+      - Name: Url
+        Description: S3 URL with destination bucket name and key path
+        Type: String
 
   - ResourceType: LambdaSharp::S3::EmptyBucket
     Description: Resource for emptying an S3 bucket on deletion
     Handler: S3WriterTopic
     Properties:
-      Request:
 
-        - Name: Bucket
-          Description: S3 bucket ARN/name where to write the JSON file to
-          Type: String
-          Required: true
+      - Name: Bucket
+        Description: S3 bucket ARN/name where to write the JSON file to
+        Type: String
+        Required: true
 
-      Response:
+    Attributes:
 
-        - Name: BucketName
-          Description: S3 bucket name
-          Type: String
+      - Name: BucketName
+        Description: S3 bucket name
+        Type: String
 
   - Resource: DestinationBucketPermissions
     Description: LambdaSharpS3PackageLoader requires read-write access to all S3 buckets

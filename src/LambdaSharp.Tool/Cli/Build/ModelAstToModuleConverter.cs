@@ -308,7 +308,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                         minLength: node.MinLength,
                         minValue: node.MinValue,
                         allow: node.Allow,
-                        properties: node.Properties,
+                        properties: ParseToDictionary("Properties", node.Properties),
                         arnAttribute: node.DefaultAttribute,
                         encryptionContext: node.EncryptionContext,
                         pragmas: node.Pragmas
@@ -430,7 +430,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                             type: node.Type,
                             scope: ConvertScope(node.Scope),
                             allow: node.Allow,
-                            properties: node.Properties,
+                            properties: ParseToDictionary("Properties", node.Properties),
                             dependsOn: ConvertToStringList(node.DependsOn),
                             arnAttribute: node.DefaultAttribute,
                             condition: node.If,
@@ -631,30 +631,41 @@ namespace LambdaSharp.Tool.Cli.Build {
             case "ResourceType":
                 Validate(node.Handler != null, "missing 'Handler' attribute");
                 AtLocation(node.ResourceType, () => {
-                    ModuleManifestResourceType properties = null;
+
+                    // read properties
+                    List<ModuleManifestResourceProperty> properties = null;
                     if(node.Properties != null) {
                         AtLocation("Properties", () => {
-                            try {
-                                properties = JObject.FromObject(node.Properties, new JsonSerializer {
-                                    NullValueHandling = NullValueHandling.Ignore
-                                }).ToObject<ModuleManifestResourceType>();
+                            properties = ParseTo<List<ModuleManifestResourceProperty>>(node.Properties);
 
-                                // validate fields
-                                Validate((properties.Request?.Count() ?? 0) > 0, "missing or empty 'Request' section");
-                                Validate((properties.Response?.Count() ?? 0) > 0, "missing or empty 'Response' section");
-
-                                // set optional fields
-                                if(properties.Description == null) {
-                                    properties.Description = node.Description;
-                                }
-                            } catch(JsonSerializationException e) {
-                                AddError(e.Message);
-                            }
+                            // validate fields
+                            Validate((properties?.Count() ?? 0) > 0, "empty or invalid 'Properties' section");
                         });
                     } else {
                         AddError("missing 'Properties' section");
                     }
-                    _builder.AddResourceType(node.ResourceType, node.Description, node.Handler, properties);
+
+                    // read attributes
+                    List<ModuleManifestResourceProperty> attributes = null;
+                    if(node.Attributes != null) {
+                        AtLocation("Attributes", () => {
+                            attributes = ParseTo<List<ModuleManifestResourceProperty>>(node.Attributes);
+
+                            // validate fields
+                            Validate((attributes?.Count() ?? 0) > 0, "empty or invalid 'Attributes' section");
+                        });
+                    } else {
+                        AddError("missing 'Attributes' section");
+                    }
+
+                    // create resource type
+                    _builder.AddResourceType(
+                        node.ResourceType,
+                        node.Description,
+                        node.Handler,
+                        properties,
+                        attributes
+                    );
                 });
                 break;
             case "Macro":
@@ -759,7 +770,6 @@ namespace LambdaSharp.Tool.Cli.Build {
             IEnumerable<string> expectedTypes
         ) {
             var instanceLookup = JObject.FromObject(instance);
-
             return AtLocation($"{index}", () => {
 
                 // find all declaration fields with a non-null value; use alphabetical order for consistency
@@ -944,6 +954,35 @@ namespace LambdaSharp.Tool.Cli.Build {
                     ? new List<string>()
                     : ConvertToStringList(scope);
             });
+        }
+
+        private T ParseTo<T>(object value) {
+            if(value == null) {
+                return default;
+            }
+            try {
+                return JToken.FromObject(value, new JsonSerializer {
+                    NullValueHandling = NullValueHandling.Ignore
+                }).ToObject<T>();
+            } catch {
+                return default;
+            }
+        }
+
+        private IDictionary<string, object> ParseToDictionary(string location, object value) {
+            var result = new Dictionary<string, object>();
+            if(value != null) {
+                AtLocation(location, () => {
+                    if(value is IDictionary dictionary) {
+                        foreach(DictionaryEntry entry in dictionary) {
+                            result.Add((string)entry.Key, entry.Value);
+                        }
+                    } else {
+                        AddError("invalid map");
+                    }
+                });
+            }
+            return result;
         }
     }
 }

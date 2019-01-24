@@ -115,6 +115,7 @@ namespace LambdaSharp.Tool.Model.AST {
                 "Scope"
             },
             ["ResourceType"] = new[] {
+                "Attributes",
                 "Description",
                 "Handler",
                 "Properties"
@@ -177,7 +178,7 @@ namespace LambdaSharp.Tool.Model.AST {
         public int? MinLength { get; set; }
         public int? MinValue { get; set; }
         public object Allow { get; set; }
-        public IDictionary<string, object> Properties { get; set; }
+        public object Properties { get; set; }
         public IDictionary<string, string> EncryptionContext { get; set; }
         public IList<object> Pragmas { get; set; }
 
@@ -304,10 +305,12 @@ namespace LambdaSharp.Tool.Model.AST {
          * ResourceType: string
          * Description: string
          * Handler: string
-         * Properties: map
+         * Properties: list
+         * Attributes: list
          */
         public string ResourceType { get; set; }
         public string Handler { get; set; }
+        public object Attributes { get; set; }
 
         /*
          * Macro: string
