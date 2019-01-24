@@ -3,7 +3,7 @@ Description: LambdaSharp CloudFormation Test
 Items:
 
   - Using: OtherModule
-    Source: Some.OtherModule
+    Module: Some.OtherModule
     Description: Cross-Module References
     Items:
 

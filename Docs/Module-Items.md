@@ -10,7 +10,7 @@ __Definitions__
 * [Macro](Module-Macro.md)
 * [Mapping](Module-Mapping.md)
 * [Namespace](Module-Namespace.md)
-* [Nested Module](Module-NestedModule.md)
+* [Nested Module](Module-Nested.md)
 * [Package](Module-Package.md)
 * [Parameter](Module-Parameter.md)
 * [Resource Type](Module-ResourceType.md)

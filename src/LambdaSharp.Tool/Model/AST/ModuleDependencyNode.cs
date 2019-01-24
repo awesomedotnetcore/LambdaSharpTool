@@ -26,9 +26,5 @@ namespace LambdaSharp.Tool.Model.AST {
 
         //--- Properties ---
         public string Module { get; set; }
-        public string Version { get; set; }
-        public string MinVersion { get; set; }
-        public string MaxVersion { get; set; }
-        public string BucketName { get; set; }
     }
 }

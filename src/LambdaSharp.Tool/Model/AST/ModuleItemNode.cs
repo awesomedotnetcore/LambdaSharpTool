@@ -64,11 +64,11 @@ namespace LambdaSharp.Tool.Model.AST {
                 "Description",
                 "Value"
             },
-            ["Module"] = new[] {
+            ["Nested"] = new[] {
                 "DependsOn",
                 "Description",
-                "Parameters",
-                "Source"
+                "Module",
+                "Parameters"
             },
             ["Function"] = new[] {
                 "Description",
@@ -128,7 +128,7 @@ namespace LambdaSharp.Tool.Model.AST {
             // nodes with optional nested items
             ["Using"] = new[] {
                 "Description",
-                "Source",
+                "Module",
                 "Items"
             },
             ["Namespace"] = new[] {
@@ -184,12 +184,12 @@ namespace LambdaSharp.Tool.Model.AST {
 
         /*
          * Using: string
-         * Source: string
+         * Module: string
          * Description: string
          * Items: list<Parameter>
          */
         public string Using { get; set; }
-        public string Source { get; set; }
+        public string Module { get; set; }
         public IList<ModuleItemNode> Items { get; set; }
 
         /*
@@ -247,13 +247,13 @@ namespace LambdaSharp.Tool.Model.AST {
         public string DefaultAttribute { get; set; }
 
         /*
-         * Module: string
+         * Nested: string
          * Description: string
-         * Source: string
+         * Module: string
          * DependsOn: string -or- list<string>
          * Parameters: map
          */
-        public string Module { get; set; }
+        public string Nested { get; set; }
         public IDictionary<string, object> Parameters { get; set; }
 
         /*

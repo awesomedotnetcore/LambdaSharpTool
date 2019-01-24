@@ -110,56 +110,15 @@ namespace LambdaSharp.Tool.Cli.Build {
 
         private void ConvertDependency(int index, ModuleDependencyNode dependency) {
             AtLocation($"{index}", () => {
-                VersionInfo minVersion = null;
-                VersionInfo maxVersion = null;
-                if(dependency.Version != null) {
-                    Validate(dependency.MinVersion == null, "'Version' and 'MinVersion' attributes cannot be used at the same time");
-                    Validate(dependency.MaxVersion == null, "'Version' and 'MaxVersion' attributes cannot be used at the same time");
-                    AtLocation("Version", () => {
-                        if(!VersionInfo.TryParse(dependency.Version, out VersionInfo version)) {
-                            AddError("invalid value");
-                        } else {
-                            minVersion = version;
-                            maxVersion = version;
-                        }
-                    });
-                } else {
-                    if(dependency.MinVersion != null) {
-                        AtLocation("MinVersion", () => {
-
-                        });
-                        if(!VersionInfo.TryParse(dependency.MinVersion, out minVersion)) {
-                            AddError("invalid value");
-                        }
-                    }
-                    if(dependency.MaxVersion != null) {
-                        AtLocation("MaxVersion", () => {
-
-                        });
-                        if(!VersionInfo.TryParse(dependency.MaxVersion, out maxVersion)) {
-                            AddError("invalid value");
-                        }
-                    }
-                }
-                if(dependency.MinVersion != null) {
-                    AtLocation("MinVersion", () => {
-                        if(!VersionInfo.TryParse(dependency.MinVersion, out minVersion)) {
-                            AddError("invalid value");
-                        }
-                    });
-                }
-                if(dependency.MaxVersion != null) {
-                    AtLocation("MaxVersion", () => {
-                        if(!VersionInfo.TryParse(dependency.MaxVersion, out maxVersion)) {
-                            AddError("invalid value");
-                        }
-                    });
+                if(!dependency.Module.TryParseModuleDescriptor(out string moduleOwner, out string moduleName, out VersionInfo moduleVersion, out string moduleBucketName)) {
+                    AddError("invalid module reference format");
+                    return;
                 }
                 _builder.AddDependency(
-                    moduleFullName: dependency.Module,
-                    minVersion: minVersion,
-                    maxVersion: maxVersion,
-                    bucketName: dependency.BucketName
+                    moduleFullName: $"{moduleOwner}.{moduleName}",
+                    minVersion: moduleVersion,
+                    maxVersion: null,
+                    bucketName: moduleBucketName
                 );
             });
         }
@@ -266,7 +225,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 "Function",
                 "Macro",
                 "Mapping",
-                "Module",
+                "Nested",
                 "Namespace",
                 "Package",
                 "Parameter",
@@ -321,7 +280,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     // create import/cross-module reference item
                     var result = _builder.AddUsing(
                         name: node.Using,
-                        source: node.Source,
+                        source: node.Module,
                         description: node.Description
                     );
 
@@ -439,25 +398,25 @@ namespace LambdaSharp.Tool.Cli.Build {
                     }
                 });
                 break;
-            case "Module":
-                AtLocation(node.Module, () => {
+            case "Nested":
+                AtLocation(node.Nested, () => {
 
                     // validation
-                    if(node.Source == null) {
-                        AddError("missing 'Reference' attribute");
-                    } else if(!node.Source.TryParseModuleDescriptor(
+                    if(node.Module == null) {
+                        AddError("missing 'Module' attribute");
+                    } else if(!node.Module.TryParseModuleDescriptor(
                         out string moduleOwner,
                         out string moduleName,
                         out VersionInfo moduleVersion,
                         out string moduleBucketName
                     )) {
-                        AddError("invalid value for 'Reference' attribute");
+                        AddError("invalid value for 'Module' attribute");
                     } else {
 
                         // create nested module item
                         _builder.AddModule(
                             parent: parent,
-                            name: node.Module,
+                            name: node.Nested,
                             description: node.Description,
                             moduleOwner: moduleOwner,
                             moduleName: moduleName,

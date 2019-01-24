@@ -14,7 +14,7 @@ __Topics__
 ```yaml
 Using: String
 Description: String
-Source: String
+Module: String
 Items:
   - ImportDefinition
 ```
@@ -41,9 +41,9 @@ The <code>Items</code> section specifies the imported values for the referenced 
 <i>Type:</i> List of [Import Definition](Module-Using-Import.md)
 </dd>
 
-<dt><code>Source</code></dt>
+<dt><code>Module</code></dt>
 <dd>
-The <code>Source</code> attribute specifies the full name of the requested module, its version, and origin. The format of the source must be <code>Owner.Name</code>.
+The <code>Module</code> attribute specifies the full name of the requested module, its version, and origin. The format of the source must be <code>Owner.Name</code>.
 
 <i>Required</i>: Yes
 
@@ -67,7 +67,7 @@ The <code>Using</code> attribute specifies the namespace for imported cross-modu
 
 ```yaml
 - Using: MyModuleImports
-  Source: My.OtherModule
+  Module: My.OtherModule
   Items:
 
     - Import: MessageTitle
@@ -82,7 +82,7 @@ The <code>Using</code> attribute specifies the namespace for imported cross-modu
 
 ```yaml
 - Using: MyModuleImports
-  Source: My.OtherModule
+  Module: My.OtherModule
   Description: Topic ARN
   Items:
 

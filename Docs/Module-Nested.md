@@ -14,9 +14,9 @@ __Topics__
 ## Syntax
 
 ```yaml
-Module: String
+Nested: String
 Description: String
-Source: String
+Module: String
 Parameters:
   ModuleParameters
 DependsOn:
@@ -47,7 +47,16 @@ The <code>Description</code> attribute specifies the nested module description.
 
 <dt><code>Module</code></dt>
 <dd>
-The <code>Module</code> attribute specifies the item name. The name must start with a letter and followed only by letters or digits. Punctuation marks are not allowed. All names are case-sensitive.
+The <code>Module</code> attribute specifies the full name of the required module, its version, and origin. The format of the source must be <code>Owner.Name[:Version][@BucketName]</code>. Parts in brackets (<code>[]</code>) are optional. Without a version specifier, λ# uses the latest version it can find. Without an origin bucket name, λ# uses the configured deployment bucket. Compilation fails if the λ# CLI cannot find a published module that matches the criteria.
+
+<i>Required</i>: Yes
+
+<i>Type</i>: String
+</dd>
+
+<dt><code>Nested</code></dt>
+<dd>
+The <code>Nested</code> attribute specifies the item name. The name must start with a letter and followed only by letters or digits. Punctuation marks are not allowed. All names are case-sensitive.
 
 <i>Required</i>: Yes
 
@@ -63,15 +72,6 @@ The <code>Parameters</code> section specifies the parameters for the nested modu
 <i>Type</i>: Map
 </dd>
 
-<dt><code>Source</code></dt>
-<dd>
-The <code>Source</code> attribute specifies the full name of the requested module, its version, and origin. The format of the source must be <code>Owner.Name[:Version][@BucketName]</code>. Parts in brackets (<code>[]</code>) are optional. Without a version specifier, λ# uses the latest version it can find. Without an origin bucket name, λ# uses the configured deployment bucket. Compilation fails if the λ# CLI cannot resolve the source attribute to a published module.
-
-<i>Required</i>: Yes
-
-<i>Type</i>: String
-</dd>
-
 </dl>
 
 
@@ -80,8 +80,8 @@ The <code>Source</code> attribute specifies the full name of the requested modul
 ### Creating a nested module and accessing it outputs
 
 ```yaml
-- Module: MyNestedModule
-  Source: Acme.MyOtherModule:1.0
+- Nested: MyNestedModule
+  Module: Acme.MyOtherModule:1.0
   Parameters:
     Message: !Sub "Hi from ${Module::Name}"
 
