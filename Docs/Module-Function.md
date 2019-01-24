@@ -24,8 +24,6 @@ Runtime: String
 Language: String
 Pragmas:
   - PragmaDefinition
-VPC:
-  VpcDefinition
 Environment:
   String: String
 Properties:
@@ -100,6 +98,15 @@ The <code>Project</code> attribute specifies the relative path of the .NET Core 
 <i>Required</i>: Conditional. By default, the .NET Core project file is expected to be located in a sub-folder of the module definition. The name of the sub-folder and project file are expected to match the function name. If that is not the case, then the <code>Project</code> attribute must be specified. Otherwise, it can be omitted.
 
 <i>Type</i>: String
+</dd>
+
+<dt><code>Pragmas</code></dt>
+<dd>
+The <code>Pragmas</code> section specifies directives that change the default compiler behavior.
+
+<i>Required:</i> No
+
+<i>Type:</i> List of [Pragma Definition](Module-Pragmas.md)
 </dd>
 
 <dt><code>Properties</code></dt>
@@ -198,4 +205,7 @@ The above definitions can be expressed more concisely if the `Condition` item ne
   Timeout: 15
   Properties:
     ReservedConcurrentExecutions: 1
+    VpcConfig:
+      SecurityGroupIds: !Split [ ",", !Ref SecurityGroupIds ]
+      SubnetIds: !Split [ ",", !Ref SubnetIds ]
 ```

@@ -525,14 +525,6 @@ namespace LambdaSharp.Tool.Cli.Build {
                     Validate(int.TryParse(node.Timeout, out _), "invalid 'Timeout' value");
                     ValidateFunctionSource(node.Sources ?? new FunctionSourceNode[0]);
 
-                    // initialize VPC configuration if provided
-                    if(node.VPC != null) {
-                        AtLocation("VPC", () => {
-                            Validate(node.VPC.SubnetIds != null, "missing 'SubnetIds' attribute");
-                            Validate(node.VPC.SecurityGroupIds != null, "missing 'SecurityGroupIds' attribute");
-                        });
-                    }
-
                     // determine function type
                     var project = node.Project;
                     var language = node.Language;
@@ -561,8 +553,6 @@ namespace LambdaSharp.Tool.Cli.Build {
                         runtime: runtime,
                         memory: node.Memory,
                         handler: handler,
-                        subnets: node.VPC?.SubnetIds,
-                        securityGroups: node.VPC?.SecurityGroupIds,
                         properties: node.Properties
                     );
                 });

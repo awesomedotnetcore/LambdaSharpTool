@@ -780,8 +780,6 @@ namespace LambdaSharp.Tool.Model {
             string runtime,
             string memory,
             string handler,
-            object subnets,
-            object securityGroups,
             object properties
         ) {
 
@@ -807,12 +805,6 @@ namespace LambdaSharp.Tool.Model {
             }
             if(handler != null) {
                 resource.Handler = handler;
-            }
-            if((subnets != null) && (securityGroups != null)) {
-                resource.VpcConfig = new Humidifier.Lambda.FunctionTypes.VpcConfig {
-                    SubnetIds = subnets,
-                    SecurityGroupIds = securityGroups
-                };
             }
 
             // set function resource properties to defaults when not defined

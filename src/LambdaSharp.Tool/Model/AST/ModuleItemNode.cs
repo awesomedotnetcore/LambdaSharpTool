@@ -290,7 +290,6 @@ namespace LambdaSharp.Tool.Model.AST {
         public string Project { get; set; }
         public string Runtime { get; set; }
         public string Language { get; set; }
-        public FunctionVpcNode VPC { get; set; }
         public Dictionary<string, object> Environment { get; set; }
         public IList<FunctionSourceNode> Sources { get; set; }
 
@@ -318,12 +317,5 @@ namespace LambdaSharp.Tool.Model.AST {
          * Handler: object
          */
         public string Macro { get; set; }
-    }
-
-    public class FunctionVpcNode {
-
-        //--- Properties ---
-        public object SubnetIds { get; set; }
-        public object SecurityGroupIds { get; set; }
     }
 }
