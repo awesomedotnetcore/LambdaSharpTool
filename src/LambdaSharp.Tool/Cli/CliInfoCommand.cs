@@ -90,6 +90,7 @@ namespace LambdaSharp.Tool.Cli {
             Console.WriteLine($"    .NET Core CLI Version: {GetDotNetVersion() ?? "<NOT FOUND>"}");
             Console.WriteLine($"    Git CLI Version: {GetGitVersion() ?? "<NOT FOUND>"}");
 
+            // local functions
             string ConcealAwsAccountId(string text) {
                 if(showSensitive || (settings.AwsAccountId == null)) {
                     return text;

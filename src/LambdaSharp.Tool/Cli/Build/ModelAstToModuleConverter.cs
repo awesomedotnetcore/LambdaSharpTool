@@ -512,7 +512,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                         runtime: runtime,
                         memory: node.Memory,
                         handler: handler,
-                        properties: node.Properties
+                        properties: ParseToDictionary("Properties", node.Properties)
                     );
                 });
                 break;

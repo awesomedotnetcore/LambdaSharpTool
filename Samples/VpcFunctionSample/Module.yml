@@ -1,0 +1,17 @@
+Module: LambdaSharp.Sample.VpcFunction
+Description: A sample module using function in VPC
+Items:
+
+  - Parameter: SecurityGroupIds
+    Type: CommaDelimitedString
+
+  - Parameter: SubnetIds
+    Type: CommaDelimitedString
+
+  - Function: MyFunction
+    Memory: 128
+    Timeout: 30
+    Properties:
+      VpcConfig:
+        SecurityGroupIds: !Ref SecurityGroupIds
+        SubnetIds: !Ref SubnetIds

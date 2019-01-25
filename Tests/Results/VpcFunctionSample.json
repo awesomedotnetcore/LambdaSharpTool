@@ -1,7 +1,13 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "LambdaSharp S3 Utility Module (v0.5-WIP)",
+  "Description": "A sample module using function in VPC (v1.0-DEV)",
   "Parameters": {
+    "SecurityGroupIds": {
+      "Type": "String"
+    },
+    "SubnetIds": {
+      "Type": "String"
+    },
     "Secrets": {
       "Type": "String",
       "Description": "Secret Keys (ARNs)",
@@ -55,26 +61,18 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "AEFB5A5A9B2818C2D554446545510E47"
+      "Default": "D1BF466F955167EF129246783CDAD5CA"
     }
   },
   "Resources": {
-    "S3WriterTopic": {
-      "Type": "AWS::SNS::Topic",
-      "Properties": {}
-    },
-    "ManifestBucket": {
-      "Type": "AWS::S3::Bucket",
-      "Properties": {}
-    },
-    "S3Writer": {
+    "MyFunction": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
         "Code": {
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "LambdaSharp/Modules/S3.IO/Assets/S3Writer-DRYRUN.zip"
+          "S3Key": "LambdaSharp/Modules/Sample.VpcFunction/Assets/MyFunction-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -108,14 +106,14 @@
             ]
           }
         },
-        "Description": "LambdaSharp S3 Package Loader handler (v0.5-WIP)",
+        "Description": "TODO - update MyFunction description (v1.0-DEV)",
         "Environment": {
           "Variables": {
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharp.S3.IO:0.5-WIP",
-            "LAMBDA_NAME": "S3Writer",
+            "MODULE_INFO": "LambdaSharp.Sample.VpcFunction:1.0-DEV",
+            "LAMBDA_NAME": "MyFunction",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
               "Fn::If": [
@@ -176,17 +174,11 @@
                   "Ref": "LambdaSharpDefaultSecretKey"
                 }
               ]
-            },
-            "STR_MANIFESTBUCKET": {
-              "Fn::GetAtt": [
-                "ManifestBucket",
-                "Arn"
-              ]
             }
           }
         },
-        "Handler": "S3Writer::LambdaSharp.S3.IO.S3Writer.Function::FunctionHandlerAsync",
-        "MemorySize": "256",
+        "Handler": "MyFunction::LambdaSharp.Samples.VpcFunction.MyFunction.Function::FunctionHandlerAsync",
+        "MemorySize": "128",
         "Role": {
           "Fn::GetAtt": [
             "ModuleRole",
@@ -194,14 +186,22 @@
           ]
         },
         "Runtime": "dotnetcore2.1",
-        "Timeout": "300"
+        "Timeout": "30",
+        "VpcConfig": {
+          "SecurityGroupIds": {
+            "Ref": "SecurityGroupIds"
+          },
+          "SubnetIds": {
+            "Ref": "SubnetIds"
+          }
+        }
       }
     },
-    "S3WriterLogGroup": {
+    "MyFunctionLogGroup": {
       "Type": "AWS::Logs::LogGroup",
       "Properties": {
         "LogGroupName": {
-          "Fn::Sub": "/aws/lambda/${S3Writer}"
+          "Fn::Sub": "/aws/lambda/${MyFunction}"
         },
         "RetentionInDays": 30
       }
@@ -227,140 +227,6 @@
             "PolicyDocument": {
               "Version": "2012-10-17",
               "Statement": [
-                {
-                  "Sid": "DestinationBucketPermissions",
-                  "Effect": "Allow",
-                  "Action": [
-                    "s3:AbortMultipartUpload",
-                    "s3:CreateBucket",
-                    "s3:DeleteObject",
-                    "s3:DeleteObjectTagging",
-                    "s3:DeleteObjectVersion",
-                    "s3:DeleteObjectVersionTagging",
-                    "s3:GetBucketLocation",
-                    "s3:GetObject",
-                    "s3:GetObjectAcl",
-                    "s3:GetObjectTagging",
-                    "s3:GetObjectTorrent",
-                    "s3:GetObjectVersion",
-                    "s3:GetObjectVersionAcl",
-                    "s3:GetObjectVersionTagging",
-                    "s3:GetObjectVersionTorrent",
-                    "s3:ListBucket",
-                    "s3:ListBucketMultipartUploads",
-                    "s3:ListMultipartUploadParts",
-                    "s3:PutObject",
-                    "s3:PutObjectAcl",
-                    "s3:PutObjectTagging",
-                    "s3:PutObjectVersionAcl",
-                    "s3:PutObjectVersionTagging",
-                    "s3:RestoreObject"
-                  ],
-                  "Resource": [
-                    {
-                      "Fn::Sub": "arn:aws:s3:::${DeploymentPrefixLowercase}*"
-                    },
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          {
-                            "Fn::Sub": "arn:aws:s3:::${DeploymentPrefixLowercase}*"
-                          },
-                          "/*"
-                        ]
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "Sid": "SourceBucketPermissions",
-                  "Effect": "Allow",
-                  "Action": [
-                    "s3:GetObject",
-                    "s3:GetObjectAcl",
-                    "s3:GetObjectTagging",
-                    "s3:GetObjectTorrent",
-                    "s3:GetObjectVersion",
-                    "s3:GetObjectVersionAcl",
-                    "s3:GetObjectVersionTagging",
-                    "s3:GetObjectVersionTorrent"
-                  ],
-                  "Resource": [
-                    "arn:aws:s3:::*",
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          "arn:aws:s3:::*",
-                          "/*"
-                        ]
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "Sid": "S3WriterTopic",
-                  "Effect": "Allow",
-                  "Action": [
-                    "sns:Subscribe"
-                  ],
-                  "Resource": {
-                    "Ref": "S3WriterTopic"
-                  }
-                },
-                {
-                  "Sid": "ManifestBucket",
-                  "Effect": "Allow",
-                  "Action": [
-                    "s3:AbortMultipartUpload",
-                    "s3:CreateBucket",
-                    "s3:DeleteObject",
-                    "s3:DeleteObjectTagging",
-                    "s3:DeleteObjectVersion",
-                    "s3:DeleteObjectVersionTagging",
-                    "s3:GetBucketLocation",
-                    "s3:GetObject",
-                    "s3:GetObjectAcl",
-                    "s3:GetObjectTagging",
-                    "s3:GetObjectTorrent",
-                    "s3:GetObjectVersion",
-                    "s3:GetObjectVersionAcl",
-                    "s3:GetObjectVersionTagging",
-                    "s3:GetObjectVersionTorrent",
-                    "s3:ListBucket",
-                    "s3:ListBucketMultipartUploads",
-                    "s3:ListMultipartUploadParts",
-                    "s3:PutObject",
-                    "s3:PutObjectAcl",
-                    "s3:PutObjectTagging",
-                    "s3:PutObjectVersionAcl",
-                    "s3:PutObjectVersionTagging",
-                    "s3:RestoreObject"
-                  ],
-                  "Resource": [
-                    {
-                      "Fn::GetAtt": [
-                        "ManifestBucket",
-                        "Arn"
-                      ]
-                    },
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          {
-                            "Fn::GetAtt": [
-                              "ManifestBucket",
-                              "Arn"
-                            ]
-                          },
-                          "/*"
-                        ]
-                      ]
-                    }
-                  ]
-                },
                 {
                   "Sid": "ModuleDeadLetterQueueLogging",
                   "Effect": "Allow",
@@ -496,6 +362,16 @@
                     "logs:PutLogEvents"
                   ],
                   "Resource": "arn:aws:logs:*:*:*"
+                },
+                {
+                  "Sid": "ModuleVpcNetworkInterfaces",
+                  "Effect": "Allow",
+                  "Action": [
+                    "ec2:CreateNetworkInterface",
+                    "ec2:DeleteNetworkInterface",
+                    "ec2:DescribeNetworkInterfaces"
+                  ],
+                  "Resource": "*"
                 }
               ]
             },
@@ -515,13 +391,13 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "LambdaSharp.S3.IO:0.5-WIP",
+        "Module": "LambdaSharp.Sample.VpcFunction:1.0-DEV",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
       }
     },
-    "S3WriterRegistration": {
+    "MyFunctionRegistration": {
       "Type": "Custom::LambdaSharpRegistrationFunction",
       "Properties": {
         "ServiceToken": {
@@ -534,23 +410,23 @@
           "Ref": "AWS::StackName"
         },
         "FunctionId": {
-          "Ref": "S3Writer"
+          "Ref": "MyFunction"
         },
-        "FunctionName": "S3Writer",
+        "FunctionName": "MyFunction",
         "FunctionLogGroupName": {
-          "Fn::Sub": "/aws/lambda/${S3Writer}"
+          "Fn::Sub": "/aws/lambda/${MyFunction}"
         },
         "FunctionPlatform": "AWS Lambda",
         "FunctionFramework": "dotnetcore2.1",
         "FunctionLanguage": "csharp",
-        "FunctionMaxMemory": "256",
-        "FunctionMaxDuration": "300"
+        "FunctionMaxMemory": "128",
+        "FunctionMaxDuration": "30"
       },
       "DependsOn": [
         "ModuleRegistration"
       ]
     },
-    "S3WriterLogGroupSubscription": {
+    "MyFunctionLogGroupSubscription": {
       "Type": "AWS::Logs::SubscriptionFilter",
       "Properties": {
         "DestinationArn": {
@@ -585,7 +461,7 @@
         },
         "FilterPattern": "-\"*** \"",
         "LogGroupName": {
-          "Ref": "S3WriterLogGroup"
+          "Ref": "MyFunctionLogGroup"
         },
         "RoleArn": {
           "Fn::If": [
@@ -618,75 +494,11 @@
           ]
         }
       }
-    },
-    "S3WriterSource1Subscription": {
-      "Type": "AWS::SNS::Subscription",
-      "Properties": {
-        "Endpoint": {
-          "Fn::GetAtt": [
-            "S3Writer",
-            "Arn"
-          ]
-        },
-        "Protocol": "lambda",
-        "TopicArn": {
-          "Ref": "S3WriterTopic"
-        }
-      }
-    },
-    "S3WriterSource1Permission": {
-      "Type": "AWS::Lambda::Permission",
-      "Properties": {
-        "Action": "lambda:InvokeFunction",
-        "FunctionName": {
-          "Fn::GetAtt": [
-            "S3Writer",
-            "Arn"
-          ]
-        },
-        "Principal": "sns.amazonaws.com",
-        "SourceArn": {
-          "Ref": "S3WriterTopic"
-        }
-      }
     }
   },
   "Outputs": {
     "Module": {
-      "Value": "LambdaSharp.S3.IO:0.5-WIP"
-    },
-    "LambdaSharpS3Unzip": {
-      "Value": {
-        "Ref": "S3WriterTopic"
-      },
-      "Export": {
-        "Name": {
-          "Fn::Sub": "${DeploymentPrefix}LambdaSharp::S3::Unzip"
-        }
-      },
-      "Description": "Resource type for deploying a zip package to an S3 bucket"
-    },
-    "LambdaSharpS3WriteJson": {
-      "Value": {
-        "Ref": "S3WriterTopic"
-      },
-      "Export": {
-        "Name": {
-          "Fn::Sub": "${DeploymentPrefix}LambdaSharp::S3::WriteJson"
-        }
-      },
-      "Description": "Resource for writing a JSON file to an S3 bucket"
-    },
-    "LambdaSharpS3EmptyBucket": {
-      "Value": {
-        "Ref": "S3WriterTopic"
-      },
-      "Export": {
-        "Name": {
-          "Fn::Sub": "${DeploymentPrefix}LambdaSharp::S3::EmptyBucket"
-        }
-      },
-      "Description": "Resource for emptying an S3 bucket on deletion"
+      "Value": "LambdaSharp.Sample.VpcFunction:1.0-DEV"
     }
   },
   "Conditions": {
@@ -872,6 +684,15 @@
       "ParameterGroups": [
         {
           "Label": {
+            "default": "Module Settings"
+          },
+          "Parameters": [
+            "SecurityGroupIds",
+            "SubnetIds"
+          ]
+        },
+        {
+          "Label": {
             "default": "LambdaSharp Module Options"
           },
           "Parameters": [
@@ -905,8 +726,21 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2018-12-31",
-      "Module": "LambdaSharp.S3.IO:0.5-WIP",
+      "Module": "LambdaSharp.Sample.VpcFunction:1.0-DEV",
       "ParameterSections": [
+        {
+          "Title": "Module Settings",
+          "Parameters": [
+            {
+              "Name": "SecurityGroupIds",
+              "Type": "CommaDelimitedString"
+            },
+            {
+              "Name": "SubnetIds",
+              "Type": "CommaDelimitedString"
+            }
+          ]
+        },
         {
           "Title": "LambdaSharp Module Options",
           "Parameters": [
@@ -949,7 +783,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "AEFB5A5A9B2818C2D554446545510E47",
+      "Hash": "D1BF466F955167EF129246783CDAD5CA",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
@@ -960,112 +794,12 @@
           "MinVersion": "0.5-WIP"
         }
       ],
-      "ResourceTypes": [
-        {
-          "Type": "LambdaSharp::S3::EmptyBucket",
-          "Description": "Resource for emptying an S3 bucket on deletion",
-          "Properties": [
-            {
-              "Name": "Bucket",
-              "Description": "S3 bucket ARN/name to empty on deletion",
-              "Type": "String",
-              "Required": true
-            },
-            {
-              "Name": "Enabled",
-              "Description": "Enable/disable the emptying behavior on deletion.",
-              "Type": "Boolean",
-              "Required": false
-            }
-          ],
-          "Attributes": [
-            {
-              "Name": "BucketName",
-              "Description": "S3 bucket name",
-              "Type": "String",
-              "Required": true
-            }
-          ]
-        },
-        {
-          "Type": "LambdaSharp::S3::Unzip",
-          "Description": "Resource type for deploying a zip package to an S3 bucket",
-          "Properties": [
-            {
-              "Name": "DestinationBucket",
-              "Description": "Destination S3 bucket ARN/name where to unzip the zip file to",
-              "Type": "String",
-              "Required": true
-            },
-            {
-              "Name": "DestinationKey",
-              "Description": "Destination S3 key prefix for all unzipped files",
-              "Type": "String",
-              "Required": true
-            },
-            {
-              "Name": "SourceBucket",
-              "Description": "Source S3 bucket ARN/name for the zip file",
-              "Type": "String",
-              "Required": true
-            },
-            {
-              "Name": "SourceKey",
-              "Description": "Source S3 key for the zip file",
-              "Type": "String",
-              "Required": true
-            }
-          ],
-          "Attributes": [
-            {
-              "Name": "Url",
-              "Description": "S3 URL with destination bucket name and key-prefix path",
-              "Type": "String",
-              "Required": true
-            }
-          ]
-        },
-        {
-          "Type": "LambdaSharp::S3::WriteJson",
-          "Description": "Resource for writing a JSON file to an S3 bucket",
-          "Properties": [
-            {
-              "Name": "Bucket",
-              "Description": "S3 bucket ARN/name where to write the JSON file to",
-              "Type": "String",
-              "Required": true
-            },
-            {
-              "Name": "Key",
-              "Description": "S3 key where to write the JSON file to",
-              "Type": "String",
-              "Required": true
-            },
-            {
-              "Name": "Contents",
-              "Description": "JSON contents to be written",
-              "Type": "Json",
-              "Required": true
-            }
-          ],
-          "Attributes": [
-            {
-              "Name": "Url",
-              "Description": "S3 URL with destination bucket name and key path",
-              "Type": "String",
-              "Required": true
-            }
-          ]
-        }
-      ],
       "ResourceNameMappings": {
-        "S3WriterLogGroup": "S3Writer::LogGroup",
+        "MyFunctionLogGroup": "MyFunction::LogGroup",
         "ModuleRole": "Module::Role",
         "ModuleRegistration": "Module::Registration",
-        "S3WriterRegistration": "S3Writer::Registration",
-        "S3WriterLogGroupSubscription": "S3Writer::LogGroupSubscription",
-        "S3WriterSource1Subscription": "S3Writer::Source1Subscription",
-        "S3WriterSource1Permission": "S3Writer::Source1Permission"
+        "MyFunctionRegistration": "MyFunction::Registration",
+        "MyFunctionLogGroupSubscription": "MyFunction::LogGroupSubscription"
       },
       "TypeNameMappings": {
         "Custom::LambdaSharpRegistrationModule": "LambdaSharp::Registration::Module",

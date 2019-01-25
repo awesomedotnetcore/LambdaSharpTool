@@ -78,7 +78,7 @@ namespace LambdaSharp {
             return table.Substring(TABLE_PREFIX.Length);
         }
 
-        public static string SqsReadQueueUrl(this LambdaConfig config, string key) {
+        public static string ReadSqsQueueUrl(this LambdaConfig config, string key) {
             var value = config.ReadText(key);
             return (value.StartsWith("arn:", StringComparison.Ordinal))
                 ? ConvertQueueArnToUrl(value)

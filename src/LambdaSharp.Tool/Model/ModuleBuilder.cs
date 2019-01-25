@@ -780,7 +780,7 @@ namespace LambdaSharp.Tool.Model {
             string runtime,
             string memory,
             string handler,
-            object properties
+            IDictionary<string, object> properties
         ) {
 
             // initialize function resource definition from properties

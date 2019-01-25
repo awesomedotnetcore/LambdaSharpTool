@@ -22,3 +22,6 @@ Please refer to the [Folder Structure Documentation](../Docs/FolderStructure.md)
 1. [Slack Command Source Example](SlackCommandSample/)
 1. [SNS Topic Source Example](SnsSample/)
 1. [SQS Queue Source Example](SqsSample/)
+
+## Miscellaneous Examples
+1. [Lambda Function in VPC](VpcFunction/)
