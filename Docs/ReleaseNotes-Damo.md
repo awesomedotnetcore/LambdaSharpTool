@@ -1,3 +1,5 @@
+![λ#](LambdaSharp_v2_small.png)
+
 # λ# - Damo (v0.4.0.4) - 2019-01-11
 
 > Damo was a Pythagorean philosopher said by many to have been the daughter of Pythagoras and Theano. [(Wikipedia)](https://en.wikipedia.org/wiki/Damo_(philosopher))
