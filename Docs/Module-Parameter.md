@@ -223,7 +223,7 @@ The <code>Type</code> attribute specifies the data type for the parameter. When 
 
 <i>Type</i>: String
 
-The following parameter types are supported:
+The following parameter types are supported by CloudFormation. When using other AWS resource types, λ# automatically declares them as <code>String</code> type.
 
 <dl>
 

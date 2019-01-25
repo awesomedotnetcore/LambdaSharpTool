@@ -91,15 +91,6 @@ The <code>Memory</code> attribute specifies the memory limit for the lambda func
 <i>Type</i>: Int
 </dd>
 
-<dt><code>Project</code></dt>
-<dd>
-The <code>Project</code> attribute specifies the relative path of the .NET Core project file location for the lambda function.
-
-<i>Required</i>: Conditional. By default, the .NET Core project file is expected to be located in a sub-folder of the module definition. The name of the sub-folder and project file are expected to match the function name. If that is not the case, then the <code>Project</code> attribute must be specified. Otherwise, it can be omitted.
-
-<i>Type</i>: String
-</dd>
-
 <dt><code>Pragmas</code></dt>
 <dd>
 The <code>Pragmas</code> section specifies directives that change the default compiler behavior.
@@ -107,6 +98,15 @@ The <code>Pragmas</code> section specifies directives that change the default co
 <i>Required:</i> No
 
 <i>Type:</i> List of [Pragma Definition](Module-Pragmas.md)
+</dd>
+
+<dt><code>Project</code></dt>
+<dd>
+The <code>Project</code> attribute specifies the relative path of the function project file or its folder.
+
+<i>Required</i>: Conditional. By default, the .NET Core project file is expected to be located in a sub-folder of the module definition. The name of the sub-folder and project file are expected to match the function name. If that is not the case, then the <code>Project</code> attribute must be specified. Otherwise, it can be omitted.
+
+<i>Type</i>: String
 </dd>
 
 <dt><code>Properties</code></dt>
