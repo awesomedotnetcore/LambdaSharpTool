@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "A sample module using function in VPC (v1.0-DEV)",
+  "Description": "A sample module defining a Lambda function in VPC (v1.0-DEV)",
   "Parameters": {
     "SecurityGroupIds": {
       "Type": "String"
@@ -61,7 +61,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "D1BF466F955167EF129246783CDAD5CA"
+      "Default": "E0A4473095AB952E5BD5CE55581D732C"
     }
   },
   "Resources": {
@@ -106,7 +106,6 @@
             ]
           }
         },
-        "Description": "TODO - update MyFunction description (v1.0-DEV)",
         "Environment": {
           "Variables": {
             "MODULE_ID": {
@@ -783,7 +782,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "D1BF466F955167EF129246783CDAD5CA",
+      "Hash": "E0A4473095AB952E5BD5CE55581D732C",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

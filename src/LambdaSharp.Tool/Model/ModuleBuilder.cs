@@ -31,9 +31,84 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace LambdaSharp.Tool.Model {
+    using System.Reflection;
     using static ModelFunctions;
 
     public class ModuleBuilder : AModelProcessor {
+
+        //--- Class Methods ---
+        private static object ConvertJTokenToNative(object value) {
+
+            // NOTE (2019-01-25, bjorg): this method is needed because the Humidifier types use 'dynamic' as type;
+            //  and JsonConvert then generates JToken values instead of primitive types as it does for object.
+
+            switch(value) {
+            case JObject jObject: {
+                    var map = new Dictionary<string, object>();
+                    foreach(var property in jObject.Properties()) {
+                        map[property.Name] = ConvertJTokenToNative(property.Value);
+                    }
+                    return map;
+                }
+            case JArray jArray: {
+                    var list = new List<object>();
+                    foreach(var item in jArray) {
+                        list.Add(ConvertJTokenToNative(item));
+                    }
+                    return list;
+                }
+            case JValue jValue:
+                return jValue.Value;
+            case JToken _:
+                throw new ApplicationException($"unsupported type: {value.GetType()}");
+            case IDictionary dictionary:
+                foreach(string key in dictionary.Keys.OfType<string>().ToList()) {
+                    dictionary[key] = ConvertJTokenToNative(dictionary[key]);
+                }
+                return value;
+            case IList list:
+                for(var i = 0; i < list.Count; ++i) {
+                    list[i] = ConvertJTokenToNative(list[i]);
+                }
+                return value;
+            case null:
+                return value;
+            default:
+                if(SkipType(value.GetType())) {
+
+                    // nothing further to remove
+                    return value;
+                }
+                if(value.GetType().FullName.StartsWith("Humidifier.", StringComparison.Ordinal)) {
+
+                    // use reflection to substitute properties
+                    foreach(var property in value.GetType().GetProperties().Where(p => !SkipType(p.PropertyType))) {
+                        object propertyValue;
+                        try {
+                            propertyValue = property.GetGetMethod()?.Invoke(value, new object[0]);
+                        } catch(Exception e) {
+                            throw new ApplicationException($"unable to get {value.GetType()}::{property.Name}", e);
+                        }
+                        if((propertyValue == null) || SkipType(propertyValue.GetType())) {
+
+                            // nothing to do
+                        } else {
+                            propertyValue = ConvertJTokenToNative(propertyValue);
+                            try {
+                                property.GetSetMethod()?.Invoke(value, new[] { propertyValue });
+                            } catch(Exception e) {
+                                throw new ApplicationException($"unable to set {value.GetType()}::{property.Name}", e);
+                            }
+                        }
+                    }
+                    return value;
+                }
+                throw new ApplicationException($"unsupported type: {value.GetType()}");
+            }
+
+            // local function
+            bool SkipType(Type type) => type.IsValueType || type == typeof(string);
+        }
 
         //--- Fields ---
         public readonly string _owner;
@@ -782,45 +857,48 @@ namespace LambdaSharp.Tool.Model {
             string handler,
             IDictionary<string, object> properties
         ) {
-
-            // initialize function resource definition from properties
-            var resource = (properties != null)
-                ? JObject.FromObject(properties).ToObject<Humidifier.Lambda.Function>()
-                : new Humidifier.Lambda.Function();
+            var definition = (properties != null)
+                ? new Dictionary<string, object>(properties)
+                : new Dictionary<string, object>();
 
             // set optional function resource properties
             if(description != null) {
 
                 // append version number to function description
-                resource.Description = description.TrimEnd() + $" (v{_version})";
+                definition["Description"] = description.TrimEnd() + $" (v{_version})";
             }
             if(timeout != null) {
-                resource.Timeout = timeout;
+                definition["Timeout"] = timeout;
             }
             if(runtime != null) {
-                resource.Runtime = runtime;
+                definition["Runtime"] = runtime;
             }
             if(memory != null) {
-                resource.MemorySize = memory;
+                definition["MemorySize"] = memory;
             }
             if(handler != null) {
-                resource.Handler = handler;
+                definition["Handler"] = handler;
             }
 
             // set function resource properties to defaults when not defined
-            if(resource.Role == null) {
-                resource.Role = FnGetAtt("Module::Role", "Arn");
+            if(!definition.ContainsKey("Role")) {
+                definition["Role"] = FnGetAtt("Module::Role", "Arn");
             }
-            if(resource.Environment == null) {
-                resource.Environment = new Humidifier.Lambda.FunctionTypes.Environment {
-                    Variables = new Dictionary<string, dynamic>()
+            if(!definition.ContainsKey("Environment")) {
+                definition["Environment"] = new Dictionary<string, object> {
+                    ["Variables"] = new Dictionary<string, dynamic>()
                 };
             }
-            if(resource.Code == null) {
-                resource.Code = new Humidifier.Lambda.FunctionTypes.Code {
-                    S3Bucket = FnRef("DeploymentBucketName")
+            if(!definition.ContainsKey("Code")) {
+                definition["Code"] = new Dictionary<string, object> {
+                    ["S3Key"] = "<TBD>",
+                    ["S3Bucket"] = FnRef("DeploymentBucketName")
                 };
             }
+            AtLocation("Properties", () => ValidateProperties("AWS::Lambda::Function", definition));
+
+            // initialize function resource from definition
+            var resource = (Humidifier.Lambda.Function)ConvertJTokenToNative(JObject.FromObject(definition).ToObject<Humidifier.Lambda.Function>());
 
             // create function item
             var function = new FunctionItem(
@@ -1169,38 +1247,67 @@ namespace LambdaSharp.Tool.Model {
                         AddError($"unrecognized property '{prefix + property.Key}'");
                     } else {
                         switch(propertyType.Type) {
-                        case "List":
-                            if(!(property.Value is IList nestedList)) {
-                                AddError($"property type mismatch for '{prefix + property.Key}', expected a list [{property.Value?.GetType().Name ?? "<null>"}]");
-                            } else if(propertyType.ItemType != null) {
-                                var nestedResource = ResourceMapping.CloudformationSpec.PropertyTypes[awsType + "." + propertyType.ItemType];
-                                ValidateList(prefix + property.Key + ".", nestedResource, ListToEnumerable(nestedList));
-                            } else {
+                        case "List": {
 
-                                // TODO (2018-12-06, bjorg): validate list items using the primitive type
+                                // check if property value is a function invocation
+                                if(
+                                    (property.Value is IDictionary fnMap)
+                                    && (fnMap.Count == 1)
+                                    && (fnMap.Keys.OfType<string>().FirstOrDefault() is string fnName)
+                                    && ((fnName == "Ref") || fnName.StartsWith("Fn::"))
+                                ) {
+
+                                    // TODO (2019-01-25, bjorg): validate the return type of the function is a list
+                                } else if(!(property.Value is IList nestedList)) {
+                                    AddError($"property type mismatch for '{prefix + property.Key}', expected a list [{property.Value?.GetType().Name ?? "<null>"}]");
+                                } else if(propertyType.ItemType != null) {
+                                    var nestedResource = ResourceMapping.CloudformationSpec.PropertyTypes[awsType + "." + propertyType.ItemType];
+                                    ValidateList(prefix + property.Key + ".", nestedResource, ListToEnumerable(nestedList));
+                                } else {
+
+                                    // TODO (2018-12-06, bjorg): validate list items using the primitive type
+                                }
                             }
                             break;
-                        case "Map":
-                            if(!(property.Value is IDictionary nestedProperties1)) {
-                                AddError($"property type mismatch for '{prefix + property.Key}', expected a map [{property.Value?.GetType().FullName ?? "<null>"}]");
-                            } else if(propertyType.ItemType != null) {
-                                var nestedResource = ResourceMapping.CloudformationSpec.PropertyTypes[awsType + "." + propertyType.ItemType];
-                                ValidateList(prefix + property.Key + ".", nestedResource, DictionaryToEnumerable(nestedProperties1));
-                            } else {
+                        case "Map": {
+                                if(
+                                    (property.Value is IDictionary fnMap)
+                                    && (fnMap.Count == 1)
+                                    && (fnMap.Keys.OfType<string>().FirstOrDefault() is string fnName)
+                                    && ((fnName == "Ref") || fnName.StartsWith("Fn::"))
+                                ) {
 
-                                // TODO (2018-12-06, bjorg): validate map entries using the primitive type
+                                    // TODO (2019-01-25, bjorg): validate the return type of the function is a map
+                                } else if(!(property.Value is IDictionary nestedProperties1)) {
+                                    AddError($"property type mismatch for '{prefix + property.Key}', expected a map [{property.Value?.GetType().FullName ?? "<null>"}]");
+                                } else if(propertyType.ItemType != null) {
+                                    var nestedResource = ResourceMapping.CloudformationSpec.PropertyTypes[awsType + "." + propertyType.ItemType];
+                                    ValidateList(prefix + property.Key + ".", nestedResource, DictionaryToEnumerable(nestedProperties1));
+                                } else {
+
+                                    // TODO (2018-12-06, bjorg): validate map entries using the primitive type
+                                }
                             }
                             break;
                         case null:
 
                             // TODO (2018-12-06, bjorg): validate property value with the primitive type
                             break;
-                        default:
-                            if(!(property.Value is IDictionary nestedProperties2)) {
-                                AddError($"property type mismatch for '{prefix + property.Key}', expected a map [{property.Value?.GetType().FullName ?? "<null>"}]");
-                            } else {
-                                var nestedResource = ResourceMapping.CloudformationSpec.PropertyTypes[awsType + "." + propertyType.Type];
-                                ValidateProperties(prefix + property.Key + ".", nestedResource, nestedProperties2);
+                        default: {
+                                if(
+                                    (property.Value is IDictionary fnMap)
+                                    && (fnMap.Count == 1)
+                                    && (fnMap.Keys.OfType<string>().FirstOrDefault() is string fnName)
+                                    && ((fnName == "Ref") || fnName.StartsWith("Fn::"))
+                                ) {
+
+                                    // TODO (2019-01-25, bjorg): validate the return type of the function is a map
+                                } else if(!(property.Value is IDictionary nestedProperties2)) {
+                                    AddError($"property type mismatch for '{prefix + property.Key}', expected a map [{property.Value?.GetType().FullName ?? "<null>"}]");
+                                } else {
+                                    var nestedResource = ResourceMapping.CloudformationSpec.PropertyTypes[awsType + "." + propertyType.Type];
+                                    ValidateProperties(prefix + property.Key + ".", nestedResource, nestedProperties2);
+                                }
                             }
                             break;
                         }

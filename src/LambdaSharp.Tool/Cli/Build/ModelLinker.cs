@@ -636,8 +636,6 @@ namespace LambdaSharp.Tool.Cli.Build {
             case null:
                 AddError("null value is not allowed");
                 return value;
-            case JValue jValue:
-                return jValue;
             default:
                 if(SkipType(value.GetType())) {
 
