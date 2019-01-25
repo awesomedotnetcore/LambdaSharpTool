@@ -25,3 +25,4 @@ Please refer to the [Folder Structure Documentation](../Docs/FolderStructure.md)
 
 ## Miscellaneous Examples
 1. [Lambda Function in VPC](VpcFunction/)
+1. [Lambda Function with Lambda Layer](LambdaLayerSample/)

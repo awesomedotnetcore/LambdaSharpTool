@@ -1,5 +1,5 @@
 Module: LambdaSharp.Sample.VpcFunction
-Description: A sample module using function in VPC
+Description: A sample module defining a Lambda function in VPC
 Items:
 
   - Parameter: SecurityGroupIds
