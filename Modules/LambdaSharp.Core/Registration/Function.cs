@@ -49,6 +49,18 @@ namespace LambdaSharp.Core.Registration {
         public string FunctionPlatform { get; set; }
         public string FunctionFramework { get; set; }
         public string FunctionLanguage { get; set; }
+
+        //--- Methods ---
+        public string GetModuleFullName() {
+            if(Module == null) {
+                return null;
+            }
+            var index = Module.IndexOfAny(new[] { ':', '@' });
+            if(index < 0) {
+                return Module;
+            }
+            return Module.Substring(0, index);
+        }
     }
 
     public class ResponseProperties {
@@ -93,7 +105,7 @@ namespace LambdaSharp.Core.Registration {
 
                     // create new rollbar project
                     if(_rollbarClient.HasTokens) {
-                        var name = _rollbarProjectPrefix + request.ResourceProperties.Module;
+                        var name = _rollbarProjectPrefix + request.ResourceProperties.GetModuleFullName();
                         var project = await _rollbarClient.FindProjectByName(name)
                             ?? await _rollbarClient.CreateProject(name);
                         var tokens = await _rollbarClient.ListProjectTokens(project.Id);
