@@ -78,7 +78,7 @@ namespace LambdaSharp.Tool.Cli {
                         }
 
                         // TODO (2018-09-13, bjorg): allow following settings to be configurable via command line options
-                        var functionMemory = 128;
+                        var functionMemory = 256;
                         var functionTimeout = 30;
 
                         // determine function name
