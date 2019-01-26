@@ -17,9 +17,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-Module: LambdaSharp.Twitter.Query
+Module: LambdaSharp.Twitter.Notify
 Version: 0.5-WIP
-Description: This module queries Twitter at re
+Description: This module queries Twitter at regular interval and sends notifications for each new search result
 Items:
 
   - Parameter: TwitterApiKey
