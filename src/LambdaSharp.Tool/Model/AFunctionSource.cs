@@ -47,11 +47,13 @@ namespace LambdaSharp.Tool.Model {
     public class ScheduleSource : AFunctionSource {
 
        //--- Properties ---
-        public string Expression { get; set; }
+        public object Expression { get; set; }
         public string Name { get; set; }
 
         //--- Methods ---
-        public override void Visit(AModuleItem item, ModuleVisitorDelegate visitor) { }
+        public override void Visit(AModuleItem item, ModuleVisitorDelegate visitor) {
+            Expression = visitor(item, Expression);
+        }
     }
 
     public enum ApiGatewaySourceIntegration {

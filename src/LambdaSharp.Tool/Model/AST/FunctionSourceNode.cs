@@ -69,7 +69,7 @@ namespace LambdaSharp.Tool.Model.AST {
         public bool? ApiKeyRequired { get; set; }
 
         // CloudWatch Schedule Event Source
-        public string Schedule { get; set; }
+        public object Schedule { get; set; }
         public string Name { get; set; }
 
         // S3 Bucket Source

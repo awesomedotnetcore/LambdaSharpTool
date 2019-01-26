@@ -278,13 +278,13 @@ The next example shows a definition of a `Mapping` item and its use:
 ```
 
 ### Function Sources
-* `Topic` can not be a `!Ref` expression.
+* `DynamoDB` can now be a `!Ref` expression.
+* `Kinesis` can now be a `!Ref` expression.
+* `Queue` can now be a `!Ref` expression.
+* `S3` can now be a `!Ref` expression.
+* `Schedule` can now be a `!Ref` expression.
+* `Topic` can now be a `!Ref` expression.
 * `Topic` source now supports `Filters` to filter on SNS notifications.
-* `Queue` can not be a `!Ref` expression.
-* `S3` can not be a `!Ref` expression.
-* `DynamoDB` can not be a `!Ref` expression.
-* `Kinesis` can not be a `!Ref` expression.
-
 
 > TODO
 
