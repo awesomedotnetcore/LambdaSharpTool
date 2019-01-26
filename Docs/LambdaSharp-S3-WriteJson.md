@@ -16,7 +16,7 @@ __Topics__
 ## Requires
 
 ```yaml
-Module: LambdaSharp.S3.IO:0.5
+Module: LambdaSharp.S3.IO:0.5-WIP
 ```
 
 ## Syntax

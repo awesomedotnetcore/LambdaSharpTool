@@ -188,9 +188,7 @@ namespace LambdaSharp.Core.ProcessLogEvents {
 
         private async Task PublishErrorReportToRollbarAsync(OwnerMetaData owner, ErrorReport report) {
             if(owner == null) {
-
-                // TODO (2018-10-17, bjorg): how should we handle our own errors?
-                return;
+                throw new ArgumentNullException(nameof(owner));
             }
             if(owner.RollbarAccessToken == null) {
                 return;

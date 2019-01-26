@@ -60,13 +60,14 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "E0065FD81AB8E111F0121E12DDA661A3"
+      "Default": "844FBC9DB9AB70E46C8716C82C728CA7"
     }
   },
   "Resources": {
     "MessageTable": {
       "Type": "AWS::DynamoDB::Table",
       "Properties": {
+        "BillingMode": "PAY_PER_REQUEST",
         "AttributeDefinitions": [
           {
             "AttributeName": "MessageId",
@@ -78,11 +79,7 @@
             "AttributeName": "MessageId",
             "KeyType": "HASH"
           }
-        ],
-        "ProvisionedThroughput": {
-          "ReadCapacityUnits": "1",
-          "WriteCapacityUnits": "1"
-        }
+        ]
       }
     },
     "NotifyRecorderTopic": {
@@ -1336,7 +1333,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "E0065FD81AB8E111F0121E12DDA661A3",
+      "Hash": "844FBC9DB9AB70E46C8716C82C728CA7",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

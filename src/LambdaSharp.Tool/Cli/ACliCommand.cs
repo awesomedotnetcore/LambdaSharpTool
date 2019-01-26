@@ -37,6 +37,7 @@ using Amazon.SimpleSystemsManagement;
 using McMaster.Extensions.CommandLineUtils;
 using LambdaSharp.Tool.Internal;
 using LambdaSharp.Tool.Model;
+using System.Text;
 
 namespace LambdaSharp.Tool.Cli {
 
@@ -45,6 +46,21 @@ namespace LambdaSharp.Tool.Cli {
         //--- Class Methods ---
         public static CommandOption AddTierOption(CommandLineApplication cmd)
             => cmd.Option("--tier|-T <NAME>", "(optional) Name of deployment tier (default: LAMBDASHARP_TIER environment variable)", CommandOptionType.SingleValue);
+
+        public static string ReadResource(string resourceName, IDictionary<string, string> substitutions = null) {
+            string result;
+            var assembly = typeof(ACliCommand).Assembly;
+            using(var resource = assembly.GetManifestResourceStream($"LambdaSharp.Tool.Resources.{resourceName}"))
+            using(var reader = new StreamReader(resource, Encoding.UTF8)) {
+                result = reader.ReadToEnd();
+            }
+            if(substitutions != null) {
+                foreach(var kv in substitutions) {
+                    result = result.Replace($"%%{kv.Key}%%", kv.Value);
+                }
+            }
+            return result;
+        }
 
         //--- Methods ---
         protected async Task<(string AccountId, string Region)?> InitializeAwsProfile(string awsProfile, string awsAccountId = null, string awsRegion = null) {

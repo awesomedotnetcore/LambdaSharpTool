@@ -132,8 +132,6 @@ namespace LambdaSharp.Tool.Model.AST {
                 "Items"
             },
             ["Namespace"] = new[] {
-
-                // TODO
                 "Items",
                 "Description"
             }

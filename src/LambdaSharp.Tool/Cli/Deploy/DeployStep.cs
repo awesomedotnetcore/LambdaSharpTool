@@ -261,9 +261,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                             continue;
                         }
                         var nestedDependency = new DependencyRecord {
-
-                            // TODO (2019-01-15, bjorg): why is this commented out?
-//                            Owner = $"{current.ModuleOwner}.{current.ModuleName}",
+                            Owner = current.Module,
                             Manifest = dependencyManifest,
                             Location = dependencyLocation
                         };

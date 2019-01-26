@@ -126,8 +126,6 @@ namespace LambdaSharp.Tool.Cli.Build {
                 section: section,
                 label: "Comma-separated list of optional secret keys",
                 description: "Secret Keys (ARNs)",
-
-                // TODO (2019-01-04, bjorg): see if we can use CommaDelimitedList here instead?
                 type: "String",
                 scope: null,
                 noEcho: null,

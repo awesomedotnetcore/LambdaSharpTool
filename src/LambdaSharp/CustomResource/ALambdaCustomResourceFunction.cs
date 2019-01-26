@@ -216,7 +216,7 @@ namespace LambdaSharp.CustomResource {
                 LogError(e, "writing response to pre-signed S3 URL failed");
 
                 // TODO (2018-06-14, bjorg): how should we handle this? we may want the handler to re-attempt the
-                // resource creation since the request was SNS based
+                //  resource creation since the request was SNS based
                 throw;
             }
 

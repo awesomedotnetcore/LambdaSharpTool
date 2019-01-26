@@ -32,24 +32,6 @@ namespace LambdaSharp.Tool.Cli {
 
     public class CliNewCommand : ACliCommand {
 
-        //--- Class Methods ---
-        private static string ReadResource(string resourceName, IDictionary<string, string> substitutions = null) {
-
-            // TODO (2018-12-14, bjorg): multiple copies of this code
-            string result;
-            var assembly = typeof(CliNewCommand).Assembly;
-            using(var resource = assembly.GetManifestResourceStream($"LambdaSharp.Tool.Resources.{resourceName}"))
-            using(var reader = new StreamReader(resource, Encoding.UTF8)) {
-                result = reader.ReadToEnd();
-            }
-            if(substitutions != null) {
-                foreach(var kv in substitutions) {
-                    result = result.Replace($"%%{kv.Key}%%", kv.Value);
-                }
-            }
-            return result;
-        }
-
         //--- Methods --
         public void Register(CommandLineApplication app) {
             app.Command("new", cmd => {
