@@ -62,7 +62,7 @@ Items:
     Allow: Publish
 
   - Resource: Table
-    Description: This table stores the most query results
+    Description: This table stores the most recent result id
     Scope: Query
     Type: AWS::DynamoDB::Table
     Allow: ReadWrite
