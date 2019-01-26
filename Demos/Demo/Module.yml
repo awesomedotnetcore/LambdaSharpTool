@@ -13,15 +13,13 @@ Items:
     Type: AWS::DynamoDB::Table
     Allow: ReadWrite
     Properties:
+      BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: MessageId
           AttributeType: S
       KeySchema:
         - AttributeName: MessageId
           KeyType: HASH
-      ProvisionedThroughput:
-        ReadCapacityUnits: 1
-        WriteCapacityUnits: 1
 
   - Resource: NotifyRecorderTopic
     Description: The topic for recording messages

@@ -81,9 +81,15 @@ namespace LambdaSharp.Tool.Cli.Deploy {
 
             // validate template
             var templateUrl = $"https://{location.ModuleBucketName}.s3.amazonaws.com/{location.TemplatePath}";
-            var validation = await Settings.CfnClient.ValidateTemplateAsync(new ValidateTemplateRequest  {
-                TemplateURL = templateUrl
-            });
+            ValidateTemplateResponse validation;
+            try {
+                validation = await Settings.CfnClient.ValidateTemplateAsync(new ValidateTemplateRequest  {
+                    TemplateURL = templateUrl
+                });
+            } catch(AmazonCloudFormationException e) {
+                AddError(e.Message);
+                return false;
+            }
 
             // create change-set
             var success = false;

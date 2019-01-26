@@ -77,7 +77,7 @@ namespace LambdaSharp.Tool.Cli {
 
         public static Dictionary<string, string> ReadInputParametersFiles(Settings settings, string filename) {
             if(!File.Exists(filename)) {
-                AddError("cannot find inputs file");
+                AddError("cannot find parameters file");
                 return null;
             }
             switch(Path.GetExtension(filename).ToLowerInvariant()) {

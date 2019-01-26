@@ -444,7 +444,9 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 ScheduleExpression = scheduleSource.Expression,
                                 Targets = new[] {
                                     new Humidifier.Events.RuleTypes.Target {
-                                        Id = FnSub($"${{AWS::StackName}}-{function.LogicalId}Source{sourceSuffix}ScheduleEvent"),
+
+                                        // TODO (2019-01-25, bjorg): the `Id` cannot exceed 64 chars!
+                                        Id = FnSub($"${{AWS::StackName}}-{function.LogicalId}{sourceSuffix}"),
                                         Arn = FnGetAtt(function.ResourceName, "Arn"),
                                         InputTransformer = new Humidifier.Events.RuleTypes.InputTransformer {
                                             InputPathsMap = new Dictionary<string, object> {
