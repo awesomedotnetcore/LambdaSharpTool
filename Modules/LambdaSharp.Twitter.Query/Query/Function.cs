@@ -34,7 +34,7 @@ using Tweetinvi.Parameters;
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
 
-namespace LambdaSharp.Twitter.EventSource.Query {
+namespace LambdaSharp.Twitter.Query {
     using TwitterSearch = Tweetinvi.Search;
 
     public class Function : ALambdaFunction<LambdaScheduleEvent, string> {
