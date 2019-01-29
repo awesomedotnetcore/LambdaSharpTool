@@ -86,17 +86,5 @@ The <code>Parameters</code> section specifies the parameters for the nested modu
     Message: !Sub "Hi from ${Module::Name}"
 
 - Variable: NestedOutput
-  Value: !Ref MyNestedModule::OutputName
-```
-
-### Creating a nested module and accessing it outputs without type checking
-
-```yaml
-- Nested: MyNestedModule
-  Module: Acme.MyOtherModule:1.0
-  Parameters:
-    Message: !Sub "Hi from ${Module::Name}"
-
-- Variable: NestedOutput
   Value: !GetAtt MyNestedModule.Outputs.OutputName
 ```

@@ -173,7 +173,7 @@ The next example shows how to set Lambda layers for a function:
 
 ### Nested Modules
 
-Nested modules are similar to nested CloudFormation stacks. The module reference is resolved at compile time to a CloudFormation template location. Furthermore, the λ# CLI seamlessly injects the deployment tier parameters required for deploying modules. [See `Nested` documentation.](Module-Nested.md)
+Nested modules are similar to nested CloudFormation stacks. The module reference is resolved at compile time to a CloudFormation template location. Furthermore, the λ# CLI seamlessly injects the deployment tier parameters required for deploying modules. [See `Nested` documentation](Module-Nested.md).
 
 The following example shows how to create a nested module definition and access its output values:
 ```yaml
@@ -183,7 +183,7 @@ The following example shows how to create a nested module definition and access 
     Message: !Sub "Hi from ${Module::Name}"
 
 - Variable: NestedOutput
-  Value: !Ref MyNestedModule::OutputName
+  Value: !GetAtt MyNestedModule.Outputs.OutputName
 ```
 
 ### `Condition` Item
