@@ -7,6 +7,8 @@ _Version:_ 0.5-WIP
 
 The `LambdaSharp.Twitter.Query` module conducts a Twitter search at regular intervals and publishes found tweets to a dedicated SNS topic.
 
+This module requires a Twitter developer account. See the [Twitter Developer Documentation](https://developer.twitter.com/en/docs/basics/getting-started) for more information.
+
 __Topics__
 * [Resource Types](#resource-types)
 * [Parameters](#parameters)
