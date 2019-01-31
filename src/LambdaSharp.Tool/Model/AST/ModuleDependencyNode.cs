@@ -26,5 +26,6 @@ namespace LambdaSharp.Tool.Model.AST {
 
         //--- Properties ---
         public string Module { get; set; }
+        public string Description { get; set; }
     }
 }

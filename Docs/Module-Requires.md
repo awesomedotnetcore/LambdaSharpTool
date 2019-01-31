@@ -13,11 +13,21 @@ __Topics__
 
 ```yaml
 Module: String
+Description: String
 ```
 
 ## Properties
 
 <dl>
+
+<dt><code>Description</code></dt>
+<dd>
+The <code>Description</code> attribute specifies the description for the module dependency.
+
+<i>Required</i>: No
+
+<i>Type</i>: String
+</dd>
 
 <dt><code>Module</code></dt>
 <dd>

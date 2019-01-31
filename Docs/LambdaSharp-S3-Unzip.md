@@ -6,6 +6,8 @@ The `LambdaSharp::S3::Unzip` type creates a resource that unzips a [`Package` it
 
 On creation, the contents of the source zip package are copied to the destination S3 bucket. On update, the resource checks which files in the zip package have been added, updated, or removed and only copies or deletes the affected files. On delete, the resource attempts to remove all files that were previously copied to the S3 bucket.
 
+**NOTE:** The maximum size of the zip package is limited by the amount of temporary storage available to a Lambda function. At the time of this writing, this limit is 512MB.
+
 __Topics__
 * [Requires](#requires)
 * [Syntax](#syntax)
