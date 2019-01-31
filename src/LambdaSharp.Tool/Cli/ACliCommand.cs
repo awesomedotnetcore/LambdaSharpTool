@@ -119,12 +119,14 @@ namespace LambdaSharp.Tool.Cli {
             var toolVersionOption = cmd.Option("--cli-version <VALUE>", "(test only) LambdaSharp CLI version for profile", CommandOptionType.SingleValue);
             var deploymentBucketNameOption = cmd.Option("--deployment-bucket-name <NAME>", "(test only) S3 Bucket name used to deploy modules (default: read from LambdaSharp CLI configuration)", CommandOptionType.SingleValue);
             var deploymentNotificationTopicOption = cmd.Option("--deployment-notifications-topic <ARN>", "(test only) SNS Topic for CloudFormation deployment notifications (default: read from LambdaSharp CLI configuration)", CommandOptionType.SingleValue);
+            var moduleBucketNamesOption = cmd.Option("--module-bucket-names <NAMES>", "(test only) Comma-separated list of S3 Bucket names used to find modules (default: read from LambdaSharp CLI configuration)", CommandOptionType.SingleValue);
             var runtimeVersionOption = cmd.Option("--core-version <VERSION>", "(test only) LambdaSharp Core version (default: read from deployment tier)", CommandOptionType.SingleValue);
             awsAccountIdOption.ShowInHelpText = false;
             awsRegionOption.ShowInHelpText = false;
             toolVersionOption.ShowInHelpText = false;
             deploymentBucketNameOption.ShowInHelpText = false;
             deploymentNotificationTopicOption.ShowInHelpText = false;
+            moduleBucketNamesOption.ShowInHelpText = false;
             runtimeVersionOption.ShowInHelpText = false;
             return async () => {
 
@@ -177,6 +179,7 @@ namespace LambdaSharp.Tool.Cli {
                     var runtimeVersion = runtimeVersionOption.Value();
                     var deploymentBucketName = deploymentBucketNameOption.Value();
                     var deploymentNotificationTopic = deploymentNotificationTopicOption.Value();
+                    var moduleBucketNames = moduleBucketNamesOption.Value()?.Split(',');
 
                     // create a settings instance for each module filename
                     return new Settings {
@@ -189,6 +192,7 @@ namespace LambdaSharp.Tool.Cli {
                         AwsAccountId = awsAccount.GetValueOrDefault().AccountId,
                         DeploymentBucketName = deploymentBucketName,
                         DeploymentNotificationsTopic = deploymentNotificationTopic,
+                        ModuleBucketNames = moduleBucketNames,
                         SsmClient = ssmClient,
                         CfnClient = cfClient,
                         KmsClient = kmsClient,
@@ -232,6 +236,7 @@ namespace LambdaSharp.Tool.Cli {
             if(
                 (settings.DeploymentBucketName == null)
                 || (settings.DeploymentNotificationsTopic == null)
+                || (settings.ModuleBucketNames == null)
             ) {
 
                 // import LambdaSharp CLI settings
@@ -252,6 +257,12 @@ namespace LambdaSharp.Tool.Cli {
                     }
                     settings.DeploymentBucketName = settings.DeploymentBucketName ?? GetLambdaSharpToolSetting("DeploymentBucketName");
                     settings.DeploymentNotificationsTopic = settings.DeploymentNotificationsTopic ?? GetLambdaSharpToolSetting("DeploymentNotificationTopic");
+                    if(settings.ModuleBucketNames == null) {
+                        var searchBucketNames = GetLambdaSharpToolSetting("ModuleBucketNames");
+                        if(searchBucketNames != null) {
+                            settings.ModuleBucketNames = searchBucketNames.Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries).ToArray();
+                        }
+                    }
 
                     // local functions
                     string GetLambdaSharpToolSetting(string name) {

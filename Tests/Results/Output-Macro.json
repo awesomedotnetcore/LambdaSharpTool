@@ -55,7 +55,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "3AAF0BA7ECD2E235E9F5F2AA0E7D02CE"
+      "Default": "D5E538CEC8719596B9144D9A5B398B26"
     }
   },
   "Resources": {
@@ -66,9 +66,7 @@
         "FunctionName": {
           "Ref": "Function"
         },
-        "Name": {
-          "Fn::Sub": "${DeploymentPrefix}MyMacro"
-        }
+        "Name": "MyMacro"
       }
     },
     "Function": {
@@ -749,7 +747,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "3AAF0BA7ECD2E235E9F5F2AA0E7D02CE",
+      "Hash": "D5E538CEC8719596B9144D9A5B398B26",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

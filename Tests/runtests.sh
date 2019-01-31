@@ -9,7 +9,8 @@ if [ -z "$1" ]; then
         --core-version 0.5-WIP \
         --cli-version 0.5-WIP \
         --deployment-bucket-name lambdasharp-bucket-name \
-        --deployment-notifications-topic  arn:aws:sns:us-east-1:123456789012:LambdaSharp-DeploymentNotificationTopic
+        --deployment-notifications-topic  arn:aws:sns:us-east-1:123456789012:LambdaSharp-DeploymentNotificationTopic \
+        --module-bucket-names registered-bucket-name,lambdasharp-bucket-name
 
     if [ $? -ne 0 ]; then
         exit $?
@@ -29,6 +30,7 @@ if [ -z "$1" ]; then
         --cli-version 0.5-WIP \
         --deployment-bucket-name lambdasharp-bucket-name \
         --deployment-notifications-topic  arn:aws:sns:us-east-1:123456789012:LambdaSharp-DeploymentNotificationTopic \
+        --module-bucket-names registered-bucket-name,lambdasharp-bucket-name \
         --no-dependency-validation \
         Empty.yml \
         Empty-NoLambdaSharpDependencies.yml \

@@ -114,12 +114,20 @@ export LAMBDASHARP_TIER=Sandbox
 
 ## Optional: Customize LambdaSharp Core Settings
 
-The following λ# Core module settings can be adjusted int the AWS console by updating the deployed CloudFormation stack.
+The following λ# Core module settings can be adjusted in the AWS console by updating the deployed CloudFormation stack.
 
 |Parameter|Description|Default|
 |---|---|---|
 |`LoggingStreamRetentionPeriod`|How long logging stream entries are kept before they are lost|24|
 |`DefaultSecretKeyRotationEnabled`|Rotate KMS key automatically every 365 days|false|
+
+## Optional: Add S3 Module Locations
+
+The following λ# CLI settings can be adjusted in the AWS console by accessing the Parameter Store in the Systems Manager.
+
+|Parameter|Description|Default|
+|---|---|---|
+|`/LambdaSharpTool/${CLI Profile}/ModuleBucketNames`|Comma-separated list of S3 bucket names used by the CLI to find modules|`${DeploymentBucket},lambdasharp-${AWS::Region}`|
 
 ## Optional: Subscribe to `ErrorReportTopic` Topic
 

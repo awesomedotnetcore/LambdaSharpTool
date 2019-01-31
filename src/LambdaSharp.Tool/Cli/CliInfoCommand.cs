@@ -77,6 +77,7 @@ namespace LambdaSharp.Tool.Cli {
             Console.WriteLine($"    Version: {settings.ToolVersion}");
             Console.WriteLine($"    Deployment S3 Bucket: {settings.DeploymentBucketName ?? "<NOT SET>"}");
             Console.WriteLine($"    Deployment Notifications Topic: {ConcealAwsAccountId(settings.DeploymentNotificationsTopic ?? "<NOT SET>")}");
+            Console.WriteLine($"    Module S3 Buckets: {((settings.ModuleBucketNames != null) ? string.Join(", ", settings.ModuleBucketNames) : "<NOT SET>")}");
             Console.WriteLine($"LambdaSharp Deployment Tier");
             Console.WriteLine($"    Name: {settings.Tier ?? "<NOT SET>"}");
             Console.WriteLine($"    Core Version: {settings.CoreVersion?.ToString() ?? "<NOT SET>"}");

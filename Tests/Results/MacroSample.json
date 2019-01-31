@@ -55,7 +55,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "4283C7FF520B502F22CB204BC1F0441F"
+      "Default": "AC2C22868C1166646AADCAF4C7DFDA74"
     }
   },
   "Resources": {
@@ -65,9 +65,7 @@
         "FunctionName": {
           "Ref": "MyFunction"
         },
-        "Name": {
-          "Fn::Sub": "${DeploymentPrefix}StringToUpper"
-        }
+        "Name": "StringToUpper"
       }
     },
     "MacrosStringToLower": {
@@ -76,9 +74,7 @@
         "FunctionName": {
           "Ref": "MyFunction"
         },
-        "Name": {
-          "Fn::Sub": "${DeploymentPrefix}StringToLower"
-        }
+        "Name": "StringToLower"
       }
     },
     "MyFunction": {
@@ -759,7 +755,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "4283C7FF520B502F22CB204BC1F0441F",
+      "Hash": "AC2C22868C1166646AADCAF4C7DFDA74",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

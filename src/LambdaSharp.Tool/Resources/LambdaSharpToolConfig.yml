@@ -110,7 +110,7 @@ Resources:
     Type: AWS::SSM::Parameter
     Properties:
       Name: !Sub '/LambdaSharpTool/${LambdaSharpToolProfile}/DeploymentBucketName'
-      Description: S3 bucket name to install modules
+      Description: S3 bucket name to publish modules
       Type: String
       Value: !If
         - DeploymentBucketNameIsEmpty
@@ -132,3 +132,18 @@ Resources:
         - CreateDeploymentNotificationTopic
         - !Ref DeploymentNotificationTopicResource
         - !Ref DeploymentNotificationTopic
+
+  # S3 Module Buckets
+  ModuleBucketNamesSsmParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/LambdaSharpTool/${LambdaSharpToolProfile}/ModuleBucketNames'
+      Description: S3 bucket names to search for modules
+      Type: String
+      Value: !Join
+        - ","
+        - - !If
+            - DeploymentBucketNameIsEmpty
+            - !Ref DeploymentBucket
+            - !Ref DeploymentBucketName
+          - lambdasharp-${AWS::Region}

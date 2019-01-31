@@ -29,7 +29,7 @@ namespace LambdaSharp.Tool {
         //--- Constructors ---
         public ModuleLocation() { }
 
-        public ModuleLocation(string owner, string name, VersionInfo version = null, string bucketName = null) {
+        public ModuleLocation(string owner, string name, VersionInfo version, string bucketName) {
             ModuleFullName = $"{owner}.{name}";
             ModuleVersion = version;
             ModuleBucketName = bucketName;

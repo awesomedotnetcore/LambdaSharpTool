@@ -122,23 +122,16 @@ namespace LambdaSharp.Tool {
         public async Task<ModuleLocation> LocateAsync(string moduleOwner, string moduleName, VersionInfo minVersion, VersionInfo maxVersion, string bucketName) {
 
             // by default, attempt to find the module in the deployment bucket and then the regional lambdasharp bucket
-            var searchBuckets = new List<string>();
-            if(bucketName != null) {
-                searchBuckets.Add(bucketName);
-                searchBuckets.Add($"{bucketName}-{Settings.AwsRegion}");
-            } else {
-                if(Settings.DeploymentBucketName != null) {
-                    searchBuckets.Add(Settings.DeploymentBucketName);
-                }
-
-                // TODO (2018-12-03, bjorg): do we still need to default to the 'lambdasharp` bucket?
-                searchBuckets.Add($"lambdasharp-{Settings.AwsRegion}");
-            }
+            var searchBucketNames = (bucketName != null)
+                ? new List<string> { bucketName.Replace("${AWS::Region}", Settings.AwsRegion) }
+                : Settings.ModuleBucketNames
+                    .Select(name => name.Replace("${AWS::Region}", Settings.AwsRegion))
+                    .ToList();
 
             // attempt to find a matching version
             VersionInfo foundVersion = null;
             string foundBucketName = null;
-            foreach(var bucket in searchBuckets) {
+            foreach(var bucket in searchBucketNames) {
                 foundVersion = await FindNewestVersion(Settings, bucket, moduleOwner, moduleName, minVersion, maxVersion);
                 if(foundVersion != null) {
                     foundBucketName = bucket;
@@ -161,10 +154,7 @@ namespace LambdaSharp.Tool {
                 AddError($"could not find module: {moduleOwner}.{moduleName} ({versionConstraint})");
                 return null;
             }
-            return new ModuleLocation {
-                ModuleFullName = $"{moduleOwner}.{moduleName}",
-                ModuleVersion = foundVersion,
-                ModuleBucketName = foundBucketName,
+            return new ModuleLocation(moduleOwner, moduleName, foundVersion, foundBucketName) {
                 TemplatePath = $"{moduleOwner}/Modules/{moduleName}/Versions/{foundVersion}/cloudformation.json"
             };
         }
