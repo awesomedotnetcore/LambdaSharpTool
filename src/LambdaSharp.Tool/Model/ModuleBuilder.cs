@@ -530,6 +530,7 @@ namespace LambdaSharp.Tool.Model {
             IEnumerable<ModuleManifestResourceProperty> properties,
             IEnumerable<ModuleManifestResourceProperty> attributes
         ) {
+
             // TODO (2018-09-20, bjorg): add custom resource name validation
             if(_customResourceTypes.Any(existing => existing.Type == resourceType)) {
                 AddError($"Resource type '{resourceType}' is already defined.");
@@ -571,8 +572,10 @@ namespace LambdaSharp.Tool.Model {
                 resource: new Humidifier.CloudFormation.Macro {
 
                     // TODO (2018-10-30, bjorg): we may want to set 'LogGroupName' and 'LogRoleARN' as well
-                    Name = FnSub("${DeploymentPrefix}" + macroName),
-                    Description = description ?? "",
+
+                    // NOTE (2019-01-30, bjorg): macro invocations don't allow dynamic names using !Sub, so must be global
+                    Name = macroName,
+                    Description = description,
                     FunctionName = FnRef(handler)
                 },
                 resourceExportAttribute: null,
@@ -753,7 +756,33 @@ namespace LambdaSharp.Tool.Model {
             var moduleParameters = (parameters != null)
                 ? new Dictionary<string, object>(parameters)
                 : new Dictionary<string, object>();
+
+            // validate module
             AtLocation("Parameters", () => {
+                if(!Settings.NoDependencyValidation) {
+                    var moduleFullName = $"{moduleOwner}.{moduleName}";
+                    var loader = new ModelManifestLoader(Settings, moduleFullName);
+                    var location = loader.LocateAsync(moduleOwner, moduleName, moduleVersion, moduleVersion, moduleBucketName).Result;
+                    if(location != null) {
+                        var manifest = new ModelManifestLoader(Settings, moduleFullName).LoadFromS3Async(location.ModuleBucketName, location.TemplatePath).Result;
+
+                        // validate that all required parameters are supplied
+                        var formalParameters = manifest.GetAllParameters().ToDictionary(p => p.Name);
+                        foreach(var formalParameter in formalParameters.Values.Where(p => (p.Default == null) && !moduleParameters.ContainsKey(p.Name))) {
+                            AddError($"missing module parameter '{formalParameter.Name}'");
+                        }
+                        foreach(var moduleParameter in moduleParameters.Where(kv => !formalParameters.ContainsKey(kv.Key))) {
+                            AddError($"unknown module parameter '{moduleParameter.Key}'");
+                        }
+                    } else {
+
+                        // nothing to do; 'LocateAsync' already reported the error
+                    }
+                } else {
+                    AddWarning("unable to validate module parameters");
+                }
+
+                // add expected parameters
                 OptionalAdd("LambdaSharpDeadLetterQueue", FnRef("Module::DeadLetterQueue"));
                 OptionalAdd("LambdaSharpLoggingStream", FnRef("Module::LoggingStream"));
                 OptionalAdd("LambdaSharpLoggingStreamRole", FnRef("Module::LoggingStreamRole"));
@@ -773,7 +802,7 @@ namespace LambdaSharp.Tool.Model {
                 resource: new Humidifier.CloudFormation.Stack {
                     NotificationARNs = FnRef("AWS::NotificationARNs"),
                     Parameters = moduleParameters,
-                    TemplateURL = FnSub("https://${ModuleBucketName}.s3.${AWS::Region}.amazonaws.com/${ModuleOwner}/Modules/${ModuleName}/Versions/${ModuleVersion}/cloudformation.json", new Dictionary<string, object> {
+                    TemplateURL = FnSub("https://s3.amazonaws.com/${ModuleBucketName}/${ModuleOwner}/Modules/${ModuleName}/Versions/${ModuleVersion}/cloudformation.json", new Dictionary<string, object> {
                         ["ModuleOwner"] = moduleOwner,
                         ["ModuleName"] = moduleName,
                         ["ModuleVersion"] = moduleVersion.ToString(),
@@ -1142,9 +1171,8 @@ namespace LambdaSharp.Tool.Model {
 
             // resolve references in output values
             AtLocation("ResourceStatements", () => {
-
-                // TODO (2019-01-05, bjorg): pass in 'Module::Role' item?
-                _resourceStatements = (IList<Humidifier.Statement>)visitor(null, _resourceStatements);
+                TryGetItem("Module::Role", out AModuleItem moduleRole);
+                _resourceStatements = (IList<Humidifier.Statement>)visitor(moduleRole, _resourceStatements);
             });
         }
 

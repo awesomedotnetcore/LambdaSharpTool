@@ -55,14 +55,13 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "FB6DC93236084D477C927B059A59CBDC"
+      "Default": "4283C7FF520B502F22CB204BC1F0441F"
     }
   },
   "Resources": {
     "MacrosStringToUpper": {
       "Type": "AWS::CloudFormation::Macro",
       "Properties": {
-        "Description": "",
         "FunctionName": {
           "Ref": "MyFunction"
         },
@@ -74,7 +73,6 @@
     "MacrosStringToLower": {
       "Type": "AWS::CloudFormation::Macro",
       "Properties": {
-        "Description": "",
         "FunctionName": {
           "Ref": "MyFunction"
         },
@@ -761,7 +759,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "FB6DC93236084D477C927B059A59CBDC",
+      "Hash": "4283C7FF520B502F22CB204BC1F0441F",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

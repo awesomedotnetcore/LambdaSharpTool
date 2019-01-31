@@ -379,7 +379,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
             }
 
             // check if module requires any prompts
-            if(manifest.ParameterSections.SelectMany(section => section.Parameters).Any(RequiresPrompt)) {
+            if(manifest.GetAllParameters().Any(RequiresPrompt)) {
                 Console.WriteLine();
                 Console.WriteLine($"Configuration for {manifest.GetFullName()} (v{manifest.GetVersion()})");
 

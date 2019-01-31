@@ -96,6 +96,9 @@ namespace LambdaSharp.Tool.Model {
             }
             return moduleVersion;
         }
+
+        public IEnumerable<ModuleManifestParameter> GetAllParameters()
+            => ParameterSections.SelectMany(section => section.Parameters);
     }
 
     public class ModuleManifestGitInfo {

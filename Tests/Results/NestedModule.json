@@ -55,7 +55,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "1F0C0A307392BBA5584F61BB2DBC1ACD"
+      "Default": "89D002513F7CD4E185BEB913B6E88EF7"
     }
   },
   "Resources": {
@@ -201,7 +201,7 @@
           }
         },
         "TemplateURL": {
-          "Fn::Sub": "https://${DeploymentBucketName}.s3.${AWS::Region}.amazonaws.com/Test/Modules/OtherModule/Versions/1.0/cloudformation.json"
+          "Fn::Sub": "https://s3.amazonaws.com/${DeploymentBucketName}/Test/Modules/OtherModule/Versions/1.0/cloudformation.json"
         },
         "TimeoutInMinutes": 5
       }
@@ -479,7 +479,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "1F0C0A307392BBA5584F61BB2DBC1ACD",
+      "Hash": "89D002513F7CD4E185BEB913B6E88EF7",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
