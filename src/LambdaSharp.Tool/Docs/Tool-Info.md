@@ -42,6 +42,7 @@ LambdaSharp CLI
     Version: 0.5
     Module Deployment S3 Bucket: lambdasharp-bucket-name
     Deployment Notifications Topic: arn:aws:sns:us-east-1:************:LambdaSharpTool-Sandbox-DeploymentNotificationTopicResource-QMM6DIP3K4N4
+    Module S3 Buckets: lambdasharp-bucket-name, lambdasharp-${AWS::Region}
 LambdaSharp Deployment Tier
     Name: Sandbox
     Core Version: 0.5
