@@ -435,6 +435,15 @@ namespace LambdaSharp.Tool.Cli.Build {
                     });
                     break;
                 case ScheduleSource scheduleSource: {
+
+                        // NOTE (2019-01-30, bjorg): we need the source suffix to support multiple sources
+                        //  per function; however, we cannot exceed 64 characters in length for the ID.
+                        var id = function.LogicalId;
+                        if(id.Length > 61) {
+                            id += id.Substring(0, 61) + "-" + sourceSuffix;
+                        } else {
+                            id += "-" + sourceSuffix;
+                        }
                         var schedule = _builder.AddResource(
                             parent: function,
                             name: $"Source{sourceSuffix}ScheduleEvent",
@@ -444,9 +453,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 ScheduleExpression = scheduleSource.Expression,
                                 Targets = new[] {
                                     new Humidifier.Events.RuleTypes.Target {
-
-                                        // TODO (2019-01-25, bjorg): the `Id` cannot exceed 64 chars!
-                                        Id = FnSub($"${{AWS::StackName}}-{function.LogicalId}{sourceSuffix}"),
+                                        Id = id,
                                         Arn = FnGetAtt(function.ResourceName, "Arn"),
                                         InputTransformer = new Humidifier.Events.RuleTypes.InputTransformer {
                                             InputPathsMap = new Dictionary<string, object> {

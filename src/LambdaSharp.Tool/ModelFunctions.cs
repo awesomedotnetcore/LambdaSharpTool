@@ -214,6 +214,14 @@ namespace LambdaSharp.Tool {
                 }
             };
 
+        public static object FnTransform(string macroName, IDictionary<string, object> parameters)
+            => new Dictionary<string, object> {
+                ["Fn::Transform"] = new Dictionary<string, object> {
+                    ["Name"] = macroName,
+                    ["Parameters"] = parameters
+                }
+            };
+
         public static string ReplaceSubPattern(string subPattern, Func<string, string, string> replace)
             => Regex.Replace(subPattern, SUBVARIABLE_PATTERN, match => {
                 var matchText = match.ToString();

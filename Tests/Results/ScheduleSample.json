@@ -55,7 +55,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "18421F046D99A5B658FB809842EFB808"
+      "Default": "68479BECD7ACA70B7622673704AB3559"
     }
   },
   "Resources": {
@@ -483,9 +483,7 @@
                 "Arn"
               ]
             },
-            "Id": {
-              "Fn::Sub": "${AWS::StackName}-MyFunctionSource1ScheduleEvent"
-            },
+            "Id": "MyFunction-1",
             "InputTransformer": {
               "InputPathsMap": {
                 "version": "$.version",
@@ -532,9 +530,7 @@
                 "Arn"
               ]
             },
-            "Id": {
-              "Fn::Sub": "${AWS::StackName}-MyFunctionSource2ScheduleEvent"
-            },
+            "Id": "MyFunction-2",
             "InputTransformer": {
               "InputPathsMap": {
                 "version": "$.version",
@@ -581,9 +577,7 @@
                 "Arn"
               ]
             },
-            "Id": {
-              "Fn::Sub": "${AWS::StackName}-MyFunctionSource3ScheduleEvent"
-            },
+            "Id": "MyFunction-3",
             "InputTransformer": {
               "InputPathsMap": {
                 "version": "$.version",
@@ -884,7 +878,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "18421F046D99A5B658FB809842EFB808",
+      "Hash": "68479BECD7ACA70B7622673704AB3559",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
