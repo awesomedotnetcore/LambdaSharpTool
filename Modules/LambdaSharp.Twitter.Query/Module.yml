@@ -19,7 +19,7 @@
 
 Module: LambdaSharp.Twitter.Query
 Version: 0.5-WIP
-Description: This module queries Twitter at regular interval and sends notifications for each new search result
+Description: Search Twitter at regular intervals and publish new found tweets
 Items:
 
   - Parameter: TwitterApiKey
