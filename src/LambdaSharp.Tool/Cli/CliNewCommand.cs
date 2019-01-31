@@ -246,31 +246,13 @@ namespace LambdaSharp.Tool.Cli {
                 break;
             }
 
-            // update YAML module definition
-            var moduleLines = File.ReadAllLines(moduleFile).ToList();
-
-            // check if `Items:` section needs to be added
-            var functionsIndex = moduleLines.FindIndex(line => line.StartsWith("Items:", StringComparison.Ordinal));
-            if(functionsIndex < 0) {
-
-                // add empty separator line if the last line of the file is not empty
-                if(moduleLines.Any() && (moduleLines.Last().Trim() != "")) {
-                    moduleLines.Add("");
-                }
-                functionsIndex = moduleLines.Count;
-                moduleLines.Add("Items:");
-            }
-            ++functionsIndex;
-
             // insert function definition
-            moduleLines.InsertRange(functionsIndex, new[] {
-                "",
+            InsertModuleItemsLines(moduleFile, new[] {
                 $"  - Function: {functionName}",
                 $"    Description: TODO - update {functionName} description",
                 $"    Memory: {functionMemory}",
-                $"    Timeout: {functionTimeout}",
+                $"    Timeout: {functionTimeout}"
             });
-            File.WriteAllLines(moduleFile, moduleLines);
         }
 
         public void NewCSharpFunction(
@@ -345,6 +327,55 @@ namespace LambdaSharp.Tool.Cli {
                 AddError($"unable to create function file '{functionFile}'", e);
                 return;
             }
+        }
+
+        public void InsertModuleItemsLines(string moduleFile, IEnumerable<string> lines) {
+
+            // update YAML module definition
+            var moduleLines = File.ReadAllLines(moduleFile).ToList();
+
+            // check if `Items:` section needs to be added
+            var functionIndex = moduleLines.FindIndex(line => line.StartsWith("Items:", StringComparison.Ordinal));
+            if(functionIndex < 0) {
+                moduleLines.Add("Items:");
+                moduleLines.Add("");
+                functionIndex = moduleLines.Count;
+            } else {
+
+                // find the last line of the section
+                var blankLineIndex = -1;
+                ++functionIndex;
+                while(functionIndex < moduleLines.Count) {
+                    var line = moduleLines[functionIndex];
+                    if(line.Trim() == "") {
+                        if(blankLineIndex == -1) {
+                            blankLineIndex = functionIndex;
+                        }
+                    } else if(char.IsWhiteSpace(line[0])) {
+                        blankLineIndex = -1;
+                    } else {
+                        break;
+                    }
+                    ++functionIndex;
+                }
+
+                // check if we found a blank line
+                if(blankLineIndex == -1) {
+                    moduleLines.Insert(functionIndex, "");
+                    ++functionIndex;
+                } else {
+                    functionIndex = blankLineIndex + 1;
+                }
+
+                // add another blank line after if we stopped before the last line of the file
+                if(functionIndex < moduleLines.Count) {
+                    moduleLines.Insert(functionIndex, "");
+                }
+            }
+
+            // insert function definition
+            moduleLines.InsertRange(functionIndex, lines);
+            File.WriteAllLines(moduleFile, moduleLines);
         }
     }
 }
