@@ -9,16 +9,18 @@ On creation, the contents of the source zip package are copied to the destinatio
 **NOTE:** The maximum size of the zip package is limited by the amount of temporary storage available to a Lambda function. At the time of this writing, this limit is 512MB.
 
 __Topics__
-* [Requires](#requires)
+* [Using](#using)
 * [Syntax](#syntax)
 * [Properties](#properties)
 * [Attributes](#attributes)
 * [Examples](#examples)
 
-## Requires
+## Using
 
 ```yaml
-Module: LambdaSharp.S3.IO:0.5-WIP
+Using:
+
+  - Module: LambdaSharp.S3.IO:0.5-WIP
 ```
 
 ## Syntax

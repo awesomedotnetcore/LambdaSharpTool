@@ -78,7 +78,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 // convert collections
                 ForEach("Pragmas", module.Pragmas, ConvertPragma);
                 ForEach("Secrets", module.Secrets, ConvertSecret);
-                ForEach("Requires", module.Requires, ConvertDependency);
+                ForEach("Using", module.Using, ConvertDependency);
                 ForEach("Items", module.Items, ConvertItem);
                 return _builder;
             } catch(Exception e) {

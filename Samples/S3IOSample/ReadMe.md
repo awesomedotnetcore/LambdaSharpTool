@@ -11,7 +11,7 @@ The `LambdaSharp.S3.IO` module contains resource type definitions to make it eas
 * `LambdaSharp::S3::WriteJson`: This resource is used to write a JSON file to an S3 bucket using information.
 * `LambdaSharp::S3::Unzip`: This resource unzips an archive into an S3 bucket.
 
-To access these additional resource types, the `LambdaSharp.S3.IO` module must be referenced in the `Requires` section of the module.
+To access these additional resource types, the `LambdaSharp.S3.IO` module must be referenced in the `Using` section of the module.
 
 ## Module Definition
 
@@ -25,10 +25,9 @@ The following module definition does the following:
 ```yaml
 Module: LambdaSharp.Sample.S3.IO
 Description: Showcase how to write files to an S3 bucket
-Requires:
+Using:
 
-  - Module: LambdaSharp.S3.IO
-    Version: 0.5
+  - Module: LambdaSharp.S3.IO:0.5-WIP
 
 Items:
 

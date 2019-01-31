@@ -1,8 +1,8 @@
 ![λ#](LambdaSharp_v2_small.png)
 
-# LambdaSharp Module - Requires
+# LambdaSharp Module - Using
 
-The `Requires` section, in the [λ# Module](Module.md), lists modules that the current module depends on. During deployment, the λ# CLI checks if the dependent modules are present. If not, it will attempt to find and deploy them, resolving their dependencies recursively.
+The `Using` section, in the [λ# Module](Module.md), lists modules that the current module uses. During deployment, the λ# CLI checks if the used modules are present. If not, it will attempt to find and deploy them, resolving their dependencies recursively.
 
 __Topics__
 * [Syntax](#syntax)
@@ -45,7 +45,7 @@ The <code>Module</code> attribute specifies the full name of the required module
 ### List the `LambdaSharp.S3.IO` module as a dependency
 
 ```yaml
-Requires:
+Using:
 
   - Module: LambdaSharp.S3.IO
 ```
@@ -53,7 +53,7 @@ Requires:
 ### List a dependency with a specific version number
 
 ```yaml
-Requires:
+Using:
 
   - Module: My.OtherModule:2.5
 ```
@@ -61,7 +61,7 @@ Requires:
 ### List a dependency with a specific version number and origin bucket
 
 ```yaml
-Requires:
+Using:
 
   - Module: My.OtherModule:2.5@SomeBucket
 ```

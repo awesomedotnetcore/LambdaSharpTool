@@ -7,16 +7,18 @@ The `LambdaSharp::S3::WriteJson` type creates a resource that writes a JSON file
 On creation and update, the <code>Contents</code> property is serialized into a JSON document and written to the S3 bucket. On deletion, the JSON document is deleted from the S3 bucket.
 
 __Topics__
-* [Requires](#requires)
+* [Using](#using)
 * [Syntax](#syntax)
 * [Properties](#properties)
 * [Attributes](#attributes)
 * [Examples](#examples)
 
-## Requires
+## Using
 
 ```yaml
-Module: LambdaSharp.S3.IO:0.5-WIP
+Using:
+
+  - Module: LambdaSharp.S3.IO:0.5-WIP
 ```
 
 ## Syntax

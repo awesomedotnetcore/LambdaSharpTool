@@ -29,8 +29,8 @@ Pragmas:
   - PragmaDefinition
 Secrets:
   - String
-Requires:
-  - RequireDefinition
+Using:
+  - UsingDefinition
 Items:
   - ItemDefinition
 ```
@@ -76,13 +76,13 @@ The <code>Pragmas</code> section specifies directives that change the default co
 <i>Type:</i> List of [Pragma Definition](Module-Pragmas.md)
 </dd>
 
-<dt><code>Requires</code></dt>
+<dt><code>Using</code></dt>
 <dd>
-The <code>Requires</code> section specifies λ# modules that are required by this module. During the build phase, the manifests of the required modules are imported to validate their parameters and attributes. During the deploy phase, the required modules are automatically deployed when missing.
+The <code>Using</code> section specifies λ# modules that are used by this module. During the build phase, the manifests of the used modules are imported to validate their parameters and attributes. During the deploy phase, the used modules are automatically deployed when missing.
 
 <i>Required:</i> No
 
-<i>Type:</i> List of [Require Definition](Module-Requires.md)
+<i>Type:</i> List of [Using Definition](Module-Requires.md)
 </dd>
 
 <dt><code>Secrets</code></dt>

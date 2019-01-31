@@ -40,7 +40,7 @@ The custom resource can then be used by other modules by using its resource type
 ```yaml
 Module: MyModule
 Description: A sample module that uses a custom resource
-Requires:
+Using:
 
     - Module: LambdaSharp.Sample.CustomResourceType
 

@@ -32,7 +32,7 @@ namespace LambdaSharp.Tool.Model.AST {
         public string Description { get; set; }
         public IList<object> Pragmas { get; set; } = new List<object>();
         public IList<string> Secrets { get; set; } = new List<string>();
-        public IList<ModuleDependencyNode> Requires { get; set; } = new List<ModuleDependencyNode>();
+        public IList<ModuleDependencyNode> Using { get; set; } = new List<ModuleDependencyNode>();
         public IList<ModuleItemNode> Items { get; set; } = new List<ModuleItemNode>();
     }
 }

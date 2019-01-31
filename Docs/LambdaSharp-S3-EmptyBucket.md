@@ -7,16 +7,18 @@ The `LambdaSharp::S3::EmptyBucket` type creates a resource that empties the atta
 On creation or update, nothing happens. On the deletion, the contents of the S3 bucket will be deleted.
 
 __Topics__
-* [Requires](#requires)
+* [Using](#using)
 * [Syntax](#syntax)
 * [Properties](#properties)
 * [Attributes](#attributes)
 * [Examples](#examples)
 
-## Requires
+## Using
 
 ```yaml
-Module: LambdaSharp.S3.IO:0.5-WIP
+Using:
+
+  - Module: LambdaSharp.S3.IO:0.5-WIP
 ```
 
 ## Syntax
