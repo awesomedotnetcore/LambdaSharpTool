@@ -334,16 +334,54 @@ The λ# CLI now prevents a module from being published again with the same versi
 
 ### Deploy Command
 
-> TODO
+The λ# CLI now uses [CloudFormation Change Sets](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-changesets.html) to deploy modules. CloudFormation change sets are the preferred way to update infrastructure as they provide an additional review mechanism for detecting unwanted changes.
 
-* Deploy Process
-    * use change-sets for deploying stacks
-    * translate custom resource types from `Custom::LambdaSharpRegisterFunction` to `LambdaSharp::Register::Function` when showing the stack update (also resource names)
-    * before deploying a module/dependency, prompt for any missing parameters
-    * option `--prompt-all` prompts for all missing parameters, including those with default values
-    * option `--prompts-as-errors` causes any prompt to be reported as an error instead
+In addition, the λ# CLI now prompts for missing module parameters before creating or updating the CloudFormation stack. This includes parameters required by modules referenced in the `Using` section. If the module was deployed previously, the λ# CLI will only prompt for parameters that were not set previously. Furthermore, the `--parameters` option can be used to supply parameter values for the module being deployed. Parameters with default values are not prompted unless the `--prompt-all` option is used.
+
+Having an interactive prompt in a CI/CD setup is about the worst thing that can happen. To avoid this scenario, use the `--prompts-as-errors` option to convert prompts into reported errors instead. This is another way to catch early that something is amiss before anything happens.
+
+The following example shows the deployment of the `Demos/TwitterNotifier` module:
+```
+LambdaSharp CLI (v0.5) - Deploy LambdaSharp module
+Readying module for deployment tier 'Sandbox'
+
+Compiling module: Demos\TwitterNotifier\Module.yml
+=> Building function Notify [netcoreapp2.1, Release]
+=> Module compilation done: C:\LambdaSharpTool\Demos\TwitterNotifier\bin\cloudformation.json
+Publishing module: LambdaSharp.Demo.TwitterNotifier
+=> No changes found to publish
+Resolving module reference: s3://lambdasharp-bucket-name/LambdaSharp/Modules/Demo.TwitterNotifier/Versions/1.0-DEV/cloudformation.json
+=> Validating module for deployment tier
+
+Configuration for LambdaSharp.Demo.TwitterNotifier (v1.0-DEV)
+*** TWITTER SETTINGS ***
+|=> TwitterApiKey [Secret]: API Key: AQICAHiCs...wn7WieBEC
+|=> TwitterApiSecretKey [Secret]: API Secret Key: AQICAHiCs...BNOJIrKzo
+|=> TwitterQuery [String]: Search query: LambdaSharp
+
+Deploying stack: Sandbox-LambdaSharp-Demo-TwitterNotifier [LambdaSharp.Demo.TwitterNotifier:1.0-DEV]
+=> Stack create initiated for Sandbox-LambdaSharp-Demo-TwitterNotifier [CAPABILITY_NAMED_IAM, CAPABILITY_AUTO_EXPAND]
+REVIEW_IN_PROGRESS                  AWS::CloudFormation::Stack                              Sandbox-LambdaSharp-Demo-TwitterNotifier (User Initiated)
+CREATE_IN_PROGRESS                  AWS::CloudFormation::Stack                              Sandbox-LambdaSharp-Demo-TwitterNotifier (User Initiated)
+CREATE_IN_PROGRESS                  AWS::CloudFormation::Stack                              TwitterNotify
+CREATE_IN_PROGRESS                  LambdaSharp::Registration::Module                       Module::Registration
+...
+CREATE_IN_PROGRESS                  AWS::Logs::SubscriptionFilter                           Notify::LogGroupSubscription (Resource creation Initiated)
+CREATE_COMPLETE                     AWS::Logs::SubscriptionFilter                           Notify::LogGroupSubscription
+CREATE_COMPLETE                     AWS::Lambda::Permission                                 Notify::Source1Permission
+CREATE_COMPLETE                     AWS::CloudFormation::Stack                              Sandbox-LambdaSharp-Demo-TwitterNotifier
+=> Stack create finished
+Stack output values:
+=> Module: LambdaSharp.Demo.TwitterNotifier:1.0-DEV
+
+Done (finished: 2/1/2019 2:19:28 PM; duration: 00:04:36.2478253)
+```
+
+A small, aesthetic win is that the λ# CLI uses the manifest to translate the resource names from their logical ID to their module definition name. Similarly, custom resource types are translated to their actual names. For example, update to resources of type `Custom::LambdaSharpRegisterFunction` are shown as `LambdaSharp::Register::Function` instead.
 
 ### Config Command
+
+> TODO
 
 * `config` command
     * now has the option to set a specific bucket name
