@@ -27,6 +27,7 @@ using System.Text;
 using System.Threading.Tasks;
 using McMaster.Extensions.CommandLineUtils;
 using LambdaSharp.Tool.Cli.Build;
+using LambdaSharp.Tool.Model;
 
 namespace LambdaSharp.Tool.Cli {
 
@@ -36,7 +37,7 @@ namespace LambdaSharp.Tool.Cli {
         public void Register(CommandLineApplication app) {
             app.Command("new", cmd => {
                 cmd.HelpOption();
-                cmd.Description = "Create new LambdaSharp module or function";
+                cmd.Description = "Create new LambdaSharp module, function, or resource";
 
                 // function sub-command
                 cmd.Command("function", subCmd => {
@@ -52,7 +53,7 @@ namespace LambdaSharp.Tool.Cli {
                     inputFileOption.ShowInHelpText = false;
                     var useProjectReferenceOption = subCmd.Option("--use-project-reference", "(optional) Reference LambdaSharp libraries using a project reference (default behavior when LAMBDASHARP environment variable is set)", CommandOptionType.NoValue);
                     var useNugetReferenceOption = subCmd.Option("--use-nuget-reference", "(optional) Reference LambdaSharp libraries using nuget references", CommandOptionType.NoValue);
-                    var cmdArgument = subCmd.Argument("<NAME>", "Name of new project (e.g. MyFunction)");
+                    var nameArgument = subCmd.Argument("<NAME>", "Name of new project (e.g. MyFunction)");
                     subCmd.OnExecute(() => {
                         Console.WriteLine($"{app.FullName} - {cmd.Description}");
                         var lambdasharpDirectory = Environment.GetEnvironmentVariable("LAMBDASHARP");
@@ -83,8 +84,8 @@ namespace LambdaSharp.Tool.Cli {
 
                         // determine function name
                         string functionName;
-                        if(cmdArgument.Values.Any()) {
-                            functionName = cmdArgument.Values.First();
+                        if(nameArgument.Values.Any()) {
+                            functionName = nameArgument.Value;
                         } else {
                             AddError("missing function name argument");
                             return;
@@ -114,18 +115,18 @@ namespace LambdaSharp.Tool.Cli {
                     var nameOption = subCmd.Option("--name|-n <NAME>", "Name of new module (e.g. My.NewModule)", CommandOptionType.SingleValue);
                     nameOption.ShowInHelpText = false;
                     var directoryOption = subCmd.Option("--working-directory|-wd <PATH>", "(optional) New module directory (default: current directory)", CommandOptionType.SingleValue);
-                    var cmdArgument = subCmd.Argument("<NAME>", "Name of new module (e.g. My.NewModule)");
+                    var nameArgument = subCmd.Argument("<NAME>", "Name of new module (e.g. My.NewModule)");
                     subCmd.OnExecute(() => {
                         Console.WriteLine($"{app.FullName} - {cmd.Description}");
-                        if(cmdArgument.Values.Any() && nameOption.HasValue()) {
+                        if(nameArgument.Values.Any() && nameOption.HasValue()) {
                             AddError("cannot specify --name and an argument at the same time");
                             return;
                         }
                         string moduleName;
                         if(nameOption.HasValue()) {
                             moduleName = nameOption.Value();
-                        } else if(cmdArgument.Values.Any()) {
-                            moduleName = cmdArgument.Values.First();
+                        } else if(nameArgument.Values.Any()) {
+                            moduleName = nameArgument.Value;
                         } else {
                             AddError("missing module name argument");
                             return;
@@ -138,6 +139,32 @@ namespace LambdaSharp.Tool.Cli {
                         NewModule(
                             moduleName,
                             Path.GetFullPath(directoryOption.Value() ?? Directory.GetCurrentDirectory())
+                        );
+                    });
+                });
+
+                // resource sub-command
+                cmd.Command("resource", subCmd => {
+                    subCmd.HelpOption();
+                    subCmd.Description = "Create new LambdaSharp resource definition";
+                    var nameArgument = subCmd.Argument("<NAME>", "Name of new resource (e.g. MyResource)");
+                    var typeArgument = subCmd.Argument("<TYPE>", "AWS resource type (e.g. AWS::SNS::Topic)");
+
+                    // sub-command options
+                    subCmd.OnExecute(() => {
+                        Console.WriteLine($"{app.FullName} - {cmd.Description}");
+                        if(!nameArgument.Values.Any()) {
+                            AddError("missing resource name");
+                            return;
+                        }
+                        if(!typeArgument.Values.Any()) {
+                            AddError("missing resource type");
+                            return;
+                        }
+                        NewResource(
+                            moduleFile: Path.Combine(Directory.GetCurrentDirectory(), "Module.yml"),
+                            resourceName: nameArgument.Value,
+                            resourceTypeName: typeArgument.Value
                         );
                     });
                 });
@@ -249,7 +276,7 @@ namespace LambdaSharp.Tool.Cli {
             // insert function definition
             InsertModuleItemsLines(moduleFile, new[] {
                 $"  - Function: {functionName}",
-                $"    Description: TODO - update {functionName} description",
+                $"    Description: TODO - update function description",
                 $"    Memory: {functionMemory}",
                 $"    Timeout: {functionTimeout}"
             });
@@ -329,7 +356,104 @@ namespace LambdaSharp.Tool.Cli {
             }
         }
 
-        public void InsertModuleItemsLines(string moduleFile, IEnumerable<string> lines) {
+        public void NewResource(string moduleFile, string resourceName, string resourceTypeName) {
+            if(!ResourceMapping.CloudformationSpec.ResourceTypes.TryGetValue(resourceTypeName, out ResourceType resourceType)) {
+                AddError($"unknown resource type '{resourceTypeName}'");
+                return;
+            }
+
+            // create resource definition
+            var types = new HashSet<string>();
+            var lines = new List<string>();
+            lines.Add($"  - Resource: {resourceName}");
+            lines.Add($"    Description: TODO - update resource description");
+            lines.Add($"    Scope: [ ]");
+            lines.Add($"    Type: {resourceTypeName}");
+            lines.Add($"    Allow: [ ]");
+            lines.Add($"    Properties:");
+            WriteResourceProperties(resourceTypeName, resourceType, 3, startList: false);
+            InsertModuleItemsLines(moduleFile, lines);
+            Console.WriteLine($"Added resource '{resourceName}' [{resourceTypeName}]");
+
+            // local functions
+            void WriteResourceProperties(string currentTypeName, ResourceType currentType, int indentation, bool startList) {
+
+                // check for recursion since some types are recursive (e.g. AWS::EMR::Cluster)
+                if(types.Contains(currentTypeName)) {
+                    AddLine($"{currentTypeName} # Recursive");
+                    return;
+                }
+                types.Add(currentTypeName);
+                foreach(var entry in currentType.Properties.OrderBy(kv => kv.Key)) {
+                    var property = entry.Value;
+                    var line = $"{entry.Key}:";
+                    if(property.PrimitiveType != null) {
+                        line += $" {property.PrimitiveType}";
+                    }
+                    if(property.Required) {
+                        line += " # Required";
+                    }
+                    AddLine(line);
+                    ++indentation;
+                    switch(property.Type) {
+                    case null:
+                        break;
+                    case "List":
+                        if(property.PrimitiveItemType != null) {
+                            AddLine($"- {property.PrimitiveItemType}");
+                        } else if(TryGetType(property.ItemType, out ResourceType nestedListType)) {
+                            WriteResourceProperties(property.ItemType, nestedListType, indentation + 1, startList: true);
+                        } else {
+                            AddError($"could not find property type '{resourceTypeName}.{property.ItemType}'");
+                        }
+                        break;
+                    case "Map":
+                        if(property.PrimitiveItemType != null) {
+                            AddLine($"String: {property.PrimitiveItemType}");
+                        } else if(TryGetType(property.ItemType, out ResourceType nestedMapType)) {
+                            AddLine($"String:");
+                            WriteResourceProperties(property.ItemType, nestedMapType, indentation + 2, startList: true);
+                        } else {
+                            AddError($"could not find property type '{resourceTypeName}.{property.ItemType}'");
+                        }
+                        break;
+                    default:
+                        if(TryGetType(property.Type, out ResourceType nestedType)) {
+                            WriteResourceProperties(property.Type, nestedType, indentation, startList: false);
+                        } else {
+                            AddError($"could not find property type '{resourceTypeName}.{property.Type}'");
+                        }
+                        break;
+                    }
+                    --indentation;
+                }
+                types.Remove(currentTypeName);
+
+                // local functions
+                string Indent(int count) => new string(' ', count * 2);
+
+                bool TryGetType(string typeName, out ResourceType type)
+                    => ResourceMapping.CloudformationSpec.PropertyTypes.TryGetValue(typeName, out type)
+                        || ResourceMapping.CloudformationSpec.PropertyTypes.TryGetValue(resourceTypeName + "." + typeName, out type);
+
+                void AddLine(string line) {
+                    if(startList) {
+                        lines.Add(Indent(indentation - 1) + "- " + line);
+                        startList = false;
+                    } else {
+                        lines.Add(Indent(indentation) + line);
+                    }
+                }
+            }
+        }
+
+        private void InsertModuleItemsLines(string moduleFile, IEnumerable<string> lines) {
+
+            // parse yaml module definition
+            if(!File.Exists(moduleFile)) {
+                AddError($"could not find module '{moduleFile}'");
+                return;
+            }
 
             // update YAML module definition
             var moduleLines = File.ReadAllLines(moduleFile).ToList();

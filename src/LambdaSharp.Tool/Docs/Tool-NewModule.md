@@ -32,7 +32,7 @@ dotnet lash new module My.NewModule
 
 Output:
 ```
-LambdaSharp CLI (v0.5) - Create new LambdaSharp module or function
+LambdaSharp CLI (v0.5) - Create new LambdaSharp module, function, or resource
 Created module definition: Module.yml
 
 Done (finished: 1/18/2019 1:13:58 PM; duration: 00:00:00.0143553)

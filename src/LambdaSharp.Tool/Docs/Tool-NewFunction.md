@@ -47,7 +47,7 @@ dotnet lash new function MyNewFunction
 
 Output:
 ```
-LambdaSharp CLI (v0.5) - Create new LambdaSharp module or function
+LambdaSharp CLI (v0.5) - Create new LambdaSharp module, function, or resource
 Created project file: MyNewFunction\MyNewFunction.csproj
 Created function file: MyNewFunction\Function.cs
 

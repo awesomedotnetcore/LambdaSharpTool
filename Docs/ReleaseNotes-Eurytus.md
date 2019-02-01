@@ -338,13 +338,17 @@ The next example shows a definition of a `Mapping` item and its use:
     * set bucket policy to allow serverless-repo to access the contents
     * prompt for parameters when missing (computes delta of old and new cloudformation template)
 
-#### Util Command
+### New Command
+
+* `new resource`
+
+### Util Command
 
 * expose `util` commands
 * added `util delete-orphan-lambda-logs` command to delete orphaned Lambda log groups
 
 
-#### Misc
+### Misc
 
 * `ModuleCloudWatchLogsRole` is defined once in base module and then re-used by all modules
 * show time and date when command finished

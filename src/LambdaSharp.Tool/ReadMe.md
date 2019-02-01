@@ -12,6 +12,7 @@ The λ# CLI is used to process the module definition, compile the C# projects, u
 ## Utility Commands
 1. [`new module`](Docs/Tool-NewModule.md): create a new module
 1. [`new function`](Docs/Tool-NewFunction.md): add a new function
+1. [`new resource`](Docs/Tool-NewResource.md): add a new AWS resource
 1. [`encrypt`](Docs/Tool-Encrypt.md): encrypt a value with a managed encryption key
 1. [`list`](Docs/Tool-List.md): list deployed modules
 1. [`info`](Docs/Tool-Info.md): show information about CLI setup
