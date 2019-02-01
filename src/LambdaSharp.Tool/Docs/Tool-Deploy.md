@@ -100,7 +100,7 @@ Readying module for deployment tier 'Sandbox'
 Compiling module: Module.yml
 => Building function RecordMessage [netcoreapp2.1, Release]
 => Building function SlackCommand [netcoreapp2.1, Release]
-=> Module compilation done: C:\MindTouch\LambdaSharpTool\Demos\Demo\bin\cloudformation.json
+=> Module compilation done: C:\LambdaSharpTool\Demos\Demo\bin\cloudformation.json
 Publishing module: LambdaSharp.Demo
 => Uploading asset: s3://lambdasharp-bucket-name/LambdaSharp/Modules/Demo/Assets/function_RecordMessage_8A0A4D0DA5B090BD33D779EF16FE7470.zip
 => Uploading asset: s3://lambdasharp-bucket-name/LambdaSharp/Modules/Demo/Assets/function_SlackCommand_30C238770176A7AE6955A519FC6A283A.zip

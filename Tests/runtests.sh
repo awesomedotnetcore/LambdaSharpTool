@@ -103,7 +103,8 @@ if [ -z "$1" ]; then
         ../Demos/Demo \
         ../Demos/DemoS3BucketSupscription/DemoS3Bucket \
         ../Demos/DemoS3BucketSupscription/DemoS3Subscriber \
-        ../Demos/BadModule
+        ../Demos/BadModule \
+        ../Demos/TwitterNotifiers/
 
 else
 

@@ -66,11 +66,11 @@ LambdaSharp CLI (v0.5) - Publish LambdaSharp module
 Compiling module: Module.yml
 => Building function RecordMessage [netcoreapp2.1, Release]
 => Building function SlackCommand [netcoreapp2.1, Release]
-=> Module compilation done: C:\MindTouch\LambdaSharpTool\Demos\Demo\bin\cloudformation.json
+=> Module compilation done: C:\LambdaSharpTool\Demos\Demo\bin\cloudformation.json
 Publishing module: LambdaSharp.Demo
-=> Uploading asset: s3://lambdasharptool-default-deploymentbucket-1epwlxer67jmx/LambdaSharp/Modules/Demo/Assets/function_RecordMessage_8A0A4D0DA5B090BD33D779EF16FE7470.zip
-=> Uploading asset: s3://lambdasharptool-default-deploymentbucket-1epwlxer67jmx/LambdaSharp/Modules/Demo/Assets/function_SlackCommand_30C238770176A7AE6955A519FC6A283A.zip
-=> Uploading template: s3://lambdasharptool-default-deploymentbucket-1epwlxer67jmx/LambdaSharp/Modules/Demo/Assets/cloudformation_v1.0-DEV_A556D13161D90F32959CDE5EC121B7D0.json
+=> Uploading asset: s3://lambdasharp-bucket-name/LambdaSharp/Modules/Demo/Assets/function_RecordMessage_8A0A4D0DA5B090BD33D779EF16FE7470.zip
+=> Uploading asset: s3://lambdasharp-bucket-name/LambdaSharp/Modules/Demo/Assets/function_SlackCommand_30C238770176A7AE6955A519FC6A283A.zip
+=> Uploading template: s3://lambdasharp-bucket-name/LambdaSharp/Modules/Demo/Assets/cloudformation_v1.0-DEV_A556D13161D90F32959CDE5EC121B7D0.json
 
 Done (finished: 1/18/2019 1:26:33 PM; duration: 00:00:12.9332067)
 ```
@@ -86,9 +86,9 @@ Output:
 ```
 LambdaSharp CLI (v0.5) - Publish LambdaSharp module
 Publishing module: LambdaSharp.Demo
-=> Uploading asset: s3://lambdasharptool-default-deploymentbucket-1epwlxer67jmx/LambdaSharp/Modules/Demo/Assets/function_RecordMessage_8A0A4D0DA5B090BD33D779EF16FE7470.zip
-=> Uploading asset: s3://lambdasharptool-default-deploymentbucket-1epwlxer67jmx/LambdaSharp/Modules/Demo/Assets/function_SlackCommand_30C238770176A7AE6955A519FC6A283A.zip
-=> Uploading template: s3://lambdasharptool-default-deploymentbucket-1epwlxer67jmx/LambdaSharp/Modules/Demo/Assets/cloudformation_v1.0-DEV_A556D13161D90F32959CDE5EC121B7D0.json
+=> Uploading asset: s3://lambdasharp-bucket-name/LambdaSharp/Modules/Demo/Assets/function_RecordMessage_8A0A4D0DA5B090BD33D779EF16FE7470.zip
+=> Uploading asset: s3://lambdasharp-bucket-name/LambdaSharp/Modules/Demo/Assets/function_SlackCommand_30C238770176A7AE6955A519FC6A283A.zip
+=> Uploading template: s3://lambdasharp-bucket-name/LambdaSharp/Modules/Demo/Assets/cloudformation_v1.0-DEV_A556D13161D90F32959CDE5EC121B7D0.json
 
 Done (finished: 1/18/2019 1:28:06 PM; duration: 00:00:02.9318400)
 ```
