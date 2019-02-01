@@ -303,11 +303,11 @@ The next example shows a definition of a `Mapping` item and its use:
 
 ### Build Command
 
-The λ# CLI now validates the properties of created resources and access to their attributes. This avoids common errors like missing a required property or having a simple typo in the definition. Similarly, when accessing an attribute with `!GetAtt`, the CLI checks that the attribute exists on the resource. The validation for a resource can be suppressed with the `no-type-validation` [resource pragma](Module-Pragmas.md), which is useful when new resource types, properties, or attributes become available that are not yet supported by the CLI.
+The λ# CLI now validates the properties of created resources and access to their attributes. This avoids common errors like missing a required property or having a simple typo in the definition. Similarly, when accessing an attribute with `!GetAtt`, the λ# CLI checks that the attribute exists on the resource. The validation for a resource can be suppressed with the `no-type-validation` [resource pragma](Module-Pragmas.md), which is useful when new resource types, properties, or attributes become available that are not yet supported by the λ# CLI.
 
-The manifests for modules referenced as dependencies or nested modules are now downloaded to validate their usage. Manifests contain information about module parameters, resource type definitions, and output values. This enables the CLI to validate properties and attributes on custom resource types just like with built-in AWS types. This feature can be disabled with the `--no-dependency-validation` [CLI option](../src/LambdaSharp.Tool/Docs/Tool-Build.md).
+The manifests for modules referenced as dependencies or nested modules are now downloaded to validate their usage. Manifests contain information about module parameters, resource type definitions, and output values. This enables the λ# CLI to validate properties and attributes on custom resource types just like with built-in AWS types. This feature can be disabled with the `--no-dependency-validation` [CLI option](../src/LambdaSharp.Tool/Docs/Tool-Build.md).
 
-The λ# CLI now also analyzes the usage of all parameters, resources, and variables. If a declared parameter is not used anywhere, the CLI will issue a warning to draw attention to it. This situation commonly occurs because of a missing `Scope` attribute or when a parameter is no longer needed, but its definition lingers. Internally, the analysis is also used to _garbage collect_ optional resource definitions. For example, every module has an embedded IAM Role (i.e. `Module::Role`) and API Gateway (i.e. `Module::RestApi`). However, unless these are used, the CLI will automatically remove them to optimize the produced CloudFormation template.
+The λ# CLI now also analyzes the usage of all parameters, resources, and variables. If a declared parameter is not used anywhere, the λ# CLI will issue a warning to draw attention to it. This situation commonly occurs because of a missing `Scope` attribute or when a parameter is no longer needed, but its definition lingers. Internally, the analysis is also used to _garbage collect_ optional resource definitions. For example, every module has an embedded IAM Role (i.e. `Module::Role`) and API Gateway (i.e. `Module::RestApi`). However, unless these are used, the λ# CLI will automatically remove them to optimize the produced CloudFormation template.
 
 Another benefit of analyzing expressions during the _build_ phase is the ability to inline variables into `!Sub` and `!Join` expressions. For example, the generated value for `Expression` is `"My list: First,Second,Third"`:
 ```yaml
@@ -324,19 +324,17 @@ Another benefit of analyzing expressions during the _build_ phase is the ability
   Value: !Sub "My list: ${AListOfValues}"
 ```
 
-The the introduction of `Condition` definitions also requires more careful validation of `!Ref` and `!GetAtt` expressions since these could refer to resources that may not exist during the _deploy_ phase. The CLI now provides very basic support for validating conditional references. However, because the support is basic, it can lead to false negatives. Consequently, detected violations are shown as warnings instead of errors.
+The the introduction of `Condition` definitions also requires more careful validation of `!Ref` and `!GetAtt` expressions since these could refer to resources that may not exist during the _deploy_ phase. The λ# CLI now provides very basic support for validating conditional references. However, because the support is basic, it can lead to false negatives. Consequently, detected violations are shown as warnings instead of errors.
 
 Finally, the entry point for .NET Core Lambda functions is now validated after compilation of the assembly. This avoids deploying a Lambda function that immediately fails, because the Lambda runtime was unable to located the entry point. This error usually occurs after refactoring code and forgetting to update the project file with the new namespace information. Although not a common error, it is extremely time consuming, because it occurs so late in the development process. Entry point validation can be skipped by using the `--no-assembly-validation` [CLI option](../src/LambdaSharp.Tool/Docs/Tool-Build.md) or the `no-assembly-validation` [function pragma](Module-Pragmas.md).
 
 ### Publish Command
 
-> TODO
-
-* publish/deploy/init: added `--force-publish` option
-* Publish process
-    * prevent re-publishing the same version unless the version has as suffix (i.e. pre-release)
+The λ# CLI now prevents a module from being published again with the same version number. However, this constraint is lifted for pre-release versions. A pre-release version has a suffix string, such as `1.0-DEV`. If required, the λ# CLI can be forced to overwrite an existing published module by using the  `--force-publish` option. This behavior is the building block for caching of module manifests in the future. Republishing a module with breaking changes will cause issues. However, modules with pre-release versions are never cached and are therefore safe to be republished.
 
 ### Deploy Command
+
+> TODO
 
 * Deploy Process
     * use change-sets for deploying stacks
