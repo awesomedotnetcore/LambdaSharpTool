@@ -17,18 +17,17 @@ Items:
     Description: Definition for MyNamespace::MyResource resource
     Handler: ResourceHandler
     Properties:
-      Request:
 
-        - Name: SampleInput
-          Description: SampleInput description
-          Type: String
-          Required: true
+      - Name: SampleInput
+        Description: SampleInput description
+        Type: String
+        Required: true
 
-      Response:
+    Attributes:
 
-        - Name: SampleOutput
-          Description: SampleOutput description
-          Type: String
+      - Name: SampleOutput
+        Description: SampleOutput description
+        Type: String
 
   - Function: ResourceHandler
     Description: This function is invoked by CloudFormation
