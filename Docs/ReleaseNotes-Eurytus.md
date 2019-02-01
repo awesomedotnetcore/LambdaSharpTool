@@ -1,15 +1,16 @@
-# λ# - Eurytus (v0.5) - 2018-11-28
+# λ# - Eurytus (v0.5-WIP) - 2019-01-31
 
 > Eurytus was an eminent Pythagorean philosopher. He was a disciple of Philolaus, and Diogenes Laërtius mentions him among the teachers of Plato, though this statement is very doubtful. [(Wikipedia)](https://en.wikipedia.org/wiki/Eurytus_(Pythagorean))
 
 ## What's New
 
-The objective of the λ# 0.5 _Eurytus_ release has been to streamline the iterative development process with the λ# CLI. The biggest time sink for deploying CloudFormation templates is that errors are only detected during the _deploy_ phase. Consequently, the biggest time optimization is to detect errors as early as possible. This pushes the λ# CLI into the validating compiler territory, which has always been the objective. With this release, the λ# CLI validates all properties and attributes for all AWS types. That means, if you forget to set a required property on a resource, you have a typo in the type name or an attribute, the λ# CLI will detect it before attempting to deploy the CloudFormation template.
+The objective of the λ# 0.5 _Eurytus_ release has been to streamline the iterative development process with the λ# CLI. The biggest time sink for deploying CloudFormation templates is that errors are only detected during the _deploy_ phase. Consequently, the biggest time optimization is to detect errors as early as possible. This pushes the λ# CLI into the validating compiler territory, which has always been the objective. With this release, the λ# CLI validates all properties and attributes for all AWS types. That means, if you forget to set a required property on a resource or you have a typo, the λ# CLI will detect it during the _build_ phase of the module.
 
-However, streamlining error detection on AWS types is not enough to really enhance productivity. It also needs to apply to new code in published modules. To that end, the λ# manifest has been enhanced to capture significantly mores information about custom resource types. During the _build_ phase, the λ# CLI downloads the manifest of dependent λ# modules to validate properties and attributes of custom resource types.
+Streamlining error detection would be incomplete if it did not apply to published modules as well. During the _build_ phase, the λ# CLI downloads the manifests of referenced modules and uses them to validate properties and attributes of custom resource types. Then, during the _deploy_ phase, the CLI checks for the presence of the referenced modules and automatically installs them if needed.
 
-> TODO
-Finally, λ# modules now have several capabilities that are FREAKISHLY AWESOME! `decrypt` and `finalizer`
+In addition to the CLI improvements, λ# modules have also received a few new features. Amongst them is support for `Mapping` and `Condition` definitions, which fill the void to provide complete coverage of all CloudFormation constructs. More exciting is built-in support for decrypting parameters and variables directly in CloudFormation. Also, modules now have a constructor/destructor called a `Finalizer` allowing for dynamic initialization and clean-up operations.
+
+Finally, as a bonus feature, the λ# CLI now has the utility command `util delete-orphan-lambda-logs` to delete legacy Lambda CloudWatch Logs. This feature is particularly useful for those who have been experimenting with Lambda in the past. By default, CloudWatch Logs are never deleted and keep accumulating over time, only increasing your monthly AWS bill. λ# modules are quite different. They have default retention policy of 30 days for logs and automatically delete them on tear down.
 
 __Topics__
 1. [Breaking Changes](#breaking-changes)
@@ -81,12 +82,12 @@ Module: Acme.Accounting.Reports
 
 ### Module Dependencies
 
-λ# modules now support the concept of dependencies. Required modules are listed in the `Requires` section of the module definition. Listing a module impacts both the build and deploy phases. During the build phase, the module manifests are imported to help with validation. During the deploy phase, required dependencies are checked for and deployed when missing.
+λ# modules now support the concept of dependencies. Used modules are listed in the `Using` section of the module definition. Listing a module impacts both the build and deploy phases. During the build phase, the module manifests are imported to help with validation. During the deploy phase, used dependencies are checked for and deployed when missing.
 
 In the following example, the module definition indicates that it has a dependency on `LambdaSharp.S3.IO`.
 ```yaml
 Module: Acme.MyModule
-Requires:
+Using:
 
   - Module: LambdaSharp.S3.IO
 ```
@@ -126,8 +127,17 @@ Items:
 
 ### `Secret` Type
 
-> TODO
-* `Type: Secret` parameters/variables can decrypted for resources using `!Ref SecretParameterName::Plaintext`
+`Parameter` and `Variable` definitions with encrypted values (type `Secret`) can now be decrypted by accessing a dynamically created nested item called `Plaintext`.
+
+The following example defines an encrypted parameter called `MySecretParameter`. For illustrative purposes, the variable `MyDecryptedValue` shows how easy it is to access the plaintext value. The `!Ref` expression could be used in any context where an expression can be used. Note that the module must have been granted access to the encryption key used by the encrypted value.
+
+```yaml
+- Parameter: MySecretParameter
+  Type: Secret
+
+- Variable:
+  Value: !Ref MySecretParameter::Plaintext
+```
 
 ### Module Finalizer
 
@@ -174,6 +184,8 @@ The next example shows how to set Lambda layers for a function:
 ### Nested Modules
 
 Nested modules are similar to nested CloudFormation stacks. The module reference is resolved at compile time to a CloudFormation template location. Furthermore, the λ# CLI seamlessly injects the deployment tier parameters required for deploying modules. [See `Nested` documentation](Module-Nested.md).
+
+During the _build_ phase, the λ# CLI validates that all required parameters are supplied and that the supplied parameters exist.
 
 The following example shows how to create a nested module definition and access its output values:
 ```yaml
@@ -286,47 +298,63 @@ The next example shows a definition of a `Mapping` item and its use:
 * `Topic` can now be a `!Ref` expression.
 * `Topic` source now supports `Filters` to filter on SNS notifications.
 
-> TODO
-
 
 ## New λ# CLI Features
 
-* garbage collection of optional resources and conditions
-    * issue warning if a `Parameter` is never used (but don't garbage collect it!)
-* updated manifest format, includes: resource types, macros, and outputs
-* include `git` branch information in manifest and lambda function
-* new module specification for deploying: `ModuleName[:Version][@Bucket]`
-* publish/deploy/init: added `--force-publish` option
-* files packages are not be created when functions are not compiled (both are about building assets) (i.e. dryrun)
-* `config` command
-    * now has the option to set a specific bucket name
-    * set bucket policy to allow serverless-repo to access the contents
-    * prompt for parameters when missing (computes delta of old and new cloudformation template)
+> TODO
+
+### Build Command
+
 * `--no-dependency-validation` to disable downloading of dependencies
-* added `util delete-orphan-lambda-logs` command to delete orphaned Lambda log groups
-* expose `util` commands
-* added `--git-branch` option
 * validate that function entry point exists after compiling assembly
 * comprehensive variable resolution
 * validate custom resource types using module dependencies
 * validate AWS resource names using the cloudformation json spec
 * validation of attribute in `!GetAtt` expressions
-* `ModuleCloudWatchLogsRole` is defined once in base module and then re-used by all modules
-* garbage collection generated import parameters if not used
 * warn on unused parameters
 * simplify references in `!Sub` expressions
 * validate that `!Ref` and `!GetAtt` references to conditional resources are only made from compatible, conditional resources
+* files packages are not be created when functions are not compiled (both are about building assets) (i.e. dryrun)
+
+### Publish Command
+
+* publish/deploy/init: added `--force-publish` option
+* Publish process
+    * prevent re-publishing the same version unless the version has as suffix (i.e. pre-release)
+
+### Deploy Command
+
 * Deploy Process
     * use change-sets for deploying stacks
     * translate custom resource types from `Custom::LambdaSharpRegisterFunction` to `LambdaSharp::Register::Function` when showing the stack update (also resource names)
     * before deploying a module/dependency, prompt for any missing parameters
     * option `--prompt-all` prompts for all missing parameters, including those with default values
     * option `--prompts-as-errors` causes any prompt to be reported as an error instead
-* show time and date when command finished
-* renamed `--cf-output` option to `--cfn-output`; output can now be a path, in which case the module source name is used as output json
-* Publish process
-    * prevent re-publishing the same version unless the version has as suffix (i.e. pre-release)
 
+### Config Command
+
+* `config` command
+    * now has the option to set a specific bucket name
+    * set bucket policy to allow serverless-repo to access the contents
+    * prompt for parameters when missing (computes delta of old and new cloudformation template)
+
+#### Util Command
+
+* expose `util` commands
+* added `util delete-orphan-lambda-logs` command to delete orphaned Lambda log groups
+
+
+#### Misc
+
+* `ModuleCloudWatchLogsRole` is defined once in base module and then re-used by all modules
+* show time and date when command finished
+* garbage collection generated import parameters if not used
+* garbage collection of optional resources and conditions
+    * issue warning if a `Parameter` is never used (but don't garbage collect it!)
+* updated manifest format, includes: resource types, macros, and outputs
+* include `git` branch information in manifest and lambda function
+* added `--git-branch` option
+* new module specification for deploying: `ModuleName[:Version][@Bucket]`
 
 
 ## New λ# Core Features
@@ -355,15 +383,14 @@ The next example shows a definition of a `Mapping` item and its use:
 
 ## New λ# Assembly Features
 
-* added `ALambdaFinalizerFunction` base class
-* `ALambdaCustomResourceFunction` can be invoked via SNS or directly from a custom resource
+### Class `ALambdaFinalizerFunction`
 
+This new base class was introduced for creating a module finalizer. This base class defines the proper request and response data-structures. See the [Finalizer Example](../Samples/FinalizerSample) for its use.
 
+### Class `ALambdaCustomResourceFunction`
+
+This base class was enhanced to support direct Lambda invocations and indirect SNS topic invocations. The detection of either protocol is done automatically and no additional steps are required.
 
 ## Internal Changes
 
-> TODO
-* default log retention was increased from 7 to 30 days
-
-
-
+* The default Lambda log retention period was increased from 7 to 30 days.
