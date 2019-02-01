@@ -72,7 +72,7 @@ namespace LambdaSharp.Tool.Cli {
                             return;
                         }
                         var destinationZipLocation = Path.Combine(lambdaSharpFolder, "src/LambdaSharp.Tool/Resources/CloudFormationResourceSpecification.json.gz");
-                        var destinationJsonLocation = Path.Combine(lambdaSharpFolder, "src/LambdaSharp.Tool/Docs/CloudFormationResourceSpecification.json");
+                        var destinationJsonLocation = Path.Combine(lambdaSharpFolder, "Docs/CloudFormationResourceSpecification.json");
 
                         // run command
                         await RefreshCloudFormationSpec(
@@ -112,7 +112,7 @@ namespace LambdaSharp.Tool.Cli {
             var json = JObject.Parse(text);
             json.Descendants()
                 .OfType<JProperty>()
-                .Where(attr => attr.Name == "Documentation")
+                .Where(attr => (attr.Name == "Documentation") || (attr.Name == "UpdateType"))
                 .ToList()
                 .ForEach(attr => attr.Remove());
             json = OrderFields(json);

@@ -70,7 +70,6 @@ namespace LambdaSharp.Tool.Model {
         public string PrimitiveType { get; set; }
         public bool Required { get; set; }
         public string Type { get; set; }
-        public string UpdateType { get; set; }
     }
 
     public static class ResourceMapping {
