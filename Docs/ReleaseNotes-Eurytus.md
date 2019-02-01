@@ -345,13 +345,7 @@ The following example shows the deployment of the `Demos/TwitterNotifier` module
 LambdaSharp CLI (v0.5) - Deploy LambdaSharp module
 Readying module for deployment tier 'Sandbox'
 
-Compiling module: Demos\TwitterNotifier\Module.yml
-=> Building function Notify [netcoreapp2.1, Release]
-=> Module compilation done: C:\LambdaSharpTool\Demos\TwitterNotifier\bin\cloudformation.json
-Publishing module: LambdaSharp.Demo.TwitterNotifier
-=> No changes found to publish
-Resolving module reference: s3://lambdasharp-bucket-name/LambdaSharp/Modules/Demo.TwitterNotifier/Versions/1.0-DEV/cloudformation.json
-=> Validating module for deployment tier
+...
 
 Configuration for LambdaSharp.Demo.TwitterNotifier (v1.0-DEV)
 *** TWITTER SETTINGS ***
@@ -381,35 +375,66 @@ A small, aesthetic win is that the λ# CLI uses the manifest to translate the re
 
 ### Config Command
 
-> TODO
+The λ# CLI now allows to request a specific bucket name during the `config` command instead of defaulting to a name created by CloudFormation. The created bucket now also grants permission to the [AWS Serverless Repository](https://docs.aws.amazon.com/serverlessrepo/latest/devguide/what-is-serverlessrepo.html) to access its contents, in preparation to support publishing modules to it in the future.
 
-* `config` command
-    * now has the option to set a specific bucket name
-    * set bucket policy to allow serverless-repo to access the contents
-    * prompt for parameters when missing (computes delta of old and new cloudformation template)
+Similar to the change the `deploy` command, the `config` command now prompts for new parameters when upgrading an existing configuration.
 
 ### New Command
 
-* `new resource`
+The λ# CLI now allows to add a resource definition to a module, similar to the `new function` command. The new [`new resource` command](../src/LambdaSharp.Tool/Docs/Tool-NewResource.md) take a resource name and resource type. It then appends the a skeleont definition to the `Module.yml` file where the property values indicate the type of the property and if it is required.
+
+```bash
+dotnet lash new resource MyTopic AWS::SNS::Topic
+```
+
+Appends the following resource definition to the `Module.yml` file:
+```yaml
+- Resource: MyResource
+  Description: TODO - update resource description
+  # Scope: List of functions to be given the name of the resource
+  Type: AWS::SNS::Topic
+  # Allow: Shorthand or allowed actions
+  Properties:
+    DisplayName: String
+    KmsMasterKeyId: String
+    Subscription:
+      - Endpoint: String # Required
+        Protocol: String # Required
+    TopicName: String
+```
 
 ### Util Command
 
-* expose `util` commands
-* added `util delete-orphan-lambda-logs` command to delete orphaned Lambda log groups
+The λ# CLI now has a new `util` command menu with two sub-commands.
 
+The first one is the `download-cloudformation-spec`, which is used by λ# contributors to update the built-in CloudFormation specification. It is not useful for non-contributors.
+
+The second sub-command is `delete-orphan-lambda-logs`, which deletes orphaned Lambda CloudWatch log groups. Log groups created by λ# are automatically deleted when a module is torn down. However, by default, if you have experimented with Lambda functions before, the Lambda function CloudWatch log groups are never deleted. This sub-command scans all log groups and checks if the associated Lambda function still exists. If it does not, it deletes the CloudWatch log group.
+
+Usage is straightforward. There is `--dryrun` option to have the sub-command show what it would do without affecting anything.
+```bash
+dotnet lash util delete-orphan-lambda-logs
+```
+
+The sub-command shows which CloudWatch log groups were deleted.
+```
+LambdaSharp CLI (v0.5) - Delete orphaned Lambda CloudWatch logs
+
+* deleted '/aws/lambda/MyOldFunction'
+* deleted '/aws/lambda/LifeBeforeLambdaSharpWasHardFunction'
+
+Found 2 log groups. Deleted 2. Skipped 0.
+
+Done (finished: 2/1/2019 2:57:08 PM; duration: 00:00:00.9142275)
+```
 
 ### Misc
 
-* `ModuleCloudWatchLogsRole` is defined once in base module and then re-used by all modules
-* show time and date when command finished
-* garbage collection generated import parameters if not used
-* garbage collection of optional resources and conditions
-    * issue warning if a `Parameter` is never used (but don't garbage collect it!)
-* updated manifest format, includes: resource types, macros, and outputs
-* include `git` branch information in manifest and lambda function
-* added `--git-branch` option
-* new module specification for deploying: `ModuleName[:Version][@Bucket]`
+The λ# CLI now prints a date-timestamp after each command and how long it took to run. This makes it easy to see if it was run recently and thus avoiding re-running a command in the heat of a frantic development session.
 
+The λ# CLI now captures information about the git branch during the _build_ phase in addition to the git SHA. If needed, the git branch information can also be supplied with the `--git-branch` option.
+
+> TODO
 
 ## New λ# Core Features
 
@@ -448,3 +473,4 @@ This base class was enhanced to support direct Lambda invocations and indirect S
 ## Internal Changes
 
 * The default Lambda log retention period was increased from 7 to 30 days.
+* `ModuleCloudWatchLogsRole` is defined once in base module and then re-used by all modules
