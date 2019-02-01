@@ -17,7 +17,7 @@ dotnet lash build
 <dl>
 
 <dt><code>--no-assembly-validation</code></dt>
-<dd>(optional) Disable validating LambdaSharp assembly references in function project files</dd>
+<dd>(optional) Disable validating LambdaSharp assemblies</dd>
 
 <dt><code>--no-dependency-validation</code></dt>
 <dd>(optional) Disable validating LambdaSharp module dependencies</dd>

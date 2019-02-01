@@ -7,10 +7,14 @@
 <dl>
 
 <dt><b>Asset</b></dt>
-<dd>A file that is part of the published module.</dd>
+<dd>
+A file that is part of the published module.
+</dd>
 
 <dt><b>Attribute</b></dt>
-<dd>A YAML mapping for a single value or list of values.</dd>
+<dd>
+A YAML mapping for a single value or list of values.
+</dd>
 
 <dt><b>Build Process</b></dt>
 <dd>
@@ -18,7 +22,9 @@ The process by which the λ# CLI converts the source YAML module file into a Clo
 </dd>
 
 <dt><b>Core</b></dt>
-<dd>The foundational CloudFormation template required to deploy and run modules.</dd>
+<dd>
+The foundational CloudFormation template required to deploy and run modules.
+</dd>
 
 <dt><b>Cross-Module Reference</b></dt>
 <dd>
@@ -32,19 +38,38 @@ The process by which the λ# CLI creates a CloudFormation stack from a CloudForm
 
 <dt><b>Deployment Tier</b></dt>
 <dd>
-> TODO
+A deployment tier is used to isolate deployments from each other on a single AWS account. Deployment tiers are use commonly used to segment deployment between <i>production</i>, <i>staging</i>, and <i>test</i>.
 </dd>
 
 <dt><b>Import</b></dt>
-<dd>(see <i>Cross-Module Reference</i>)</dd>
+<dd>
+(see <i>Cross-Module Reference</i>)
+</dd>
 
 <dt><b>Module Definition</b></dt>
 <dd>
 > TODO
 </dd>
 
+<dt><b>Output Value</b></dt>
+<dd>
+> TODO
+</dd>
+
+<dt><b>Resource Type</b></dt>
+<dd>
+A resource type is the definition for a custom resource. Similar to built-in AWS CloudFormation types, it provides the list of <i>properties</i> that can be set and <i>attributes</i> that can be retrieved.
+</dd>
+
 <dt><b>Package</b></dt>
-<dd>A package is a compressed zip archive of files.</dd>
+<dd>
+A package is a compressed zip archive of files.
+</dd>
+
+<dt><b>Parameter</b></dt>
+<dd>
+A parameter is a variable that is set at module deployment time. A parameter can be optional by providing a default value. A parameter can constrained by a list of values or a regular expression. See documentation about <a href="https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/parameters-section-structure.html">CloudFormation parameters</a> for more information.
+</dd>
 
 <dt><b>Publishing Process</b></dt>
 <dd>
@@ -52,16 +77,13 @@ The process by which the λ# CLI creates a CloudFormation stack from a CloudForm
 </dd>
 
 <dt><b>Section</b></dt>
-<dd>A YAML mapping for another YAML mapping.</dd>
+<dd>
+A YAML mapping for another YAML mapping.
+</dd>
 
 <dt><b>Tier</b></dt>
-<dd>(see <i>Deployment Tier</i>)</dd>
-
-
-<!-- <dt><b></b></dt>
 <dd>
-> TODO
-</dd> -->
-
+(see <i>Deployment Tier</i>)
+</dd>
 
 </dl>

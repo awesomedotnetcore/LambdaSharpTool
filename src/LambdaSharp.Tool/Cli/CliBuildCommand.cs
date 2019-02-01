@@ -46,7 +46,7 @@ namespace LambdaSharp.Tool.Cli {
 
         //--- Class Methods ---
         public static CommandOption AddSkipAssemblyValidationOption(CommandLineApplication cmd)
-            => cmd.Option("--no-assembly-validation", "(optional) Disable validating LambdaSharp assembly references in function project files", CommandOptionType.NoValue);
+            => cmd.Option("--no-assembly-validation", "(optional) Disable validating LambdaSharp assemblies", CommandOptionType.NoValue);
 
         public static CommandOption AddSkipDependencyValidationOption(CommandLineApplication cmd)
             => cmd.Option("--no-dependency-validation", "(optional) Disable validating LambdaSharp module dependencies", CommandOptionType.NoValue);
