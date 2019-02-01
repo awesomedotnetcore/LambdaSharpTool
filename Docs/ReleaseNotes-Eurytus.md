@@ -6,7 +6,7 @@
 
 The objective of the λ# 0.5 _Eurytus_ release has been to streamline the iterative development process with the λ# CLI. The biggest time sink for deploying CloudFormation templates is that errors are only detected during the _deploy_ phase. Consequently, the biggest time optimization is to detect errors as early as possible. This pushes the λ# CLI into the validating compiler territory, which has always been the objective. With this release, the λ# CLI validates all properties and attributes for all AWS types. That means, if you forget to set a required property on a resource or you have a typo, the λ# CLI will detect it during the _build_ phase of the module.
 
-Streamlining error detection would be incomplete if it did not apply to published modules as well. During the _build_ phase, the λ# CLI downloads the manifests of referenced modules and uses them to validate properties and attributes of custom resource types. Then, during the _deploy_ phase, the CLI checks for the presence of the referenced modules and automatically installs them if needed.
+Streamlining error detection would be incomplete if it did not apply to published modules as well. During the _build_ phase, the λ# CLI downloads the manifests of referenced modules and uses them to validate properties and attributes of custom resource types. Then, during the _deploy_ phase, the CLI checks for the presence of the referenced modules and automatically installs them if needed. This release includes three utility modules: `LambdaSharp.S3.IO` provides functionality for writing or deleting files from S3 buckets, `LambdaSharp.S3.Subscriber` enables Lambda functions to receive notifications from S3 buckets, and `LambdaSharp.Twitter.Query` enables Lambda functions to received notifications from Twitter queries.
 
 In addition to the CLI improvements, λ# modules have also received a few new features. Amongst them is support for `Mapping` and `Condition` definitions, which fill the void to provide complete coverage of all CloudFormation constructs. More exciting is built-in support for decrypting parameters and variables directly in CloudFormation. Also, modules now have a constructor/destructor called a `Finalizer` allowing for dynamic initialization and clean-up operations.
 
@@ -16,7 +16,7 @@ __Topics__
 1. [Breaking Changes](#breaking-changes)
 1. [New λ# Module Features](#new-λ-module-features)
 1. [New λ# CLI Features](#new-λ-cli-features)
-1. [New λ# Core Features](#new-λ-core-features)
+1. [New λ# Core Module Features](#new-λ-core-module-features)
 1. [New λ# Assembly Features](#new-λ-assembly-features)
 1. [Internal Changes](#internal-changes)
 
@@ -305,7 +305,7 @@ The next example shows a definition of a `Mapping` item and its use:
 
 The λ# CLI now validates the properties of created resources and access to their attributes. This avoids common errors like missing a required property or having a simple typo in the definition. Similarly, when accessing an attribute with `!GetAtt`, the λ# CLI checks that the attribute exists on the resource. The validation for a resource can be suppressed with the `no-type-validation` [resource pragma](Module-Pragmas.md), which is useful when new resource types, properties, or attributes become available that are not yet supported by the λ# CLI.
 
-The manifests for modules referenced as dependencies or nested modules are now downloaded to validate their usage. Manifests contain information about module parameters, resource type definitions, and output values. This enables the λ# CLI to validate properties and attributes on custom resource types just like with built-in AWS types. This feature can be disabled with the `--no-dependency-validation` [CLI option](../src/LambdaSharp.Tool/Docs/Tool-Build.md).
+The manifests for modules referenced as dependencies or nested modules are now downloaded to validate their usage. Manifests contain information about module parameters, resource type definitions, and output values. This enables the λ# CLI to validate properties and attributes on custom resource types just like with built-in AWS types. This feature can be disabled with the `--no-dependency-validation` [CLI option](../src/LambdaSharp.Tool/Docs/Tool-Build.md). The list of S3 buckets that are scanned for modules is controlled by a parameter in the AWS Systems Manager parameter store. By default, it is the deployment bucket and the lambdasharp bucket.
 
 The λ# CLI now also analyzes the usage of all parameters, resources, and variables. If a declared parameter is not used anywhere, the λ# CLI will issue a warning to draw attention to it. This situation commonly occurs because of a missing `Scope` attribute or when a parameter is no longer needed, but its definition lingers. Internally, the analysis is also used to _garbage collect_ optional resource definitions. For example, every module has an embedded IAM Role (i.e. `Module::Role`) and API Gateway (i.e. `Module::RestApi`). However, unless these are used, the λ# CLI will automatically remove them to optimize the produced CloudFormation template.
 
@@ -434,31 +434,24 @@ The λ# CLI now prints a date-timestamp after each command and how long it took 
 
 The λ# CLI now captures information about the git branch during the _build_ phase in addition to the git SHA. If needed, the git branch information can also be supplied with the `--git-branch` option.
 
-> TODO
+## New λ# Core Module Features
 
-## New λ# Core Features
+The λ# Core module provides the basic capabilities of a deployment tier and is required by every module. The λ# Core module no longer requires nested modules. Instead, additional functionality is automatically pulled in during the _deploy_ phase by the λ# CLI.
 
-* added `LambdaSharp::S3::WriteJson` resource type
-* custom resource `LambdaSharp::S3::WriteJson`
-* custom resource `LambdaSharp::S3::EmptyBucket`
-* custom resource `LambdaSharp::S3::Unzip`
-```yaml
-- Resource: WriteConfigFile
-    Type: LambdaSharp::S3::WriteFile
-    Properties:
-    Bucket: !Ref Website::Bucket
-    Key: config.json
-    Contents:
-        api:
-        invokeUrl: !Ref Api::DomainName
-        scheme: https
-```
-* LambdaSharp.S3.IO
-    * `LambdaSharp::S3::WriteJson`
-    * `LambdaSharp::S3::EmptyBucket`
-    * `LambdaSharp::S3::Unzip` only upload changed files
+### Module LambdaSharp.S3.IO
 
+This module defines three resource types for interacting with S3 buckets:
+* `LambdaSharp::S3::EmptyBucket`: empty all contents of a bucket on module tear-down
+* `LambdaSharp::S3::Unzip`: copy/update a package to an S3 bucket
+* `LambdaSharp::S3::WriteJson`: write a JSON file to an S3 bucket
 
+### Module LambdaSharp.S3.Subscriber
+
+This module provides the `LambdaSharp::S3::Subscription` resource type required for receiving S3 bucket notifications. It is automatically referenced by the λ# CLI when a Lambda function uses an S3 bucket as its event source.
+
+### Module LambdaSharp.Twitter.Query
+
+This module runs a Twitter query on a regular interval and publishes newly found tweets on an SNS topic. The [`TwitterNotifier` demo module](../Demos/TwitterNotifier/) shows how to subscribe to messages and reformat them for delivery.
 
 ## New λ# Assembly Features
 
@@ -472,5 +465,7 @@ This base class was enhanced to support direct Lambda invocations and indirect S
 
 ## Internal Changes
 
-* The default Lambda log retention period was increased from 7 to 30 days.
-* `ModuleCloudWatchLogsRole` is defined once in base module and then re-used by all modules
+There wre some additional internal changes listed here for sake of completeness:
+* The default Lambda log group retention period was increased from 7 to 30 days.
+* The `ModuleCloudWatchLogsRole` is now defined once in the λ# Core module and then re-used by all modules.
+* The `ModuleName` and `ModuleVersion` module output values have been combined into a single `Module` output value.
