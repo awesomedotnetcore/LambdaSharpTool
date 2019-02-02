@@ -55,7 +55,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "CC4389B9247E82E8F2C4854C2EFC5797"
+      "Default": "79A7D3D74E0B063F95C476D891EC63AC"
     }
   },
   "Resources": {
@@ -614,13 +614,13 @@
           }
         },
         "ResourceType": "LambdaSharp::S3::Subscription",
-        "BucketArn": {
+        "Bucket": {
           "Fn::GetAtt": [
             "MyFirstBucket",
             "Arn"
           ]
         },
-        "FunctionArn": {
+        "Function": {
           "Fn::GetAtt": [
             "MyFunction",
             "Arn"
@@ -669,13 +669,13 @@
           }
         },
         "ResourceType": "LambdaSharp::S3::Subscription",
-        "BucketArn": {
+        "Bucket": {
           "Fn::GetAtt": [
             "MySecondBucket",
             "Arn"
           ]
         },
-        "FunctionArn": {
+        "Function": {
           "Fn::GetAtt": [
             "MyFunction",
             "Arn"
@@ -962,7 +962,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "CC4389B9247E82E8F2C4854C2EFC5797",
+      "Hash": "79A7D3D74E0B063F95C476D891EC63AC",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

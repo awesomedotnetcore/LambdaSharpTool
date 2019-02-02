@@ -539,8 +539,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                             scope: null,
                             allow: null,
                             properties: new Dictionary<string, object> {
-                                ["BucketArn"] = arn,
-                                ["FunctionArn"] = FnGetAtt(function.ResourceName, "Arn"),
+                                ["Bucket"] = arn,
+                                ["Function"] = FnGetAtt(function.ResourceName, "Arn"),
                                 ["Filters"] = new List<object> {
 
                                     // TODO (2018-11-18, bjorg): we need to group filters from the same function for the same bucket
