@@ -89,7 +89,7 @@ If the argument refers to a module definition, the `deploy` command invokes the 
 
 __Using PowerShell/Bash:__
 ```bash
-dotnet lash deploy
+lash deploy
 ```
 
 Output:
@@ -132,7 +132,7 @@ Done (finished: 1/17/2019 4:12:13 PM; duration: 00:02:23.5535481)
 
 __Using PowerShell/Bash:__
 ```bash
-dotnet lash deploy Demo/bin/manifest.json
+lash deploy Demo/bin/manifest.json
 ```
 
 Output:
@@ -184,5 +184,5 @@ Secrets:
 
 __Using PowerShell/Bash:__
 ```bash
-dotnet lash deploy --inputs inputs.yml Demo
+lash deploy --inputs inputs.yml Demo
 ```

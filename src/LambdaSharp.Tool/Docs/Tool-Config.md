@@ -40,7 +40,7 @@ The `config` command is used to configure the λ# CLI. The configuration step op
 
 __Using PowerShell/Bash:__
 ```bash
-dotnet lash config
+lash config
 ```
 
 Output:
@@ -74,7 +74,7 @@ Done (finished: 1/18/2019 9:55:27 AM; duration: 00:00:42.6786101)
 
 __Using Bash:__
 ```bash
-dotnet lash config \
+lash config \
     --cli-profile Team \
     --existing-s3-bucket-name="" \
     --requested-s3-bucket-name="" \
@@ -82,7 +82,7 @@ dotnet lash config \
 ```
 __Using PowerShell:__
 ```powershell
-dotnet lash config ^
+lash config ^
     --cli-profile Team ^
     --existing-s3-bucket-name="" ^
     --requested-s3-bucket-name="" ^

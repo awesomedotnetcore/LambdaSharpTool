@@ -9,7 +9,7 @@ The `build` command compiles the module in preparation for publishing. If the mo
 The `build` command takes an optional path. The path can either refer to a module definition or a folder containing a `Module.yml` file.
 
 ```bash
-dotnet lash build
+lash build
 ```
 
 ## Options
@@ -60,7 +60,7 @@ dotnet lash build
 
 __Using PowerShell/Bash:__
 ```bash
-dotnet lash build
+lash build
 ```
 
 Output:
@@ -79,7 +79,7 @@ Done (finished: 1/17/2019 3:57:27 PM; duration: 00:00:21.2642565)
 
 __Using PowerShell/Bash:__
 ```bash
-dotnet lash build Demo
+lash build Demo
 ```
 
 Output:

@@ -25,6 +25,7 @@ __Topics__
 
 The following change may impact modules created with previous releases.
 
+
 ### Module Definition
 
 * The top-level `Module` attribute must now contain at least one period (`.`) to denote the _module owner_ and _module name_.
@@ -38,12 +39,16 @@ The following change may impact modules created with previous releases.
 * Nesting items has been limited to `Using` and `Namespace` definitions.
 * The default value for the `Version` attribute is now `1.0-DEV`.
 
+
 ### λ# Runtime
 
 * The _λ# Runtime_ has been renamed to _λ# Core_. The previous terminology caused too much confusion with the AWS Lambda runtime.
 * The λ# Core is deployed as a single module without using nested modules. This decreases the deployment time.
 
+
 ### λ# CLI
+
+The big change is to run `lash` now instead of `dotnet lash`. It's shorter and works just as well!
 
 * Build process
     * Renamed `--skip-assembly-validation` option to `--no-assembly-validation`
@@ -66,7 +71,6 @@ The following change may impact modules created with previous releases.
 * Namespaces and Classes
     * Renamed the `MindTouch.LambdaSharp` namespace to `LambdaSharp`.
     * Renamed `ALambdaEventFunction` to `ALambdaTopicFunction`.
-
 
 
 ## New λ# Module Features
@@ -384,7 +388,7 @@ Similar to the change the `deploy` command, the `config` command now prompts for
 The λ# CLI now allows to add a resource definition to a module, similar to the `new function` command. The new [`new resource` command](../src/LambdaSharp.Tool/Docs/Tool-NewResource.md) take a resource name and resource type. It then appends the a skeleont definition to the `Module.yml` file where the property values indicate the type of the property and if it is required.
 
 ```bash
-dotnet lash new resource MyTopic AWS::SNS::Topic
+lash new resource MyTopic AWS::SNS::Topic
 ```
 
 Appends the following resource definition to the `Module.yml` file:
@@ -413,7 +417,7 @@ The second sub-command is `delete-orphan-lambda-logs`, which deletes orphaned La
 
 Usage is straightforward. There is `--dryrun` option to have the sub-command show what it would do without affecting anything.
 ```bash
-dotnet lash util delete-orphan-lambda-logs
+lash util delete-orphan-lambda-logs
 ```
 
 The sub-command shows which CloudWatch log groups were deleted.

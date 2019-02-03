@@ -56,7 +56,7 @@ lash new function MyNewFunction
 
 __Using PowerShell/Bash:__
 ```bash
-dotnet lash publish
+lash publish
 ```
 
 Output:
@@ -79,7 +79,7 @@ Done (finished: 1/18/2019 1:26:33 PM; duration: 00:00:12.9332067)
 
 __Using PowerShell/Bash:__
 ```bash
-dotnet lash publish Demo/bin/cloudformation.json
+lash publish Demo/bin/cloudformation.json
 ```
 
 Output:

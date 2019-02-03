@@ -28,7 +28,7 @@ The `list` command is used to list all deployed modules on a deployment tier.
 
 __Using PowerShell/Bash:__
 ```bash
-dotnet lash list --tier Sandbox
+lash list --tier Sandbox
 ```
 
 Output:

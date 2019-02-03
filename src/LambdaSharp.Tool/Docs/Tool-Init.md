@@ -58,7 +58,7 @@ The `init` command is used to both initialize a new deployment tier and update a
 
 __Using PowerShell/Bash:__
 ```bash
-dotnet lash init --tier Sandbox
+lash init --tier Sandbox
 ```
 
 Output:

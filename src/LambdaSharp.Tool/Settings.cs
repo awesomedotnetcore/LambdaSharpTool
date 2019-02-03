@@ -56,11 +56,7 @@ namespace LambdaSharp.Tool {
     public class Settings {
 
         //--- Constants ---
-#if DEBUG
         public const string Lash = "lash";
-#else
-        public const string Lash = "dotnet lash";
-#endif
 
         //--- Class Fields ---
         public static VerboseLevel VerboseLevel = Tool.VerboseLevel.Exceptions;

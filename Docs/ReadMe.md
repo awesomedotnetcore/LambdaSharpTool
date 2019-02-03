@@ -26,7 +26,7 @@ Once installed, validate that the command works by running it.
 
 __Using PowerShell/Bash:__
 ```bash
-dotnet lash
+lash
 ```
 
 The following text should appear (or similar):
@@ -35,7 +35,7 @@ LambdaSharp CLI (v0.5)
 
 Project Home: https://github.com/LambdaSharp/LambdaSharpTool
 
-Usage: dotnet lash [options] [command]
+Usage: lash [options] [command]
 
 Options:
   -?|-h|--help  Show help information
@@ -52,7 +52,7 @@ Commands:
   publish       Publish LambdaSharp module
   util          Miscellaneous AWS utilities
 
-Run 'dotnet lash [command] --help' for more information about a command.
+Run 'lash [command] --help' for more information about a command.
 ```
 
 ## Step 2: Configure λ# CLI
@@ -61,7 +61,7 @@ The λ# CLI must be configured before it can be used. The configuration step opt
 
 __Using PowerShell/Bash:__
 ```bash
-dotnet lash config
+lash config
 ```
 
 The λ# CLI can be configured for multiple CLI profiles using the `--cli-profile` option. When omitted, the _Default_ CLI profile is assumed. The λ# CLI configuration options are stored in [AWS System Manager Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-paramstore.html), so they can be shared across teams on the same AWS account.
@@ -72,7 +72,7 @@ The λ# CLI must initialize each deployment tier (e.g. `Test`, `Stage`, `Prod`, 
 
 __Using PowerShell/Bash:__
 ```bash
-dotnet lash init --tier Sandbox
+lash init --tier Sandbox
 ```
 
 __NOTE:__ This step must to be repeated for each deployment tier (e.g. `Test`, `Stage`, `Prod`, etc.).
@@ -81,7 +81,7 @@ Run the `list` command to confirm that all λ# modules were deployed successfull
 
 __Using PowerShell/Bash:__
 ```bash
-dotnet lash list --tier Sandbox
+lash list --tier Sandbox
 ```
 
 The following text should appear (or similar):
@@ -137,7 +137,7 @@ The λ# Core module analyzes the output of all deployed functions. When an issue
 
 The λ# Core module can optionally be configured to send errors and warnings to [Rollbar](https://rollbar.com/). To enable this functionality, the λ# Core module needs the _read_ and _write_ access tokens for the account, which can be found in the _Account Settings_ page.
 
-The λ# Core module expects the access tokens to be encrypted, which can easily be done with the [`dotnet lash encrypt`](../src/LambdaSharp.Tool/Docs/Tool-Encrypt.md) command.
+The λ# Core module expects the access tokens to be encrypted, which can easily be done with the [`lash encrypt`](../src/LambdaSharp.Tool/Docs/Tool-Encrypt.md) command.
 
 |Parameter|Description|Default|
 |---|---|---|
@@ -170,4 +170,4 @@ export LAMBDASHARP=/Repos/LambdaSharpTool
 alias lash="dotnet run -p $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csproj --"
 ```
 
-__IMPORTANT:__ make sure to always use your  `lash` alias instead of the `dotnet lash` command.
+__IMPORTANT:__ make sure to always use your  `lash` alias instead of the `lash` command.

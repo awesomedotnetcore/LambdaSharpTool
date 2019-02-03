@@ -31,7 +31,7 @@ The `info` command is used to show information about the current CLI profile, λ
 
 __Using PowerShell/Bash:__
 ```bash
-dotnet lash info --tier Sandbox
+lash info --tier Sandbox
 ```
 
 Output:

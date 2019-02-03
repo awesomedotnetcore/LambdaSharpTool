@@ -12,7 +12,7 @@ The `util download-cloudformation-spec` is used by λ# contributors to download 
 
 __Using PowerShell/Bash:__
 ```bash
-dotnet lash util download-cloudformation-spec
+lash util download-cloudformation-spec
 ```
 
 Output:

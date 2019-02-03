@@ -9,7 +9,7 @@ The `new module` command is used to create a new module definition.
 The `new module` command takes a single argument that specifies the module name.
 
 ```bash
-dotnet lash new module My.NewModule
+lash new module My.NewModule
 ```
 
 ## Options
@@ -27,7 +27,7 @@ dotnet lash new module My.NewModule
 
 __Using PowerShell/Bash:__
 ```bash
-dotnet lash new module My.NewModule
+lash new module My.NewModule
 ```
 
 Output:

@@ -180,13 +180,15 @@ fi
 
 cd ../..
 unset LAMBDASHARP
+unset lash
+unalias lash
 
 
 echo "**********************"
 echo "*** .NET Tool Init ***"
 echo "**********************"
 
-dotnet lash init -V:3
+lash init -V:3
 if [ $? -ne 0 ]; then
     exit $?
 fi
@@ -199,19 +201,19 @@ echo "********************************"
 # mkdir Test$SUFFIX
 mkdir Test$SUFFIX
 cd Test$SUFFIX
-dotnet lash new module MyModule
+lash new module MyModule
 if [ $? -ne 0 ]; then
     exit $?
 fi
-dotnet lash new function MyFirstFunction
+lash new function MyFirstFunction
 if [ $? -ne 0 ]; then
     exit $?
 fi
-dotnet lash new function --language javascript MySecondFunction
+lash new function --language javascript MySecondFunction
 if [ $? -ne 0 ]; then
     exit $?
 fi
-dotnet lash deploy
+lash deploy
 if [ $? -ne 0 ]; then
     exit $?
 fi

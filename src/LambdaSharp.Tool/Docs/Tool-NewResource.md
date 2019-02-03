@@ -9,7 +9,7 @@ The `new resource` command is used to add a resource to an existing module. The 
 The `new resource` command takes two arguments: the resource name and the resource type.
 
 ```bash
-dotnet lash new resource MyResource AWS::SNS::Topic
+lash new resource MyResource AWS::SNS::Topic
 ```
 
 ## Options
@@ -22,7 +22,7 @@ The command has no options.
 
 __Using PowerShell/Bash:__
 ```bash
-dotnet lash new resource MyResource AWS::SNS::Topic
+lash new resource MyResource AWS::SNS::Topic
 ```
 
 Output:

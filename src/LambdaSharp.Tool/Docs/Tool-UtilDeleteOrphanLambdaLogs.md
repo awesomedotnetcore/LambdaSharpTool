@@ -19,7 +19,7 @@ The `util delete-orphan-lambda-logs` command is used to delete CloudWatch log gr
 
 __Using PowerShell/Bash:__
 ```bash
-dotnet lash util delete-orphan-lambda-logs
+lash util delete-orphan-lambda-logs
 ```
 
 Output:

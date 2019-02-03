@@ -42,7 +42,7 @@ lash new function MyNewFunction
 
 __Using PowerShell/Bash:__
 ```bash
-dotnet lash new function MyNewFunction
+lash new function MyNewFunction
 ```
 
 Output:
@@ -58,7 +58,7 @@ Done (finished: 1/18/2019 1:17:14 PM; duration: 00:00:00.1047835)
 
 __Using PowerShell/Bash:__
 ```bash
-dotnet lash new function --language javascript MyNewFunction
+lash new function --language javascript MyNewFunction
 ```
 
 Output:

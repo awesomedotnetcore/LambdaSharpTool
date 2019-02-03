@@ -31,7 +31,7 @@ The `encrypt` command is used to encrypt sensitive information using a managed e
 
 __Using PowerShell/Bash:__
 ```bash
-dotnet lash encrypt --tier Sandbox "My private API key"
+lash encrypt --tier Sandbox "My private API key"
 ```
 
 Output:
@@ -47,7 +47,7 @@ Done (finished: 1/18/2019 1:19:29 PM; duration: 00:00:00.9495032)
 
 __Using PowerShell/Bash:__
 ```bash
-dotnet lash encrypt --key alias/Sandbox-LambdaSharpDefaultSecretKey --tier Sandbox < api-key.txt
+lash encrypt --key alias/Sandbox-LambdaSharpDefaultSecretKey --tier Sandbox < api-key.txt
 ```
 
 Output:

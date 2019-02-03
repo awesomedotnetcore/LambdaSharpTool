@@ -18,12 +18,12 @@ dotnet tool install -g LambdaSharp.Tool
 
 Once installed, the λ# CLI needs to be configured.
 ```bash
-dotnet lash config
+lash config
 ```
 
 Finally, a deployment tier must be initialized with the λ# Core.
 ```bash
-dotnet lash init --tier Sandbox
+lash init --tier Sandbox
 ```
 
 ## Deploy a λ# Module
@@ -32,13 +32,13 @@ Creating modules with Lambda functions and deploying them only requires a few st
 
 ```bash
 # Create a new λ# module
-dotnet lash new module MySampleModule
+lash new module MySampleModule
 
 # Add a function to the λ# module
-dotnet lash new function MyFunction
+lash new function MyFunction
 
 # Deploy the λ# module
-dotnet lash deploy
+lash deploy
 ```
 
 The λ# CLI uses a YAML file to compile the C# projects, upload assets, and deploy the CloudFormation stack in one step. The YAML file describes the entire module including the inputs, outputs, variables, resources, and functions.
