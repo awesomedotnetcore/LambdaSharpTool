@@ -403,8 +403,11 @@ namespace LambdaSharp.Tool.Cli {
                         } else if(Path.GetFileName(argument) == "cloudformation.json") {
                             settings.WorkingDirectory = Path.GetDirectoryName(argument);
                             settings.OutputDirectory = settings.WorkingDirectory;
-                        } else {
+                        } else if(moduleReference.TryParseModuleDescriptor(out string _, out string _, out VersionInfo _, out string _)) {
                             moduleReference = argument;
+                        } else {
+                            AddError($"unrecognized argument: {argument}");
+                            break;
                         }
                         if(moduleSource != null) {
                             settings.WorkingDirectory = Path.GetDirectoryName(moduleSource);

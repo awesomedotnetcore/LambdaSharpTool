@@ -101,10 +101,10 @@ if [ -z "$1" ]; then
         ../Samples/SqsSample \
         ../Samples/VpcFunctionSample \
         ../Demos/Demo \
-        ../Demos/DemoS3BucketSupscription/DemoS3Bucket \
-        ../Demos/DemoS3BucketSupscription/DemoS3Subscriber \
+        ../Demos/DemoS3BucketSubscription/DemoS3Bucket \
+        ../Demos/DemoS3BucketSubscription/DemoS3Subscriber \
         ../Demos/BadModule \
-        ../Demos/TwitterNotifiers/
+        ../Demos/TwitterNotifier
 
 else
 

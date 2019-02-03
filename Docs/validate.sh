@@ -52,12 +52,12 @@ echo "********************"
 echo "*** Deploy Demos ***"
 echo "********************"
 
-# lash deploy \
-#     Demos/Demo \
-#     Demos/BadModule
-# if [ $? -ne 0 ]; then
-#     exit $?
-# fi
+lash deploy \
+    Demos/Demo \
+    Demos/BadModule
+if [ $? -ne 0 ]; then
+    exit $?
+fi
 
 # # Deploy all λ# Sample Modules
 echo "*********************"
