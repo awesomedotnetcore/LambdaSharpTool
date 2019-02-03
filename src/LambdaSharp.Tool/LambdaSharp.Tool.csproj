@@ -8,7 +8,7 @@
     <Title>MindTouch λ#</Title>
     <Description>A serverless framework for rapid application development on AWS Lambda</Description>
     <Company>MindTouch, Inc.</Company>
-    <Copyright>Copyright (C) 2018 MindTouch, Inc.</Copyright>
+    <Copyright>Copyright (C) 2018-2019 MindTouch, Inc.</Copyright>
     <Authors>Bjorg;DerekRobbins;MindTouch</Authors>
     <VersionSuffix>WIP</VersionSuffix>
     <ToolCommandName>lash</ToolCommandName>

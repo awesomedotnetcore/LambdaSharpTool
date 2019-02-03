@@ -9,7 +9,7 @@
     <Title>MindTouch λ# Slack</Title>
     <Description>A serverless framework for rapid application development of Slack integrations</Description>
     <Company>MindTouch, Inc.</Company>
-    <Copyright>Copyright (C) 2018 MindTouch, Inc.</Copyright>
+    <Copyright>Copyright (C) 2018-2019 MindTouch, Inc.</Copyright>
     <Authors>Bjorg;DerekRobbins;MindTouch</Authors>
 
     <PackageLicenseUrl>http://www.apache.org/licenses/LICENSE-2.0</PackageLicenseUrl>
