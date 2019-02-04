@@ -41,6 +41,13 @@ Items:
     AllowedPattern: .+
     ConstraintDescription: Search query must be a non-empty string
 
+  - Parameter: NotificationEmail
+    Description: This parameter sets the notification email for found tweets
+    Section: Notification Settings
+    Label: Email address to notify with found tweets
+    AllowedPattern: .+@.+
+    ConstraintDescription: Must be a valid email address
+
   - Nested: TwitterNotify
     Module: LambdaSharp.Twitter.Query:0.5-WIP
     Parameters:
@@ -53,10 +60,14 @@ Items:
     Allow: Subscribe
     Value: !GetAtt TwitterNotify.Outputs.Topic
 
-  - Resource: Topic
+  - Resource: FoundTopic
     Scope: Notify
     Type: AWS::SNS::Topic
     Allow: Publish
+    Properties:
+      Subscription:
+        - Protocol: email
+          Endpoint: !Ref NotificationEmail
 
   - Function: Notify
     Memory: 256

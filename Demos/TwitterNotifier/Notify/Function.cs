@@ -67,7 +67,7 @@ namespace LambdaSharp.Demo.TwitterNotifier.Notify {
 
             // initialize SNS client
             _snsClient = new AmazonSimpleNotificationServiceClient();
-            _notificationTopic = config.ReadText("Topic");
+            _notificationTopic = config.ReadText("FoundTopic");
         }
 
         public override async Task ProcessMessageAsync(Tweet tweet, ILambdaContext context) {
