@@ -140,8 +140,8 @@ namespace LambdaSharp.Tool.Cli {
                         return;
                     }
                     if(existingVersion < Version) {
-                        Console.WriteLine($"LambdaSharp CLI configuration appears to be out of date: (v{existingVersion})");
-                        var upgrade = Prompt.GetYesNo("|=> Do you want to upgrade?", false);
+                        Console.WriteLine($"LambdaSharp CLI configuration appears to be out of date");
+                        var upgrade = Prompt.GetYesNo($"|=> Do you want to upgrade LambdaSharp CLI profile for '{settings.ToolProfile}' from v{existingVersion} to v{Version}?", false);
                         if(!upgrade) {
                             return;
                         }
