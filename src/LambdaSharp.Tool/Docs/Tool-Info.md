@@ -14,7 +14,7 @@ The `info` command is used to show information about the current CLI profile, λ
 <dt><code>--tier|-T &lt;NAME&gt;</code></dt>
 <dd>(optional) Name of deployment tier (default: <code>LAMBDASHARP_TIER</code> environment variable)</dd>
 
-<dt><code>--cli-profile|-CLI &lt;NAME&gt;</code></dt>
+<dt><code>--cli-profile|-C &lt;NAME&gt;</code></dt>
 <dd>(optional) Use a specific LambdaSharp CLI profile (default: Default)</dd>
 
 <dt><code>--aws-profile|-P &lt;NAME&gt;</code></dt>
@@ -42,7 +42,9 @@ LambdaSharp CLI
     Version: 0.5
     Module Deployment S3 Bucket: lambdasharp-bucket-name
     Deployment Notifications Topic: arn:aws:sns:us-east-1:************:LambdaSharpTool-Sandbox-DeploymentNotificationTopicResource-QMM6DIP3K4N4
-    Module S3 Buckets: lambdasharp-bucket-name, lambdasharp-${AWS::Region}
+    Module S3 Buckets:
+        - lambdasharp-bucket-name
+        - lambdasharp-us-east-1
 LambdaSharp Deployment Tier
     Name: Sandbox
     Core Version: 0.5

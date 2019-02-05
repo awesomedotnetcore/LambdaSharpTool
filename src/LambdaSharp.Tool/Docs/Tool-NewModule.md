@@ -16,7 +16,7 @@ lash new module My.NewModule
 
 <dl>
 
-<dt><code>--working-directory|-wd &lt;PATH&gt;</code></dt>
+<dt><code>--working-directory &lt;PATH&gt;</code></dt>
 <dd>(optional) New module directory (default: current directory)</dd>
 
 </dl>

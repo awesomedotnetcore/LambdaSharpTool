@@ -16,10 +16,10 @@ lash new function MyNewFunction
 
 <dl>
 
-<dt><code>--namespace|-ns &lt;VALUE&gt;</code></dt>
+<dt><code>--namespace &lt;VALUE&gt;</code></dt>
 <dd>(optional) Root namespace for project (default: same as function name)</dd>
 
-<dt><code>--working-directory|-wd &lt;VALUE&gt;</code></dt>
+<dt><code>--working-directory &lt;VALUE&gt;</code></dt>
 <dd>(optional) New function project parent directory (default: current directory)</dd>
 
 <dt><code>--framework|-f &lt;VALUE&gt;</code></dt>

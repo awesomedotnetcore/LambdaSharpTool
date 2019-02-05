@@ -72,7 +72,7 @@ If the argument refers to a module definition, the `deploy` command invokes the 
 <dt><code>--tier|-T &lt;NAME&gt;</code></dt>
 <dd>(optional) Name of deployment tier (default: <code>LAMBDASHARP_TIER</code> environment variable)</dd>
 
-<dt><code>--cli-profile|-CLI &lt;NAME&gt;</code></dt>
+<dt><code>--cli-profile|-C &lt;NAME&gt;</code></dt>
 <dd>(optional) Use a specific LambdaSharp CLI profile (default: Default)</dd>
 
 <dt><code>--aws-profile|-P &lt;NAME&gt;</code></dt>

@@ -107,7 +107,7 @@ namespace LambdaSharp.Tool.Cli {
             if(requireDeploymentTier) {
                 tierOption = AddTierOption(cmd);
             }
-            var toolProfileOption = cmd.Option("--cli-profile|-CLI <NAME>", "(optional) Use a specific LambdaSharp CLI profile (default: Default)", CommandOptionType.SingleValue);
+            var toolProfileOption = cmd.Option("--cli-profile|-C <NAME>", "(optional) Use a specific LambdaSharp CLI profile (default: Default)", CommandOptionType.SingleValue);
             if(requireAwsProfile) {
                 awsProfileOption = cmd.Option("--aws-profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
             }
@@ -260,7 +260,10 @@ namespace LambdaSharp.Tool.Cli {
                     if(settings.ModuleBucketNames == null) {
                         var searchBucketNames = GetLambdaSharpToolSetting("ModuleBucketNames");
                         if(searchBucketNames != null) {
-                            settings.ModuleBucketNames = searchBucketNames.Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries).ToArray();
+                            settings.ModuleBucketNames = searchBucketNames
+                                .Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                                .Select(name => name.Replace("${AWS::Region}", settings.AwsRegion))
+                                .ToArray();
                         }
                     }
 

@@ -41,7 +41,7 @@ The `init` command is used to both initialize a new deployment tier and update a
 <dt><code>--tier|-T &lt;NAME&gt;</code></dt>
 <dd>(optional) Name of deployment tier (default: <code>LAMBDASHARP_TIER</code> environment variable)</dd>
 
-<dt><code>--cli-profile|-CLI &lt;NAME&gt;</code></dt>
+<dt><code>--cli-profile|-C &lt;NAME&gt;</code></dt>
 <dd>(optional) Use a specific LambdaSharp CLI profile (default: Default)</dd>
 
 <dt><code>--aws-profile|-P &lt;NAME&gt;</code></dt>

@@ -43,7 +43,7 @@ lash build
 <dt><code>--dryrun[:&lt;LEVEL&gt;]</code></dt>
 <dd>(optional) Generate output assets without deploying (0=everything, 1=cloudformation)</dd>
 
-<dt><code>--cli-profile|-CLI &lt;NAME&gt;</code></dt>
+<dt><code>--cli-profile|-C &lt;NAME&gt;</code></dt>
 <dd>(optional) Use a specific LambdaSharp CLI profile (default: Default)</dd>
 
 <dt><code>--aws-profile|-P &lt;NAME&gt;</code></dt>
