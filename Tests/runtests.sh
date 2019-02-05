@@ -100,7 +100,7 @@ if [ -z "$1" ]; then
         ../Samples/SnsSample \
         ../Samples/SqsSample \
         ../Samples/VpcFunctionSample \
-        ../Demos/Demo \
+        ../Demos/SlackTodo \
         ../Demos/DemoS3BucketSubscription/DemoS3Bucket \
         ../Demos/DemoS3BucketSubscription/DemoS3Subscriber \
         ../Demos/BadModule \

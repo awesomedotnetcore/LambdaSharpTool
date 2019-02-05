@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "LambdaSharp Demo (v1.0-DEV)",
+  "Description": "Manage a personal To-Do list from Slack (v1.0-DEV)",
   "Parameters": {
     "SlackToken": {
       "Type": "String",
@@ -60,190 +60,26 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "844FBC9DB9AB70E46C8716C82C728CA7"
+      "Default": "61F0C4A16AFE80E65B75918D0D98E283"
     }
   },
   "Resources": {
-    "MessageTable": {
+    "TaskTable": {
       "Type": "AWS::DynamoDB::Table",
       "Properties": {
         "BillingMode": "PAY_PER_REQUEST",
         "AttributeDefinitions": [
           {
-            "AttributeName": "MessageId",
+            "AttributeName": "TaskId",
             "AttributeType": "S"
           }
         ],
         "KeySchema": [
           {
-            "AttributeName": "MessageId",
+            "AttributeName": "TaskId",
             "KeyType": "HASH"
           }
         ]
-      }
-    },
-    "NotifyRecorderTopic": {
-      "Type": "AWS::SNS::Topic",
-      "Properties": {}
-    },
-    "UsagePlan": {
-      "Type": "AWS::ApiGateway::UsagePlan",
-      "Properties": {
-        "UsagePlanName": "DemoUsagePlan",
-        "ApiStages": [
-          {
-            "ApiId": {
-              "Ref": "ModuleRestApi"
-            },
-            "Stage": {
-              "Ref": "ModuleRestApiStage"
-            }
-          }
-        ],
-        "Description": "Sample usage plan for REST API",
-        "Quota": {
-          "Limit": "500",
-          "Period": "MONTH"
-        }
-      }
-    },
-    "RecordMessage": {
-      "Type": "AWS::Lambda::Function",
-      "Properties": {
-        "Code": {
-          "S3Bucket": {
-            "Ref": "DeploymentBucketName"
-          },
-          "S3Key": "LambdaSharp/Modules/Demo/Assets/RecordMessage-DRYRUN.zip"
-        },
-        "DeadLetterConfig": {
-          "TargetArn": {
-            "Fn::If": [
-              "LambdaSharpDeadLetterQueueIsImported",
-              {
-                "Fn::ImportValue": {
-                  "Fn::Sub": [
-                    "${DeploymentPrefix}${Import}",
-                    {
-                      "Import": {
-                        "Fn::Select": [
-                          "1",
-                          {
-                            "Fn::Split": [
-                              "$",
-                              {
-                                "Ref": "LambdaSharpDeadLetterQueue"
-                              }
-                            ]
-                          }
-                        ]
-                      }
-                    }
-                  ]
-                }
-              },
-              {
-                "Ref": "LambdaSharpDeadLetterQueue"
-              }
-            ]
-          }
-        },
-        "Description": "Record message in a DynamoDB table (v1.0-DEV)",
-        "Environment": {
-          "Variables": {
-            "MODULE_ID": {
-              "Ref": "AWS::StackName"
-            },
-            "MODULE_INFO": "LambdaSharp.Demo:1.0-DEV",
-            "LAMBDA_NAME": "RecordMessage",
-            "LAMBDA_RUNTIME": "dotnetcore2.1",
-            "DEADLETTERQUEUE": {
-              "Fn::If": [
-                "LambdaSharpDeadLetterQueueIsImported",
-                {
-                  "Fn::ImportValue": {
-                    "Fn::Sub": [
-                      "${DeploymentPrefix}${Import}",
-                      {
-                        "Import": {
-                          "Fn::Select": [
-                            "1",
-                            {
-                              "Fn::Split": [
-                                "$",
-                                {
-                                  "Ref": "LambdaSharpDeadLetterQueue"
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      }
-                    ]
-                  }
-                },
-                {
-                  "Ref": "LambdaSharpDeadLetterQueue"
-                }
-              ]
-            },
-            "DEFAULTSECRETKEY": {
-              "Fn::If": [
-                "LambdaSharpDefaultSecretKeyIsImported",
-                {
-                  "Fn::ImportValue": {
-                    "Fn::Sub": [
-                      "${DeploymentPrefix}${Import}",
-                      {
-                        "Import": {
-                          "Fn::Select": [
-                            "1",
-                            {
-                              "Fn::Split": [
-                                "$",
-                                {
-                                  "Ref": "LambdaSharpDefaultSecretKey"
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      }
-                    ]
-                  }
-                },
-                {
-                  "Ref": "LambdaSharpDefaultSecretKey"
-                }
-              ]
-            },
-            "STR_MESSAGETABLE": {
-              "Fn::GetAtt": [
-                "MessageTable",
-                "Arn"
-              ]
-            }
-          }
-        },
-        "Handler": "RecordMessage::LambdaSharpDemo.RecordEvents.Function::FunctionHandlerAsync",
-        "MemorySize": "128",
-        "Role": {
-          "Fn::GetAtt": [
-            "ModuleRole",
-            "Arn"
-          ]
-        },
-        "Runtime": "dotnetcore2.1",
-        "Timeout": "30"
-      }
-    },
-    "RecordMessageLogGroup": {
-      "Type": "AWS::Logs::LogGroup",
-      "Properties": {
-        "LogGroupName": {
-          "Fn::Sub": "/aws/lambda/${RecordMessage}"
-        },
-        "RetentionInDays": 30
       }
     },
     "SlackCommand": {
@@ -253,7 +89,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "LambdaSharp/Modules/Demo/Assets/SlackCommand-DRYRUN.zip"
+          "S3Key": "LambdaSharp/Modules/Demo.SlackTodo/Assets/SlackCommand-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -293,7 +129,7 @@
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharp.Demo:1.0-DEV",
+            "MODULE_INFO": "LambdaSharp.Demo.SlackTodo:1.0-DEV",
             "LAMBDA_NAME": "SlackCommand",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
@@ -359,15 +195,15 @@
             "STR_SLACKTOKEN": {
               "Ref": "SlackToken"
             },
-            "STR_MESSAGETABLE": {
+            "STR_TASKTABLE": {
               "Fn::GetAtt": [
-                "MessageTable",
+                "TaskTable",
                 "Arn"
               ]
             }
           }
         },
-        "Handler": "SlackCommand::LambdaSharpDemo.SlackCommand.Function::FunctionHandlerAsync",
+        "Handler": "SlackCommand::LambdaSharp.Demo.SlackTodo.Function::FunctionHandlerAsync",
         "MemorySize": "128",
         "Role": {
           "Fn::GetAtt": [
@@ -410,7 +246,7 @@
               "Version": "2012-10-17",
               "Statement": [
                 {
-                  "Sid": "MessageTable",
+                  "Sid": "TaskTable",
                   "Effect": "Allow",
                   "Action": [
                     "dynamodb:BatchGetItem",
@@ -429,7 +265,7 @@
                   "Resource": [
                     {
                       "Fn::GetAtt": [
-                        "MessageTable",
+                        "TaskTable",
                         "Arn"
                       ]
                     },
@@ -439,7 +275,7 @@
                         [
                           {
                             "Fn::GetAtt": [
-                              "MessageTable",
+                              "TaskTable",
                               "Arn"
                             ]
                           },
@@ -453,7 +289,7 @@
                         [
                           {
                             "Fn::GetAtt": [
-                              "MessageTable",
+                              "TaskTable",
                               "Arn"
                             ]
                           },
@@ -462,16 +298,6 @@
                       ]
                     }
                   ]
-                },
-                {
-                  "Sid": "NotifyRecorderTopic",
-                  "Effect": "Allow",
-                  "Action": [
-                    "sns:Subscribe"
-                  ],
-                  "Resource": {
-                    "Ref": "NotifyRecorderTopic"
-                  }
                 },
                 {
                   "Sid": "ModuleDeadLetterQueueLogging",
@@ -627,107 +453,9 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "LambdaSharp.Demo:1.0-DEV",
+        "Module": "LambdaSharp.Demo.SlackTodo:1.0-DEV",
         "ModuleId": {
           "Ref": "AWS::StackName"
-        }
-      }
-    },
-    "RecordMessageRegistration": {
-      "Type": "Custom::LambdaSharpRegistrationFunction",
-      "Properties": {
-        "ServiceToken": {
-          "Fn::ImportValue": {
-            "Fn::Sub": "${DeploymentPrefix}LambdaSharp::Registration::Function"
-          }
-        },
-        "ResourceType": "LambdaSharp::Registration::Function",
-        "ModuleId": {
-          "Ref": "AWS::StackName"
-        },
-        "FunctionId": {
-          "Ref": "RecordMessage"
-        },
-        "FunctionName": "RecordMessage",
-        "FunctionLogGroupName": {
-          "Fn::Sub": "/aws/lambda/${RecordMessage}"
-        },
-        "FunctionPlatform": "AWS Lambda",
-        "FunctionFramework": "dotnetcore2.1",
-        "FunctionLanguage": "csharp",
-        "FunctionMaxMemory": "128",
-        "FunctionMaxDuration": "30"
-      },
-      "DependsOn": [
-        "ModuleRegistration"
-      ]
-    },
-    "RecordMessageLogGroupSubscription": {
-      "Type": "AWS::Logs::SubscriptionFilter",
-      "Properties": {
-        "DestinationArn": {
-          "Fn::If": [
-            "LambdaSharpLoggingStreamIsImported",
-            {
-              "Fn::ImportValue": {
-                "Fn::Sub": [
-                  "${DeploymentPrefix}${Import}",
-                  {
-                    "Import": {
-                      "Fn::Select": [
-                        "1",
-                        {
-                          "Fn::Split": [
-                            "$",
-                            {
-                              "Ref": "LambdaSharpLoggingStream"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  }
-                ]
-              }
-            },
-            {
-              "Ref": "LambdaSharpLoggingStream"
-            }
-          ]
-        },
-        "FilterPattern": "-\"*** \"",
-        "LogGroupName": {
-          "Ref": "RecordMessageLogGroup"
-        },
-        "RoleArn": {
-          "Fn::If": [
-            "LambdaSharpLoggingStreamRoleIsImported",
-            {
-              "Fn::ImportValue": {
-                "Fn::Sub": [
-                  "${DeploymentPrefix}${Import}",
-                  {
-                    "Import": {
-                      "Fn::Select": [
-                        "1",
-                        {
-                          "Fn::Split": [
-                            "$",
-                            {
-                              "Ref": "LambdaSharpLoggingStreamRole"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  }
-                ]
-              }
-            },
-            {
-              "Ref": "LambdaSharpLoggingStreamRole"
-            }
-          ]
         }
       }
     },
@@ -826,37 +554,6 @@
               "Ref": "LambdaSharpLoggingStreamRole"
             }
           ]
-        }
-      }
-    },
-    "RecordMessageSource1Subscription": {
-      "Type": "AWS::SNS::Subscription",
-      "Properties": {
-        "Endpoint": {
-          "Fn::GetAtt": [
-            "RecordMessage",
-            "Arn"
-          ]
-        },
-        "Protocol": "lambda",
-        "TopicArn": {
-          "Ref": "NotifyRecorderTopic"
-        }
-      }
-    },
-    "RecordMessageSource1Permission": {
-      "Type": "AWS::Lambda::Permission",
-      "Properties": {
-        "Action": "lambda:InvokeFunction",
-        "FunctionName": {
-          "Fn::GetAtt": [
-            "RecordMessage",
-            "Arn"
-          ]
-        },
-        "Principal": "sns.amazonaws.com",
-        "SourceArn": {
-          "Ref": "NotifyRecorderTopic"
         }
       }
     },
@@ -1038,18 +735,18 @@
   },
   "Outputs": {
     "Module": {
-      "Value": "LambdaSharp.Demo:1.0-DEV"
+      "Value": "LambdaSharp.Demo.SlackTodo:1.0-DEV"
     },
-    "NotifyRecorderTopic": {
+    "SlackApiPath": {
       "Value": {
-        "Ref": "NotifyRecorderTopic"
+        "Fn::Sub": "https://${ModuleRestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/LATEST/slack"
       },
       "Export": {
         "Name": {
-          "Fn::Sub": "${AWS::StackName}::NotifyRecorderTopic"
+          "Fn::Sub": "${AWS::StackName}::SlackApiPath"
         }
       },
-      "Description": "The topic for recording messages"
+      "Description": "Slack Command URL"
     }
   },
   "Conditions": {
@@ -1279,7 +976,7 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2018-12-31",
-      "Module": "LambdaSharp.Demo:1.0-DEV",
+      "Module": "LambdaSharp.Demo.SlackTodo:1.0-DEV",
       "ParameterSections": [
         {
           "Title": "Module Settings",
@@ -1333,7 +1030,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "844FBC9DB9AB70E46C8716C82C728CA7",
+      "Hash": "61F0C4A16AFE80E65B75918D0D98E283",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
@@ -1346,22 +1043,17 @@
       ],
       "Outputs": [
         {
-          "Name": "NotifyRecorderTopic",
-          "Description": "The topic for recording messages",
-          "Type": "AWS::SNS::Topic"
+          "Name": "SlackApiPath",
+          "Description": "Slack Command URL",
+          "Type": "String"
         }
       ],
       "ResourceNameMappings": {
-        "RecordMessageLogGroup": "RecordMessage::LogGroup",
         "SlackCommandLogGroup": "SlackCommand::LogGroup",
         "ModuleRole": "Module::Role",
         "ModuleRegistration": "Module::Registration",
-        "RecordMessageRegistration": "RecordMessage::Registration",
-        "RecordMessageLogGroupSubscription": "RecordMessage::LogGroupSubscription",
         "SlackCommandRegistration": "SlackCommand::Registration",
         "SlackCommandLogGroupSubscription": "SlackCommand::LogGroupSubscription",
-        "RecordMessageSource1Subscription": "RecordMessage::Source1Subscription",
-        "RecordMessageSource1Permission": "RecordMessage::Source1Permission",
         "ModuleRestApi": "Module::RestApi",
         "ModuleRestApiSlackResource": "Module::RestApi::SlackResource",
         "ModuleRestApiSlackResourcePOST": "Module::RestApi::SlackResource::POST",

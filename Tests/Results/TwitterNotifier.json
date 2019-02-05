@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "Listen for specific tweets and convert them to formatted SNS messages that can be subscribed to (v1.0-DEV)",
+  "Description": "Listen for specific tweets and publish to an email address via SNS topic (v1.0-DEV)",
   "Parameters": {
     "TwitterApiKey": {
       "Type": "String",
@@ -15,6 +15,17 @@
       "Description": "This parameter sets the query expression for finding tweets",
       "AllowedPattern": ".+",
       "ConstraintDescription": "Search query must be a non-empty string"
+    },
+    "TwitterLanguageFilter": {
+      "Type": "String",
+      "Description": "This parameter set the language filter for tweets (empty value disables filter)",
+      "Default": "en"
+    },
+    "NotificationEmail": {
+      "Type": "String",
+      "Description": "This parameter sets the notification email for found tweets",
+      "AllowedPattern": ".+@.+",
+      "ConstraintDescription": "Must be a valid email address"
     },
     "Secrets": {
       "Type": "String",
@@ -69,7 +80,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "07EB6DD16CB661EBBE2ACFAAC6018E09"
+      "Default": "0A0163211F098262A563A5C719880DAB"
     }
   },
   "Resources": {
@@ -228,9 +239,18 @@
         "TimeoutInMinutes": 5
       }
     },
-    "Topic": {
+    "FoundTopic": {
       "Type": "AWS::SNS::Topic",
-      "Properties": {}
+      "Properties": {
+        "Subscription": [
+          {
+            "Protocol": "email",
+            "Endpoint": {
+              "Ref": "NotificationEmail"
+            }
+          }
+        ]
+      }
     },
     "Notify": {
       "Type": "AWS::Lambda::Function",
@@ -344,8 +364,11 @@
             "STR_TWITTERQUERY": {
               "Ref": "TwitterQuery"
             },
-            "STR_TOPIC": {
-              "Ref": "Topic"
+            "STR_TWITTERLANGUAGEFILTER": {
+              "Ref": "TwitterLanguageFilter"
+            },
+            "STR_FOUNDTOPIC": {
+              "Ref": "FoundTopic"
             }
           }
         },
@@ -405,13 +428,13 @@
                   }
                 },
                 {
-                  "Sid": "Topic",
+                  "Sid": "FoundTopic",
                   "Effect": "Allow",
                   "Action": [
                     "sns:Publish"
                   ],
                   "Resource": {
-                    "Ref": "Topic"
+                    "Ref": "FoundTopic"
                   }
                 },
                 {
@@ -873,6 +896,12 @@
         "TwitterQuery": {
           "default": "Search query [String]"
         },
+        "TwitterLanguageFilter": {
+          "default": "ISO Language filter [String]"
+        },
+        "NotificationEmail": {
+          "default": "Email address to notify with found tweets [String]"
+        },
         "Secrets": {
           "default": "Comma-separated list of optional secret keys [String]"
         },
@@ -912,7 +941,16 @@
           "Parameters": [
             "TwitterApiKey",
             "TwitterApiSecretKey",
-            "TwitterQuery"
+            "TwitterQuery",
+            "TwitterLanguageFilter"
+          ]
+        },
+        {
+          "Label": {
+            "default": "Notification Settings"
+          },
+          "Parameters": [
+            "NotificationEmail"
           ]
         },
         {
@@ -969,6 +1007,22 @@
               "Name": "TwitterQuery",
               "Type": "String",
               "Label": "Search query"
+            },
+            {
+              "Name": "TwitterLanguageFilter",
+              "Type": "String",
+              "Label": "ISO Language filter",
+              "Default": "en"
+            }
+          ]
+        },
+        {
+          "Title": "Notification Settings",
+          "Parameters": [
+            {
+              "Name": "NotificationEmail",
+              "Type": "String",
+              "Label": "Email address to notify with found tweets"
             }
           ]
         },
@@ -1014,7 +1068,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "07EB6DD16CB661EBBE2ACFAAC6018E09",
+      "Hash": "0A0163211F098262A563A5C719880DAB",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
