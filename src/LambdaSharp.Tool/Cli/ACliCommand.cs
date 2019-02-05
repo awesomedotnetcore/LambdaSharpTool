@@ -227,7 +227,7 @@ namespace LambdaSharp.Tool.Cli {
             }
         failed:
             var pairs = Enum.GetValues(typeof(T)).Cast<int>().Zip(Enum.GetNames(typeof(T)).Cast<string>(), (value, name) => $"{value}={name.ToLowerInvariant()}");
-            AddError($"value for {option.Template} must be one of {string.Join(", ", pairs)}");
+            AddError($"value for {option.LongName} must be one of {string.Join(", ", pairs)}");
             result = defaultvalue;
             return false;
         }
