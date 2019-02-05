@@ -17,8 +17,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-Module: LambdaSharp.Demo
-Description: LambdaSharp Demo
+Module: LambdaSharp.Demo.SlackTodo
+Description: Manage a personal To-Do list from Slack
 Items:
 
   - Parameter: SlackToken
@@ -26,45 +26,24 @@ Items:
     Scope: SlackCommand
     Default: ""
 
-  - Resource: MessageTable
-    Description: DynamoDB table for storing received messages
-    Scope: "*"
+  - Variable: SlackApiPath
+    Description: Slack Command URL
+    Scope: public
+    Value: !Sub "${Module::RestApi::Url}/slack"
+
+  - Resource: TaskTable
+    Description: DynamoDB table for storing tasks
+    Scope: SlackCommand
     Type: AWS::DynamoDB::Table
     Allow: ReadWrite
     Properties:
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
-        - AttributeName: MessageId
+        - AttributeName: TaskId
           AttributeType: S
       KeySchema:
-        - AttributeName: MessageId
+        - AttributeName: TaskId
           KeyType: HASH
-
-  - Resource: NotifyRecorderTopic
-    Description: The topic for recording messages
-    Scope: public
-    Type: AWS::SNS::Topic
-    Allow: Subscribe
-
-  - Resource: UsagePlan
-    Description: Limit usage for REST API
-    Type: AWS::ApiGateway::UsagePlan
-    Properties:
-      UsagePlanName: DemoUsagePlan
-      ApiStages:
-        - ApiId: !Ref Module::RestApi
-          Stage: !Ref Module::RestApi::Stage
-      Description: Sample usage plan for REST API
-      Quota:
-        Limit: 500
-        Period: MONTH
-
-  - Function: RecordMessage
-    Description: Record message in a DynamoDB table
-    Memory: 128
-    Timeout: 30
-    Sources:
-      - Topic: NotifyRecorderTopic
 
   - Function: SlackCommand
     Description: Respond to slack commands
