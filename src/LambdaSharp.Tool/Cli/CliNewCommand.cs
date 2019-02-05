@@ -134,7 +134,7 @@ namespace LambdaSharp.Tool.Cli {
 
                         // prepend default owner string
                         if(!moduleName.Contains('.')) {
-                            moduleName = "Owner." + moduleName;
+                            moduleName = "My." + moduleName;
                         }
                         NewModule(
                             moduleName,

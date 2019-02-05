@@ -200,7 +200,12 @@ namespace LambdaSharp.Tool.Cli.Deploy {
             if(outputs.Any()) {
                 Console.WriteLine("Stack output values:");
                 foreach(var output in outputs.OrderBy(output => output.OutputKey)) {
-                    Console.WriteLine($"=> {output.Description ?? output.OutputKey}: {output.OutputValue}");
+                    var line = $"=> {output.OutputKey}";
+                    if(!string.IsNullOrEmpty(output.Description)) {
+                        line += $": {output.Description}";
+                    }
+                    line += $" = {output.OutputValue}";
+                    Console.WriteLine(line);
                 }
             }
         }

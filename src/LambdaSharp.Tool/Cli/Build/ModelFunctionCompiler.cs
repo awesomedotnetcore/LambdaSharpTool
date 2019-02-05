@@ -104,7 +104,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                         description: "Module REST API URL",
                         type: "String",
                         scope: null,
-                        value: FnSub("https://${Module::RestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/LATEST/"),
+                        value: FnSub("https://${Module::RestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/LATEST"),
                         allow: null,
                         encryptionContext: null
                     );
