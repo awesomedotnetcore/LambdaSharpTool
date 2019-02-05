@@ -58,12 +58,14 @@ namespace LambdaSharp.Demo.TwitterNotifier.Notify {
 
         //--- Fields ---
         private string _twitterQuery;
+        private string _twitterLanguageFilter;
         private IAmazonSimpleNotificationService _snsClient;
         private string _notificationTopic;
 
         //--- Methods ---
         public override async Task InitializeAsync(LambdaConfig config) {
             _twitterQuery = config.ReadText("TwitterQuery");
+            _twitterLanguageFilter = config.ReadText("TwitterLanguageFilter");
 
             // initialize SNS client
             _snsClient = new AmazonSimpleNotificationServiceClient();
@@ -71,8 +73,8 @@ namespace LambdaSharp.Demo.TwitterNotifier.Notify {
         }
 
         public override async Task ProcessMessageAsync(Tweet tweet, ILambdaContext context) {
-            if(tweet.metadata.iso_language_code != "en") {
-                LogInfo($"language mismatch: {tweet.metadata.iso_language_code}");
+            if((_twitterLanguageFilter != "") && (tweet.metadata.iso_language_code != _twitterLanguageFilter)) {
+                LogInfo($"tweet language '{tweet.metadata.iso_language_code}' did not match '{_twitterLanguageFilter}'");
                 return;
             }
             await _snsClient.PublishAsync(new PublishRequest {

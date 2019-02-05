@@ -18,7 +18,7 @@
 # limitations under the License.
 
 Module: LambdaSharp.Demo.TwitterNotifier
-Description: Listen for specific tweets and convert them to formatted SNS messages that can be subscribed to
+Description: Listen for specific tweets and publish to an email address via SNS topic
 Items:
 
   - Parameter: TwitterApiKey
@@ -40,6 +40,13 @@ Items:
     Label: Search query
     AllowedPattern: .+
     ConstraintDescription: Search query must be a non-empty string
+
+  - Parameter: TwitterLanguageFilter
+    Scope: Notify
+    Description: This parameter set the language filter for tweets (empty value disables filter)
+    Section: Twitter Settings
+    Label: ISO Language filter
+    Default: en
 
   - Parameter: NotificationEmail
     Description: This parameter sets the notification email for found tweets
