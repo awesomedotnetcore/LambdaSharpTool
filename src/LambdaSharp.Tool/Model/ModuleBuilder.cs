@@ -671,6 +671,9 @@ namespace LambdaSharp.Tool.Model {
                 }
             }
 
+            // add module auto-tags
+            AutoTag(resource);
+
             // create resource
             var result = new ResourceItem(
                 parent: parent,
@@ -716,6 +719,8 @@ namespace LambdaSharp.Tool.Model {
 
             // create resource item
             var customResource = RegisterCustomResourceNameMapping(new Humidifier.CustomResource(type, properties));
+
+            // add resource
             var result = AddResource(
                 parent: parent,
                 name: name,
@@ -790,7 +795,7 @@ namespace LambdaSharp.Tool.Model {
                 MandatoryAdd("DeploymentBucketName", sourceBucketName);
                 MandatoryAdd("DeploymentPrefix", FnRef("DeploymentPrefix"));
                 MandatoryAdd("DeploymentPrefixLowercase", FnRef("DeploymentPrefixLowercase"));
-                MandatoryAdd("DeploymentParent", FnRef("AWS::StackName"));
+                MandatoryAdd("DeploymentRoot", FnRef("Module::RootId"));
             });
 
             // add stack resource
@@ -929,6 +934,9 @@ namespace LambdaSharp.Tool.Model {
             // initialize function resource from definition
             var resource = (Humidifier.Lambda.Function)ConvertJTokenToNative(JObject.FromObject(definition).ToObject<Humidifier.Lambda.Function>());
 
+            // add module auto-tags
+            AutoTag(resource);
+
             // create function item
             var function = new FunctionItem(
                 parent: parent,
@@ -1033,12 +1041,30 @@ namespace LambdaSharp.Tool.Model {
             string condition,
             IList<object> pragmas,
             string timeout,
-            string reservedConcurrency,
             string memory,
-            object subnets,
-            object securityGroups,
             string code
         ) {
+
+            // create function resource
+            var resource = new Humidifier.Lambda.Function {
+
+                // append version number to function description
+                Description = (description != null)
+                    ? description.TrimEnd() + $" (v{_version})"
+                    : null,
+                Timeout = timeout,
+                Runtime = "nodejs8.10",
+                MemorySize = memory,
+                Handler = "index.handler",
+                Role = FnGetAtt("Module::Role", "Arn"),
+                Environment = new Humidifier.Lambda.FunctionTypes.Environment {
+                    Variables = new Dictionary<string, dynamic>()
+                },
+                Code = new Humidifier.Lambda.FunctionTypes.Code {
+                    ZipFile = code
+                }
+            };
+            AutoTag(resource);
 
             // create inline function item
             var function = new FunctionItem(
@@ -1052,33 +1078,7 @@ namespace LambdaSharp.Tool.Model {
                 sources: sources ?? new AFunctionSource[0],
                 condition: condition,
                 pragmas: pragmas ?? new object[0],
-                function: new Humidifier.Lambda.Function {
-
-                    // append version number to function description
-                    Description = (description != null)
-                        ? description.TrimEnd() + $" (v{_version})"
-                        : null,
-                    Timeout = timeout,
-                    Runtime = "nodejs8.10",
-                    ReservedConcurrentExecutions = reservedConcurrency,
-                    MemorySize = memory,
-                    Handler = "index.handler",
-
-                    // create optional VPC configuration
-                    VpcConfig = ((subnets != null) && (securityGroups != null))
-                        ? new Humidifier.Lambda.FunctionTypes.VpcConfig {
-                            SubnetIds = subnets,
-                            SecurityGroupIds = securityGroups
-                        }
-                        : null,
-                    Role = FnGetAtt("Module::Role", "Arn"),
-                    Environment = new Humidifier.Lambda.FunctionTypes.Environment {
-                        Variables = new Dictionary<string, dynamic>()
-                    },
-                    Code = new Humidifier.Lambda.FunctionTypes.Code {
-                        ZipFile = code
-                    }
-                }
+                function: resource
             );
             AddItem(function);
             return function;
@@ -1289,7 +1289,7 @@ namespace LambdaSharp.Tool.Model {
                                 } else if(!(property.Value is IList nestedList)) {
                                     AddError($"property type mismatch for '{prefix + property.Key}', expected a list [{property.Value?.GetType().Name ?? "<null>"}]");
                                 } else if(propertyType.ItemType != null) {
-                                    var nestedResource = ResourceMapping.CloudformationSpec.PropertyTypes[awsType + "." + propertyType.ItemType];
+                                    ResourceMapping.TryGetPropertyItemType(awsType, propertyType.ItemType, out ResourceType nestedResource);
                                     ValidateList(prefix + property.Key + ".", nestedResource, ListToEnumerable(nestedList));
                                 } else {
 
@@ -1309,7 +1309,7 @@ namespace LambdaSharp.Tool.Model {
                                 } else if(!(property.Value is IDictionary nestedProperties1)) {
                                     AddError($"property type mismatch for '{prefix + property.Key}', expected a map [{property.Value?.GetType().FullName ?? "<null>"}]");
                                 } else if(propertyType.ItemType != null) {
-                                    var nestedResource = ResourceMapping.CloudformationSpec.PropertyTypes[awsType + "." + propertyType.ItemType];
+                                    ResourceMapping.TryGetPropertyItemType(awsType, propertyType.ItemType, out ResourceType nestedResource);
                                     ValidateList(prefix + property.Key + ".", nestedResource, DictionaryToEnumerable(nestedProperties1));
                                 } else {
 
@@ -1333,7 +1333,7 @@ namespace LambdaSharp.Tool.Model {
                                 } else if(!(property.Value is IDictionary nestedProperties2)) {
                                     AddError($"property type mismatch for '{prefix + property.Key}', expected a map [{property.Value?.GetType().FullName ?? "<null>"}]");
                                 } else {
-                                    var nestedResource = ResourceMapping.CloudformationSpec.PropertyTypes[awsType + "." + propertyType.Type];
+                                    ResourceMapping.TryGetPropertyItemType(awsType, propertyType.Type, out ResourceType nestedResource);
                                     ValidateProperties(prefix + property.Key + ".", nestedResource, nestedProperties2);
                                 }
                             }
@@ -1400,6 +1400,52 @@ namespace LambdaSharp.Tool.Model {
                 AddWarning($"ambiguous resource type '{resourceTypeName}'");
                 resourceType = matches[0];
                 return true;
+            }
+        }
+
+        private void AutoTag(Humidifier.Resource resource) {
+            if(resource is Humidifier.Lambda.Function functionResource) {
+                if(functionResource.Tags == null) {
+                    functionResource.Tags = new List<Humidifier.Tag>();
+                }
+                functionResource.Tags.Add(new Humidifier.Tag {
+                    Key = "ModuleName",
+                    Value = FnRef("Module::Name")
+                });
+                functionResource.Tags.Add(new Humidifier.Tag {
+                    Key = "ModuleRootId",
+                    Value = FnRef("Module::RootId")
+                });
+                functionResource.Tags.Add(new Humidifier.Tag {
+                    Key = "ModuleId",
+                    Value = FnRef("Module::Id")
+                });
+            } else if(
+                ResourceMapping.IsCloudFormationType(resource.AWSTypeName)
+                && (resource is Humidifier.CustomResource customResource)
+                && ResourceMapping.HasProperty(customResource.AWSTypeName, "Tags")
+            ) {
+            IList tags = null;
+                if(customResource.TryGetValue("Tags", out object tagsObject)) {
+                    tags = tagsObject as IList;
+                } else {
+                    tags = new List<object>();
+                    customResource["Tags"] = tags;
+                }
+                if(tags != null) {
+                    tags.Add(new Dictionary<string, object> {
+                        ["Key"] = "ModuleName",
+                        ["Value"] = FnRef("Module::Name")
+                    });
+                    tags.Add(new Dictionary<string, object> {
+                        ["Key"] = "ModuleRootId",
+                        ["Value"] = FnRef("Module::RootId")
+                    });
+                    tags.Add(new Dictionary<string, object> {
+                        ["Key"] = "ModuleId",
+                        ["Value"] = FnRef("Module::Id")
+                    });
+                }
             }
         }
     }

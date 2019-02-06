@@ -476,7 +476,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                             case "DeploymentBucketName":
                             case "DeploymentPrefix":
                             case "DeploymentPrefixLowercase":
-                            case "DeploymentParent":
+                            case "DeploymentRoot":
                             case "DeploymentChecksum":
 
                                 // these are built-in parameters; don't report them

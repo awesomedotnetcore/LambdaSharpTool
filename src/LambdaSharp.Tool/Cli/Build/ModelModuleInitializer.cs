@@ -118,6 +118,22 @@ namespace LambdaSharp.Tool.Cli.Build {
                 allow: null,
                 encryptionContext: null
             );
+            _builder.AddCondition(
+                parent: moduleItem,
+                name: "IsNested",
+                description: "Module is nested",
+                value: FnNot(FnEquals(FnRef("DeploymentRoot"), ""))
+            );
+            _builder.AddVariable(
+                parent: moduleItem,
+                name: "RootId",
+                description: "Root Module ID",
+                type: "String",
+                scope: null,
+                value: FnIf("Module::IsNested", FnRef("DeploymentRoot"), FnRef("Module::Id")),
+                allow: null,
+                encryptionContext: null
+            );
 
             // add LambdaSharp Module Options
             var section = "LambdaSharp Module Options";
@@ -322,10 +338,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     "no-wildcard-scoped-variables"
                 },
                 timeout: "30",
-                reservedConcurrency: null,
                 memory: "128",
-                subnets: null,
-                securityGroups: null,
                 code: DecryptSecretFunctionCode
             ).DiscardIfNotReachable = true;
 
@@ -398,10 +411,10 @@ namespace LambdaSharp.Tool.Cli.Build {
                 pragmas: null
             );
             _builder.AddParameter(
-                name: "DeploymentParent",
+                name: "DeploymentRoot",
                 section: section,
-                label: "Parent stack name for nested deployments, blank otherwise",
-                description: "Parent Stack Name",
+                label: "Root stack name for nested deployments, blank otherwise",
+                description: "Root Stack Name",
                 type: "String",
                 scope: null,
                 noEcho: null,

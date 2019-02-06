@@ -170,6 +170,18 @@ namespace LambdaSharp.Tool.Model {
                     : new object[] { arnReference };
         }
 
+        public static bool HasProperty(string awsType, string property) {
+
+            // for `Custom::`, allow any property
+            if(awsType.StartsWith("Custom::", StringComparison.Ordinal)) {
+                return true;
+            }
+
+            // check if type exists and contains property
+            return CloudformationSpec.ResourceTypes.TryGetValue(awsType, out ResourceType resource)
+                && (resource.Properties?.ContainsKey(property) == true);
+        }
+
         public static bool HasAttribute(string awsType, string attribute) {
 
             // for 'AWS::CloudFormation::Stack', allow attributes starting with "Outputs."
@@ -191,5 +203,9 @@ namespace LambdaSharp.Tool.Model {
 
         public static string ToCloudFormationParameterType(string type)
             => _cloudFormationParameterTypes.Contains(type) ? type : "String";
+
+        public static bool TryGetPropertyItemType(string rootAwsType, string itemTypeName, out ResourceType type)
+            => ResourceMapping.CloudformationSpec.PropertyTypes.TryGetValue(itemTypeName, out type)
+                || ResourceMapping.CloudformationSpec.PropertyTypes.TryGetValue(rootAwsType + "." + itemTypeName, out type);
     }
 }
