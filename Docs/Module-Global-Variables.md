@@ -40,6 +40,6 @@ The following variables are set by λ# CLI when deploying a module.
 |------------------------------|-------------------------------|----------------------------------------------|
 |`DeploymentBucketName`        |String                         |S3 Bucket name from which the module is being deployed from
 |`DeploymentChecksum`          |String                         |Module checksum; changes whenever the module definition changes
-|`DeploymentParent`            |String                         |CloudFormation parent stack ID when the module is nested; empty string otherwise
+|`DeploymentRootId`            |String                         |Root CloudFormation stack when the module is nested; empty string otherwise
 |`DeploymentPrefix`            |String                         |Deployment tier prefix used to isolate resources
 |`DeploymentPrefixLowercase`   |String                         |Deployment tier prefix in lowercase characters; used by resources that require only lowercase characters (e.g. S3 buckets)

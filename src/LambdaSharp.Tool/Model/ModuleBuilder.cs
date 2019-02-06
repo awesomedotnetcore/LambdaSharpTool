@@ -1409,16 +1409,20 @@ namespace LambdaSharp.Tool.Model {
                     functionResource.Tags = new List<Humidifier.Tag>();
                 }
                 functionResource.Tags.Add(new Humidifier.Tag {
-                    Key = "ModuleName",
+                    Key = "LambdaSharp:Tier",
+                    Value = FnSub("${DeploymentPrefix}tier")
+                });
+                functionResource.Tags.Add(new Humidifier.Tag {
+                    Key = "LambdaSharp:Module",
                     Value = FnRef("Module::Name")
                 });
                 functionResource.Tags.Add(new Humidifier.Tag {
-                    Key = "ModuleRootId",
-                    Value = FnRef("Module::RootId")
+                    Key = "LambdaSharp:Stack",
+                    Value = FnRef("Module::Id")
                 });
                 functionResource.Tags.Add(new Humidifier.Tag {
-                    Key = "ModuleId",
-                    Value = FnRef("Module::Id")
+                    Key = "LambdaSharp:RootStack",
+                    Value = FnRef("Module::RootId")
                 });
             } else if(
                 ResourceMapping.IsCloudFormationType(resource.AWSTypeName)
@@ -1434,16 +1438,20 @@ namespace LambdaSharp.Tool.Model {
                 }
                 if(tags != null) {
                     tags.Add(new Dictionary<string, object> {
-                        ["Key"] = "ModuleName",
+                        ["Key"] = "LambdaSharp:Tier",
+                        ["Value"] = FnSub("${DeploymentPrefix}tier")
+                    });
+                    tags.Add(new Dictionary<string, object> {
+                        ["Key"] = "LambdaSharp:Module",
                         ["Value"] = FnRef("Module::Name")
                     });
                     tags.Add(new Dictionary<string, object> {
-                        ["Key"] = "ModuleRootId",
-                        ["Value"] = FnRef("Module::RootId")
+                        ["Key"] = "LambdaSharp:Stack",
+                        ["Value"] = FnRef("Module::Id")
                     });
                     tags.Add(new Dictionary<string, object> {
-                        ["Key"] = "ModuleId",
-                        ["Value"] = FnRef("Module::Id")
+                        ["Key"] = "LambdaSharp:RootStack",
+                        ["Value"] = FnRef("Module::RootId")
                     });
                 }
             }
