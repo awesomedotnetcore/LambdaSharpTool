@@ -52,15 +52,15 @@
       "Type": "String",
       "Description": "Deployment Tier Prefix (lowercase)"
     },
-    "DeploymentParent": {
+    "DeploymentRoot": {
       "Type": "String",
-      "Description": "Parent Stack Name",
+      "Description": "Root Stack Name",
       "Default": ""
     },
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "61F0C4A16AFE80E65B75918D0D98E283"
+      "Default": "0B22EE1B95F0B83D4A65F5645696291D"
     }
   },
   "Resources": {
@@ -78,6 +78,38 @@
           {
             "AttributeName": "TaskId",
             "KeyType": "HASH"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "LambdaSharp:Tier",
+            "Value": {
+              "Fn::Sub": "${DeploymentPrefix}tier"
+            }
+          },
+          {
+            "Key": "LambdaSharp:Module",
+            "Value": "Demo.SlackTodo"
+          },
+          {
+            "Key": "LambdaSharp:Stack",
+            "Value": {
+              "Ref": "AWS::StackName"
+            }
+          },
+          {
+            "Key": "LambdaSharp:RootStack",
+            "Value": {
+              "Fn::If": [
+                "ModuleIsNested",
+                {
+                  "Ref": "DeploymentRoot"
+                },
+                {
+                  "Ref": "AWS::StackName"
+                }
+              ]
+            }
           }
         ]
       }
@@ -212,6 +244,38 @@
           ]
         },
         "Runtime": "dotnetcore2.1",
+        "Tags": [
+          {
+            "Key": "LambdaSharp:Tier",
+            "Value": {
+              "Fn::Sub": "${DeploymentPrefix}tier"
+            }
+          },
+          {
+            "Key": "LambdaSharp:Module",
+            "Value": "Demo.SlackTodo"
+          },
+          {
+            "Key": "LambdaSharp:Stack",
+            "Value": {
+              "Ref": "AWS::StackName"
+            }
+          },
+          {
+            "Key": "LambdaSharp:RootStack",
+            "Value": {
+              "Fn::If": [
+                "ModuleIsNested",
+                {
+                  "Ref": "DeploymentRoot"
+                },
+                {
+                  "Ref": "AWS::StackName"
+                }
+              ]
+            }
+          }
+        ],
         "Timeout": "30"
       }
     },
@@ -750,6 +814,18 @@
     }
   },
   "Conditions": {
+    "ModuleIsNested": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "DeploymentRoot"
+            },
+            ""
+          ]
+        }
+      ]
+    },
     "SecretsIsEmpty": {
       "Fn::Equals": [
         {
@@ -925,8 +1001,8 @@
         "DeploymentPrefixLowercase": {
           "default": "Deployment tier prefix (lowercase) [String]"
         },
-        "DeploymentParent": {
-          "default": "Parent stack name for nested deployments, blank otherwise [String]"
+        "DeploymentRoot": {
+          "default": "Root stack name for nested deployments, blank otherwise [String]"
         },
         "DeploymentChecksum": {
           "default": "CloudFormation template MD5 checksum [String]"
@@ -968,7 +1044,7 @@
             "DeploymentBucketName",
             "DeploymentPrefix",
             "DeploymentPrefixLowercase",
-            "DeploymentParent",
+            "DeploymentRoot",
             "DeploymentChecksum"
           ]
         }
@@ -1030,7 +1106,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "61F0C4A16AFE80E65B75918D0D98E283",
+      "Hash": "0B22EE1B95F0B83D4A65F5645696291D",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

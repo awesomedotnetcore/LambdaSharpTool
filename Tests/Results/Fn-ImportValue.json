@@ -19,15 +19,15 @@
       "Type": "String",
       "Description": "Deployment Tier Prefix (lowercase)"
     },
-    "DeploymentParent": {
+    "DeploymentRoot": {
       "Type": "String",
-      "Description": "Parent Stack Name",
+      "Description": "Root Stack Name",
       "Default": ""
     },
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "9F6E8F49A4FCB4748F8676D04102B65E"
+      "Default": "655D68F524B51A689AE192F0855A920B"
     }
   },
   "Resources": {
@@ -75,8 +75,8 @@
         "DeploymentPrefixLowercase": {
           "default": "Deployment tier prefix (lowercase) [String]"
         },
-        "DeploymentParent": {
-          "default": "Parent stack name for nested deployments, blank otherwise [String]"
+        "DeploymentRoot": {
+          "default": "Root stack name for nested deployments, blank otherwise [String]"
         },
         "DeploymentChecksum": {
           "default": "CloudFormation template MD5 checksum [String]"
@@ -99,7 +99,7 @@
             "DeploymentBucketName",
             "DeploymentPrefix",
             "DeploymentPrefixLowercase",
-            "DeploymentParent",
+            "DeploymentRoot",
             "DeploymentChecksum"
           ]
         }
@@ -122,7 +122,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "9F6E8F49A4FCB4748F8676D04102B65E",
+      "Hash": "655D68F524B51A689AE192F0855A920B",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

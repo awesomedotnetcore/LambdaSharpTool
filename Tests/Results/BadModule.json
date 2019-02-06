@@ -47,15 +47,15 @@
       "Type": "String",
       "Description": "Deployment Tier Prefix (lowercase)"
     },
-    "DeploymentParent": {
+    "DeploymentRoot": {
       "Type": "String",
-      "Description": "Parent Stack Name",
+      "Description": "Root Stack Name",
       "Default": ""
     },
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "E9B67AABB9CBD513DDA0418A4CFF9706"
+      "Default": "1D42E424C63360D57CCA76FAB718121F"
     }
   },
   "Resources": {
@@ -180,6 +180,38 @@
           ]
         },
         "Runtime": "dotnetcore2.1",
+        "Tags": [
+          {
+            "Key": "LambdaSharp:Tier",
+            "Value": {
+              "Fn::Sub": "${DeploymentPrefix}tier"
+            }
+          },
+          {
+            "Key": "LambdaSharp:Module",
+            "Value": "BadModule"
+          },
+          {
+            "Key": "LambdaSharp:Stack",
+            "Value": {
+              "Ref": "AWS::StackName"
+            }
+          },
+          {
+            "Key": "LambdaSharp:RootStack",
+            "Value": {
+              "Fn::If": [
+                "ModuleIsNested",
+                {
+                  "Ref": "DeploymentRoot"
+                },
+                {
+                  "Ref": "AWS::StackName"
+                }
+              ]
+            }
+          }
+        ],
         "Timeout": "15"
       }
     },
@@ -313,6 +345,38 @@
           ]
         },
         "Runtime": "dotnetcore2.1",
+        "Tags": [
+          {
+            "Key": "LambdaSharp:Tier",
+            "Value": {
+              "Fn::Sub": "${DeploymentPrefix}tier"
+            }
+          },
+          {
+            "Key": "LambdaSharp:Module",
+            "Value": "BadModule"
+          },
+          {
+            "Key": "LambdaSharp:Stack",
+            "Value": {
+              "Ref": "AWS::StackName"
+            }
+          },
+          {
+            "Key": "LambdaSharp:RootStack",
+            "Value": {
+              "Fn::If": [
+                "ModuleIsNested",
+                {
+                  "Ref": "DeploymentRoot"
+                },
+                {
+                  "Ref": "AWS::StackName"
+                }
+              ]
+            }
+          }
+        ],
         "Timeout": "30"
       }
     },
@@ -446,6 +510,38 @@
           ]
         },
         "Runtime": "dotnetcore2.1",
+        "Tags": [
+          {
+            "Key": "LambdaSharp:Tier",
+            "Value": {
+              "Fn::Sub": "${DeploymentPrefix}tier"
+            }
+          },
+          {
+            "Key": "LambdaSharp:Module",
+            "Value": "BadModule"
+          },
+          {
+            "Key": "LambdaSharp:Stack",
+            "Value": {
+              "Ref": "AWS::StackName"
+            }
+          },
+          {
+            "Key": "LambdaSharp:RootStack",
+            "Value": {
+              "Fn::If": [
+                "ModuleIsNested",
+                {
+                  "Ref": "DeploymentRoot"
+                },
+                {
+                  "Ref": "AWS::StackName"
+                }
+              ]
+            }
+          }
+        ],
         "Timeout": "30"
       }
     },
@@ -579,6 +675,38 @@
           ]
         },
         "Runtime": "dotnetcore2.1",
+        "Tags": [
+          {
+            "Key": "LambdaSharp:Tier",
+            "Value": {
+              "Fn::Sub": "${DeploymentPrefix}tier"
+            }
+          },
+          {
+            "Key": "LambdaSharp:Module",
+            "Value": "BadModule"
+          },
+          {
+            "Key": "LambdaSharp:Stack",
+            "Value": {
+              "Ref": "AWS::StackName"
+            }
+          },
+          {
+            "Key": "LambdaSharp:RootStack",
+            "Value": {
+              "Fn::If": [
+                "ModuleIsNested",
+                {
+                  "Ref": "DeploymentRoot"
+                },
+                {
+                  "Ref": "AWS::StackName"
+                }
+              ]
+            }
+          }
+        ],
         "Timeout": "15"
       }
     },
@@ -712,6 +840,38 @@
           ]
         },
         "Runtime": "dotnetcore2.1",
+        "Tags": [
+          {
+            "Key": "LambdaSharp:Tier",
+            "Value": {
+              "Fn::Sub": "${DeploymentPrefix}tier"
+            }
+          },
+          {
+            "Key": "LambdaSharp:Module",
+            "Value": "BadModule"
+          },
+          {
+            "Key": "LambdaSharp:Stack",
+            "Value": {
+              "Ref": "AWS::StackName"
+            }
+          },
+          {
+            "Key": "LambdaSharp:RootStack",
+            "Value": {
+              "Fn::If": [
+                "ModuleIsNested",
+                {
+                  "Ref": "DeploymentRoot"
+                },
+                {
+                  "Ref": "AWS::StackName"
+                }
+              ]
+            }
+          }
+        ],
         "Timeout": "15"
       }
     },
@@ -845,6 +1005,38 @@
           ]
         },
         "Runtime": "dotnetcore2.1",
+        "Tags": [
+          {
+            "Key": "LambdaSharp:Tier",
+            "Value": {
+              "Fn::Sub": "${DeploymentPrefix}tier"
+            }
+          },
+          {
+            "Key": "LambdaSharp:Module",
+            "Value": "BadModule"
+          },
+          {
+            "Key": "LambdaSharp:Stack",
+            "Value": {
+              "Ref": "AWS::StackName"
+            }
+          },
+          {
+            "Key": "LambdaSharp:RootStack",
+            "Value": {
+              "Fn::If": [
+                "ModuleIsNested",
+                {
+                  "Ref": "DeploymentRoot"
+                },
+                {
+                  "Ref": "AWS::StackName"
+                }
+              ]
+            }
+          }
+        ],
         "Timeout": "15"
       }
     },
@@ -978,6 +1170,38 @@
           ]
         },
         "Runtime": "dotnetcore2.1",
+        "Tags": [
+          {
+            "Key": "LambdaSharp:Tier",
+            "Value": {
+              "Fn::Sub": "${DeploymentPrefix}tier"
+            }
+          },
+          {
+            "Key": "LambdaSharp:Module",
+            "Value": "BadModule"
+          },
+          {
+            "Key": "LambdaSharp:Stack",
+            "Value": {
+              "Ref": "AWS::StackName"
+            }
+          },
+          {
+            "Key": "LambdaSharp:RootStack",
+            "Value": {
+              "Fn::If": [
+                "ModuleIsNested",
+                {
+                  "Ref": "DeploymentRoot"
+                },
+                {
+                  "Ref": "AWS::StackName"
+                }
+              ]
+            }
+          }
+        ],
         "Timeout": "15"
       }
     },
@@ -1111,6 +1335,38 @@
           ]
         },
         "Runtime": "nodejs8.10",
+        "Tags": [
+          {
+            "Key": "LambdaSharp:Tier",
+            "Value": {
+              "Fn::Sub": "${DeploymentPrefix}tier"
+            }
+          },
+          {
+            "Key": "LambdaSharp:Module",
+            "Value": "BadModule"
+          },
+          {
+            "Key": "LambdaSharp:Stack",
+            "Value": {
+              "Ref": "AWS::StackName"
+            }
+          },
+          {
+            "Key": "LambdaSharp:RootStack",
+            "Value": {
+              "Fn::If": [
+                "ModuleIsNested",
+                {
+                  "Ref": "DeploymentRoot"
+                },
+                {
+                  "Ref": "AWS::StackName"
+                }
+              ]
+            }
+          }
+        ],
         "Timeout": "15"
       }
     },
@@ -1244,6 +1500,38 @@
           ]
         },
         "Runtime": "nodejs8.10",
+        "Tags": [
+          {
+            "Key": "LambdaSharp:Tier",
+            "Value": {
+              "Fn::Sub": "${DeploymentPrefix}tier"
+            }
+          },
+          {
+            "Key": "LambdaSharp:Module",
+            "Value": "BadModule"
+          },
+          {
+            "Key": "LambdaSharp:Stack",
+            "Value": {
+              "Ref": "AWS::StackName"
+            }
+          },
+          {
+            "Key": "LambdaSharp:RootStack",
+            "Value": {
+              "Fn::If": [
+                "ModuleIsNested",
+                {
+                  "Ref": "DeploymentRoot"
+                },
+                {
+                  "Ref": "AWS::StackName"
+                }
+              ]
+            }
+          }
+        ],
         "Timeout": "15"
       }
     },
@@ -1377,6 +1665,38 @@
           ]
         },
         "Runtime": "nodejs8.10",
+        "Tags": [
+          {
+            "Key": "LambdaSharp:Tier",
+            "Value": {
+              "Fn::Sub": "${DeploymentPrefix}tier"
+            }
+          },
+          {
+            "Key": "LambdaSharp:Module",
+            "Value": "BadModule"
+          },
+          {
+            "Key": "LambdaSharp:Stack",
+            "Value": {
+              "Ref": "AWS::StackName"
+            }
+          },
+          {
+            "Key": "LambdaSharp:RootStack",
+            "Value": {
+              "Fn::If": [
+                "ModuleIsNested",
+                {
+                  "Ref": "DeploymentRoot"
+                },
+                {
+                  "Ref": "AWS::StackName"
+                }
+              ]
+            }
+          }
+        ],
         "Timeout": "15"
       }
     },
@@ -2557,6 +2877,18 @@
     }
   },
   "Conditions": {
+    "ModuleIsNested": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "DeploymentRoot"
+            },
+            ""
+          ]
+        }
+      ]
+    },
     "SecretsIsEmpty": {
       "Fn::Equals": [
         {
@@ -2729,8 +3061,8 @@
         "DeploymentPrefixLowercase": {
           "default": "Deployment tier prefix (lowercase) [String]"
         },
-        "DeploymentParent": {
-          "default": "Parent stack name for nested deployments, blank otherwise [String]"
+        "DeploymentRoot": {
+          "default": "Root stack name for nested deployments, blank otherwise [String]"
         },
         "DeploymentChecksum": {
           "default": "CloudFormation template MD5 checksum [String]"
@@ -2764,7 +3096,7 @@
             "DeploymentBucketName",
             "DeploymentPrefix",
             "DeploymentPrefixLowercase",
-            "DeploymentParent",
+            "DeploymentRoot",
             "DeploymentChecksum"
           ]
         }
@@ -2816,7 +3148,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "E9B67AABB9CBD513DDA0418A4CFF9706",
+      "Hash": "1D42E424C63360D57CCA76FAB718121F",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

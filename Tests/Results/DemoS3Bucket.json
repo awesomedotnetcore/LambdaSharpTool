@@ -18,21 +18,54 @@
       "Type": "String",
       "Description": "Deployment Tier Prefix (lowercase)"
     },
-    "DeploymentParent": {
+    "DeploymentRoot": {
       "Type": "String",
-      "Description": "Parent Stack Name",
+      "Description": "Root Stack Name",
       "Default": ""
     },
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "2D2C8A98714BDEEB4307584855D93662"
+      "Default": "B6081705681E8A370BD714DDF6B2F6AE"
     }
   },
   "Resources": {
     "Bucket": {
       "Type": "AWS::S3::Bucket",
-      "Properties": {}
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "LambdaSharp:Tier",
+            "Value": {
+              "Fn::Sub": "${DeploymentPrefix}tier"
+            }
+          },
+          {
+            "Key": "LambdaSharp:Module",
+            "Value": "DemoS3Bucket"
+          },
+          {
+            "Key": "LambdaSharp:Stack",
+            "Value": {
+              "Ref": "AWS::StackName"
+            }
+          },
+          {
+            "Key": "LambdaSharp:RootStack",
+            "Value": {
+              "Fn::If": [
+                "ModuleIsNested",
+                {
+                  "Ref": "DeploymentRoot"
+                },
+                {
+                  "Ref": "AWS::StackName"
+                }
+              ]
+            }
+          }
+        ]
+      }
     },
     "ModuleRegistration": {
       "Type": "Custom::LambdaSharpRegistrationModule",
@@ -55,6 +88,20 @@
       "Value": "LambdaSharp.DemoS3Bucket:1.0-DEV"
     }
   },
+  "Conditions": {
+    "ModuleIsNested": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "DeploymentRoot"
+            },
+            ""
+          ]
+        }
+      ]
+    }
+  },
   "Metadata": {
     "AWS::CloudFormation::Interface": {
       "ParameterLabels": {
@@ -70,8 +117,8 @@
         "DeploymentPrefixLowercase": {
           "default": "Deployment tier prefix (lowercase) [String]"
         },
-        "DeploymentParent": {
-          "default": "Parent stack name for nested deployments, blank otherwise [String]"
+        "DeploymentRoot": {
+          "default": "Root stack name for nested deployments, blank otherwise [String]"
         },
         "DeploymentChecksum": {
           "default": "CloudFormation template MD5 checksum [String]"
@@ -94,7 +141,7 @@
             "DeploymentBucketName",
             "DeploymentPrefix",
             "DeploymentPrefixLowercase",
-            "DeploymentParent",
+            "DeploymentRoot",
             "DeploymentChecksum"
           ]
         }
@@ -117,7 +164,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "2D2C8A98714BDEEB4307584855D93662",
+      "Hash": "B6081705681E8A370BD714DDF6B2F6AE",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

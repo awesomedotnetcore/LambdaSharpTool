@@ -47,15 +47,15 @@
       "Type": "String",
       "Description": "Deployment Tier Prefix (lowercase)"
     },
-    "DeploymentParent": {
+    "DeploymentRoot": {
       "Type": "String",
-      "Description": "Parent Stack Name",
+      "Description": "Root Stack Name",
       "Default": ""
     },
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "DB0EE399B8E86CD47FF31A640134F4B6"
+      "Default": "E62232D63AB708E0F5AA70B861183BAD"
     }
   },
   "Resources": {
@@ -184,6 +184,38 @@
           ]
         },
         "Runtime": "dotnetcore2.1",
+        "Tags": [
+          {
+            "Key": "LambdaSharp:Tier",
+            "Value": {
+              "Fn::Sub": "${DeploymentPrefix}tier"
+            }
+          },
+          {
+            "Key": "LambdaSharp:Module",
+            "Value": "Sample.Sns"
+          },
+          {
+            "Key": "LambdaSharp:Stack",
+            "Value": {
+              "Ref": "AWS::StackName"
+            }
+          },
+          {
+            "Key": "LambdaSharp:RootStack",
+            "Value": {
+              "Fn::If": [
+                "ModuleIsNested",
+                {
+                  "Ref": "DeploymentRoot"
+                },
+                {
+                  "Ref": "AWS::StackName"
+                }
+              ]
+            }
+          }
+        ],
         "Timeout": "30"
       }
     },
@@ -524,6 +556,18 @@
     }
   },
   "Conditions": {
+    "ModuleIsNested": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "DeploymentRoot"
+            },
+            ""
+          ]
+        }
+      ]
+    },
     "SecretsIsEmpty": {
       "Fn::Equals": [
         {
@@ -696,8 +740,8 @@
         "DeploymentPrefixLowercase": {
           "default": "Deployment tier prefix (lowercase) [String]"
         },
-        "DeploymentParent": {
-          "default": "Parent stack name for nested deployments, blank otherwise [String]"
+        "DeploymentRoot": {
+          "default": "Root stack name for nested deployments, blank otherwise [String]"
         },
         "DeploymentChecksum": {
           "default": "CloudFormation template MD5 checksum [String]"
@@ -731,7 +775,7 @@
             "DeploymentBucketName",
             "DeploymentPrefix",
             "DeploymentPrefixLowercase",
-            "DeploymentParent",
+            "DeploymentRoot",
             "DeploymentChecksum"
           ]
         }
@@ -783,7 +827,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "DB0EE399B8E86CD47FF31A640134F4B6",
+      "Hash": "E62232D63AB708E0F5AA70B861183BAD",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

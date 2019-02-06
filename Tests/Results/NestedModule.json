@@ -47,15 +47,15 @@
       "Type": "String",
       "Description": "Deployment Tier Prefix (lowercase)"
     },
-    "DeploymentParent": {
+    "DeploymentRoot": {
       "Type": "String",
-      "Description": "Parent Stack Name",
+      "Description": "Root Stack Name",
       "Default": ""
     },
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "89D002513F7CD4E185BEB913B6E88EF7"
+      "Default": "BBF0D885A74B69EAD1555476F72D4D8D"
     }
   },
   "Resources": {
@@ -196,8 +196,16 @@
           "DeploymentPrefixLowercase": {
             "Ref": "DeploymentPrefixLowercase"
           },
-          "DeploymentParent": {
-            "Ref": "AWS::StackName"
+          "DeploymentRoot": {
+            "Fn::If": [
+              "ModuleIsNested",
+              {
+                "Ref": "DeploymentRoot"
+              },
+              {
+                "Ref": "AWS::StackName"
+              }
+            ]
           }
         },
         "TemplateURL": {
@@ -228,6 +236,18 @@
     }
   },
   "Conditions": {
+    "ModuleIsNested": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "DeploymentRoot"
+            },
+            ""
+          ]
+        }
+      ]
+    },
     "LambdaSharpDeadLetterQueueIsImported": {
       "Fn::And": [
         {
@@ -392,8 +412,8 @@
         "DeploymentPrefixLowercase": {
           "default": "Deployment tier prefix (lowercase) [String]"
         },
-        "DeploymentParent": {
-          "default": "Parent stack name for nested deployments, blank otherwise [String]"
+        "DeploymentRoot": {
+          "default": "Root stack name for nested deployments, blank otherwise [String]"
         },
         "DeploymentChecksum": {
           "default": "CloudFormation template MD5 checksum [String]"
@@ -427,7 +447,7 @@
             "DeploymentBucketName",
             "DeploymentPrefix",
             "DeploymentPrefixLowercase",
-            "DeploymentParent",
+            "DeploymentRoot",
             "DeploymentChecksum"
           ]
         }
@@ -479,7 +499,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "89D002513F7CD4E185BEB913B6E88EF7",
+      "Hash": "BBF0D885A74B69EAD1555476F72D4D8D",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
