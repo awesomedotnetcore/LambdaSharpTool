@@ -86,6 +86,7 @@ if [ -z "$1" ]; then
         ../Modules/LambdaSharp.Core \
         ../Modules/LambdaSharp.S3.IO \
         ../Modules/LambdaSharp.S3.Subscriber \
+        ../Modules/LambdaSharp.Twitter.Query \
         ../Samples/AlexaSample \
         ../Samples/ApiSample \
         ../Samples/CustomResourceTypeSample \
@@ -107,13 +108,14 @@ if [ -z "$1" ]; then
         ../Demos/TwitterNotifier
 
 else
+    testfile=$(basename $1 .yml)
 
     # run requested test
-    rm Results/$1.json > /dev/null 2>&1
+    rm Results/$testfile.json > /dev/null 2>&1
     dotnet run -p $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csproj -- deploy \
         --verbose:exceptions \
         --tier Test \
-        --cfn-output Results/$1.json \
+        --cfn-output Results/$testfile.json \
         --dryrun:cloudformation \
         --aws-account-id 123456789012 \
         --aws-region us-east-1 \
@@ -124,5 +126,5 @@ else
         --deployment-bucket-name lambdasharp-bucket-name \
         --deployment-notifications-topic  arn:aws:sns:us-east-1:123456789012:LambdaSharp-DeploymentNotificationTopic \
         --no-dependency-validation \
-        $1.yml
+        $1
 fi
