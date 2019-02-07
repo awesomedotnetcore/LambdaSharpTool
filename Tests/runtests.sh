@@ -83,6 +83,7 @@ if [ -z "$1" ]; then
         Condition-Scoped-Resource.yml \
         Condition-Function.yml \
         Condition-Condition.yml \
+        BadModule \
         ../Modules/LambdaSharp.Core \
         ../Modules/LambdaSharp.S3.IO \
         ../Modules/LambdaSharp.S3.Subscriber \
@@ -104,7 +105,6 @@ if [ -z "$1" ]; then
         ../Demos/SlackTodo \
         ../Demos/DemoS3BucketSubscription/DemoS3Bucket \
         ../Demos/DemoS3BucketSubscription/DemoS3Subscriber \
-        ../Demos/BadModule \
         ../Demos/TwitterNotifier
 
 else

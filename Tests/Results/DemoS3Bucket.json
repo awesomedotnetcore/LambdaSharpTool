@@ -26,7 +26,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "86761358016BD4852BE7FC97859B9AE5"
+      "Default": "21DEF2B32A93817FC4D759AFFA21B676"
     }
   },
   "Resources": {
@@ -43,12 +43,6 @@
           {
             "Key": "LambdaSharp:Module",
             "Value": "DemoS3Bucket"
-          },
-          {
-            "Key": "LambdaSharp:Stack",
-            "Value": {
-              "Ref": "AWS::StackName"
-            }
           },
           {
             "Key": "LambdaSharp:RootStack",
@@ -177,7 +171,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "86761358016BD4852BE7FC97859B9AE5",
+      "Hash": "21DEF2B32A93817FC4D759AFFA21B676",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

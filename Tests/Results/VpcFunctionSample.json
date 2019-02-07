@@ -61,7 +61,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "26F14129989DF46BFFCEA9EE0486ECD4"
+      "Default": "E693D27DBE63E8F17EC1171868ADC47F"
     }
   },
   "Resources": {
@@ -195,12 +195,6 @@
           {
             "Key": "LambdaSharp:Module",
             "Value": "Sample.VpcFunction"
-          },
-          {
-            "Key": "LambdaSharp:Stack",
-            "Value": {
-              "Ref": "AWS::StackName"
-            }
           },
           {
             "Key": "LambdaSharp:RootStack",
@@ -830,7 +824,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "26F14129989DF46BFFCEA9EE0486ECD4",
+      "Hash": "E693D27DBE63E8F17EC1171868ADC47F",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

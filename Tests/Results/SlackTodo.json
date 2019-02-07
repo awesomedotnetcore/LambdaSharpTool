@@ -60,7 +60,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "96860E43F5B8DAA43EA6F4A16C8F2898"
+      "Default": "CD6CD69D55EC5D48E06A72033F78C7B7"
     }
   },
   "Resources": {
@@ -90,12 +90,6 @@
           {
             "Key": "LambdaSharp:Module",
             "Value": "Demo.SlackTodo"
-          },
-          {
-            "Key": "LambdaSharp:Stack",
-            "Value": {
-              "Ref": "AWS::StackName"
-            }
           },
           {
             "Key": "LambdaSharp:RootStack",
@@ -254,12 +248,6 @@
           {
             "Key": "LambdaSharp:Module",
             "Value": "Demo.SlackTodo"
-          },
-          {
-            "Key": "LambdaSharp:Stack",
-            "Value": {
-              "Ref": "AWS::StackName"
-            }
           },
           {
             "Key": "LambdaSharp:RootStack",
@@ -1110,7 +1098,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "96860E43F5B8DAA43EA6F4A16C8F2898",
+      "Hash": "CD6CD69D55EC5D48E06A72033F78C7B7",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

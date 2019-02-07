@@ -55,7 +55,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "2CFA325F197C586BCEF89B4A24870FFF"
+      "Default": "4AB68BD3247181CF49318A335FCCDFFC"
     }
   },
   "Resources": {
@@ -72,12 +72,6 @@
           {
             "Key": "LambdaSharp:Module",
             "Value": "Sample.S3.Subscription"
-          },
-          {
-            "Key": "LambdaSharp:Stack",
-            "Value": {
-              "Ref": "AWS::StackName"
-            }
           },
           {
             "Key": "LambdaSharp:RootStack",
@@ -109,12 +103,6 @@
           {
             "Key": "LambdaSharp:Module",
             "Value": "Sample.S3.Subscription"
-          },
-          {
-            "Key": "LambdaSharp:Stack",
-            "Value": {
-              "Ref": "AWS::StackName"
-            }
           },
           {
             "Key": "LambdaSharp:RootStack",
@@ -264,12 +252,6 @@
           {
             "Key": "LambdaSharp:Module",
             "Value": "Sample.S3.Subscription"
-          },
-          {
-            "Key": "LambdaSharp:Stack",
-            "Value": {
-              "Ref": "AWS::StackName"
-            }
           },
           {
             "Key": "LambdaSharp:RootStack",
@@ -1076,7 +1058,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "2CFA325F197C586BCEF89B4A24870FFF",
+      "Hash": "4AB68BD3247181CF49318A335FCCDFFC",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

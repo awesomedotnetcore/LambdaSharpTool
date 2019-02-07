@@ -60,7 +60,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "4DF25DE08C5607764628769C06BDF91F"
+      "Default": "F5D55CEBC7F83F27C121B35911DFDF9E"
     }
   },
   "Resources": {
@@ -195,12 +195,6 @@
           {
             "Key": "LambdaSharp:Module",
             "Value": "Sample.Alexa"
-          },
-          {
-            "Key": "LambdaSharp:Stack",
-            "Value": {
-              "Ref": "AWS::StackName"
-            }
           },
           {
             "Key": "LambdaSharp:RootStack",
@@ -843,7 +837,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "4DF25DE08C5607764628769C06BDF91F",
+      "Hash": "F5D55CEBC7F83F27C121B35911DFDF9E",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

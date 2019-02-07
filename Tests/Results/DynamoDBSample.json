@@ -55,7 +55,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "AAC5F28955176C0F35B0D1718274A385"
+      "Default": "383F8C45EBE64A38D08D2B9957194DF9"
     }
   },
   "Resources": {
@@ -88,12 +88,6 @@
           {
             "Key": "LambdaSharp:Module",
             "Value": "Sample.DynamoDB"
-          },
-          {
-            "Key": "LambdaSharp:Stack",
-            "Value": {
-              "Ref": "AWS::StackName"
-            }
           },
           {
             "Key": "LambdaSharp:RootStack",
@@ -249,12 +243,6 @@
           {
             "Key": "LambdaSharp:Module",
             "Value": "Sample.DynamoDB"
-          },
-          {
-            "Key": "LambdaSharp:Stack",
-            "Value": {
-              "Ref": "AWS::StackName"
-            }
           },
           {
             "Key": "LambdaSharp:RootStack",
@@ -907,7 +895,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "AAC5F28955176C0F35B0D1718274A385",
+      "Hash": "383F8C45EBE64A38D08D2B9957194DF9",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

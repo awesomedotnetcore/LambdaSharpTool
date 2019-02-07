@@ -55,7 +55,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "811818273D46D1829926D0523F503B46"
+      "Default": "5A3234839C456B4CEC180675AD221449"
     }
   },
   "Resources": {
@@ -190,12 +190,6 @@
           {
             "Key": "LambdaSharp:Module",
             "Value": "Sample.ApiGateway"
-          },
-          {
-            "Key": "LambdaSharp:Stack",
-            "Value": {
-              "Ref": "AWS::StackName"
-            }
           },
           {
             "Key": "LambdaSharp:RootStack",
@@ -1061,7 +1055,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "811818273D46D1829926D0523F503B46",
+      "Hash": "5A3234839C456B4CEC180675AD221449",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

@@ -59,7 +59,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "731B5AECA4C1C18CE1E901347CE2FD6C"
+      "Default": "B732CEEFFB32416659C98DE67E07FB47"
     }
   },
   "Resources": {
@@ -89,12 +89,6 @@
           {
             "Key": "LambdaSharp:Module",
             "Value": "TestModule"
-          },
-          {
-            "Key": "LambdaSharp:Stack",
-            "Value": {
-              "Ref": "AWS::StackName"
-            }
           },
           {
             "Key": "LambdaSharp:RootStack",
@@ -253,12 +247,6 @@
           {
             "Key": "LambdaSharp:Module",
             "Value": "TestModule"
-          },
-          {
-            "Key": "LambdaSharp:Stack",
-            "Value": {
-              "Ref": "AWS::StackName"
-            }
           },
           {
             "Key": "LambdaSharp:RootStack",
@@ -982,7 +970,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "731B5AECA4C1C18CE1E901347CE2FD6C",
+      "Hash": "B732CEEFFB32416659C98DE67E07FB47",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

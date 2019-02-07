@@ -80,7 +80,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "01FF338012A6794AD9E00CDB81935B15"
+      "Default": "C18FA4D4B9279CAD9AE1DDA2AE0130B4"
     }
   },
   "Resources": {
@@ -279,12 +279,6 @@
           {
             "Key": "LambdaSharp:Module",
             "Value": "Demo.TwitterNotifier"
-          },
-          {
-            "Key": "LambdaSharp:Stack",
-            "Value": {
-              "Ref": "AWS::StackName"
-            }
           },
           {
             "Key": "LambdaSharp:RootStack",
@@ -1004,7 +998,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "01FF338012A6794AD9E00CDB81935B15",
+      "Hash": "C18FA4D4B9279CAD9AE1DDA2AE0130B4",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

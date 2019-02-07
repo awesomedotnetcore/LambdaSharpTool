@@ -60,7 +60,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "9FA78154364F7E8E76A70F99B14471F5"
+      "Default": "06280E809E4599EEF207E1C360B0EA49"
     }
   },
   "Resources": {
@@ -198,12 +198,6 @@
           {
             "Key": "LambdaSharp:Module",
             "Value": "Sample.SlackCommand"
-          },
-          {
-            "Key": "LambdaSharp:Stack",
-            "Value": {
-              "Ref": "AWS::StackName"
-            }
           },
           {
             "Key": "LambdaSharp:RootStack",
@@ -989,7 +983,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "9FA78154364F7E8E76A70F99B14471F5",
+      "Hash": "06280E809E4599EEF207E1C360B0EA49",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

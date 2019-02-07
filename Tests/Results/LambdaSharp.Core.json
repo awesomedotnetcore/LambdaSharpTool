@@ -72,7 +72,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "B94B8EF57E2A90146809A53FCCE98648"
+      "Default": "1644F0255A3286AD21CD17FA476AA83A"
     }
   },
   "Resources": {
@@ -90,12 +90,6 @@
           {
             "Key": "LambdaSharp:Module",
             "Value": "Core"
-          },
-          {
-            "Key": "LambdaSharp:Stack",
-            "Value": {
-              "Ref": "AWS::StackName"
-            }
           },
           {
             "Key": "LambdaSharp:RootStack",
@@ -134,12 +128,6 @@
           {
             "Key": "LambdaSharp:Module",
             "Value": "Core"
-          },
-          {
-            "Key": "LambdaSharp:Stack",
-            "Value": {
-              "Ref": "AWS::StackName"
-            }
           },
           {
             "Key": "LambdaSharp:RootStack",
@@ -196,12 +184,6 @@
           {
             "Key": "LambdaSharp:Module",
             "Value": "Core"
-          },
-          {
-            "Key": "LambdaSharp:Stack",
-            "Value": {
-              "Ref": "AWS::StackName"
-            }
           },
           {
             "Key": "LambdaSharp:RootStack",
@@ -362,12 +344,6 @@
             "Value": "Core"
           },
           {
-            "Key": "LambdaSharp:Stack",
-            "Value": {
-              "Ref": "AWS::StackName"
-            }
-          },
-          {
             "Key": "LambdaSharp:RootStack",
             "Value": {
               "Fn::If": [
@@ -432,12 +408,6 @@
           {
             "Key": "LambdaSharp:Module",
             "Value": "Core"
-          },
-          {
-            "Key": "LambdaSharp:Stack",
-            "Value": {
-              "Ref": "AWS::StackName"
-            }
           },
           {
             "Key": "LambdaSharp:RootStack",
@@ -526,12 +496,6 @@
           {
             "Key": "LambdaSharp:Module",
             "Value": "Core"
-          },
-          {
-            "Key": "LambdaSharp:Stack",
-            "Value": {
-              "Ref": "AWS::StackName"
-            }
           },
           {
             "Key": "LambdaSharp:RootStack",
@@ -1171,7 +1135,7 @@
         }
       ],
       "RuntimeCheck": false,
-      "Hash": "B94B8EF57E2A90146809A53FCCE98648",
+      "Hash": "1644F0255A3286AD21CD17FA476AA83A",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
