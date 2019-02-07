@@ -102,10 +102,11 @@ if [ -z "$1" ]; then
         ../Samples/SnsSample \
         ../Samples/SqsSample \
         ../Samples/VpcFunctionSample \
-        ../Demos/SlackTodo \
         ../Demos/DemoS3BucketSubscription/DemoS3Bucket \
         ../Demos/DemoS3BucketSubscription/DemoS3Subscriber \
-        ../Demos/TwitterNotifier
+        ../Demos/SlackTodo \
+        ../Demos/StaticWebsite \
+        ../Demos/TwitterNotifier \
 
 else
     testfile=$(basename $1 .yml)
