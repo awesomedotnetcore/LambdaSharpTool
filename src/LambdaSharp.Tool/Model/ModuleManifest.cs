@@ -163,5 +163,6 @@ namespace LambdaSharp.Tool.Model {
         public string Type { get; set; }
         public string Label { get; set; }
         public string Default { get; set; }
+        public string Import { get; set; }
     }
 }

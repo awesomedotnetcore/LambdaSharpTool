@@ -2,19 +2,21 @@
 
 # LambdaSharp Module - Import Definition
 
-The `Import` definition is used to import a cross-module value. It can only be used as a nested item in a [`Using` definition](Module-Using.md).
+The `Import` definition is used to create a cross-module reference. By default, these references are resolved by CloudFormation at deployment time. However, they can also be redirected to a different module or be given a specific value instead. This capability allows for a default behavior that is mostly convenient, while enabling modules to be re-wired to import values from other modules, or to be given specific values for testing or legacy purposes.
+
 
 __Topics__
 * [Syntax](#syntax)
 * [Properties](#properties)
+* [Examples](#examples)
 
 ## Syntax
 
 ```yaml
 Import: String
+Module: String
 Description: String
 Scope: ScopeDefinition
-NoEcho: Boolean
 Type: String
 Allow: AllowDefinition
 EncryptionContext:
@@ -36,7 +38,7 @@ The <code>Allow</code> attribute can be either a comma-separated, single string 
 
 <dt><code>Description</code></dt>
 <dd>
-The <code>Description</code> attribute specifies the import parameter description. The description is shown in the AWS Console when creating or updating the CloudFormation stack.
+The <code>Description</code> attribute specifies the import parameter description. The description is shown as part of the module's exported values when the <code>Scope</code> includes <code>public</code>.
 
 <i>Required</i>: No
 
@@ -61,11 +63,11 @@ The <code>Import</code> attribute specifies the import parameter name. The name 
 <i>Type</i>: String
 </dd>
 
-<dt><code>NoEcho</code></dt>
+<dt><code>Module</code></dt>
 <dd>
-The <code>NoEcho</code> attribute specifies whether to mask the import parameter value when a call is made that describes the stack. If you set the value to <code>true</code>, the parameter value is masked with asterisks (*****).
+The <code>Module</code> attribute specifies the name of the module from which to import the value from. The name of imported value can optionally be specified by appending it to the module reference, separated by a double-colon (<code>::</code>). For example, <code>Other.Module::Some::Variable</code> imports the <code>Some::Variable</code> value from the <code>Other.Module</code> module. When omitted, the value of the <code></code> attribute is used instead. Note that the module reference cannot have a version or source bucket specification.
 
-<i>Required</i>: No
+<i>Required</i>: Yes
 
 <i>Type</i>: String
 </dd>
@@ -92,3 +94,23 @@ For example, the decrypted value of a variable called <code>Password</code> with
 
 </dl>
 
+## Examples
+
+### Import a module
+
+```yaml
+- Import: ImportedMessageTitle
+  Module: My.OtherModule::MessageTitle
+  Description: Imported title for messages
+  Type: String
+```
+
+### Import a module output and associate IAM permissions
+
+```yaml
+- Import: ImportedTopic
+  Module: My.OtherModule::Topic
+  Description: Topic ARN for sending notifications
+  Type: AWS::SNS::Topic
+  Allow: Publish
+```

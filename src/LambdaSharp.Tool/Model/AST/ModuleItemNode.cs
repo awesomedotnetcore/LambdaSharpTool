@@ -56,7 +56,7 @@ namespace LambdaSharp.Tool.Model.AST {
                 "Allow",
                 "Description",
                 "EncryptionContext",
-                "NoEcho",
+                "Module",
                 "Scope",
                 "Type"
             },
@@ -126,11 +126,6 @@ namespace LambdaSharp.Tool.Model.AST {
             },
 
             // nodes with optional nested items
-            ["Using"] = new[] {
-                "Description",
-                "Module",
-                "Items"
-            },
             ["Namespace"] = new[] {
                 "Items",
                 "Description"
@@ -181,25 +176,16 @@ namespace LambdaSharp.Tool.Model.AST {
         public IList<object> Pragmas { get; set; }
 
         /*
-         * Using: string
-         * Module: string
-         * Description: string
-         * Items: list<Parameter>
-         */
-        public string Using { get; set; }
-        public string Module { get; set; }
-        public IList<ModuleItemNode> Items { get; set; }
-
-        /*
          * Import: string
          * Description: string
          * Type: string
          * Scope: string -or- list<string>
-         * NoEcho: bool
          * Allow: string or list<string>
+         * Module: string
          * EncryptionContext: map
          */
         public string Import { get; set; }
+        public string Module { get; set; }
 
         /*
          * Variable: string
@@ -218,6 +204,7 @@ namespace LambdaSharp.Tool.Model.AST {
          * Items: list<Declaration>
          */
         public string Namespace { get; set; }
+        public IList<ModuleItemNode> Items { get; set; }
 
         /*
          * Condition: string

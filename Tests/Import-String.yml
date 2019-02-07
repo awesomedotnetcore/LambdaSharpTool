@@ -2,14 +2,10 @@ Module: Test.TestModule
 Description: LambdaSharp CloudFormation Test
 Items:
 
-  - Using: OtherModule
-    Module: Some.OtherModule
-    Description: Cross-Module References
-    Items:
-
-      - Import: Value
-        Description: cross-module import reference
-        Scope: "*"
+  - Import: ImportedValue
+    Module: Other.Module::Value
+    Scope: "*"
+    Type: String
 
   - Function: Function
     Description: My function

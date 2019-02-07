@@ -223,6 +223,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             => ConvertItem(null, index, node, new[] {
                 "Condition",
                 "Function",
+                "Import",
                 "Macro",
                 "Mapping",
                 "Nested",
@@ -231,7 +232,6 @@ namespace LambdaSharp.Tool.Cli.Build {
                 "Parameter",
                 "Resource",
                 "ResourceType",
-                "Using",
                 "Variable"
             });
 
@@ -274,25 +274,12 @@ namespace LambdaSharp.Tool.Cli.Build {
                     );
                 });
                 break;
-            case "Using":
-                AtLocation(node.Using, () => {
-
-                    // create import/cross-module reference item
-                    var result = _builder.AddUsing(
-                        name: node.Using,
-                        source: node.Module,
-                        description: node.Description
-                    );
-
-                    // recurse, but only allow 'Import' nodes
-                    ConvertItems(result, new[] { "Import" });
-                });
-                break;
             case "Import":
                 AtLocation(node.Import, () => {
 
                     // validation
                     Validate((node.Allow == null) || (node.Type == "AWS") || ResourceMapping.IsCloudFormationType(node.Type), "'Allow' attribute can only be used with AWS resource types");
+                    Validate(node.Module != null, "missing 'Module' attribute");
 
                     // create input parameter item
                     _builder.AddImport(
@@ -301,9 +288,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                         description: node.Description,
                         type: node.Type ?? "String",
                         scope: ConvertScope(node.Scope),
-                        noEcho: node.NoEcho,
                         allow: node.Allow,
-                        arnAttribute: node.DefaultAttribute,
+                        module: node.Module ?? "Bad.Module",
                         encryptionContext: node.EncryptionContext
                     );
                 });

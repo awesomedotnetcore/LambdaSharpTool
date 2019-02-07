@@ -88,7 +88,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
                     // recursively create resources as needed
                     var apiMethods = new List<KeyValuePair<string, object>>();
-                    AddApiResource(restApiItem, FnRef(restApiItem.ResourceName), FnGetAtt(restApiItem.ResourceName, "RootResourceId"), 0, _apiGatewayRoutes, apiMethods);
+                    AddApiResource(restApiItem, FnRef(restApiItem.FullName), FnGetAtt(restApiItem.FullName, "RootResourceId"), 0, _apiGatewayRoutes, apiMethods);
 
                     // RestApi deployment depends on all methods and their hash (to force redeployment in case of change)
                     var methodSignature = string.Join("\n", apiMethods
@@ -274,7 +274,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     scope: null,
                     resource: new Humidifier.Lambda.Permission {
                         Action = "lambda:InvokeFunction",
-                        FunctionName = FnGetAtt(method.Function.ResourceName, "Arn"),
+                        FunctionName = FnGetAtt(method.Function.FullName, "Arn"),
                         Principal = "apigateway.amazonaws.com",
                         SourceArn = FnSub($"arn:aws:execute-api:${{AWS::Region}}:${{AWS::AccountId}}:${{Module::RestApi}}/LATEST/{method.Method}/{string.Join("/", method.Path)}")
                     },
@@ -283,7 +283,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     condition: method.Function.Condition,
                     pragmas: null
                 );
-                apiMethods.Add(new KeyValuePair<string, object>(methodItem.ResourceName, apiMethod));
+                apiMethods.Add(new KeyValuePair<string, object>(methodItem.FullName, apiMethod));
             }
 
             // find sub-routes and group common sub-route prefix
@@ -312,7 +312,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     condition: null,
                     pragmas: null
                 );
-                AddApiResource(resource, restApiId, FnRef(resource.ResourceName), level + 1, subRoute, apiMethods);
+                AddApiResource(resource, restApiId, FnRef(resource.FullName), level + 1, subRoute, apiMethods);
             }
 
             Humidifier.ApiGateway.Method CreateRequestResponseApiMethod(ApiRoute method) {
@@ -326,7 +326,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     Integration = new Humidifier.ApiGateway.MethodTypes.Integration {
                         Type = "AWS_PROXY",
                         IntegrationHttpMethod = "POST",
-                        Uri = FnSub($"arn:aws:apigateway:${{AWS::Region}}:lambda:path/2015-03-31/functions/${{{method.Function.ResourceName}.Arn}}/invocations")
+                        Uri = FnSub($"arn:aws:apigateway:${{AWS::Region}}:lambda:path/2015-03-31/functions/${{{method.Function.FullName}.Arn}}/invocations")
                     }
                 };
             }
@@ -346,7 +346,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     Integration = new Humidifier.ApiGateway.MethodTypes.Integration {
                         Type = "AWS",
                         IntegrationHttpMethod = "POST",
-                        Uri = FnSub($"arn:aws:apigateway:${{AWS::Region}}:lambda:path/2015-03-31/functions/${{{method.Function.ResourceName}.Arn}}/invocations"),
+                        Uri = FnSub($"arn:aws:apigateway:${{AWS::Region}}:lambda:path/2015-03-31/functions/${{{method.Function.FullName}.Arn}}/invocations"),
                         RequestParameters = new Dictionary<string, object> {
                             ["integration.request.header.X-Amz-Invocation-Type"] = "'Event'"
                         },
@@ -404,7 +404,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                             description: null,
                             scope: null,
                             resource: new Humidifier.SNS.Subscription {
-                                Endpoint = FnGetAtt(function.ResourceName, "Arn"),
+                                Endpoint = FnGetAtt(function.FullName, "Arn"),
                                 Protocol = "lambda",
                                 TopicArn = arn,
                                 FilterPolicy = (topicSource.Filters != null)
@@ -423,7 +423,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                             scope: null,
                             resource: new Humidifier.Lambda.Permission {
                                 Action = "lambda:InvokeFunction",
-                                FunctionName = FnGetAtt(function.ResourceName, "Arn"),
+                                FunctionName = FnGetAtt(function.FullName, "Arn"),
                                 Principal = "sns.amazonaws.com",
                                 SourceArn = arn
                             },
@@ -454,7 +454,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 Targets = new[] {
                                     new Humidifier.Events.RuleTypes.Target {
                                         Id = id,
-                                        Arn = FnGetAtt(function.ResourceName, "Arn"),
+                                        Arn = FnGetAtt(function.FullName, "Arn"),
                                         InputTransformer = new Humidifier.Events.RuleTypes.InputTransformer {
                                             InputPathsMap = new Dictionary<string, object> {
                                                 ["version"] = "$.version",
@@ -490,9 +490,9 @@ namespace LambdaSharp.Tool.Cli.Build {
                             scope: null,
                             resource: new Humidifier.Lambda.Permission {
                                 Action = "lambda:InvokeFunction",
-                                FunctionName = FnGetAtt(function.ResourceName, "Arn"),
+                                FunctionName = FnGetAtt(function.FullName, "Arn"),
                                 Principal = "events.amazonaws.com",
-                                SourceArn = FnGetAtt(schedule.ResourceName, "Arn")
+                                SourceArn = FnGetAtt(schedule.FullName, "Arn")
                             },
                             resourceExportAttribute: null,
                             dependsOn: null,
@@ -521,7 +521,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                             scope: null,
                             resource: new Humidifier.Lambda.Permission {
                                 Action = "lambda:InvokeFunction",
-                                FunctionName = FnGetAtt(function.ResourceName, "Arn"),
+                                FunctionName = FnGetAtt(function.FullName, "Arn"),
                                 Principal = "s3.amazonaws.com",
                                 SourceAccount = FnRef("AWS::AccountId"),
                                 SourceArn = arn
@@ -540,7 +540,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                             allow: null,
                             properties: new Dictionary<string, object> {
                                 ["Bucket"] = arn,
-                                ["Function"] = FnGetAtt(function.ResourceName, "Arn"),
+                                ["Function"] = FnGetAtt(function.FullName, "Arn"),
                                 ["Filters"] = new List<object> {
 
                                     // TODO (2018-11-18, bjorg): we need to group filters from the same function for the same bucket
@@ -579,7 +579,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 BatchSize = sqsSource.BatchSize,
                                 Enabled = true,
                                 EventSourceArn = arn,
-                                FunctionName = FnRef(function.ResourceName)
+                                FunctionName = FnRef(function.FullName)
                             },
                             resourceExportAttribute: null,
                             dependsOn: null,
@@ -611,7 +611,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 value: FnEquals(alexaSource.EventSourceToken, "*")
                             );
                             eventSourceToken = FnIf(
-                                condition.ResourceName,
+                                condition.FullName,
                                 FnRef("AWS::NoValue"),
                                 alexaSource.EventSourceToken
                             );
@@ -623,7 +623,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                             scope: null,
                             resource: new Humidifier.Lambda.Permission {
                                 Action = "lambda:InvokeFunction",
-                                FunctionName = FnGetAtt(function.ResourceName, "Arn"),
+                                FunctionName = FnGetAtt(function.FullName, "Arn"),
                                 Principal = "alexa-appkit.amazon.com",
                                 EventSourceToken = eventSourceToken
                             },
@@ -646,14 +646,14 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 StartingPosition = dynamoDbSource.StartingPosition,
                                 Enabled = true,
                                 EventSourceArn = arn,
-                                FunctionName = FnRef(function.ResourceName)
+                                FunctionName = FnRef(function.FullName)
                             },
                             resourceExportAttribute: null,
                             dependsOn: null,
                             condition: function.Condition,
                             pragmas: null
                         );
-                    }, item => FnGetAtt(item.ResourceName, "StreamArn"));
+                    }, item => FnGetAtt(item.FullName, "StreamArn"));
                     break;
                 case KinesisSource kinesisSource:
                     Enumerate(kinesisSource.Kinesis, (suffix, arn) => {
@@ -667,7 +667,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 StartingPosition = kinesisSource.StartingPosition,
                                 Enabled = true,
                                 EventSourceArn = arn,
-                                FunctionName = FnRef(function.ResourceName)
+                                FunctionName = FnRef(function.FullName)
                             },
                             resourceExportAttribute: null,
                             dependsOn: null,

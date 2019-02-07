@@ -249,8 +249,7 @@ namespace LambdaSharp.Tool.Model {
                 if(bucketName != null) {
                     if(dependency.BucketName == null) {
                         dependency.BucketName = bucketName;
-                    }
-                    if(dependency.BucketName != bucketName) {
+                    } else if(dependency.BucketName != bucketName) {
                         AddError($"module {moduleFullName} source bucket conflict is empty ({dependency.BucketName} vs. {bucketName})");
                     }
                 }
@@ -363,7 +362,8 @@ namespace LambdaSharp.Tool.Model {
                 type: type,
                 scope: scope,
                 reference: null,
-                parameter: parameter
+                parameter: parameter,
+                import: null
             ));
 
             // check if a resource-type is associated with the input parameter
@@ -430,97 +430,102 @@ namespace LambdaSharp.Tool.Model {
             string description,
             string type,
             IList<string> scope,
-            bool? noEcho,
             object allow,
-            string arnAttribute,
+            string module,
             IDictionary<string, string> encryptionContext
         ) {
+
+            // extract optional export name from module reference
+            var export = name;
+            var moduleParts = module.Split("::", 2);
+            if(moduleParts.Length == 2) {
+                module = moduleParts[0];
+                export = moduleParts[1];
+            }
+
+            // validate module name
+            if(!module.TryParseModuleDescriptor(out string moduleOwner, out string moduleName, out VersionInfo moduleVersion, out string moduleBucketName)) {
+                AddError("invalid 'Module' attribute");
+            } else {
+                module = $"{moduleOwner}.{moduleName}";
+            }
+            if(moduleVersion != null) {
+                AddError("'Module' attribute cannot have a version");
+            }
+            if(moduleBucketName != null) {
+                AddError("'Module' attribute cannot have a source bucket name");
+            }
 
             // create input parameter item
             var parameter = new Humidifier.Parameter {
                 Type = ResourceMapping.ToCloudFormationParameterType(type),
-                Description = description,
-                NoEcho = noEcho
+                Description = $"Cross-module reference for {module}::{export}",
+
+                // default value for an imported parameter is always the cross-module reference
+                Default = $"${module.Replace(".", "-")}::{export}",
+
+                // set default settings for import parameters
+                ConstraintDescription = "must either be a cross-module reference or a non-empty value",
+                AllowedPattern =  @"^.+$"
             };
-            var result = AddItem(new ParameterItem(
+            var import = new ParameterItem(
+                parent: null,
+                name: module.ToIdentifier() + export.ToIdentifier(),
+                section: $"{module} Imports",
+                label: export,
+                description: null,
+                type: type,
+                scope: null,
+                reference: null,
+                parameter: parameter,
+                import: $"{module}::{export}"
+            );
+            import.DiscardIfNotReachable = true;
+
+            // check if an import parameter for this reference exists already
+            var found = _items.FirstOrDefault(item => item.FullName == import.FullName);
+            if(found is ParameterItem existing) {
+                if(existing.Parameter.Default != parameter.Default) {
+                    AddError($"import parameter '{import.FullName}' is already defined with a different binding");
+                }
+                import = existing;
+            } else {
+
+                // add parameter and map it to variable
+                AddItem(import);
+                var condition = AddCondition(
+                    parent: import,
+                    name: "IsImported",
+                    description: null,
+                    value: FnAnd(
+                        FnNot(FnEquals(FnRef(import.ResourceName), "")),
+                        FnEquals(FnSelect("0", FnSplit("$", FnRef(import.ResourceName))), "")
+                    )
+                );
+
+                import.Reference = FnIf(
+                    condition.ResourceName,
+                    FnImportValue(FnSub("${DeploymentPrefix}${Import}", new Dictionary<string, object> {
+                        ["Import"] = FnSelect("1", FnSplit("$", FnRef(import.ResourceName)))
+                    })),
+                    FnRef(import.ResourceName)
+                );
+            }
+
+            // TODO (2019-02-07, bjorg): since the variable is created for each import, it also duplicates the `::Plaintext` sub-resource
+            //  for imports of type `Secret`; while it's technically not wrong, it's not efficient if this happens multiple times.
+
+            // register import parameter reference
+            return AddVariable(
                 parent: parent,
-                name: name.Replace("::", ""),
-                section: parent.Description,
-                label: description,
+                name: name,
                 description: description,
                 type: type,
                 scope: scope,
-                reference: null,
-                parameter: parameter
-            ));
-
-            // default value for an imported parameter is always the cross-module reference
-            parameter.Default = $"${parent.Reference.ToString().Replace(".", "-")}::{name}";
-
-            // set default settings for import parameters
-            parameter.ConstraintDescription = "must either be a cross-module import reference or a non-empty value";
-            parameter.AllowedPattern =  @"^.+$";
-
-            // register import parameter reference
-            var condition = AddCondition(
-                parent: result,
-                name: "IsImported",
-                description: null,
-                value: FnAnd(
-                    FnNot(FnEquals(FnRef(result.ResourceName), "")),
-                    FnEquals(FnSelect("0", FnSplit("$", FnRef(result.ResourceName))), "")
-                )
+                value: FnRef(import.FullName),
+                allow: allow,
+                encryptionContext: encryptionContext
             );
-            result.Reference = FnIf(
-                condition.ResourceName,
-                FnImportValue(FnSub("${DeploymentPrefix}${Import}", new Dictionary<string, object> {
-                    ["Import"] = FnSelect("1", FnSplit("$", FnRef(result.ResourceName)))
-                })),
-                FnRef(result.ResourceName)
-            );
-
-            // check if imported values requires additional permissions/processing
-            if(result.HasSecretType) {
-                var decoder = AddResource(
-                    parent: result,
-                    name: "Plaintext",
-                    description: null,
-                    scope: null,
-                    resource: CreateDecryptSecretResourceFor(result),
-                    resourceExportAttribute: null,
-                    dependsOn: null,
-                    condition: null,
-                    pragmas: null
-                );
-                decoder.Reference = FnGetAtt(decoder.ResourceName, "Plaintext");
-                decoder.DiscardIfNotReachable = true;
-            } else if(!result.HasAwsType) {
-
-                // nothing to do
-            } else {
-
-                // request input parameter resource grants
-                AddGrant(result.LogicalId, type, result.Reference, allow);
-            }
-            return result;
-        }
-
-        public AModuleItem AddUsing(
-            string name,
-            string source,
-            string description
-        ) {
-            var result = AddVariable(
-                parent: null,
-                name: name,
-                description: description ?? $"{name} cross-module references",
-                type: "String",
-                scope: null,
-                value: source ?? name,
-                allow: null,
-                encryptionContext: null
-            );
-            return result;
         }
 
         public void AddResourceType(
@@ -762,44 +767,8 @@ namespace LambdaSharp.Tool.Model {
                 ? new Dictionary<string, object>(parameters)
                 : new Dictionary<string, object>();
 
-            // validate module
-            AtLocation("Parameters", () => {
-                if(!Settings.NoDependencyValidation) {
-                    var moduleFullName = $"{moduleOwner}.{moduleName}";
-                    var loader = new ModelManifestLoader(Settings, moduleFullName);
-                    var location = loader.LocateAsync(moduleOwner, moduleName, moduleVersion, moduleVersion, moduleBucketName).Result;
-                    if(location != null) {
-                        var manifest = new ModelManifestLoader(Settings, moduleFullName).LoadFromS3Async(location.ModuleBucketName, location.TemplatePath).Result;
-
-                        // validate that all required parameters are supplied
-                        var formalParameters = manifest.GetAllParameters().ToDictionary(p => p.Name);
-                        foreach(var formalParameter in formalParameters.Values.Where(p => (p.Default == null) && !moduleParameters.ContainsKey(p.Name))) {
-                            AddError($"missing module parameter '{formalParameter.Name}'");
-                        }
-                        foreach(var moduleParameter in moduleParameters.Where(kv => !formalParameters.ContainsKey(kv.Key))) {
-                            AddError($"unknown module parameter '{moduleParameter.Key}'");
-                        }
-                    } else {
-
-                        // nothing to do; 'LocateAsync' already reported the error
-                    }
-                } else {
-                    AddWarning("unable to validate module parameters");
-                }
-
-                // add expected parameters
-                OptionalAdd("LambdaSharpDeadLetterQueue", FnRef("Module::DeadLetterQueue"));
-                OptionalAdd("LambdaSharpLoggingStream", FnRef("Module::LoggingStream"));
-                OptionalAdd("LambdaSharpLoggingStreamRole", FnRef("Module::LoggingStreamRole"));
-                OptionalAdd("LambdaSharpDefaultSecretKey", FnRef("Module::DefaultSecretKey"));
-                MandatoryAdd("DeploymentBucketName", sourceBucketName);
-                MandatoryAdd("DeploymentPrefix", FnRef("DeploymentPrefix"));
-                MandatoryAdd("DeploymentPrefixLowercase", FnRef("DeploymentPrefixLowercase"));
-                MandatoryAdd("DeploymentRoot", FnRef("Module::RootId"));
-            });
-
-            // add stack resource
-            return AddResource(
+            // add nested module resource
+            var resource = AddResource(
                 parent: parent,
                 name: name,
                 description: description,
@@ -815,7 +784,7 @@ namespace LambdaSharp.Tool.Model {
                     }),
 
                     // TODO (2018-11-29, bjorg): make timeout configurable
-                    TimeoutInMinutes = 5
+                    TimeoutInMinutes = 15
                 },
                 resourceExportAttribute: null,
                 dependsOn: ConvertToStringList(dependsOn),
@@ -823,13 +792,65 @@ namespace LambdaSharp.Tool.Model {
                 pragmas: null
             );
 
-            // local function
-            void OptionalAdd(string key, object value) {
-                if(!moduleParameters.ContainsKey(key)) {
-                    moduleParameters.Add(key, value);
-                }
-            }
+            // validate module parameters
+            AtLocation("Parameters", () => {
+                if(!Settings.NoDependencyValidation) {
+                    var moduleFullName = $"{moduleOwner}.{moduleName}";
+                    var loader = new ModelManifestLoader(Settings, moduleFullName);
+                    var location = loader.LocateAsync(moduleOwner, moduleName, moduleVersion, moduleVersion, moduleBucketName).Result;
+                    if(location != null) {
+                        var manifest = new ModelManifestLoader(Settings, moduleFullName).LoadFromS3Async(location.ModuleBucketName, location.TemplatePath).Result;
 
+                        // validate that all required parameters are supplied
+                        var formalParameters = manifest.GetAllParameters().ToDictionary(p => p.Name);
+                        foreach(var formalParameter in formalParameters.Values.Where(p => (p.Default == null) && !moduleParameters.ContainsKey(p.Name))) {
+                            AddError($"missing module parameter '{formalParameter.Name}'");
+                        }
+
+                        // validate that all supplied parameters exist
+                        foreach(var moduleParameter in moduleParameters.Where(kv => !formalParameters.ContainsKey(kv.Key))) {
+                            AddError($"unknown module parameter '{moduleParameter.Key}'");
+                        }
+
+                        // inherit dependencies from nested module
+                        foreach(var dependency in manifest.Dependencies) {
+                            AddDependency(dependency.ModuleFullName, dependency.MinVersion, dependency.MaxVersion, dependency.BucketName);
+                        }
+
+                        // inherit import parameters that are not provided by the declaration
+                        foreach(var nestedImport in manifest.GetAllParameters()
+                            .Where(parameter => parameter.Import != null)
+                            .Where(parameter => !moduleParameters.ContainsKey(parameter.Name))
+                        ) {
+                            var import = AddImport(
+                                parent: resource,
+                                name: nestedImport.Name,
+                                description: null,
+                                type: nestedImport.Type,
+                                scope: null,
+                                allow: null,
+                                module: nestedImport.Import,
+                                encryptionContext: null
+                            );
+                            moduleParameters.Add(nestedImport.Name, FnRef(import.FullName));
+                        }
+                    } else {
+
+                        // nothing to do; 'LocateAsync' already reported the error
+                    }
+                } else {
+                    AddWarning("unable to validate module parameters");
+                }
+
+                // add expected parameters
+                MandatoryAdd("DeploymentBucketName", sourceBucketName);
+                MandatoryAdd("DeploymentPrefix", FnRef("DeploymentPrefix"));
+                MandatoryAdd("DeploymentPrefixLowercase", FnRef("DeploymentPrefixLowercase"));
+                MandatoryAdd("DeploymentRoot", FnRef("Module::RootId"));
+            });
+            return resource;
+
+            // local function
             void MandatoryAdd(string key, object value) {
                 if(!moduleParameters.ContainsKey(key)) {
                     moduleParameters.Add(key, value);

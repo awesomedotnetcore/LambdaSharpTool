@@ -1,7 +1,28 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "LambdaSharp CloudFormation Test (v1.0-DEV)",
+  "Description": "Search Twitter at regular intervals and publish new found tweets (v0.5-WIP)",
   "Parameters": {
+    "TwitterApiKey": {
+      "Type": "String",
+      "Description": "This parameter sets the API key for accessing Twitter"
+    },
+    "TwitterApiSecretKey": {
+      "Type": "String",
+      "Description": "This parameter sets the secret API key for accessing Twitter"
+    },
+    "TwitterQuery": {
+      "Type": "String",
+      "Description": "This parameter sets the query expression for finding tweets",
+      "AllowedPattern": ".+",
+      "ConstraintDescription": "Search query must be a non-empty string"
+    },
+    "TwitterQueryInterval": {
+      "Type": "Number",
+      "Description": "This parameter sets the interval between queries (in minutes)",
+      "Default": "60",
+      "MinValue": 2,
+      "MaxValue": 1440
+    },
     "Secrets": {
       "Type": "String",
       "Description": "Secret Keys (ARNs)",
@@ -13,6 +34,20 @@
       "AllowedPattern": "^.+$",
       "ConstraintDescription": "must either be a cross-module reference or a non-empty value",
       "Default": "$LambdaSharp-Core::DeadLetterQueue"
+    },
+    "LambdaSharpCoreLoggingStream": {
+      "Type": "String",
+      "Description": "Cross-module reference for LambdaSharp.Core::LoggingStream",
+      "AllowedPattern": "^.+$",
+      "ConstraintDescription": "must either be a cross-module reference or a non-empty value",
+      "Default": "$LambdaSharp-Core::LoggingStream"
+    },
+    "LambdaSharpCoreLoggingStreamRole": {
+      "Type": "String",
+      "Description": "Cross-module reference for LambdaSharp.Core::LoggingStreamRole",
+      "AllowedPattern": "^.+$",
+      "ConstraintDescription": "must either be a cross-module reference or a non-empty value",
+      "Default": "$LambdaSharp-Core::LoggingStreamRole"
     },
     "LambdaSharpCoreDefaultSecretKey": {
       "Type": "String",
@@ -41,18 +76,72 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "512F641F020B631CD9701A49760D9033"
+      "Default": "140F340002889329F396AB49A3E787E3"
     }
   },
   "Resources": {
-    "Function": {
+    "Topic": {
+      "Type": "AWS::SNS::Topic",
+      "Properties": {}
+    },
+    "Table": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "BillingMode": "PAY_PER_REQUEST",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "Id",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "Id",
+            "KeyType": "HASH"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "LambdaSharp:Tier",
+            "Value": {
+              "Fn::Sub": "${DeploymentPrefix}tier"
+            }
+          },
+          {
+            "Key": "LambdaSharp:Module",
+            "Value": "Twitter.Query"
+          },
+          {
+            "Key": "LambdaSharp:Stack",
+            "Value": {
+              "Ref": "AWS::StackName"
+            }
+          },
+          {
+            "Key": "LambdaSharp:RootStack",
+            "Value": {
+              "Fn::If": [
+                "ModuleIsNested",
+                {
+                  "Ref": "DeploymentRoot"
+                },
+                {
+                  "Ref": "AWS::StackName"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "Query": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
         "Code": {
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "Test/Modules/TestModule/Assets/Function-DRYRUN.zip"
+          "S3Key": "LambdaSharp/Modules/Twitter.Query/Assets/Query-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -86,14 +175,14 @@
             ]
           }
         },
-        "Description": "My function (v1.0-DEV)",
+        "Description": "This function runs on a scheduled interval to find the latest matching tweets (v0.5-WIP)",
         "Environment": {
           "Variables": {
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "Test.TestModule:1.0-DEV",
-            "LAMBDA_NAME": "Function",
+            "MODULE_INFO": "LambdaSharp.Twitter.Query:0.5-WIP",
+            "LAMBDA_NAME": "Query",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
               "Fn::If": [
@@ -154,11 +243,29 @@
                   "Ref": "LambdaSharpCoreDefaultSecretKey"
                 }
               ]
+            },
+            "SEC_TWITTERAPIKEY": {
+              "Ref": "TwitterApiKey"
+            },
+            "SEC_TWITTERAPISECRETKEY": {
+              "Ref": "TwitterApiSecretKey"
+            },
+            "STR_TWITTERQUERY": {
+              "Ref": "TwitterQuery"
+            },
+            "STR_TOPIC": {
+              "Ref": "Topic"
+            },
+            "STR_TABLE": {
+              "Fn::GetAtt": [
+                "Table",
+                "Arn"
+              ]
             }
           }
         },
-        "Handler": "Function::LambdaSharpTestModule.Function.Function::FunctionHandlerAsync",
-        "MemorySize": "128",
+        "Handler": "Query::LambdaSharp.Twitter.Query.Function::FunctionHandlerAsync",
+        "MemorySize": "256",
         "Role": {
           "Fn::GetAtt": [
             "ModuleRole",
@@ -175,7 +282,7 @@
           },
           {
             "Key": "LambdaSharp:Module",
-            "Value": "TestModule"
+            "Value": "Twitter.Query"
           },
           {
             "Key": "LambdaSharp:Stack",
@@ -201,11 +308,11 @@
         "Timeout": "30"
       }
     },
-    "FunctionLogGroup": {
+    "QueryLogGroup": {
       "Type": "AWS::Logs::LogGroup",
       "Properties": {
         "LogGroupName": {
-          "Fn::Sub": "/aws/lambda/${Function}"
+          "Fn::Sub": "/aws/lambda/${Query}"
         },
         "RetentionInDays": 30
       }
@@ -231,6 +338,70 @@
             "PolicyDocument": {
               "Version": "2012-10-17",
               "Statement": [
+                {
+                  "Sid": "Topic",
+                  "Effect": "Allow",
+                  "Action": [
+                    "sns:Publish"
+                  ],
+                  "Resource": {
+                    "Ref": "Topic"
+                  }
+                },
+                {
+                  "Sid": "Table",
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:BatchGetItem",
+                    "dynamodb:BatchWriteItem",
+                    "dynamodb:DeleteItem",
+                    "dynamodb:DescribeStream",
+                    "dynamodb:DescribeTable",
+                    "dynamodb:GetItem",
+                    "dynamodb:GetRecords",
+                    "dynamodb:GetShardIterator",
+                    "dynamodb:PutItem",
+                    "dynamodb:Query",
+                    "dynamodb:Scan",
+                    "dynamodb:UpdateItem"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::GetAtt": [
+                        "Table",
+                        "Arn"
+                      ]
+                    },
+                    {
+                      "Fn::Join": [
+                        "/",
+                        [
+                          {
+                            "Fn::GetAtt": [
+                              "Table",
+                              "Arn"
+                            ]
+                          },
+                          "stream/*"
+                        ]
+                      ]
+                    },
+                    {
+                      "Fn::Join": [
+                        "/",
+                        [
+                          {
+                            "Fn::GetAtt": [
+                              "Table",
+                              "Arn"
+                            ]
+                          },
+                          "index/*"
+                        ]
+                      ]
+                    }
+                  ]
+                },
                 {
                   "Sid": "ModuleDeadLetterQueueLogging",
                   "Effect": "Allow",
@@ -385,16 +556,174 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "Test.TestModule:1.0-DEV",
+        "Module": "LambdaSharp.Twitter.Query:0.5-WIP",
         "ModuleId": {
           "Ref": "AWS::StackName"
+        }
+      }
+    },
+    "QueryRegistration": {
+      "Type": "Custom::LambdaSharpRegistrationFunction",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${DeploymentPrefix}LambdaSharp::Registration::Function"
+          }
+        },
+        "ResourceType": "LambdaSharp::Registration::Function",
+        "ModuleId": {
+          "Ref": "AWS::StackName"
+        },
+        "FunctionId": {
+          "Ref": "Query"
+        },
+        "FunctionName": "Query",
+        "FunctionLogGroupName": {
+          "Fn::Sub": "/aws/lambda/${Query}"
+        },
+        "FunctionPlatform": "AWS Lambda",
+        "FunctionFramework": "dotnetcore2.1",
+        "FunctionLanguage": "csharp",
+        "FunctionMaxMemory": "256",
+        "FunctionMaxDuration": "30"
+      },
+      "DependsOn": [
+        "ModuleRegistration"
+      ]
+    },
+    "QueryLogGroupSubscription": {
+      "Type": "AWS::Logs::SubscriptionFilter",
+      "Properties": {
+        "DestinationArn": {
+          "Fn::If": [
+            "LambdaSharpCoreLoggingStreamIsImported",
+            {
+              "Fn::ImportValue": {
+                "Fn::Sub": [
+                  "${DeploymentPrefix}${Import}",
+                  {
+                    "Import": {
+                      "Fn::Select": [
+                        "1",
+                        {
+                          "Fn::Split": [
+                            "$",
+                            {
+                              "Ref": "LambdaSharpCoreLoggingStream"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "Ref": "LambdaSharpCoreLoggingStream"
+            }
+          ]
+        },
+        "FilterPattern": "-\"*** \"",
+        "LogGroupName": {
+          "Ref": "QueryLogGroup"
+        },
+        "RoleArn": {
+          "Fn::If": [
+            "LambdaSharpCoreLoggingStreamRoleIsImported",
+            {
+              "Fn::ImportValue": {
+                "Fn::Sub": [
+                  "${DeploymentPrefix}${Import}",
+                  {
+                    "Import": {
+                      "Fn::Select": [
+                        "1",
+                        {
+                          "Fn::Split": [
+                            "$",
+                            {
+                              "Ref": "LambdaSharpCoreLoggingStreamRole"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "Ref": "LambdaSharpCoreLoggingStreamRole"
+            }
+          ]
+        }
+      }
+    },
+    "QuerySource1ScheduleEvent": {
+      "Type": "AWS::Events::Rule",
+      "Properties": {
+        "ScheduleExpression": {
+          "Fn::Sub": "rate(${TwitterQueryInterval} minutes)"
+        },
+        "Targets": [
+          {
+            "Arn": {
+              "Fn::GetAtt": [
+                "Query",
+                "Arn"
+              ]
+            },
+            "Id": "Query-1",
+            "InputTransformer": {
+              "InputPathsMap": {
+                "version": "$.version",
+                "id": "$.id",
+                "source": "$.source",
+                "account": "$.account",
+                "time": "$.time",
+                "region": "$.region"
+              },
+              "InputTemplate": "{\r\n    \"Version\": <version>,\r\n    \"Id\": <id>,\r\n    \"Source\": <source>,\r\n    \"Account\": <account>,\r\n    \"Time\": <time>,\r\n    \"Region\": <region>,\r\n    \"tName\": \"\"\r\n}"
+            }
+          }
+        ]
+      }
+    },
+    "QuerySource1Permission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "Query",
+            "Arn"
+          ]
+        },
+        "Principal": "events.amazonaws.com",
+        "SourceArn": {
+          "Fn::GetAtt": [
+            "QuerySource1ScheduleEvent",
+            "Arn"
+          ]
         }
       }
     }
   },
   "Outputs": {
     "Module": {
-      "Value": "Test.TestModule:1.0-DEV"
+      "Value": "LambdaSharp.Twitter.Query:0.5-WIP"
+    },
+    "Topic": {
+      "Value": {
+        "Ref": "Topic"
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}::Topic"
+        }
+      },
+      "Description": "This topic publishes tweets that match the query"
     }
   },
   "Conditions": {
@@ -452,6 +781,74 @@
         }
       ]
     },
+    "LambdaSharpCoreLoggingStreamIsImported": {
+      "Fn::And": [
+        {
+          "Fn::Not": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "LambdaSharpCoreLoggingStream"
+                },
+                ""
+              ]
+            }
+          ]
+        },
+        {
+          "Fn::Equals": [
+            {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "$",
+                    {
+                      "Ref": "LambdaSharpCoreLoggingStream"
+                    }
+                  ]
+                }
+              ]
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "LambdaSharpCoreLoggingStreamRoleIsImported": {
+      "Fn::And": [
+        {
+          "Fn::Not": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "LambdaSharpCoreLoggingStreamRole"
+                },
+                ""
+              ]
+            }
+          ]
+        },
+        {
+          "Fn::Equals": [
+            {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "$",
+                    {
+                      "Ref": "LambdaSharpCoreLoggingStreamRole"
+                    }
+                  ]
+                }
+              ]
+            },
+            ""
+          ]
+        }
+      ]
+    },
     "LambdaSharpCoreDefaultSecretKeyIsImported": {
       "Fn::And": [
         {
@@ -490,11 +887,29 @@
   "Metadata": {
     "AWS::CloudFormation::Interface": {
       "ParameterLabels": {
+        "TwitterApiKey": {
+          "default": "API Key [Secret]"
+        },
+        "TwitterApiSecretKey": {
+          "default": "API Secret Key [Secret]"
+        },
+        "TwitterQuery": {
+          "default": "Search query [String]"
+        },
+        "TwitterQueryInterval": {
+          "default": "Query internal in minutes (from 2 to 1440) [Number]"
+        },
         "Secrets": {
           "default": "Comma-separated list of optional secret keys [String]"
         },
         "LambdaSharpCoreDeadLetterQueue": {
           "default": "DeadLetterQueue [String]"
+        },
+        "LambdaSharpCoreLoggingStream": {
+          "default": "LoggingStream [String]"
+        },
+        "LambdaSharpCoreLoggingStreamRole": {
+          "default": "LoggingStreamRole [String]"
         },
         "LambdaSharpCoreDefaultSecretKey": {
           "default": "DefaultSecretKey [String]"
@@ -518,6 +933,17 @@
       "ParameterGroups": [
         {
           "Label": {
+            "default": "Twitter Settings"
+          },
+          "Parameters": [
+            "TwitterApiKey",
+            "TwitterApiSecretKey",
+            "TwitterQuery",
+            "TwitterQueryInterval"
+          ]
+        },
+        {
+          "Label": {
             "default": "LambdaSharp Module Options"
           },
           "Parameters": [
@@ -530,6 +956,8 @@
           },
           "Parameters": [
             "LambdaSharpCoreDeadLetterQueue",
+            "LambdaSharpCoreLoggingStream",
+            "LambdaSharpCoreLoggingStreamRole",
             "LambdaSharpCoreDefaultSecretKey"
           ]
         },
@@ -549,8 +977,34 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2018-12-31",
-      "Module": "Test.TestModule:1.0-DEV",
+      "Module": "LambdaSharp.Twitter.Query:0.5-WIP",
       "ParameterSections": [
+        {
+          "Title": "Twitter Settings",
+          "Parameters": [
+            {
+              "Name": "TwitterApiKey",
+              "Type": "Secret",
+              "Label": "API Key"
+            },
+            {
+              "Name": "TwitterApiSecretKey",
+              "Type": "Secret",
+              "Label": "API Secret Key"
+            },
+            {
+              "Name": "TwitterQuery",
+              "Type": "String",
+              "Label": "Search query"
+            },
+            {
+              "Name": "TwitterQueryInterval",
+              "Type": "Number",
+              "Label": "Query internal in minutes (from 2 to 1440)",
+              "Default": "60"
+            }
+          ]
+        },
         {
           "Title": "LambdaSharp Module Options",
           "Parameters": [
@@ -573,6 +1027,20 @@
               "Import": "LambdaSharp.Core::DeadLetterQueue"
             },
             {
+              "Name": "LambdaSharpCoreLoggingStream",
+              "Type": "String",
+              "Label": "LoggingStream",
+              "Default": "$LambdaSharp-Core::LoggingStream",
+              "Import": "LambdaSharp.Core::LoggingStream"
+            },
+            {
+              "Name": "LambdaSharpCoreLoggingStreamRole",
+              "Type": "String",
+              "Label": "LoggingStreamRole",
+              "Default": "$LambdaSharp-Core::LoggingStreamRole",
+              "Import": "LambdaSharp.Core::LoggingStreamRole"
+            },
+            {
               "Name": "LambdaSharpCoreDefaultSecretKey",
               "Type": "String",
               "Label": "DefaultSecretKey",
@@ -583,7 +1051,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "512F641F020B631CD9701A49760D9033",
+      "Hash": "140F340002889329F396AB49A3E787E3",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
@@ -594,13 +1062,25 @@
           "MinVersion": "0.5-WIP"
         }
       ],
+      "Outputs": [
+        {
+          "Name": "Topic",
+          "Description": "This topic publishes tweets that match the query",
+          "Type": "AWS::SNS::Topic"
+        }
+      ],
       "ResourceNameMappings": {
-        "FunctionLogGroup": "Function::LogGroup",
+        "QueryLogGroup": "Query::LogGroup",
         "ModuleRole": "Module::Role",
-        "ModuleRegistration": "Module::Registration"
+        "ModuleRegistration": "Module::Registration",
+        "QueryRegistration": "Query::Registration",
+        "QueryLogGroupSubscription": "Query::LogGroupSubscription",
+        "QuerySource1ScheduleEvent": "Query::Source1ScheduleEvent",
+        "QuerySource1Permission": "Query::Source1Permission"
       },
       "TypeNameMappings": {
-        "Custom::LambdaSharpRegistrationModule": "LambdaSharp::Registration::Module"
+        "Custom::LambdaSharpRegistrationModule": "LambdaSharp::Registration::Module",
+        "Custom::LambdaSharpRegistrationFunction": "LambdaSharp::Registration::Function"
       }
     }
   }

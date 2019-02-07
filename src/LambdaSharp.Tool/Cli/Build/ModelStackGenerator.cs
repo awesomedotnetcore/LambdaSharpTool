@@ -102,7 +102,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                             Name = input.Name,
                             Type = input.Type,
                             Label = input.Label,
-                            Default = input.Parameter.Default
+                            Default = input.Parameter.Default,
+                            Import = input.Import
                         }).ToList()
                     }).ToList(),
                 RuntimeCheck = module.HasRuntimeCheck,

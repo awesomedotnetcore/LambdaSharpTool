@@ -20,16 +20,14 @@
 Module: LambdaSharp.DemoS3Subscriber
 Items:
 
-  - Using: DemoS3Bucket
-    Items:
-
-      - Import: Bucket
-        Type: AWS::S3::Bucket
-        Allow: Full
+  - Import: Bucket
+    Type: AWS::S3::Bucket
+    Allow: Full
+    Module: Demo.S3Bucket::Bucket
 
   - Function: Subscriber
     Memory: 128
     Timeout: 15
     Sources:
 
-      - S3: DemoS3Bucket::Bucket
+      - S3: Bucket

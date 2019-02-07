@@ -170,67 +170,68 @@ namespace LambdaSharp.Tool.Cli.Build {
             if(_builder.HasLambdaSharpDependencies) {
 
                 // add LambdaSharp Module Internal resource imports
-                var lambdasharp = _builder.AddUsing(
+                var lambdasharp = _builder.AddVariable(
+                    parent: null,
                     name: "LambdaSharp",
-                    source: "LambdaSharp.Core",
-                    description: "LambdaSharp Core Imports"
+                    description: "LambdaSharp Core Imports",
+                    type: "String",
+                    scope: null,
+                    value: "",
+                    allow: null,
+                    encryptionContext: null
                 );
                 _builder.AddImport(
                     parent: lambdasharp,
                     name: "DeadLetterQueue",
-                    description: "Dead Letter Queue (ARN)",
+                    description: null,
 
                     // TODO (2018-12-01, bjorg): consider using 'AWS::SQS::Queue'
                     type: "String",
                     scope: null,
-                    noEcho: null,
                     allow: null /* new[] {
                         "sqs:SendMessage"
                     }*/,
-                    arnAttribute: null,
+                    module: "LambdaSharp.Core",
                     encryptionContext: null
-                ).DiscardIfNotReachable = true;
+                );
                 _builder.AddImport(
                     parent: lambdasharp,
                     name: "LoggingStream",
-                    description: "Logging Stream (ARN)",
+                    description: null,
 
                     // NOTE (2018-12-11, bjorg): we use type 'String' to be more flexible with the type of values we're willing to take
                     type: "String",
                     scope: null,
-                    noEcho: null,
                     allow: null,
-                    arnAttribute: null,
+                    module: "LambdaSharp.Core",
                     encryptionContext: null
-                ).DiscardIfNotReachable = true;
+                );
                 _builder.AddImport(
                     parent: lambdasharp,
                     name: "LoggingStreamRole",
-                    description: "Logging Stream Role (ARN)",
+                    description: null,
 
                     // NOTE (2018-12-11, bjorg): we use type 'String' to be more flexible with the type of values we're willing to take
                     type: "String",
                     scope: null,
-                    noEcho: null,
                     allow: null,
-                    arnAttribute: null,
+                    module: "LambdaSharp.Core",
                     encryptionContext: null
-                ).DiscardIfNotReachable = true;
+                );
                 _builder.AddImport(
                     parent: lambdasharp,
                     name: "DefaultSecretKey",
-                    description: "Secret Key (ARN)",
+                    description: null,
 
                     // TODO (2018-12-01, bjorg): consider using 'AWS::KMS::Key'
                     type: "String",
                     scope: null,
-                    noEcho: null,
 
                     // NOTE (2018-12-11, bjorg): we grant decryption access later as part of a bulk permissioning operation
                     allow: null,
-                    arnAttribute: null,
+                    module: "LambdaSharp.Core",
                     encryptionContext: null
-                ).DiscardIfNotReachable = true;
+                );
             }
 
             // add module variables
@@ -297,7 +298,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 ? FnSplit(
                     ",",
                     FnIf(
-                        secretsIsEmpty.ResourceName,
+                        secretsIsEmpty.FullName,
                         FnJoin(",", _builder.Secrets),
                         FnJoin(
                             ",",
@@ -306,7 +307,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     )
                 )
                 : FnIf(
-                    secretsIsEmpty.ResourceName,
+                    secretsIsEmpty.FullName,
 
                     // TODO (2018-11-26, bjorg): this hack does not work to bypass the error of an empty list :(
                     "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/12345678-1234-1234-1234-123456789012",
@@ -570,9 +571,9 @@ namespace LambdaSharp.Tool.Cli.Build {
                             allow: null,
                             properties: new Dictionary<string, object> {
                                 ["ModuleId"] = FnRef("AWS::StackName"),
-                                ["FunctionId"] = FnRef(function.ResourceName),
+                                ["FunctionId"] = FnRef(function.FullName),
                                 ["FunctionName"] = function.Name,
-                                ["FunctionLogGroupName"] = FnSub($"/aws/lambda/${{{function.ResourceName}}}"),
+                                ["FunctionLogGroupName"] = FnSub($"/aws/lambda/${{{function.FullName}}}"),
                                 ["FunctionPlatform"] = "AWS Lambda",
                                 ["FunctionFramework"] = function.Function.Runtime,
                                 ["FunctionLanguage"] = function.Language,

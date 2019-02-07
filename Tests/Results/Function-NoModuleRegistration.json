@@ -7,18 +7,18 @@
       "Description": "Secret Keys (ARNs)",
       "Default": ""
     },
-    "LambdaSharpDeadLetterQueue": {
+    "LambdaSharpCoreDeadLetterQueue": {
       "Type": "String",
-      "Description": "Dead Letter Queue (ARN)",
+      "Description": "Cross-module reference for LambdaSharp.Core::DeadLetterQueue",
       "AllowedPattern": "^.+$",
-      "ConstraintDescription": "must either be a cross-module import reference or a non-empty value",
+      "ConstraintDescription": "must either be a cross-module reference or a non-empty value",
       "Default": "$LambdaSharp-Core::DeadLetterQueue"
     },
-    "LambdaSharpDefaultSecretKey": {
+    "LambdaSharpCoreDefaultSecretKey": {
       "Type": "String",
-      "Description": "Secret Key (ARN)",
+      "Description": "Cross-module reference for LambdaSharp.Core::DefaultSecretKey",
       "AllowedPattern": "^.+$",
-      "ConstraintDescription": "must either be a cross-module import reference or a non-empty value",
+      "ConstraintDescription": "must either be a cross-module reference or a non-empty value",
       "Default": "$LambdaSharp-Core::DefaultSecretKey"
     },
     "DeploymentBucketName": {
@@ -41,7 +41,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "2DA5E9885C7162727AF395AE4B16F019"
+      "Default": "DD7B0868F2C683A8430FB9B2D9CC45ED"
     }
   },
   "Resources": {
@@ -57,7 +57,7 @@
         "DeadLetterConfig": {
           "TargetArn": {
             "Fn::If": [
-              "LambdaSharpDeadLetterQueueIsImported",
+              "LambdaSharpCoreDeadLetterQueueIsImported",
               {
                 "Fn::ImportValue": {
                   "Fn::Sub": [
@@ -70,7 +70,7 @@
                             "Fn::Split": [
                               "$",
                               {
-                                "Ref": "LambdaSharpDeadLetterQueue"
+                                "Ref": "LambdaSharpCoreDeadLetterQueue"
                               }
                             ]
                           }
@@ -81,7 +81,7 @@
                 }
               },
               {
-                "Ref": "LambdaSharpDeadLetterQueue"
+                "Ref": "LambdaSharpCoreDeadLetterQueue"
               }
             ]
           }
@@ -97,7 +97,7 @@
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
               "Fn::If": [
-                "LambdaSharpDeadLetterQueueIsImported",
+                "LambdaSharpCoreDeadLetterQueueIsImported",
                 {
                   "Fn::ImportValue": {
                     "Fn::Sub": [
@@ -110,7 +110,7 @@
                               "Fn::Split": [
                                 "$",
                                 {
-                                  "Ref": "LambdaSharpDeadLetterQueue"
+                                  "Ref": "LambdaSharpCoreDeadLetterQueue"
                                 }
                               ]
                             }
@@ -121,13 +121,13 @@
                   }
                 },
                 {
-                  "Ref": "LambdaSharpDeadLetterQueue"
+                  "Ref": "LambdaSharpCoreDeadLetterQueue"
                 }
               ]
             },
             "DEFAULTSECRETKEY": {
               "Fn::If": [
-                "LambdaSharpDefaultSecretKeyIsImported",
+                "LambdaSharpCoreDefaultSecretKeyIsImported",
                 {
                   "Fn::ImportValue": {
                     "Fn::Sub": [
@@ -140,7 +140,7 @@
                               "Fn::Split": [
                                 "$",
                                 {
-                                  "Ref": "LambdaSharpDefaultSecretKey"
+                                  "Ref": "LambdaSharpCoreDefaultSecretKey"
                                 }
                               ]
                             }
@@ -151,7 +151,7 @@
                   }
                 },
                 {
-                  "Ref": "LambdaSharpDefaultSecretKey"
+                  "Ref": "LambdaSharpCoreDefaultSecretKey"
                 }
               ]
             }
@@ -239,7 +239,7 @@
                   ],
                   "Resource": {
                     "Fn::If": [
-                      "LambdaSharpDeadLetterQueueIsImported",
+                      "LambdaSharpCoreDeadLetterQueueIsImported",
                       {
                         "Fn::ImportValue": {
                           "Fn::Sub": [
@@ -252,7 +252,7 @@
                                     "Fn::Split": [
                                       "$",
                                       {
-                                        "Ref": "LambdaSharpDeadLetterQueue"
+                                        "Ref": "LambdaSharpCoreDeadLetterQueue"
                                       }
                                     ]
                                   }
@@ -263,7 +263,7 @@
                         }
                       },
                       {
-                        "Ref": "LambdaSharpDeadLetterQueue"
+                        "Ref": "LambdaSharpCoreDeadLetterQueue"
                       }
                     ]
                   }
@@ -285,7 +285,7 @@
                           "SecretsIsEmpty",
                           {
                             "Fn::If": [
-                              "LambdaSharpDefaultSecretKeyIsImported",
+                              "LambdaSharpCoreDefaultSecretKeyIsImported",
                               {
                                 "Fn::ImportValue": {
                                   "Fn::Sub": [
@@ -298,7 +298,7 @@
                                             "Fn::Split": [
                                               "$",
                                               {
-                                                "Ref": "LambdaSharpDefaultSecretKey"
+                                                "Ref": "LambdaSharpCoreDefaultSecretKey"
                                               }
                                             ]
                                           }
@@ -309,7 +309,7 @@
                                 }
                               },
                               {
-                                "Ref": "LambdaSharpDefaultSecretKey"
+                                "Ref": "LambdaSharpCoreDefaultSecretKey"
                               }
                             ]
                           },
@@ -319,7 +319,7 @@
                               [
                                 {
                                   "Fn::If": [
-                                    "LambdaSharpDefaultSecretKeyIsImported",
+                                    "LambdaSharpCoreDefaultSecretKeyIsImported",
                                     {
                                       "Fn::ImportValue": {
                                         "Fn::Sub": [
@@ -332,7 +332,7 @@
                                                   "Fn::Split": [
                                                     "$",
                                                     {
-                                                      "Ref": "LambdaSharpDefaultSecretKey"
+                                                      "Ref": "LambdaSharpCoreDefaultSecretKey"
                                                     }
                                                   ]
                                                 }
@@ -343,7 +343,7 @@
                                       }
                                     },
                                     {
-                                      "Ref": "LambdaSharpDefaultSecretKey"
+                                      "Ref": "LambdaSharpCoreDefaultSecretKey"
                                     }
                                   ]
                                 },
@@ -403,14 +403,14 @@
         ""
       ]
     },
-    "LambdaSharpDeadLetterQueueIsImported": {
+    "LambdaSharpCoreDeadLetterQueueIsImported": {
       "Fn::And": [
         {
           "Fn::Not": [
             {
               "Fn::Equals": [
                 {
-                  "Ref": "LambdaSharpDeadLetterQueue"
+                  "Ref": "LambdaSharpCoreDeadLetterQueue"
                 },
                 ""
               ]
@@ -426,7 +426,7 @@
                   "Fn::Split": [
                     "$",
                     {
-                      "Ref": "LambdaSharpDeadLetterQueue"
+                      "Ref": "LambdaSharpCoreDeadLetterQueue"
                     }
                   ]
                 }
@@ -437,14 +437,14 @@
         }
       ]
     },
-    "LambdaSharpDefaultSecretKeyIsImported": {
+    "LambdaSharpCoreDefaultSecretKeyIsImported": {
       "Fn::And": [
         {
           "Fn::Not": [
             {
               "Fn::Equals": [
                 {
-                  "Ref": "LambdaSharpDefaultSecretKey"
+                  "Ref": "LambdaSharpCoreDefaultSecretKey"
                 },
                 ""
               ]
@@ -460,7 +460,7 @@
                   "Fn::Split": [
                     "$",
                     {
-                      "Ref": "LambdaSharpDefaultSecretKey"
+                      "Ref": "LambdaSharpCoreDefaultSecretKey"
                     }
                   ]
                 }
@@ -478,11 +478,11 @@
         "Secrets": {
           "default": "Comma-separated list of optional secret keys [String]"
         },
-        "LambdaSharpDeadLetterQueue": {
-          "default": "Dead Letter Queue (ARN) [String]"
+        "LambdaSharpCoreDeadLetterQueue": {
+          "default": "DeadLetterQueue [String]"
         },
-        "LambdaSharpDefaultSecretKey": {
-          "default": "Secret Key (ARN) [String]"
+        "LambdaSharpCoreDefaultSecretKey": {
+          "default": "DefaultSecretKey [String]"
         },
         "DeploymentBucketName": {
           "default": "Deployment S3 bucket name [String]"
@@ -511,11 +511,11 @@
         },
         {
           "Label": {
-            "default": "LambdaSharp Core Imports"
+            "default": "LambdaSharp.Core Imports"
           },
           "Parameters": [
-            "LambdaSharpDeadLetterQueue",
-            "LambdaSharpDefaultSecretKey"
+            "LambdaSharpCoreDeadLetterQueue",
+            "LambdaSharpCoreDefaultSecretKey"
           ]
         },
         {
@@ -548,25 +548,27 @@
           ]
         },
         {
-          "Title": "LambdaSharp Core Imports",
+          "Title": "LambdaSharp.Core Imports",
           "Parameters": [
             {
-              "Name": "DeadLetterQueue",
+              "Name": "LambdaSharpCoreDeadLetterQueue",
               "Type": "String",
-              "Label": "Dead Letter Queue (ARN)",
-              "Default": "$LambdaSharp-Core::DeadLetterQueue"
+              "Label": "DeadLetterQueue",
+              "Default": "$LambdaSharp-Core::DeadLetterQueue",
+              "Import": "LambdaSharp.Core::DeadLetterQueue"
             },
             {
-              "Name": "DefaultSecretKey",
+              "Name": "LambdaSharpCoreDefaultSecretKey",
               "Type": "String",
-              "Label": "Secret Key (ARN)",
-              "Default": "$LambdaSharp-Core::DefaultSecretKey"
+              "Label": "DefaultSecretKey",
+              "Default": "$LambdaSharp-Core::DefaultSecretKey",
+              "Import": "LambdaSharp.Core::DefaultSecretKey"
             }
           ]
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "2DA5E9885C7162727AF395AE4B16F019",
+      "Hash": "DD7B0868F2C683A8430FB9B2D9CC45ED",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

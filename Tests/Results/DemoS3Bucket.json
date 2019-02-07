@@ -26,7 +26,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "B6081705681E8A370BD714DDF6B2F6AE"
+      "Default": "86761358016BD4852BE7FC97859B9AE5"
     }
   },
   "Resources": {
@@ -86,6 +86,19 @@
   "Outputs": {
     "Module": {
       "Value": "LambdaSharp.DemoS3Bucket:1.0-DEV"
+    },
+    "Bucket": {
+      "Value": {
+        "Fn::GetAtt": [
+          "Bucket",
+          "Arn"
+        ]
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}::Bucket"
+        }
+      }
     }
   },
   "Conditions": {
@@ -164,7 +177,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "B6081705681E8A370BD714DDF6B2F6AE",
+      "Hash": "86761358016BD4852BE7FC97859B9AE5",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
@@ -173,6 +186,12 @@
         {
           "ModuleFullName": "LambdaSharp.Core",
           "MinVersion": "0.5-WIP"
+        }
+      ],
+      "Outputs": [
+        {
+          "Name": "Bucket",
+          "Type": "AWS::S3::Bucket"
         }
       ],
       "ResourceNameMappings": {

@@ -124,17 +124,20 @@ namespace LambdaSharp.Tool.Model {
             string type,
             IList<string> scope,
             object reference,
-            Humidifier.Parameter parameter
+            Humidifier.Parameter parameter,
+            string import
         ) : base(parent, name, description, type, scope, reference) {
             Section = section ?? "Module Settings";
             Label = label;
             Parameter = parameter;
+            Import = import;
         }
 
         //--- Properties ---
         public string Section { get; }
         public string Label { get; }
         public Humidifier.Parameter Parameter { get; }
+        public string Import { get; }
     }
 
     public abstract class AResourceItem : AModuleItem {
