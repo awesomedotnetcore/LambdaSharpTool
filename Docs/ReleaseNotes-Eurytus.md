@@ -381,8 +381,7 @@ Last, but not least, all in resources in λ# module are not automatically tagged
 |Tag Name|Description|Example|
 |--------|-----------|-------|
 `LambdaSharp:Module`|The full module name without version or source bucket specification.|`My.Module`|
-`LambdaSharp:RootStack`|The name of the root CloudFormation stack the resource belongs to. This is the same as `LambdaSharp:Stack` for non-nestd modules. Otherwise, it is the name of the topmost, non-nested module.|`Sandbox-My-Module-MyResource-1TOI83RQZQZE3`|
-`LambdaSharp:Stack`|The name of the CloudFormation stack the resource belongs to.|`Sandbox-My-Module-MyResource-1PWSOTZGZ8TK6`|
+`LambdaSharp:RootStack`|The name of the root CloudFormation stack under which the resource are created. This is the same as `aws:cloudformation:stack-name` for non-nested modules. Otherwise, it is the stack name of the topmost, non-nested module.|`Sandbox-My-Module-MyResource-1TOI83RQZQZE3`|
 `LambdaSharp:Tier`|The name of the deployment tier with a `tier` suffix.|`Sandbox-tier`|
 
 ### Config Command

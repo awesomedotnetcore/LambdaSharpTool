@@ -1438,10 +1438,6 @@ namespace LambdaSharp.Tool.Model {
                     Value = FnRef("Module::Name")
                 });
                 functionResource.Tags.Add(new Humidifier.Tag {
-                    Key = "LambdaSharp:Stack",
-                    Value = FnRef("Module::Id")
-                });
-                functionResource.Tags.Add(new Humidifier.Tag {
                     Key = "LambdaSharp:RootStack",
                     Value = FnRef("Module::RootId")
                 });
@@ -1465,10 +1461,6 @@ namespace LambdaSharp.Tool.Model {
                     tags.Add(new Dictionary<string, object> {
                         ["Key"] = "LambdaSharp:Module",
                         ["Value"] = FnRef("Module::Name")
-                    });
-                    tags.Add(new Dictionary<string, object> {
-                        ["Key"] = "LambdaSharp:Stack",
-                        ["Value"] = FnRef("Module::Id")
                     });
                     tags.Add(new Dictionary<string, object> {
                         ["Key"] = "LambdaSharp:RootStack",
