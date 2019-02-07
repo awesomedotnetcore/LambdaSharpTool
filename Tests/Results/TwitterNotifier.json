@@ -80,7 +80,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "F063E21DBCE9AC1659703F009B2FAEA4"
+      "Default": "18E32E8473D86414255AC55B599A5689"
     }
   },
   "Resources": {
@@ -244,7 +244,7 @@
         "TemplateURL": {
           "Fn::Sub": "https://s3.amazonaws.com/${DeploymentBucketName}/LambdaSharp/Modules/Twitter.Query/Versions/0.5-WIP/cloudformation.json"
         },
-        "TimeoutInMinutes": 5
+        "TimeoutInMinutes": 15
       }
     },
     "FoundTopic": {
@@ -1120,7 +1120,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "F063E21DBCE9AC1659703F009B2FAEA4",
+      "Hash": "18E32E8473D86414255AC55B599A5689",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

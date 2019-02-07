@@ -2,7 +2,7 @@
 
 # LambdaSharp DynamoDB Stream Source
 
-Before you begin, make sure to [setup your λ# CLI](../../Docs/).
+Before you begin, make sure to [setup your λ# CLI](../../Docs/ReadMe.md).
 
 ## Module Definition
 

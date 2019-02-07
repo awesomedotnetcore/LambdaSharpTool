@@ -87,12 +87,12 @@ namespace MySampleModule.MyFunction {
 
 ### Getting Started
 
-1. [Setup λ#](Docs/)
-1. [λ# Samples](Samples/)
+1. [Setup λ#](Docs/ReadMe.md)
+1. [λ# Samples](Samples/ReadMe.md)
 
 ### References
 
-1. [λ# CLI Reference](src/LambdaSharp.Tool/)
+1. [λ# CLI Reference](src/LambdaSharp.Tool/ReadMe.md)
 1. [λ# Module Notation](Docs/Module.md)
 1. [λ# Module Global Variables](Docs/Module-Global-Variables.md)
 1. [λ# Module IAM Short-hands](src/LambdaSharp.Tool/Resources/IAM-Mappings.yml)

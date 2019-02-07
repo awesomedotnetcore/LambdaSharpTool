@@ -21,21 +21,22 @@ Module: LambdaSharp.Demo.TwitterNotifier
 Description: Listen for specific tweets and publish to an email address via SNS topic
 Items:
 
+  # Parameters
   - Parameter: TwitterApiKey
-    Description: This parameter sets the API key for accessing Twitter
+    Description: This parameter sets the encrypted API key for accessing Twitter
     Section: Twitter Settings
     Label: API Key
     Type: Secret
 
   - Parameter: TwitterApiSecretKey
-    Description: This parameter sets the secret API key for accessing Twitter
+    Description: This parameter sets the encrypted secret API key for accessing Twitter
     Section: Twitter Settings
     Label: API Secret Key
     Type: Secret
 
   - Parameter: TwitterQuery
     Scope: Notify
-    Description: This parameter sets the query expression for finding tweets
+    Description: This parameter sets the search query for finding tweets
     Section: Twitter Settings
     Label: Search query
     AllowedPattern: .+
@@ -43,7 +44,7 @@ Items:
 
   - Parameter: TwitterLanguageFilter
     Scope: Notify
-    Description: This parameter set the language filter for tweets (empty value disables filter)
+    Description: This parameter sets the language filter for tweets (empty value disables filter)
     Section: Twitter Settings
     Label: ISO Language filter
     Default: en
@@ -55,6 +56,7 @@ Items:
     AllowedPattern: .+@.+
     ConstraintDescription: Must be a valid email address
 
+  # Resources
   - Nested: TwitterNotify
     Module: LambdaSharp.Twitter.Query:0.5-WIP
     Parameters:
