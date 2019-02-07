@@ -377,6 +377,14 @@ Done (finished: 2/1/2019 2:19:28 PM; duration: 00:04:36.2478253)
 
 A small, aesthetic win is that the λ# CLI uses the manifest to translate the resource names from their logical ID to their module definition name. Similarly, custom resource types are translated to their actual names. For example, update to resources of type `Custom::LambdaSharpRegisterFunction` are shown as `LambdaSharp::Register::Function` instead.
 
+Last, but not least, all in resources in λ# module are not automatically tagged, when possible, with the following information:
+|Tag Name|Description|Example|
+|--------|-----------|-------|
+`LambdaSharp:Module`|The full module name without version or source bucket specification.|`My.Module`|
+`LambdaSharp:RootStack`|The name of the root CloudFormation stack the resource belongs to. This is the same as `LambdaSharp:Stack` for non-nestd modules. Otherwise, it is the name of the topmost, non-nested module.|`Sandbox-My-Module-MyResource-1TOI83RQZQZE3`|
+`LambdaSharp:Stack`|The name of the CloudFormation stack the resource belongs to.|`Sandbox-My-Module-MyResource-1PWSOTZGZ8TK6`|
+`LambdaSharp:Tier`|The name of the deployment tier with a `tier` suffix.|`Sandbox-tier`|
+
 ### Config Command
 
 The λ# CLI now allows to request a specific bucket name during the `config` command instead of defaulting to a name created by CloudFormation. The created bucket now also grants permission to the [AWS Serverless Repository](https://docs.aws.amazon.com/serverlessrepo/latest/devguide/what-is-serverlessrepo.html) to access its contents, in preparation to support publishing modules to it in the future.
