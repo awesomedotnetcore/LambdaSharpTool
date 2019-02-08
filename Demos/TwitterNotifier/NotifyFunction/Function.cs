@@ -30,7 +30,7 @@ using Amazon.SimpleNotificationService.Model;
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
 
-namespace LambdaSharp.Demo.TwitterNotifier.Notify {
+namespace LambdaSharp.Demo.TwitterNotifier.NotifyFunction {
 
     public class Tweet {
 
@@ -38,7 +38,7 @@ namespace LambdaSharp.Demo.TwitterNotifier.Notify {
         public string id_str { get; set; }
         public string full_text { get; set; }
         public TweetUser user { get; set; }
-        public TweetMetadata metadata { get; set; }
+        public string aws_sentiment { get; set; }
     }
 
     public class TweetUser {
@@ -48,24 +48,16 @@ namespace LambdaSharp.Demo.TwitterNotifier.Notify {
         public string screen_name { get; set; }
     }
 
-    public class TweetMetadata {
-
-        //--- Properties ---
-        public string iso_language_code { get; set; }
-    }
-
     public class Function : ALambdaTopicFunction<Tweet> {
 
         //--- Fields ---
         private string _twitterQuery;
-        private string _twitterLanguageFilter;
         private IAmazonSimpleNotificationService _snsClient;
         private string _notificationTopic;
 
         //--- Methods ---
         public override async Task InitializeAsync(LambdaConfig config) {
             _twitterQuery = config.ReadText("TwitterQuery");
-            _twitterLanguageFilter = config.ReadText("TwitterLanguageFilter");
 
             // initialize SNS client
             _snsClient = new AmazonSimpleNotificationServiceClient();
@@ -73,16 +65,15 @@ namespace LambdaSharp.Demo.TwitterNotifier.Notify {
         }
 
         public override async Task ProcessMessageAsync(Tweet tweet, ILambdaContext context) {
-            if((_twitterLanguageFilter != "") && (tweet.metadata.iso_language_code != _twitterLanguageFilter)) {
-                LogInfo($"tweet language '{tweet.metadata.iso_language_code}' did not match '{_twitterLanguageFilter}'");
-                return;
+            var subject = $"@{tweet.user.screen_name} tweeted";
+            if(tweet.aws_sentiment != null) {
+                subject += $" [{tweet.aws_sentiment}]";
             }
             await _snsClient.PublishAsync(new PublishRequest {
                 TopicArn = _notificationTopic,
                 Message = FormatMessage(tweet),
-                Subject = $"@{tweet.user.screen_name} tweeted about {_twitterQuery}"
+                Subject = subject
             });
-            return;
         }
 
         private string FormatMessage(Tweet tweet)

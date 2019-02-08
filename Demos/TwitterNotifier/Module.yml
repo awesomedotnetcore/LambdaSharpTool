@@ -35,7 +35,7 @@ Items:
     Type: Secret
 
   - Parameter: TwitterQuery
-    Scope: Notify
+    Scope: NotifyFunction
     Description: This parameter sets the search query for finding tweets
     Section: Twitter Settings
     Label: Search query
@@ -43,16 +43,28 @@ Items:
     ConstraintDescription: Search query must be a non-empty string
 
   - Parameter: TwitterLanguageFilter
-    Scope: Notify
-    Description: This parameter sets the language filter for tweets (empty value disables filter)
+    Scope: NotifyFunction
+    Description: This parameter is a comma-delimited list of ISO 639-1 language filters for tweets (empty value disables filter)
     Section: Twitter Settings
-    Label: ISO Language filter
+    Label: ISO 639-1 Language filters
     Default: en
+
+  - Parameter: TwitterSentimentFilter
+    Scope: NotifyFunction
+    Description: "This parameter sets the sentiment filter (one of: SKIP, POSITIVE, NEUTRAL, NEGATIVE, MIXED, ALL)"
+    AllowedValues:
+      - SKIP
+      - POSITIVE
+      - NEUTRAL
+      - NEGATIVE
+      - MIXED
+      - ALL
+    Default: SKIP
 
   - Parameter: NotificationEmail
     Description: This parameter sets the notification email for found tweets
     Section: Notification Settings
-    Label: Email address to notify with found tweets
+    Label: Email address to NotifyFunction with found tweets
     AllowedPattern: .+@.+
     ConstraintDescription: Must be a valid email address
 
@@ -63,14 +75,16 @@ Items:
       TwitterApiKey: !Ref TwitterApiKey
       TwitterApiSecretKey: !Ref TwitterApiSecretKey
       TwitterQuery: !Ref TwitterQuery
+      TwitterLanguageFilter: !Ref TwitterLanguageFilter
+      TwitterSentimentFilter: !Ref TwitterSentimentFilter
 
   - Resource: TwitterNotifyTopic
     Type: AWS::SNS::Topic
     Allow: Subscribe
-    Value: !GetAtt TwitterNotify.Outputs.Topic
+    Value: !GetAtt TwitterNotify.Outputs.TweetTopic
 
   - Resource: FoundTopic
-    Scope: Notify
+    Scope: NotifyFunction
     Type: AWS::SNS::Topic
     Allow: Publish
     Properties:
@@ -78,7 +92,7 @@ Items:
         - Protocol: email
           Endpoint: !Ref NotificationEmail
 
-  - Function: Notify
+  - Function: NotifyFunction
     Memory: 256
     Timeout: 30
     Sources:
