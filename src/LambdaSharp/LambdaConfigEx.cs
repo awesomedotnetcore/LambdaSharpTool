@@ -20,6 +20,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 
 namespace LambdaSharp {
 
@@ -31,6 +32,9 @@ namespace LambdaSharp {
 
         public static string ReadText(this LambdaConfig config, string key, string defaultValue, Action<string> validate = null)
             => config.Read(key, fallback: _ => defaultValue, convert: v => v, validate: validate);
+
+        public static IEnumerable<string> ReadCommaDelimitedList(this LambdaConfig config, string key, Action<IEnumerable<string>> validate = null)
+            => config.Read(key, fallback: null, convert: v => v.Split(",", StringSplitOptions.RemoveEmptyEntries), validate: validate);
 
         public static int ReadInt(this LambdaConfig config, string key, Action<int> validate = null)
             => config.Read(key, fallback: null, convert: int.Parse, validate: validate);

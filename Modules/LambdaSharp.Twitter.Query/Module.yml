@@ -22,23 +22,24 @@ Version: 0.5-WIP
 Description: Search Twitter at regular intervals and publish new found tweets
 Items:
 
+  # Parameters
   - Parameter: TwitterApiKey
     Description: This parameter sets the API key for accessing Twitter
-    Scope: Query
+    Scope: QueryFunction
     Section: Twitter Settings
     Label: API Key
     Type: Secret
 
   - Parameter: TwitterApiSecretKey
     Description: This parameter sets the secret API key for accessing Twitter
-    Scope: Query
+    Scope: QueryFunction
     Section: Twitter Settings
     Label: API Secret Key
     Type: Secret
 
   - Parameter: TwitterQuery
     Description: This parameter sets the query expression for finding tweets
-    Scope: Query
+    Scope: QueryFunction
     Section: Twitter Settings
     Label: Search query
     AllowedPattern: .+
@@ -53,17 +54,36 @@ Items:
     MinValue: 2
     MaxValue: 1440
 
-  - Resource: Topic
+  - Parameter: TwitterLanguageFilter
+    Scope: QueryFunction
+    Description: This parameter is a comma-delimited list of ISO 639-1 language filters for tweets (empty value disables filter)
+    Section: Twitter Settings
+    Label: ISO 639-1 Language filters
+
+  - Parameter: TwitterSentimentFilter
+    Scope: QueryFunction
+    Description: "This parameter sets the sentiment filter (one of: SKIP, POSITIVE, NEUTRAL, NEGATIVE, MIXED, ALL)"
+    AllowedValues:
+      - SKIP
+      - POSITIVE
+      - NEUTRAL
+      - NEGATIVE
+      - MIXED
+      - ALL
+    Default: SKIP
+
+  # Resources
+  - Resource: TweetTopic
     Description: This topic publishes tweets that match the query
     Scope:
       - public
-      - Query
+      - QueryFunction
     Type: AWS::SNS::Topic
     Allow: Publish
 
   - Resource: Table
-    Description: This table stores the most recent result id
-    Scope: Query
+    Description: This table stores the state of the most recent search
+    Scope: QueryFunction
     Type: AWS::DynamoDB::Table
     Allow: ReadWrite
     Properties:
@@ -75,7 +95,12 @@ Items:
         - AttributeName: Id
           KeyType: HASH
 
-  - Function: Query
+  - Resource: AwsComprehendPermissions
+    Description: Grant access to AWS Comprehend
+    Allow: comprehend:BatchDetectSentiment
+    Value: "*"
+
+  - Function: QueryFunction
     Description: This function runs on a scheduled interval to find the latest matching tweets
     Memory: 256
     Timeout: 30
