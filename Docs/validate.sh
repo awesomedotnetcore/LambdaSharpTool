@@ -33,7 +33,7 @@ echo "************************"
 echo "*** Init LambdaSharp ***"
 echo "*************************"
 
-# # Setup λ# in Contributor Mode
+# Setup λ# in Contributor Mode
 
 lash() {
     dotnet run -p $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csproj -- $*
@@ -47,19 +47,19 @@ if [ $? -ne 0 ]; then
     exit $?
 fi
 
-# # Deploy the λ# Demos
+# Deploy the λ# Demos
 echo "********************"
 echo "*** Deploy Demos ***"
 echo "********************"
 
 lash deploy \
-    Demos/Demo \
-    Demos/BadModule
+    Demos/StaticWebsite \
+    Demos/SlackTodo
 if [ $? -ne 0 ]; then
     exit $?
 fi
 
-# # Deploy all λ# Sample Modules
+# Deploy all λ# Sample Modules
 echo "*********************"
 echo "*** Build Samples ***"
 echo "*********************"
