@@ -639,6 +639,58 @@
         }
       }
     },
+    "AWS::ApiGatewayV2::Route.ParameterConstraints": {
+      "Properties": {
+        "Required": {
+          "PrimitiveType": "Boolean",
+          "Required": true
+        }
+      }
+    },
+    "AWS::ApiGatewayV2::RouteResponse.ParameterConstraints": {
+      "Properties": {
+        "Required": {
+          "PrimitiveType": "Boolean",
+          "Required": true
+        }
+      }
+    },
+    "AWS::ApiGatewayV2::Stage.AccessLogSettings": {
+      "Properties": {
+        "DestinationArn": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Format": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::ApiGatewayV2::Stage.RouteSettings": {
+      "Properties": {
+        "DataTraceEnabled": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        },
+        "DetailedMetricsEnabled": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        },
+        "LoggingLevel": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "ThrottlingBurstLimit": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        },
+        "ThrottlingRateLimit": {
+          "PrimitiveType": "Double",
+          "Required": false
+        }
+      }
+    },
     "AWS::ApplicationAutoScaling::ScalableTarget.ScalableTargetAction": {
       "Properties": {
         "MaxCapacity": {
@@ -2641,6 +2693,11 @@
         }
       }
     },
+    "AWS::CodeBuild::Project.FilterGroup": {
+      "ItemType": "WebhookFilter",
+      "Required": false,
+      "Type": "List"
+    },
     "AWS::CodeBuild::Project.LogsConfig": {
       "Properties": {
         "CloudWatchLogs": {
@@ -2667,6 +2724,11 @@
     },
     "AWS::CodeBuild::Project.ProjectTriggers": {
       "Properties": {
+        "FilterGroups": {
+          "ItemType": "FilterGroup",
+          "Required": false,
+          "Type": "List"
+        },
         "Webhook": {
           "PrimitiveType": "Boolean",
           "Required": false
@@ -2760,6 +2822,22 @@
         "VpcId": {
           "PrimitiveType": "String",
           "Required": false
+        }
+      }
+    },
+    "AWS::CodeBuild::Project.WebhookFilter": {
+      "Properties": {
+        "ExcludeMatchedPattern": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        },
+        "Pattern": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Type": {
+          "PrimitiveType": "String",
+          "Required": true
         }
       }
     },
@@ -4504,6 +4582,41 @@
         }
       }
     },
+    "AWS::EC2::LaunchTemplate.CapacityReservationPreference": {
+      "PrimitiveType": "String"
+    },
+    "AWS::EC2::LaunchTemplate.CapacityReservationSpecification": {
+      "Properties": {
+        "CapacityReservationPreference": {
+          "Required": false,
+          "Type": "CapacityReservationPreference"
+        },
+        "CapacityReservationTarget": {
+          "Required": false,
+          "Type": "CapacityReservationTarget"
+        }
+      }
+    },
+    "AWS::EC2::LaunchTemplate.CapacityReservationTarget": {
+      "Properties": {
+        "CapacityReservationId": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::EC2::LaunchTemplate.CpuOptions": {
+      "Properties": {
+        "CoreCount": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        },
+        "ThreadsPerCore": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        }
+      }
+    },
     "AWS::EC2::LaunchTemplate.CreditSpecification": {
       "Properties": {
         "CpuCredits": {
@@ -4552,6 +4665,14 @@
         }
       }
     },
+    "AWS::EC2::LaunchTemplate.HibernationOptions": {
+      "Properties": {
+        "Configured": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        }
+      }
+    },
     "AWS::EC2::LaunchTemplate.IamInstanceProfile": {
       "Properties": {
         "Arn": {
@@ -4591,6 +4712,14 @@
           "Required": false,
           "Type": "List"
         },
+        "CapacityReservationSpecification": {
+          "Required": false,
+          "Type": "CapacityReservationSpecification"
+        },
+        "CpuOptions": {
+          "Required": false,
+          "Type": "CpuOptions"
+        },
         "CreditSpecification": {
           "Required": false,
           "Type": "CreditSpecification"
@@ -4607,6 +4736,15 @@
           "ItemType": "ElasticGpuSpecification",
           "Required": false,
           "Type": "List"
+        },
+        "ElasticInferenceAccelerators": {
+          "ItemType": "LaunchTemplateElasticInferenceAccelerator",
+          "Required": false,
+          "Type": "List"
+        },
+        "HibernationOptions": {
+          "Required": false,
+          "Type": "HibernationOptions"
         },
         "IamInstanceProfile": {
           "Required": false,
@@ -4635,6 +4773,11 @@
         "KeyName": {
           "PrimitiveType": "String",
           "Required": false
+        },
+        "LicenseSpecifications": {
+          "ItemType": "LicenseSpecification",
+          "Required": false,
+          "Type": "List"
         },
         "Monitoring": {
           "Required": false,
@@ -4669,6 +4812,22 @@
           "Type": "List"
         },
         "UserData": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::EC2::LaunchTemplate.LaunchTemplateElasticInferenceAccelerator": {
+      "Properties": {
+        "Type": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::EC2::LaunchTemplate.LicenseSpecification": {
+      "Properties": {
+        "LicenseConfigurationArn": {
           "PrimitiveType": "String",
           "Required": false
         }
@@ -12578,7 +12737,7 @@
       }
     }
   },
-  "ResourceSpecificationVersion": "2.21.0",
+  "ResourceSpecificationVersion": "2.22.0",
   "ResourceTypes": {
     "Alexa::ASK::Skill": {
       "Properties": {
@@ -13288,6 +13447,324 @@
           "PrimitiveItemType": "String",
           "Required": true,
           "Type": "List"
+        }
+      }
+    },
+    "AWS::ApiGatewayV2::Api": {
+      "Properties": {
+        "ApiKeySelectionExpression": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Description": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "DisableSchemaValidation": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        },
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "ProtocolType": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "RouteSelectionExpression": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Version": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::ApiGatewayV2::Authorizer": {
+      "Properties": {
+        "ApiId": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "AuthorizerCredentialsArn": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "AuthorizerResultTtlInSeconds": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        },
+        "AuthorizerType": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "AuthorizerUri": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "IdentitySource": {
+          "PrimitiveItemType": "String",
+          "Required": true,
+          "Type": "List"
+        },
+        "IdentityValidationExpression": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::ApiGatewayV2::Deployment": {
+      "Properties": {
+        "ApiId": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Description": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "StageName": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::ApiGatewayV2::Integration": {
+      "Properties": {
+        "ApiId": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "ConnectionType": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "ContentHandlingStrategy": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "CredentialsArn": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Description": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "IntegrationMethod": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "IntegrationType": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "IntegrationUri": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "PassthroughBehavior": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "RequestParameters": {
+          "PrimitiveType": "Json",
+          "Required": false
+        },
+        "RequestTemplates": {
+          "PrimitiveType": "Json",
+          "Required": false
+        },
+        "TemplateSelectionExpression": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "TimeoutInMillis": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        }
+      }
+    },
+    "AWS::ApiGatewayV2::IntegrationResponse": {
+      "Properties": {
+        "ApiId": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "ContentHandlingStrategy": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "IntegrationId": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "IntegrationResponseKey": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "ResponseParameters": {
+          "PrimitiveType": "Json",
+          "Required": false
+        },
+        "ResponseTemplates": {
+          "PrimitiveType": "Json",
+          "Required": false
+        },
+        "TemplateSelectionExpression": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::ApiGatewayV2::Model": {
+      "Properties": {
+        "ApiId": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "ContentType": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Description": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Schema": {
+          "PrimitiveType": "Json",
+          "Required": true
+        }
+      }
+    },
+    "AWS::ApiGatewayV2::Route": {
+      "Properties": {
+        "ApiId": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "ApiKeyRequired": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        },
+        "AuthorizationScopes": {
+          "PrimitiveItemType": "String",
+          "Required": false,
+          "Type": "List"
+        },
+        "AuthorizationType": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "AuthorizerId": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "ModelSelectionExpression": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "OperationName": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "RequestModels": {
+          "PrimitiveType": "Json",
+          "Required": false
+        },
+        "RequestParameters": {
+          "PrimitiveType": "Json",
+          "Required": false
+        },
+        "RouteKey": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "RouteResponseSelectionExpression": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Target": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::ApiGatewayV2::RouteResponse": {
+      "Properties": {
+        "ApiId": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "ModelSelectionExpression": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "ResponseModels": {
+          "PrimitiveType": "Json",
+          "Required": false
+        },
+        "ResponseParameters": {
+          "PrimitiveType": "Json",
+          "Required": false
+        },
+        "RouteId": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "RouteResponseKey": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::ApiGatewayV2::Stage": {
+      "Properties": {
+        "AccessLogSettings": {
+          "Required": false,
+          "Type": "AccessLogSettings"
+        },
+        "ApiId": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "ClientCertificateId": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "DefaultRouteSettings": {
+          "Required": false,
+          "Type": "RouteSettings"
+        },
+        "DeploymentId": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Description": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "RouteSettings": {
+          "PrimitiveType": "Json",
+          "Required": false
+        },
+        "StageName": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "StageVariables": {
+          "PrimitiveType": "Json",
+          "Required": false
         }
       }
     },
@@ -21009,6 +21486,10 @@
         }
       },
       "Properties": {
+        "AssociatePublicIpAddress": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        },
         "BackupId": {
           "PrimitiveType": "String",
           "Required": false
