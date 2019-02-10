@@ -372,7 +372,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                             parent: parent,
                             name: node.Resource,
                             description: node.Description,
-                            type: node.Type,
+                            type: node.Type ?? "AWS",
                             scope: ConvertScope(node.Scope),
                             allow: node.Allow,
                             properties: ParseToDictionary("Properties", node.Properties),
