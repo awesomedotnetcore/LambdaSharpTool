@@ -132,7 +132,6 @@ namespace LambdaSharp.Tool.Cli {
                     Console.WriteLine("=> Stack creation FAILED");
                 }
             } else {
-                Console.WriteLine($"Updating CLI profile: {settings.ToolProfile}");
 
                 // check if exiting profile needs to be upgraded
                 if(!forceUpdate) {
