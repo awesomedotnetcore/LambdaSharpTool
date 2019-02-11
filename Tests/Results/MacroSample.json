@@ -7,6 +7,15 @@
       "Description": "Secret Keys (ARNs)",
       "Default": ""
     },
+    "XRayTracing": {
+      "Type": "String",
+      "Description": "AWS X-Ray Tracing Mode",
+      "AllowedValues": [
+        "Active",
+        "PassThrough"
+      ],
+      "Default": "PassThrough"
+    },
     "LambdaSharpCoreDeadLetterQueue": {
       "Type": "String",
       "Description": "Cross-module reference for LambdaSharp.Core::DeadLetterQueue",
@@ -55,7 +64,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "4F3DE529B6698C0475BACD1D13CE0EC8"
+      "Default": "F7E05C7DC50BCB8A4BBD808063B5E75E"
     }
   },
   "Resources": {
@@ -224,7 +233,12 @@
             }
           }
         ],
-        "Timeout": "30"
+        "Timeout": "30",
+        "TracingConfig": {
+          "Mode": {
+            "Ref": "XRayTracing"
+          }
+        }
       }
     },
     "MyFunctionLogGroup": {
@@ -392,6 +406,18 @@
                     "logs:PutLogEvents"
                   ],
                   "Resource": "arn:aws:logs:*:*:*"
+                },
+                {
+                  "Sid": "AWSXRayWriteAccess",
+                  "Effect": "Allow",
+                  "Action": [
+                    "xray:GetSamplingRules",
+                    "xray:GetSamplingStatisticSummaries",
+                    "xray:GetSamplingTargets",
+                    "xray:PutTelemetryRecords",
+                    "xray:PutTraceSegments"
+                  ],
+                  "Resource": "*"
                 }
               ]
             },
@@ -683,7 +709,10 @@
     "AWS::CloudFormation::Interface": {
       "ParameterLabels": {
         "Secrets": {
-          "default": "Comma-separated list of optional secret keys [String]"
+          "default": "Comma-separated list of additional KMS secret keys [String]"
+        },
+        "XRayTracing": {
+          "default": "AWS X-Ray tracing mode for module functions [String]"
         },
         "LambdaSharpCoreDeadLetterQueue": {
           "default": "DeadLetterQueue [String]"
@@ -719,7 +748,8 @@
             "default": "LambdaSharp Module Options"
           },
           "Parameters": [
-            "Secrets"
+            "Secrets",
+            "XRayTracing"
           ]
         },
         {
@@ -757,8 +787,14 @@
             {
               "Name": "Secrets",
               "Type": "String",
-              "Label": "Comma-separated list of optional secret keys",
+              "Label": "Comma-separated list of additional KMS secret keys",
               "Default": ""
+            },
+            {
+              "Name": "XRayTracing",
+              "Type": "String",
+              "Label": "AWS X-Ray tracing mode for module functions",
+              "Default": "PassThrough"
             }
           ]
         },
@@ -797,7 +833,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "4F3DE529B6698C0475BACD1D13CE0EC8",
+      "Hash": "F7E05C7DC50BCB8A4BBD808063B5E75E",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

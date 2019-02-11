@@ -6,6 +6,15 @@
       "Description": "Secret Keys (ARNs)",
       "Default": ""
     },
+    "XRayTracing": {
+      "Type": "String",
+      "Description": "AWS X-Ray Tracing Mode",
+      "AllowedValues": [
+        "Active",
+        "PassThrough"
+      ],
+      "Default": "PassThrough"
+    },
     "DeploymentBucketName": {
       "Type": "String",
       "Description": "Deployment S3 Bucket Name"
@@ -26,7 +35,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "21DEF2B32A93817FC4D759AFFA21B676"
+      "Default": "1B5D713E99960BA1ACCFEBD091CEB0CA"
     }
   },
   "Resources": {
@@ -113,7 +122,10 @@
     "AWS::CloudFormation::Interface": {
       "ParameterLabels": {
         "Secrets": {
-          "default": "Comma-separated list of optional secret keys [String]"
+          "default": "Comma-separated list of additional KMS secret keys [String]"
+        },
+        "XRayTracing": {
+          "default": "AWS X-Ray tracing mode for module functions [String]"
         },
         "DeploymentBucketName": {
           "default": "Deployment S3 bucket name [String]"
@@ -137,7 +149,8 @@
             "default": "LambdaSharp Module Options"
           },
           "Parameters": [
-            "Secrets"
+            "Secrets",
+            "XRayTracing"
           ]
         },
         {
@@ -164,14 +177,20 @@
             {
               "Name": "Secrets",
               "Type": "String",
-              "Label": "Comma-separated list of optional secret keys",
+              "Label": "Comma-separated list of additional KMS secret keys",
               "Default": ""
+            },
+            {
+              "Name": "XRayTracing",
+              "Type": "String",
+              "Label": "AWS X-Ray tracing mode for module functions",
+              "Default": "PassThrough"
             }
           ]
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "21DEF2B32A93817FC4D759AFFA21B676",
+      "Hash": "1B5D713E99960BA1ACCFEBD091CEB0CA",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

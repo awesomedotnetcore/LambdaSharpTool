@@ -18,8 +18,21 @@
     },
     "TwitterLanguageFilter": {
       "Type": "String",
-      "Description": "This parameter sets the language filter for tweets (empty value disables filter)",
+      "Description": "This parameter is a comma-delimited list of ISO 639-1 language filters for tweets (empty value disables filter)",
       "Default": "en"
+    },
+    "TwitterSentimentFilter": {
+      "Type": "String",
+      "Description": "This parameter sets the sentiment filter (one of: SKIP, POSITIVE, NEUTRAL, NEGATIVE, MIXED, ALL)",
+      "AllowedValues": [
+        "SKIP",
+        "POSITIVE",
+        "NEUTRAL",
+        "NEGATIVE",
+        "MIXED",
+        "ALL"
+      ],
+      "Default": "SKIP"
     },
     "NotificationEmail": {
       "Type": "String",
@@ -31,6 +44,15 @@
       "Type": "String",
       "Description": "Secret Keys (ARNs)",
       "Default": ""
+    },
+    "XRayTracing": {
+      "Type": "String",
+      "Description": "AWS X-Ray Tracing Mode",
+      "AllowedValues": [
+        "Active",
+        "PassThrough"
+      ],
+      "Default": "PassThrough"
     },
     "LambdaSharpCoreDeadLetterQueue": {
       "Type": "String",
@@ -80,7 +102,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "C18FA4D4B9279CAD9AE1DDA2AE0130B4"
+      "Default": "E49BF717125772927044E6AE075B531E"
     }
   },
   "Resources": {
@@ -99,6 +121,12 @@
           },
           "TwitterQuery": {
             "Ref": "TwitterQuery"
+          },
+          "TwitterLanguageFilter": {
+            "Ref": "TwitterLanguageFilter"
+          },
+          "TwitterSentimentFilter": {
+            "Ref": "TwitterSentimentFilter"
           },
           "DeploymentBucketName": {
             "Ref": "DeploymentBucketName"
@@ -140,14 +168,14 @@
         ]
       }
     },
-    "Notify": {
+    "NotifyFunction": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
         "Code": {
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "LambdaSharp/Modules/Demo.TwitterNotifier/Assets/Notify-DRYRUN.zip"
+          "S3Key": "LambdaSharp/Modules/Demo.TwitterNotifier/Assets/NotifyFunction-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -187,7 +215,7 @@
               "Ref": "AWS::StackName"
             },
             "MODULE_INFO": "LambdaSharp.Demo.TwitterNotifier:1.0-DEV",
-            "LAMBDA_NAME": "Notify",
+            "LAMBDA_NAME": "NotifyFunction",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
               "Fn::If": [
@@ -255,12 +283,15 @@
             "STR_TWITTERLANGUAGEFILTER": {
               "Ref": "TwitterLanguageFilter"
             },
+            "STR_TWITTERSENTIMENTFILTER": {
+              "Ref": "TwitterSentimentFilter"
+            },
             "STR_FOUNDTOPIC": {
               "Ref": "FoundTopic"
             }
           }
         },
-        "Handler": "Notify::LambdaSharp.Demo.TwitterNotifier.Notify.Function::FunctionHandlerAsync",
+        "Handler": "NotifyFunction::LambdaSharp.Demo.TwitterNotifier.NotifyFunction.Function::FunctionHandlerAsync",
         "MemorySize": "256",
         "Role": {
           "Fn::GetAtt": [
@@ -295,14 +326,19 @@
             }
           }
         ],
-        "Timeout": "30"
+        "Timeout": "30",
+        "TracingConfig": {
+          "Mode": {
+            "Ref": "XRayTracing"
+          }
+        }
       }
     },
-    "NotifyLogGroup": {
+    "NotifyFunctionLogGroup": {
       "Type": "AWS::Logs::LogGroup",
       "Properties": {
         "LogGroupName": {
-          "Fn::Sub": "/aws/lambda/${Notify}"
+          "Fn::Sub": "/aws/lambda/${NotifyFunction}"
         },
         "RetentionInDays": 30
       }
@@ -337,7 +373,7 @@
                   "Resource": {
                     "Fn::GetAtt": [
                       "TwitterNotify",
-                      "Outputs.Topic"
+                      "Outputs.TweetTopic"
                     ]
                   }
                 },
@@ -486,6 +522,18 @@
                     "logs:PutLogEvents"
                   ],
                   "Resource": "arn:aws:logs:*:*:*"
+                },
+                {
+                  "Sid": "AWSXRayWriteAccess",
+                  "Effect": "Allow",
+                  "Action": [
+                    "xray:GetSamplingRules",
+                    "xray:GetSamplingStatisticSummaries",
+                    "xray:GetSamplingTargets",
+                    "xray:PutTelemetryRecords",
+                    "xray:PutTraceSegments"
+                  ],
+                  "Resource": "*"
                 }
               ]
             },
@@ -511,7 +559,7 @@
         }
       }
     },
-    "NotifyRegistration": {
+    "NotifyFunctionRegistration": {
       "Type": "Custom::LambdaSharpRegistrationFunction",
       "Properties": {
         "ServiceToken": {
@@ -524,11 +572,11 @@
           "Ref": "AWS::StackName"
         },
         "FunctionId": {
-          "Ref": "Notify"
+          "Ref": "NotifyFunction"
         },
-        "FunctionName": "Notify",
+        "FunctionName": "NotifyFunction",
         "FunctionLogGroupName": {
-          "Fn::Sub": "/aws/lambda/${Notify}"
+          "Fn::Sub": "/aws/lambda/${NotifyFunction}"
         },
         "FunctionPlatform": "AWS Lambda",
         "FunctionFramework": "dotnetcore2.1",
@@ -540,7 +588,7 @@
         "ModuleRegistration"
       ]
     },
-    "NotifyLogGroupSubscription": {
+    "NotifyFunctionLogGroupSubscription": {
       "Type": "AWS::Logs::SubscriptionFilter",
       "Properties": {
         "DestinationArn": {
@@ -575,7 +623,7 @@
         },
         "FilterPattern": "-\"*** \"",
         "LogGroupName": {
-          "Ref": "NotifyLogGroup"
+          "Ref": "NotifyFunctionLogGroup"
         },
         "RoleArn": {
           "Fn::If": [
@@ -609,12 +657,12 @@
         }
       }
     },
-    "NotifySource1Subscription": {
+    "NotifyFunctionSource1Subscription": {
       "Type": "AWS::SNS::Subscription",
       "Properties": {
         "Endpoint": {
           "Fn::GetAtt": [
-            "Notify",
+            "NotifyFunction",
             "Arn"
           ]
         },
@@ -622,18 +670,18 @@
         "TopicArn": {
           "Fn::GetAtt": [
             "TwitterNotify",
-            "Outputs.Topic"
+            "Outputs.TweetTopic"
           ]
         }
       }
     },
-    "NotifySource1Permission": {
+    "NotifyFunctionSource1Permission": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
           "Fn::GetAtt": [
-            "Notify",
+            "NotifyFunction",
             "Arn"
           ]
         },
@@ -641,7 +689,7 @@
         "SourceArn": {
           "Fn::GetAtt": [
             "TwitterNotify",
-            "Outputs.Topic"
+            "Outputs.TweetTopic"
           ]
         }
       }
@@ -823,13 +871,19 @@
           "default": "Search query [String]"
         },
         "TwitterLanguageFilter": {
-          "default": "ISO Language filter [String]"
+          "default": "ISO 639-1 Language filters [String]"
+        },
+        "TwitterSentimentFilter": {
+          "default": "This parameter sets the sentiment filter (one of: SKIP, POSITIVE, NEUTRAL, NEGATIVE, MIXED, ALL) [String]"
         },
         "NotificationEmail": {
-          "default": "Email address to notify with found tweets [String]"
+          "default": "Email address to NotifyFunction with found tweets [String]"
         },
         "Secrets": {
-          "default": "Comma-separated list of optional secret keys [String]"
+          "default": "Comma-separated list of additional KMS secret keys [String]"
+        },
+        "XRayTracing": {
+          "default": "AWS X-Ray tracing mode for module functions [String]"
         },
         "LambdaSharpCoreDeadLetterQueue": {
           "default": "DeadLetterQueue [String]"
@@ -873,6 +927,14 @@
         },
         {
           "Label": {
+            "default": "Module Settings"
+          },
+          "Parameters": [
+            "TwitterSentimentFilter"
+          ]
+        },
+        {
+          "Label": {
             "default": "Notification Settings"
           },
           "Parameters": [
@@ -884,7 +946,8 @@
             "default": "LambdaSharp Module Options"
           },
           "Parameters": [
-            "Secrets"
+            "Secrets",
+            "XRayTracing"
           ]
         },
         {
@@ -937,8 +1000,18 @@
             {
               "Name": "TwitterLanguageFilter",
               "Type": "String",
-              "Label": "ISO Language filter",
+              "Label": "ISO 639-1 Language filters",
               "Default": "en"
+            }
+          ]
+        },
+        {
+          "Title": "Module Settings",
+          "Parameters": [
+            {
+              "Name": "TwitterSentimentFilter",
+              "Type": "String",
+              "Default": "SKIP"
             }
           ]
         },
@@ -948,7 +1021,7 @@
             {
               "Name": "NotificationEmail",
               "Type": "String",
-              "Label": "Email address to notify with found tweets"
+              "Label": "Email address to NotifyFunction with found tweets"
             }
           ]
         },
@@ -958,8 +1031,14 @@
             {
               "Name": "Secrets",
               "Type": "String",
-              "Label": "Comma-separated list of optional secret keys",
+              "Label": "Comma-separated list of additional KMS secret keys",
               "Default": ""
+            },
+            {
+              "Name": "XRayTracing",
+              "Type": "String",
+              "Label": "AWS X-Ray tracing mode for module functions",
+              "Default": "PassThrough"
             }
           ]
         },
@@ -998,7 +1077,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "C18FA4D4B9279CAD9AE1DDA2AE0130B4",
+      "Hash": "E49BF717125772927044E6AE075B531E",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
@@ -1010,13 +1089,13 @@
         }
       ],
       "ResourceNameMappings": {
-        "NotifyLogGroup": "Notify::LogGroup",
+        "NotifyFunctionLogGroup": "NotifyFunction::LogGroup",
         "ModuleRole": "Module::Role",
         "ModuleRegistration": "Module::Registration",
-        "NotifyRegistration": "Notify::Registration",
-        "NotifyLogGroupSubscription": "Notify::LogGroupSubscription",
-        "NotifySource1Subscription": "Notify::Source1Subscription",
-        "NotifySource1Permission": "Notify::Source1Permission"
+        "NotifyFunctionRegistration": "NotifyFunction::Registration",
+        "NotifyFunctionLogGroupSubscription": "NotifyFunction::LogGroupSubscription",
+        "NotifyFunctionSource1Subscription": "NotifyFunction::Source1Subscription",
+        "NotifyFunctionSource1Permission": "NotifyFunction::Source1Permission"
       },
       "TypeNameMappings": {
         "Custom::LambdaSharpRegistrationModule": "LambdaSharp::Registration::Module",
