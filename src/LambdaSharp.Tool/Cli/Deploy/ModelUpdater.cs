@@ -109,6 +109,12 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 NotificationARNs = notificationArns,
                 Parameters = new List<CloudFormationParameter>(parameters) {
                     new CloudFormationParameter {
+                        ParameterKey = "XRayTracing",
+                        ParameterValue = enableXRayTracing
+                            ? "Active"
+                            : "PassThrough"
+                    },
+                    new CloudFormationParameter {
                         ParameterKey = "DeploymentPrefix",
                         ParameterValue = string.IsNullOrEmpty(Settings.Tier) ? "" : (Settings.Tier + "-")
                     },
@@ -119,12 +125,6 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     new CloudFormationParameter {
                         ParameterKey = "DeploymentBucketName",
                         ParameterValue = location.ModuleBucketName ?? ""
-                    },
-                    new CloudFormationParameter {
-                        ParameterKey = "DeploymentTracing",
-                        ParameterValue = enableXRayTracing
-                            ? "Active"
-                            : "PassThrough"
                     }
                 },
                 StackName = stackName,

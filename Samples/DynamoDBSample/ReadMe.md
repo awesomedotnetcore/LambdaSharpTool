@@ -16,7 +16,7 @@ Description: A sample module using Kinesis streams
 Items:
 
   - Resource: Table
-    Scope: "*"
+    Scope: all
     Description: Description for DynamoDB table
     Type: AWS::DynamoDB::Table
     Allow: Subscribe

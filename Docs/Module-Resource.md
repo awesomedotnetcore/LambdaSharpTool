@@ -108,7 +108,7 @@ The <code>Resource</code> attribute specifies the item name. The name must start
 
 <dt><code>Scope</code></dt>
 <dd>
-The <code>Scope</code> attribute specifies which functions need to have access to this item. The <code>Scope</code> attribute can be a comma-separated list or a YAML list of function names. If all function need the item, then <code>"*"</code> can be used as a wildcard. In addition, the <code>public</code> can be used to export the item from the module.
+The <code>Scope</code> attribute specifies which functions need to have access to this item. The <code>Scope</code> attribute can be a comma-separated list or a YAML list of function names. If all function need the item, then <code>all</code> can be used as a wildcard. In addition, the <code>public</code> can be used to export the item from the module.
 
 <i>Required</i>: No
 
@@ -149,7 +149,7 @@ The <code>Value</code> attribute specifies the value for the parameter. If the <
 
 ```yaml
 - Resource: MyDynamoDBTable
-  Scope: "*"
+  Scope: all
   Type: AWS::DynamoDB::Table
   Allow: Subscribe
   Properties:
@@ -174,7 +174,7 @@ The <code>Value</code> attribute specifies the value for the parameter. If the <
   Default: 1
 
 - Resource: MyDynamoDBTable
-  Scope: "*"
+  Scope: all
   Type: AWS::DynamoDB::Table
   Allow: Subscribe
   Properties:

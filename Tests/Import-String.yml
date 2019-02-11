@@ -4,7 +4,7 @@ Items:
 
   - Import: ImportedValue
     Module: Other.Module::Value
-    Scope: "*"
+    Scope: all
     Type: String
 
   - Function: Function

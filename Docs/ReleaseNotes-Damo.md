@@ -199,7 +199,7 @@ The `Variables` section defines literal values and resources. Variables can eith
 To scope a variable to all functions, use the wildcard value (`*`):
 ```yaml
 - Var: My Variable
-  Scope: "*"
+  Scope: all
   Value: Best variable ever
 ```
 
@@ -341,7 +341,7 @@ The λ# implementation of cross-module references enables CloudFormation to reso
 
 ```yaml
 - Import: MyOtherModule::Topic
-  Scope: "*"
+  Scope: all
   Description: Topic ARN for notifying users
 
 # ...

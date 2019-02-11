@@ -4,13 +4,13 @@ Items:
 
   - Parameter: InputBucket
     Description: Description for Bucket resource
-    Scope: "*"
+    Scope: all
     Type: AWS::S3::Bucket
     Allow: ReadWrite
 
   - Resource: Bucket
     Description: Description for Bucket resource
-    Scope: "*"
+    Scope: all
     Type: AWS::S3::Bucket
     Allow: ReadWrite
 

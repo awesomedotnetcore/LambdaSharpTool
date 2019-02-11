@@ -140,7 +140,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             _builder.AddParameter(
                 name: "Secrets",
                 section: section,
-                label: "Comma-separated list of optional secret keys",
+                label: "Comma-separated list of additional KMS secret keys",
                 description: "Secret Keys (ARNs)",
                 type: "String",
                 scope: null,
@@ -164,6 +164,28 @@ namespace LambdaSharp.Tool.Cli.Build {
                 name: "SecretsIsEmpty",
                 description: null,
                 value: FnEquals(FnRef("Secrets"), "")
+            );
+            _builder.AddParameter(
+                name: "XRayTracing",
+                section: section,
+                label: "AWS X-Ray tracing mode for module functions",
+                description: "AWS X-Ray Tracing Mode",
+                type: "String",
+                scope: null,
+                noEcho: null,
+                defaultValue: "PassThrough",
+                constraintDescription: null,
+                allowedPattern: null,
+                allowedValues: new[] { "Active", "PassThrough" },
+                maxLength: null,
+                maxValue: null,
+                minLength: null,
+                minValue: null,
+                allow: null,
+                properties: null,
+                arnAttribute: null,
+                encryptionContext: null,
+                pragmas: null
             );
 
             // import lambdasharp dependencies (unless requested otherwise)
@@ -445,28 +467,6 @@ namespace LambdaSharp.Tool.Cli.Build {
                 constraintDescription: null,
                 allowedPattern: null,
                 allowedValues: null,
-                maxLength: null,
-                maxValue: null,
-                minLength: null,
-                minValue: null,
-                allow: null,
-                properties: null,
-                arnAttribute: null,
-                encryptionContext: null,
-                pragmas: null
-            );
-            _builder.AddParameter(
-                name: "DeploymentTracing",
-                section: section,
-                label: "X-Ray tracing mode for functions",
-                description: "X-Ray Tracing Mode",
-                type: "String",
-                scope: null,
-                noEcho: null,
-                defaultValue: "PassThrough",
-                constraintDescription: null,
-                allowedPattern: null,
-                allowedValues: new[] { "Active", "PassThrough" },
                 maxLength: null,
                 maxValue: null,
                 minLength: null,

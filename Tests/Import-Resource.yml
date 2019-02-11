@@ -4,7 +4,7 @@ Items:
 
   - Import: ImportedResource
     Module: Other.Module::Resource
-    Scope: "*"
+    Scope: all
     Type: AWS::DynamoDB::Table
     Allow: ReadOnly
 

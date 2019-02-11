@@ -4,13 +4,13 @@ Items:
 
   - Parameter: InputTable
     Description: Description for DynamoDB input table
-    Scope: "*"
+    Scope: all
     Type: AWS::DynamoDB::Table
     Allow: Subscribe
 
   - Resource: Table
     Description: Description for DynamoDB table
-    Scope: "*"
+    Scope: all
     Type: AWS::DynamoDB::Table
     Allow: Subscribe
     Properties:

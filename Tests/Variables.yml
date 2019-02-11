@@ -4,23 +4,23 @@ Items:
 
   - Variable: SourceValueParameter
     Description: Literal value
-    Scope: "*"
+    Scope: all
     Value: This is a literal value
 
   - Variable: SourceExpressionParameter
     Description: CloudFormation !Ref expression
-    Scope: "*"
+    Scope: all
     Value: !Ref SourceValueParameter
 
   - Resource: SourceResourceParameter
     Description: CloudFormation Resource
-    Scope: "*"
+    Scope: all
     Type: AWS::SNS::Topic
     Allow: Publish
 
   - Variable: SourceValueListParameter
     Description: List of literal values
-    Scope: "*"
+    Scope: all
     Value:
       - first
       - second
@@ -28,7 +28,7 @@ Items:
 
   - Variable: SourceExpressionListParameter
     Description: List of literal values
-    Scope: "*"
+    Scope: all
     Value:
       - !Ref SourceValueParameter
       - !Ref SourceExpressionParameter
@@ -41,12 +41,12 @@ Items:
 
       - Variable: FirstSourceValueParameter
         Description: Nested parameter with a literal value
-        Scope: "*"
+        Scope: all
         Value: A nested literal source value
 
       - Resource: SecondSourceResourceParameter
         Description: CloudFormation Resource
-        Scope: "*"
+        Scope: all
         Type: AWS::SNS::Topic
         Allow: Publish
         Properties:
@@ -58,12 +58,12 @@ Items:
 
       - Variable: FirstNestedParameter
         Description: First nested parameter
-        Scope: "*"
+        Scope: all
         Value: A literal value
 
       - Variable: SecondNestedParameter
         Description: Second nested parameter
-        Scope: "*"
+        Scope: all
         Value:
           - one
           - two
@@ -71,34 +71,34 @@ Items:
 
       - Resource: ThirdNestedParameter
         Description: Third nested parameter
-        Scope: "*"
+        Scope: all
         Type: AWS::SNS::Topic
         Allow: Publish
         Value: arn:aws:sns:us-east-1:123456789012:SampleTopic
 
       - Resource: FourthNestedParameter
         Description: Fourth nested parameter
-        Scope: "*"
+        Scope: all
         Type: AWS::SNS::Topic
         Allow: Subscribe
 
       - Variable: FifthNestedParameter
         Description: Fifth nested parameter
         Type: Secret
-        Scope: "*"
+        Scope: all
         Value: AQICAHjeGw7GlEczkZKnuQaQHVYq...+CXNRhA/rkOSNUThq4ikMnVU2g==
 
       - Variable: SixthNestedParameter
         Description: Sixth nested parameter
         Type: Secret
-        Scope: "*"
+        Scope: all
         Value: AQICAHjeGw7GlEczkZKnuQaQHVYq...+CXNRhA/rkOSNUThq4ikMnVU2g==
         EncryptionContext:
           Purpose: Security
 
       - Variable: SeventhParameter
         Description: Seventh nested parameter
-        Scope: "*"
+        Scope: all
         Value: !Ref SingleResourceVariable
 
   - Namespace: OtherParameterCollection
@@ -107,19 +107,19 @@ Items:
 
       - Variable: FirstNestedParameter
         Description: Same name as first nested parameter in sample parameter collection
-        Scope: "*"
+        Scope: all
         Value: Another literal value
 
   - Resource: SingleResourceVariable
     Description: Second nested parameter
-    Scope: "*"
+    Scope: all
     Type: AWS::SNS::Topic
     Allow: Publish
     Value: "arn:aws:sns:*:*:*"
 
   - Resource: MultiResourceVariable
     Description: Second nested parameter
-    Scope: "*"
+    Scope: all
     Type: AWS::SNS::Topic
     Allow: Publish
     Value:
@@ -129,7 +129,7 @@ Items:
   # !Ref reference use-cases
   - Variable: SourceSubExpressions
     Description: CloudFormation !Sub expressions
-    Scope: "*"
+    Scope: all
     Value:
       - !Sub "${SourceValueParameter}"
       - !Sub "${SourceExpressionParameter}"
@@ -142,15 +142,15 @@ Items:
 
   # !Ref module variables
   - Variable: MyModuleName
-    Scope: "*"
+    Scope: all
     Value: !Ref Module::Name
 
   - Variable: MyModuleId
-    Scope: "*"
+    Scope: all
     Value: !Ref Module::Id
 
   - Variable: MyModuleVersion
-    Scope: "*"
+    Scope: all
     Value: !Ref Module::Version
 
   # Grant permission to resource-less AWS services

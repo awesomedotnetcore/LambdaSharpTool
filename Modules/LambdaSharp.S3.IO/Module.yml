@@ -118,7 +118,7 @@ Items:
     Allow: Subscribe
 
   - Resource: ManifestBucket
-    Scope: "*"
+    Scope: all
     Description: Bucket to store information about uploaded packages
     Type: AWS::S3::Bucket
     Allow: ReadWrite

@@ -5,7 +5,7 @@ Items:
   # Resource Input Parameters
   - Parameter: ConditionalResourceInputParameterOrCreate
     Section: Resource Input Parameters
-    Scope: "*"
+    Scope: all
     Default: ""
     Type: AWS::SNS::Topic
     Allow: Publish

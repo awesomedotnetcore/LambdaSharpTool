@@ -68,10 +68,17 @@ namespace LambdaSharp.Tool.Cli.Build {
                     .ToList();
                 foreach(var item in builder.Items) {
                     AtLocation(item.FullName, () => {
-                        if(item.Scope.Contains("*")) {
+                        if(item.Scope.Contains("*") || item.Scope.Contains("all")) {
                             item.Scope = item.Scope
-                                .Where(scope => scope != "*")
+
+                                // remove wildcard (either '*' or 'all')
+                                .Where(scope => (scope != "*") && (scope != "all"))
+
+                                // add all function names, except the one being processed
                                 .Union(functionNames)
+                                .Where(scope => scope != item.FullName)
+
+                                // nicely organize the scopes
                                 .Distinct()
                                 .OrderBy(scope => scope)
                                 .ToList();
@@ -473,12 +480,12 @@ namespace LambdaSharp.Tool.Cli.Build {
                         } else if(item is ParameterItem) {
                             switch(item.FullName) {
                             case "Secrets":
+                            case "XRayTracing":
                             case "DeploymentBucketName":
                             case "DeploymentPrefix":
                             case "DeploymentPrefixLowercase":
                             case "DeploymentRoot":
                             case "DeploymentChecksum":
-                            case "DeploymentTracing":
 
                                 // these are built-in parameters; don't report them
                                 break;

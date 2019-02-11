@@ -4,7 +4,7 @@ Items:
 
   - Parameter: ResourceInputParameter
     Section: Resource Input Parameters
-    Scope: "*"
+    Scope: all
     Type: AWS::S3::Bucket
     Allow: ReadOnly
 

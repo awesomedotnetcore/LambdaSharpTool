@@ -6,7 +6,7 @@ Items:
 
   - Resource: MyResource
     If: !Equals [ !Ref MyParameter, "value" ]
-    Scope: "*"
+    Scope: all
     Type: AWS::SNS::Topic
 
   - Function: Function

@@ -177,7 +177,7 @@ Items:
 
   - Resource: RegistrationTable
     Description: DynamoDb table for storing function registrations
-    Scope: "*"
+    Scope: all
     Type: AWS::DynamoDB::Table
     Allow: ReadWrite
     Properties:

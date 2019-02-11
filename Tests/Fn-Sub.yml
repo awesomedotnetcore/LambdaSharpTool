@@ -7,7 +7,7 @@ Items:
     Default: "example.org"
 
   - Resource: MyQueue
-    Scope: "*"
+    Scope: all
     Type: AWS::SQS::Queue
 
   - Variable: ConstantValue

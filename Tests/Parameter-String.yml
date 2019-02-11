@@ -6,12 +6,12 @@ Items:
   - Parameter: InputParameter
     Section: Plain Input Parameters
     Description: required input parameter
-    Scope: "*"
+    Scope: all
 
   - Parameter: InputParameterWithDefault
     Section: Plain Input Parameters
     Description: input parameter with a default value
-    Scope: "*"
+    Scope: all
     Default: a default value
 
   - Function: Function
