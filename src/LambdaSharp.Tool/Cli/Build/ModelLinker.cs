@@ -93,7 +93,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             });
 
             // compute function environments
-            AtLocation("Declarations", () => {
+            AtLocation("Items", () => {
                 foreach(var function in builder.Items.OfType<FunctionItem>()) {
                     AtLocation(function.FullName, () => {
                         var environment = function.Function.Environment.Variables;

@@ -201,7 +201,7 @@ namespace LambdaSharp.Tool.Model.AST {
         /*
          * Namespace: string
          * Description: string
-         * Items: list<Declaration>
+         * Items: list<Item>
          */
         public string Namespace { get; set; }
         public IList<ModuleItemNode> Items { get; set; }
