@@ -136,7 +136,7 @@ namespace LambdaSharp.Tool.Cli {
 
                 // check if exiting profile needs to be upgraded
                 if(!forceUpdate) {
-                    if(!VersionInfo.TryParse(GetToolSetting("Version"), out VersionInfo existingVersion)) {
+                    if(!VersionInfo.TryParse(GetToolSetting("Version"), out var existingVersion)) {
                         AddError("unable to parse existing version; use --force-update to proceed anyway");
                         return;
                     }
@@ -183,7 +183,7 @@ namespace LambdaSharp.Tool.Cli {
 
             // local functions
             string GetToolSetting(string name) {
-                lambdaSharpToolSettings.TryGetValue(lambdaSharpToolPath + name, out KeyValuePair<string, string> kv);
+                lambdaSharpToolSettings.TryGetValue(lambdaSharpToolPath + name, out var kv);
                 return kv.Value;
             }
         }
@@ -218,7 +218,7 @@ namespace LambdaSharp.Tool.Cli {
             var result = new List<Parameter>();
             var missingParameters = new List<ParameterDeclaration>();
             foreach(var templateParameter in templateSummary.Parameters) {
-                if(providedParameters.TryGetValue(templateParameter.ParameterKey, out string providedValue)) {
+                if(providedParameters.TryGetValue(templateParameter.ParameterKey, out var providedValue)) {
 
                     // use the provided parameter value
                     result.Add(new Parameter {

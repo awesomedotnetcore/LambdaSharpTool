@@ -184,7 +184,7 @@ namespace LambdaSharp {
             // read configuration from environment variables
             ModuleId = envSource.Read("MODULE_ID");
             var moduleInfo = envSource.Read("MODULE_INFO");
-            ParseModuleString(moduleInfo, out string moduleOwner, out string moduleName, out string moduleVersion);
+            ParseModuleString(moduleInfo, out var moduleOwner, out var moduleName, out var moduleVersion);
             ModuleOwner = moduleOwner;
             ModuleName = moduleName;
             ModuleVersion = moduleVersion;

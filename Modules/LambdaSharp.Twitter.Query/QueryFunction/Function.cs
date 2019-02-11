@@ -86,9 +86,9 @@ namespace LambdaSharp.Twitter.QueryFunction {
             var document = await _table.GetItemAsync("last");
             if(
                 (document != null)
-                && document.TryGetValue("Query", out DynamoDBEntry queryEntry)
+                && document.TryGetValue("Query", out var queryEntry)
                 && (queryEntry.AsString() == _twitterSearchQuery)
-                && document.TryGetValue("LastId", out DynamoDBEntry lastIdEntry)
+                && document.TryGetValue("LastId", out var lastIdEntry)
             ) {
                 lastId = lastIdEntry.AsLong();
             }

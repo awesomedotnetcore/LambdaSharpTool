@@ -157,7 +157,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // check if module contains a finalizer invocation function
             if(
-                builder.TryGetItem("Finalizer::Invocation", out AModuleItem finalizerInvocationItem)
+                builder.TryGetItem("Finalizer::Invocation", out var finalizerInvocationItem)
                 && (finalizerInvocationItem is ResourceItem finalizerResourceItem)
                 && (finalizerResourceItem.Resource is Humidifier.CustomResource finalizerCustomResource)
             ) {
@@ -274,8 +274,8 @@ namespace LambdaSharp.Tool.Cli.Build {
             return Visit(root, value => {
 
                 // handle !Ref expression
-                if(TryGetFnRef(value, out string refKey)) {
-                    if(TrySubstitute(refKey, null, out object found)) {
+                if(TryGetFnRef(value, out var refKey)) {
+                    if(TrySubstitute(refKey, null, out var found)) {
                         return found ?? value;
                     }
                     DebugWriteLine(() => $"NOT FOUND => {refKey}");
@@ -284,8 +284,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                 }
 
                 // handle !GetAtt expression
-                if(TryGetFnGetAtt(value, out string getAttKey, out string getAttAttribute)) {
-                    if(TrySubstitute(getAttKey, getAttAttribute, out object found)) {
+                if(TryGetFnGetAtt(value, out var getAttKey, out var getAttAttribute)) {
+                    if(TrySubstitute(getAttKey, getAttAttribute, out var found)) {
                         return found ?? value;
                     }
                     DebugWriteLine(() => $"NOT FOUND => {getAttKey}");
@@ -294,13 +294,13 @@ namespace LambdaSharp.Tool.Cli.Build {
                 }
 
                 // handle !Sub expression
-                if(TryGetFnSub(value, out string subPattern, out IDictionary<string, object> subArgs)) {
+                if(TryGetFnSub(value, out var subPattern, out var subArgs)) {
 
                     // replace as many ${VAR} occurrences as possible
                     var substitions = false;
                     subPattern = ReplaceSubPattern(subPattern, (subRefKey, suffix) => {
                         if(!subArgs.ContainsKey(subRefKey)) {
-                            if(TrySubstitute(subRefKey, suffix?.Substring(1), out object found)) {
+                            if(TrySubstitute(subRefKey, suffix?.Substring(1), out var found)) {
                                 if(found == null) {
                                     return null;
                                 }
@@ -326,11 +326,11 @@ namespace LambdaSharp.Tool.Cli.Build {
                 }
 
                 // handle !If expression
-                if(TryGetFnIf(value, out string condition, out object ifTrue, out object ifFalse)) {
+                if(TryGetFnIf(value, out var condition, out var ifTrue, out var ifFalse)) {
                     if(condition.StartsWith("@", StringComparison.Ordinal)) {
                         return value;
                     }
-                    if(_freeItems.TryGetValue(condition, out AModuleItem freeItem)) {
+                    if(_freeItems.TryGetValue(condition, out var freeItem)) {
                         if(!(freeItem is ConditionItem)) {
                             AddError($"item '{freeItem.FullName}' must be a condition");
                         }
@@ -345,7 +345,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     if(condition.StartsWith("@", StringComparison.Ordinal)) {
                         return value;
                     }
-                    if(_freeItems.TryGetValue(condition, out AModuleItem freeItem)) {
+                    if(_freeItems.TryGetValue(condition, out var freeItem)) {
                         if(!(freeItem is ConditionItem)) {
                             AddError($"item '{freeItem.FullName}' must be a condition");
                         }
@@ -356,7 +356,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 }
 
                 // handle !FindInMap expression
-                if(TryGetFnFindInMap(value, out string mapName, out object topLevelKey, out object secondLevelKey)) {
+                if(TryGetFnFindInMap(value, out var mapName, out var topLevelKey, out var secondLevelKey)) {
                     if(mapName.StartsWith("@", StringComparison.Ordinal)) {
                         return value;
                     }
@@ -388,7 +388,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 // TODO (2019-01-06): must know what types of references are legal (Parameters only -or- Resources and Paramaters)
 
                 // check if the requested key can be resolved using a free item
-                if(_freeItems.TryGetValue(key, out AModuleItem freeItem)) {
+                if(_freeItems.TryGetValue(key, out var freeItem)) {
                     switch(freeItem) {
                     case ConditionItem _:
                     case MappingItem _:
@@ -422,13 +422,13 @@ namespace LambdaSharp.Tool.Cli.Build {
                     // check if we're accessing a conditional resource from a resource with a different condition or no condition
                     var freeItemConditionName = (freeItem as AResourceItem)?.Condition;
                     if((freeItemConditionName != null) && (item is AResourceItem resourceItem)) {
-                        _builder.TryGetItem(freeItemConditionName, out AModuleItem freeItemCondition);
+                        _builder.TryGetItem(freeItemConditionName, out var freeItemCondition);
                         if(resourceItem.Condition == null) {
 
                             // TODO (2019-01-10, bjorg): we need to follow 'Fn::If' expressions to make a better determination
                             AddWarning($"possible reference to conditional item {freeItem.FullName} from non-conditional item");
                         } else if(resourceItem.Condition != freeItemConditionName) {
-                             _builder.TryGetItem(resourceItem.Condition, out AModuleItem resourceItemCondition);
+                             _builder.TryGetItem(resourceItem.Condition, out var resourceItemCondition);
                             AddWarning($"conditional item {freeItem.FullName} with condition '{freeItemCondition?.FullName ?? freeItemConditionName}' is accessed by item with condition '{resourceItemCondition.FullName ?? resourceItem.Condition}'");
                         }
                     }
@@ -506,19 +506,19 @@ namespace LambdaSharp.Tool.Cli.Build {
                 return Visit(root, value => {
 
                     // handle !Ref expression
-                    if(TryGetFnRef(value, out string refKey)) {
+                    if(TryGetFnRef(value, out var refKey)) {
                         MarkReachableItem(item, refKey);
                         return value;
                     }
 
                     // handle !GetAtt expression
-                    if(TryGetFnGetAtt(value, out string getAttKey, out string getAttAttribute)) {
+                    if(TryGetFnGetAtt(value, out var getAttKey, out var getAttAttribute)) {
                         MarkReachableItem(item, getAttKey);
                         return value;
                     }
 
                     // handle !Sub expression
-                    if(TryGetFnSub(value, out string subPattern, out IDictionary<string, object> subArgs)) {
+                    if(TryGetFnSub(value, out var subPattern, out var subArgs)) {
 
                         // substitute ${VAR} occurrences if possible
                         subPattern = ReplaceSubPattern(subPattern, (subRefKey, suffix) => {
@@ -532,7 +532,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     }
 
                     // handle !If expression
-                    if(TryGetFnIf(value, out string condition, out object _, out object _)) {
+                    if(TryGetFnIf(value, out var condition, out _, out _)) {
                         MarkReachableItem(item, condition);
                         return value;
                     }
@@ -544,7 +544,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     }
 
                     // handle !FindInMap expression
-                    if(TryGetFnFindInMap(value, out string mapName, out object _, out object _)) {
+                    if(TryGetFnFindInMap(value, out var mapName, out _, out _)) {
                         MarkReachableItem(item, mapName);
                         return value;
                     }
@@ -556,7 +556,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 if(fullNameOrResourceName.StartsWith("AWS::", StringComparison.Ordinal)) {
                     return;
                 }
-                if(_builder.TryGetItem(fullNameOrResourceName, out AModuleItem refItem)) {
+                if(_builder.TryGetItem(fullNameOrResourceName, out var refItem)) {
                     if(!reachable.ContainsKey(refItem.FullName)) {
                         if(!found.ContainsKey(refItem.FullName)) {
                             DebugWriteLine(() => $"REACHED {item?.FullName ?? "<null>"} -> {refItem?.FullName ?? "<null>"}");
@@ -571,17 +571,17 @@ namespace LambdaSharp.Tool.Cli.Build {
             return Visit(root, value => {
 
                 // handle !Ref expression
-                if(TryGetFnRef(value, out string refKey) && refKey.StartsWith("@", StringComparison.Ordinal)) {
+                if(TryGetFnRef(value, out var refKey) && refKey.StartsWith("@", StringComparison.Ordinal)) {
                     return FnRef(refKey.Substring(1));
                 }
 
                 // handle !GetAtt expression
-                if(TryGetFnGetAtt(value, out string getAttKey, out string getAttAttribute) && getAttKey.StartsWith("@", StringComparison.Ordinal)) {
+                if(TryGetFnGetAtt(value, out var getAttKey, out var getAttAttribute) && getAttKey.StartsWith("@", StringComparison.Ordinal)) {
                     return FnGetAtt(getAttKey.Substring(1), getAttAttribute);
                 }
 
                 // handle !Sub expression
-                if(TryGetFnSub(value, out string subPattern, out IDictionary<string, object> subArgs)) {
+                if(TryGetFnSub(value, out var subPattern, out var subArgs)) {
 
                     // replace as many ${VAR} occurrences as possible
                     subPattern = ReplaceSubPattern(subPattern, (subRefKey, suffix) => {
@@ -594,7 +594,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 }
 
                 // handle !If expression
-                if(TryGetFnIf(value, out string condition, out object ifTrue, out object ifFalse) && condition.StartsWith("@", StringComparison.Ordinal)) {
+                if(TryGetFnIf(value, out var condition, out var ifTrue, out var ifFalse) && condition.StartsWith("@", StringComparison.Ordinal)) {
                     return FnIf(condition.Substring(1), ifTrue, ifFalse);
                 }
 
@@ -604,7 +604,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 }
 
                 // handle !FindInMap expression
-                if(TryGetFnFindInMap(value, out string mapName, out object topLevelKey, out object secondLevelKey) && mapName.StartsWith("@", StringComparison.Ordinal)) {
+                if(TryGetFnFindInMap(value, out var mapName, out var topLevelKey, out var secondLevelKey) && mapName.StartsWith("@", StringComparison.Ordinal)) {
                     return FnFindInMap(mapName.Substring(1), topLevelKey, secondLevelKey);
                 }
                 return value;

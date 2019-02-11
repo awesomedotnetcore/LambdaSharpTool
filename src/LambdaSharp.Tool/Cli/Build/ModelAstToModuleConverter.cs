@@ -63,7 +63,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 }
 
                 // ensure owner is present
-                if(!module.Module.TryParseModuleOwnerName(out string moduleOwner, out string moduleName)) {
+                if(!module.Module.TryParseModuleOwnerName(out string moduleOwner, out var moduleName)) {
                     AddError("'Module' attribute must have format 'Owner.Name'");
                 }
 
@@ -110,7 +110,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
         private void ConvertDependency(int index, ModuleDependencyNode dependency) {
             AtLocation($"{index}", () => {
-                if(!dependency.Module.TryParseModuleDescriptor(out string moduleOwner, out string moduleName, out VersionInfo moduleVersion, out string moduleBucketName)) {
+                if(!dependency.Module.TryParseModuleDescriptor(out var moduleOwner, out var moduleName, out var moduleVersion, out var moduleBucketName)) {
                     AddError("invalid module reference format");
                     return;
                 }
@@ -758,7 +758,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // local functions
             bool IsFieldSet(string field)
-                => instanceLookup.TryGetValue(field, out JToken token) && (token.Type != JTokenType.Null);
+                => instanceLookup.TryGetValue(field, out var token) && (token.Type != JTokenType.Null);
         }
 
         private void DetermineFunctionType(

@@ -58,13 +58,13 @@ namespace LambdaSharp.Core.Registrations {
 
             // local functions
             string TryGetAsString(string key)
-                => document.TryGetValue(key, out DynamoDBEntry entry) ? entry.AsString() : null;
+                => document.TryGetValue(key, out var entry) ? entry.AsString() : null;
 
             int TryGetAsInt(string key)
-                => document.TryGetValue(key, out DynamoDBEntry entry) ? entry.AsInt() : 0;
+                => document.TryGetValue(key, out var entry) ? entry.AsInt() : 0;
 
             TimeSpan TryGetAsTimeSpan(string key)
-                => document.TryGetValue(key, out DynamoDBEntry entry) ? TimeSpan.Parse(entry.AsString()) : TimeSpan.Zero;
+                => document.TryGetValue(key, out var entry) ? TimeSpan.Parse(entry.AsString()) : TimeSpan.Zero;
         }
 
         public async Task PutOwnerMetaDataAsync(string id, OwnerMetaData owner) {

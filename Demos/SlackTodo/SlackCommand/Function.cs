@@ -54,7 +54,7 @@ namespace LambdaSharp.Demo.SlackTodo {
                 }
                 break;
             case "remove":
-                if((args.Length == 1) || string.IsNullOrWhiteSpace(args[1]) || !int.TryParse(args[1], out int index)) {
+                if((args.Length == 1) || string.IsNullOrWhiteSpace(args[1]) || !int.TryParse(args[1], out var index)) {
                     Console.WriteLine("Missing or invalid task number after the `remove` command.");
                 } else if(!await RemoveTask(request.UserId, index)) {
                     Console.WriteLine("Invalid task number after the `remove` command.");

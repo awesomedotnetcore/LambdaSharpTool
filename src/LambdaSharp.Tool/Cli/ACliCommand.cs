@@ -214,7 +214,7 @@ namespace LambdaSharp.Tool.Cli {
                 result = defaultvalue;
                 return true;
             }
-            if(int.TryParse(option.Value(), out int intValue)) {
+            if(int.TryParse(option.Value(), out var intValue)) {
                 if(!Enum.GetValues(typeof(T)).Cast<int>().Any(v => v == intValue)) {
                     goto failed;
                 }
@@ -247,7 +247,7 @@ namespace LambdaSharp.Tool.Cli {
                     if((lambdaSharpToolVersionText == null) && optional) {
                         return;
                     }
-                    if(!VersionInfo.TryParse(lambdaSharpToolVersionText, out VersionInfo lambdaSharpToolVersion)) {
+                    if(!VersionInfo.TryParse(lambdaSharpToolVersionText, out var lambdaSharpToolVersion)) {
                         AddError("LambdaSharp CLI is not configured propertly", new LambdaSharpToolConfigException(settings.ToolProfile));
                         return;
                     }
@@ -269,7 +269,7 @@ namespace LambdaSharp.Tool.Cli {
 
                     // local functions
                     string GetLambdaSharpToolSetting(string name) {
-                        lambdaSharpToolSettings.TryGetValue(lambdaSharpToolPath + name, out KeyValuePair<string, string> kv);
+                        lambdaSharpToolSettings.TryGetValue(lambdaSharpToolPath + name, out var kv);
                         return kv.Value;
                     }
                 }

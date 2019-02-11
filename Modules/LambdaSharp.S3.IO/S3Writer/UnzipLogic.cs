@@ -135,7 +135,7 @@ namespace LambdaSharp.S3.IO.S3Writer {
                         var hash = GetMD5Hash(memoryStream);
 
                         // only upload file if new or the contents have changed
-                        if(!oldFileEntries.TryGetValue(entry.FullName, out string existingHash) || (existingHash != hash)) {
+                        if(!oldFileEntries.TryGetValue(entry.FullName, out var existingHash) || (existingHash != hash)) {
                             var destination = Path.Combine(properties.DestinationKey, entry.FullName).Replace('\\', '/');
                             _logger.LogInfo($"uploading file: {destination}");
                             await _transferUtility.UploadAsync(

@@ -247,7 +247,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                         AddError($"circular dependency detected: {string.Join(" -> ", inProgress.Select(d => d.Manifest.GetFullName()))}");
                         return;
                     } else {
-                        dependency.ModuleFullName.TryParseModuleOwnerName(out string moduleOwner, out string moduleName);
+                        dependency.ModuleFullName.TryParseModuleOwnerName(out string moduleOwner, out var moduleName);
 
                         // resolve dependencies for dependency module
                         var dependencyLocation = await _loader.LocateAsync(moduleOwner, moduleName, dependency.MinVersion, dependency.MaxVersion, dependency.BucketName);

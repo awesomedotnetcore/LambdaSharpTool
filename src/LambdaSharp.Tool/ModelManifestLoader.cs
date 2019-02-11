@@ -174,9 +174,9 @@ namespace LambdaSharp.Tool {
 
         private ModuleManifest GetManifest(JObject cloudformation) {
             if(
-                cloudformation.TryGetValue("Metadata", out JToken metadataToken)
+                cloudformation.TryGetValue("Metadata", out var metadataToken)
                 && (metadataToken is JObject metadata)
-                && metadata.TryGetValue("LambdaSharp::Manifest", out JToken manifestToken)
+                && metadata.TryGetValue("LambdaSharp::Manifest", out var manifestToken)
             ) {
                 return manifestToken.ToObject<ModuleManifest>();
             }

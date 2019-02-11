@@ -181,12 +181,12 @@ namespace LambdaSharp.Tool.Cli.Build {
                         if(libraryVersionText == null) {
                             AddError($"csproj file is missing a version attribute in its assembly reference for {library} (expected version: '{expectedVersion}')");
                         } else if(libraryVersionText.EndsWith(".*", StringComparison.Ordinal)) {
-                            if(!VersionInfo.TryParse(libraryVersionText.Substring(0, libraryVersionText.Length - 2), out VersionInfo libraryVersion)) {
+                            if(!VersionInfo.TryParse(libraryVersionText.Substring(0, libraryVersionText.Length - 2), out var libraryVersion)) {
                                 AddError($"csproj file contains an invalid wildcard version in its assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
                             } else if(!libraryVersion.IsCompatibleWith(expectedVersion)) {
                                 AddError($"csproj file contains a mismatched assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
                             }
-                        } else if(!VersionInfo.TryParse(libraryVersionText, out VersionInfo libraryVersion)) {
+                        } else if(!VersionInfo.TryParse(libraryVersionText, out var libraryVersion)) {
                             AddError($"csproj file contains an invalid version in its assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
                         } else if(!libraryVersion.IsCompatibleWith(expectedVersion)) {
                             AddError($"csproj file contains a mismatched assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");

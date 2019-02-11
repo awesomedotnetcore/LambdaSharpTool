@@ -119,11 +119,11 @@ namespace LambdaSharp.Tool {
                 string value = null;
                 if(kv.Value is string text) {
                     value = text;
-                } else if(TryGetFnRef(kv.Value, out string refKey)) {
+                } else if(TryGetFnRef(kv.Value, out var refKey)) {
                     value = $"${{{refKey}}}";
-                } else if(TryGetFnGetAtt(kv.Value, out string getAttKey, out string getAttAttribute)) {
+                } else if(TryGetFnGetAtt(kv.Value, out var getAttKey, out var getAttAttribute)) {
                     value = $"${{{getAttKey}.{getAttAttribute}}}";
-                } else if(TryGetFnSub(kv.Value, out string subPattern, out IDictionary<string, object> subArguments) && !subArguments.Any()) {
+                } else if(TryGetFnSub(kv.Value, out var subPattern, out var subArguments) && !subArguments.Any()) {
                     value = subPattern;
                 }
                 return new {
@@ -235,7 +235,7 @@ namespace LambdaSharp.Tool {
             if(
                 (value is IDictionary<string, object> map)
                 && (map.Count == 1)
-                && map.TryGetValue("Fn::If", out object argsObject)
+                && map.TryGetValue("Fn::If", out var argsObject)
                 && (argsObject is IList<object> argsList)
                 && (argsList.Count == 3)
                 && (argsList[0] is string conditionText)
@@ -255,7 +255,7 @@ namespace LambdaSharp.Tool {
             if(
                 (value is IDictionary<string, object> map)
                 && (map.Count == 1)
-                && map.TryGetValue("Ref", out object refObject)
+                && map.TryGetValue("Ref", out var refObject)
                 && (refObject is string refKey)
             ) {
                 key = refKey;
@@ -269,7 +269,7 @@ namespace LambdaSharp.Tool {
             if(
                 (value is IDictionary<string, object> map)
                 && (map.Count == 1)
-                && map.TryGetValue("Fn::GetAtt", out object getAttObject)
+                && map.TryGetValue("Fn::GetAtt", out var getAttObject)
                 && (getAttObject is IList<object> getAttArgs)
                 && (getAttArgs.Count == 2)
                 && getAttArgs[0] is string getAttKey
@@ -288,7 +288,7 @@ namespace LambdaSharp.Tool {
             if(
                 (value is IDictionary<string, object> map)
                 && (map.Count == 1)
-                && map.TryGetValue("Fn::Sub", out object subObject)
+                && map.TryGetValue("Fn::Sub", out var subObject)
             ) {
 
                 // determine which form of !Sub is being used
@@ -317,7 +317,7 @@ namespace LambdaSharp.Tool {
             if(
                 (value is IDictionary<string, object> map)
                 && (map.Count == 1)
-                && map.TryGetValue("Condition", out object refObject)
+                && map.TryGetValue("Condition", out var refObject)
                 && (refObject is string refKey)
             ) {
                 condition = refKey;
@@ -331,7 +331,7 @@ namespace LambdaSharp.Tool {
             if(
                 (value is IDictionary<string, object> map)
                 && (map.Count == 1)
-                && map.TryGetValue("Fn::FindInMap", out object argsObject)
+                && map.TryGetValue("Fn::FindInMap", out var argsObject)
                 && (argsObject is IList<object> argsList)
                 && (argsList.Count == 3)
                 && (argsList[0] is string mapNameText)

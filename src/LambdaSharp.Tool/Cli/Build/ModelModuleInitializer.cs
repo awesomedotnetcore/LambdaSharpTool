@@ -257,7 +257,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
 
             // add module variables
-            if(TryGetModuleVariable("DeadLetterQueue", out object deadLetterQueueVariable)) {
+            if(TryGetModuleVariable("DeadLetterQueue", out var deadLetterQueueVariable)) {
                 _builder.AddVariable(
                     parent: moduleItem,
                     name: "DeadLetterQueue",
@@ -277,7 +277,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     }
                 );
             }
-            if(TryGetModuleVariable("LoggingStream", out object loggingStreamVariable)) {
+            if(TryGetModuleVariable("LoggingStream", out var loggingStreamVariable)) {
                 _builder.AddVariable(
                     parent: moduleItem,
                     name: "LoggingStream",
@@ -289,7 +289,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     encryptionContext: null
                 );
             }
-            if(TryGetModuleVariable("LoggingStreamRole", out object loggingStreamRoleVariable)) {
+            if(TryGetModuleVariable("LoggingStreamRole", out var loggingStreamRoleVariable)) {
                 _builder.AddVariable(
                     parent: moduleItem,
                     name: "LoggingStreamRole",
@@ -301,7 +301,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     encryptionContext: null
                 );
             }
-            if(TryGetModuleVariable("DefaultSecretKey", out object defaultSecretKeyVariable)) {
+            if(TryGetModuleVariable("DefaultSecretKey", out var defaultSecretKeyVariable)) {
                 _builder.AddVariable(
                     parent: moduleItem,
                     name: "DefaultSecretKey",
@@ -541,7 +541,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // check if lambdasharp specific resources need to be initialized
             var functions = _builder.Items.OfType<FunctionItem>().ToList();
-            if(_builder.TryGetItem("Module::DeadLetterQueue", out AModuleItem _)) {
+            if(_builder.TryGetItem("Module::DeadLetterQueue", out _)) {
                 foreach(var function in functions.Where(f => f.HasDeadLetterQueue)) {
 
                     // initialize dead-letter queue
@@ -624,8 +624,8 @@ namespace LambdaSharp.Tool.Cli.Build {
 
                         // create function log-group subscription
                         if(
-                            _builder.TryGetItem("Module::LoggingStream", out AModuleItem _)
-                            && _builder.TryGetItem("Module::LoggingStreamRole", out AModuleItem _)
+                            _builder.TryGetItem("Module::LoggingStream", out _)
+                            && _builder.TryGetItem("Module::LoggingStreamRole", out _)
                         ) {
                             _builder.AddResource(
                                 parent: function,
@@ -651,7 +651,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
         private bool TryGetModuleVariable(string name, out object variable) {
             if(
-                _builder.TryGetLabeledPragma("Overrides", out object value)
+                _builder.TryGetLabeledPragma("Overrides", out var value)
                 && (value is IDictionary dictionary)
             ) {
                 var entry = dictionary[$"Module::{name}"];

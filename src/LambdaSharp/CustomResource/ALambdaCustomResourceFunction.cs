@@ -72,7 +72,7 @@ namespace LambdaSharp.CustomResource {
 
             // determine if the custom resource request is wrapped in an SNS message
             CloudFormationResourceRequest<TRequestProperties> rawRequest;
-            if(json.TryGetValue("Records", out JToken _)) {
+            if(json.TryGetValue("Records", out _)) {
 
                 // deserialize SNS event
                 LogInfo("deserializing SNS event");

@@ -99,7 +99,7 @@ namespace Humidifier {
         object ICollection.SyncRoot => this;
         object IDictionary.this[object key] {
             get {
-                _properties.TryGetValue((string)key, out object value);
+                _properties.TryGetValue((string)key, out var value);
                 return value;
             }
             set => _properties[(string)key] = value;

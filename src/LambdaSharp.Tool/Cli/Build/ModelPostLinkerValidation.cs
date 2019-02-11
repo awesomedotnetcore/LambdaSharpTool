@@ -100,7 +100,7 @@ namespace LambdaSharp.Tool.Cli.Build {
         private void ValidateSourceParameter(object value, string awsType) {
             if(value is string literalValue) {
                 ValidateSourceParameter(literalValue);
-            } else if(TryGetFnRef(value, out string refKey)) {
+            } else if(TryGetFnRef(value, out var refKey)) {
                 ValidateSourceParameter(refKey);
             } else {
                 AddError("invalid expression");
@@ -108,7 +108,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // local functions
             void ValidateSourceParameter(string fullName) {
-                if(!_builder.TryGetItem(fullName, out AModuleItem item)) {
+                if(!_builder.TryGetItem(fullName, out var item)) {
                     AddError($"could not find function source {fullName}");
                     return;
                 }
@@ -142,7 +142,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 AddError("invalid expression");
                 return;
             }
-            if(!_builder.TryGetItem(fullName, out AModuleItem item)) {
+            if(!_builder.TryGetItem(fullName, out var item)) {
                 AddError($"could not find handler item {fullName}");
                 return;
             }
@@ -175,7 +175,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 AddError("invalid expression");
                 return;
             }
-            if(!_builder.TryGetItem(fullName, out AModuleItem item)) {
+            if(!_builder.TryGetItem(fullName, out var item)) {
                 AddError($"could not find function item {fullName}");
                 return;
             }

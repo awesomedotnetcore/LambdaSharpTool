@@ -170,14 +170,14 @@ namespace LambdaSharp.Tool.Model {
 
             // TODO (2018-11-29, bjorg): we need to make sure that only other resources are referenced (no literal items, or itself, no loops either)
             if(Condition != null) {
-                TryGetFnCondition(visitor(this, FnCondition(Condition)), out string result);
+                TryGetFnCondition(visitor(this, FnCondition(Condition)), out var result);
                 Condition = result ?? throw new InvalidOperationException($"invalid expression returned (condition)");
             }
 
             // TODO (2018-11-29, bjorg): we need to make sure that only other resources are referenced (no literal items, or itself, no loops either)
             for(var i = 0; i < DependsOn.Count; ++i) {
                 var dependency = DependsOn[i];
-                TryGetFnRef(visitor(this, FnRef(dependency)), out string result);
+                TryGetFnRef(visitor(this, FnRef(dependency)), out var result);
                 DependsOn[i] = result ?? throw new InvalidOperationException($"invalid expression returned (DependsOn[{i}])");
             }
         }

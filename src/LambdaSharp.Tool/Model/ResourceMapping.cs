@@ -134,7 +134,7 @@ namespace LambdaSharp.Tool.Model {
         //--- Methods ---
         public static bool TryResolveAllowShorthand(string awsType, string shorthand, out IList<string> allowed) {
             allowed = null;
-            return _iamMappings.TryGetValue(awsType, out IDictionary<string, IList<string>> awsTypeShorthands)
+            return _iamMappings.TryGetValue(awsType, out var awsTypeShorthands)
                 && awsTypeShorthands.TryGetValue(shorthand, out allowed);
         }
 
@@ -178,7 +178,7 @@ namespace LambdaSharp.Tool.Model {
             }
 
             // check if type exists and contains property
-            return CloudformationSpec.ResourceTypes.TryGetValue(awsType, out ResourceType resource)
+            return CloudformationSpec.ResourceTypes.TryGetValue(awsType, out var resource)
                 && (resource.Properties?.ContainsKey(property) == true);
         }
 
@@ -195,7 +195,7 @@ namespace LambdaSharp.Tool.Model {
             }
 
             // check if type exists and contains attribute
-            return CloudformationSpec.ResourceTypes.TryGetValue(awsType, out ResourceType resource)
+            return CloudformationSpec.ResourceTypes.TryGetValue(awsType, out var resource)
                 && (resource.Attributes?.ContainsKey(attribute) == true);
         }
 

@@ -70,7 +70,7 @@ namespace MacroSample.MyFunction {
 
             // macro for string operations
             try {
-                if(!request.Params.TryGetValue("Value", out object value)) {
+                if(!request.Params.TryGetValue("Value", out var value)) {
                     throw new ArgumentException("missing parameter: 'Value");
                 }
                 if(!(value is string text)) {

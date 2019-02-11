@@ -90,7 +90,7 @@ namespace LambdaSharp.Tool.Cli {
                         .Deserialize<Dictionary<string, object>>(File.ReadAllText(filename));
 
                     // resolve 'alias/' key names to key arns
-                    if(inputs.TryGetValue("Secrets", out object keys)) {
+                    if(inputs.TryGetValue("Secrets", out var keys)) {
                         if(keys is string key) {
                             inputs["Secrets"] = key.Split(',').Select(item => ConvertAliasToKeyArn(item.Trim())).ToList();
                         } else if(keys is IList<object> list) {
@@ -404,7 +404,7 @@ namespace LambdaSharp.Tool.Cli {
                         } else if(Path.GetFileName(argument) == "cloudformation.json") {
                             settings.WorkingDirectory = Path.GetDirectoryName(argument);
                             settings.OutputDirectory = settings.WorkingDirectory;
-                        } else if(argument.TryParseModuleDescriptor(out string _, out string _, out VersionInfo _, out string _)) {
+                        } else if(argument.TryParseModuleDescriptor(out _, out _, out _, out _)) {
                             moduleReference = argument;
                         } else {
                             AddError($"unrecognized argument: {argument}");

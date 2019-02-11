@@ -357,7 +357,7 @@ namespace LambdaSharp.Tool.Cli {
         }
 
         public void NewResource(string moduleFile, string resourceName, string resourceTypeName) {
-            if(!ResourceMapping.CloudformationSpec.ResourceTypes.TryGetValue(resourceTypeName, out ResourceType resourceType)) {
+            if(!ResourceMapping.CloudformationSpec.ResourceTypes.TryGetValue(resourceTypeName, out var resourceType)) {
                 AddError($"unknown resource type '{resourceTypeName}'");
                 return;
             }
@@ -401,7 +401,7 @@ namespace LambdaSharp.Tool.Cli {
                     case "List":
                         if(property.PrimitiveItemType != null) {
                             AddLine($"- {property.PrimitiveItemType}");
-                        } else if(TryGetType(property.ItemType, out ResourceType nestedListType)) {
+                        } else if(TryGetType(property.ItemType, out var nestedListType)) {
                             WriteResourceProperties(property.ItemType, nestedListType, indentation + 1, startList: true);
                         } else {
                             AddError($"could not find property type '{resourceTypeName}.{property.ItemType}'");
@@ -410,7 +410,7 @@ namespace LambdaSharp.Tool.Cli {
                     case "Map":
                         if(property.PrimitiveItemType != null) {
                             AddLine($"String: {property.PrimitiveItemType}");
-                        } else if(TryGetType(property.ItemType, out ResourceType nestedMapType)) {
+                        } else if(TryGetType(property.ItemType, out var nestedMapType)) {
                             AddLine($"String:");
                             WriteResourceProperties(property.ItemType, nestedMapType, indentation + 2, startList: true);
                         } else {
@@ -418,7 +418,7 @@ namespace LambdaSharp.Tool.Cli {
                         }
                         break;
                     default:
-                        if(TryGetType(property.Type, out ResourceType nestedType)) {
+                        if(TryGetType(property.Type, out var nestedType)) {
                             WriteResourceProperties(property.Type, nestedType, indentation, startList: false);
                         } else {
                             AddError($"could not find property type '{resourceTypeName}.{property.Type}'");

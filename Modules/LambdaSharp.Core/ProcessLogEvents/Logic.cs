@@ -233,7 +233,7 @@ namespace LambdaSharp.Core.ProcessLogEvents {
                                 MethodName = traceMatch.Groups["Function"].Value.Trim(),
                                 FileName = traceMatch.Groups["File"].Value
                             };
-                            if(int.TryParse(traceMatch.Groups["Line"].Value, out int line)) {
+                            if(int.TryParse(traceMatch.Groups["Line"].Value, out var line)) {
                                 frame.LineNumber = line;
                             }
                             return frame;

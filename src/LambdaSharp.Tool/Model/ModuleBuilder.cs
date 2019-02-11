@@ -147,7 +147,7 @@ namespace LambdaSharp.Tool.Model {
             _resourceTypeNameMappings = module.ResourceTypeNameMappings ?? new Dictionary<string, string>();
 
             // extract existing resource statements when they exist
-            if(TryGetItem("Module::Role", out AModuleItem moduleRoleItem)) {
+            if(TryGetItem("Module::Role", out var moduleRoleItem)) {
                 var role = (Humidifier.IAM.Role)((ResourceItem)moduleRoleItem).Resource;
                 _resourceStatements = new List<Humidifier.Statement>(role.Policies[0].PolicyDocument.Statement);
                 role.Policies[0].PolicyDocument.Statement = new List<Humidifier.Statement>();
@@ -204,7 +204,7 @@ namespace LambdaSharp.Tool.Model {
         }
 
         public void RemoveItem(string fullName) {
-            if(TryGetItem(fullName, out AModuleItem item)) {
+            if(TryGetItem(fullName, out var item)) {
 
                 // check if the module role is being removed
                 if(fullName == "Module::Role") {
@@ -268,7 +268,7 @@ namespace LambdaSharp.Tool.Model {
                 return;
             }
             if(!Settings.NoDependencyValidation) {
-                if(!moduleFullName.TryParseModuleOwnerName(out string moduleOwner, out string moduleName)) {
+                if(!moduleFullName.TryParseModuleOwnerName(out string moduleOwner, out var moduleName)) {
                     AddError("invalid module reference");
                     return;
                 }
@@ -444,7 +444,7 @@ namespace LambdaSharp.Tool.Model {
             }
 
             // validate module name
-            if(!module.TryParseModuleDescriptor(out string moduleOwner, out string moduleName, out VersionInfo moduleVersion, out string moduleBucketName)) {
+            if(!module.TryParseModuleDescriptor(out var moduleOwner, out var moduleName, out var moduleVersion, out var moduleBucketName)) {
                 AddError("invalid 'Module' attribute");
             } else {
                 module = $"{moduleOwner}.{moduleName}";
@@ -555,7 +555,7 @@ namespace LambdaSharp.Tool.Model {
             Validate(Regex.IsMatch(macroName, CLOUDFORMATION_ID_PATTERN), "name is not valid");
 
             // check if a root macros collection needs to be created
-            if(!TryGetItem("Macros", out AModuleItem macrosItem)) {
+            if(!TryGetItem("Macros", out var macrosItem)) {
                 macrosItem = AddVariable(
                     parent: null,
                     name: "Macros",
@@ -669,7 +669,7 @@ namespace LambdaSharp.Tool.Model {
 
                     // for built-in type, use the 'Arn' attribute if it exists
                     resourceExportAttribute = "Arn";
-                } else if(TryGetResourceType(resourceTypeName, out ModuleManifestResourceType resourceType)) {
+                } else if(TryGetResourceType(resourceTypeName, out var resourceType)) {
 
                     // for custom resource types, use the first defined response attribute
                     resourceExportAttribute = resourceType.Attributes.FirstOrDefault()?.Name;
@@ -1150,7 +1150,7 @@ namespace LambdaSharp.Tool.Model {
 
                     // AWS permission statements always contain a `:` (e.g `ssm:GetParameter`)
                     allowStatements.Add(allowStatement);
-                } else if((awsType != null) && ResourceMapping.TryResolveAllowShorthand(awsType, allowStatement, out IList<string> allowedList)) {
+                } else if((awsType != null) && ResourceMapping.TryResolveAllowShorthand(awsType, allowStatement, out var allowedList)) {
                     allowStatements.AddRange(allowedList);
                 } else {
                     AddError($"could not find IAM mapping for short-hand '{allowStatement}' on AWS type '{awsType ?? "<omitted>"}'");
@@ -1197,13 +1197,13 @@ namespace LambdaSharp.Tool.Model {
 
             // resolve references in output values
             AtLocation("ResourceStatements", () => {
-                TryGetItem("Module::Role", out AModuleItem moduleRole);
+                TryGetItem("Module::Role", out var moduleRole);
                 _resourceStatements = (IList<Humidifier.Statement>)visitor(moduleRole, _resourceStatements);
             });
         }
 
         public bool HasAttribute(AModuleItem item, string attribute) {
-            if(TryGetResourceType(item.Type, out ModuleManifestResourceType resourceType)) {
+            if(TryGetResourceType(item.Type, out var resourceType)) {
                 return resourceType.Attributes.Any(field => field.Name == attribute);
             }
             return ResourceMapping.HasAttribute(item.Type, attribute);
@@ -1212,7 +1212,7 @@ namespace LambdaSharp.Tool.Model {
         public Module ToModule() {
 
             // update existing resource statements when they exist
-            if(TryGetItem("Module::Role", out AModuleItem moduleRoleItem)) {
+            if(TryGetItem("Module::Role", out var moduleRoleItem)) {
                 var role = (Humidifier.IAM.Role)((ResourceItem)moduleRoleItem).Resource;
                 role.Policies[0].PolicyDocument.Statement = _resourceStatements.ToList();
             }
@@ -1253,7 +1253,7 @@ namespace LambdaSharp.Tool.Model {
             string awsType,
             IDictionary properties
         ) {
-            if(ResourceMapping.CloudformationSpec.ResourceTypes.TryGetValue(awsType, out ResourceType resource)) {
+            if(ResourceMapping.CloudformationSpec.ResourceTypes.TryGetValue(awsType, out var resource)) {
                 ValidateProperties("", resource, properties);
             } else if(!awsType.StartsWith("Custom::", StringComparison.Ordinal)) {
                 var dependency = _dependencies.Values.FirstOrDefault(d => d.Manifest?.ResourceTypes.Any(existing => existing.Type == awsType) ?? false);
@@ -1297,7 +1297,7 @@ namespace LambdaSharp.Tool.Model {
 
                 // check that all defined properties exist
                 foreach(DictionaryEntry property in currentProperties) {
-                    if(!currentResource.Properties.TryGetValue((string)property.Key, out PropertyType propertyType)) {
+                    if(!currentResource.Properties.TryGetValue((string)property.Key, out var propertyType)) {
                         AddError($"unrecognized property '{prefix + property.Key}'");
                     } else {
                         switch(propertyType.Type) {
@@ -1315,7 +1315,7 @@ namespace LambdaSharp.Tool.Model {
                                 } else if(!(property.Value is IList nestedList)) {
                                     AddError($"property type mismatch for '{prefix + property.Key}', expected a list [{property.Value?.GetType().Name ?? "<null>"}]");
                                 } else if(propertyType.ItemType != null) {
-                                    ResourceMapping.TryGetPropertyItemType(awsType, propertyType.ItemType, out ResourceType nestedResource);
+                                    ResourceMapping.TryGetPropertyItemType(awsType, propertyType.ItemType, out var nestedResource);
                                     ValidateList(prefix + property.Key + ".", nestedResource, ListToEnumerable(nestedList));
                                 } else {
 
@@ -1335,7 +1335,7 @@ namespace LambdaSharp.Tool.Model {
                                 } else if(!(property.Value is IDictionary nestedProperties1)) {
                                     AddError($"property type mismatch for '{prefix + property.Key}', expected a map [{property.Value?.GetType().FullName ?? "<null>"}]");
                                 } else if(propertyType.ItemType != null) {
-                                    ResourceMapping.TryGetPropertyItemType(awsType, propertyType.ItemType, out ResourceType nestedResource);
+                                    ResourceMapping.TryGetPropertyItemType(awsType, propertyType.ItemType, out var nestedResource);
                                     ValidateList(prefix + property.Key + ".", nestedResource, DictionaryToEnumerable(nestedProperties1));
                                 } else {
 
@@ -1359,7 +1359,7 @@ namespace LambdaSharp.Tool.Model {
                                 } else if(!(property.Value is IDictionary nestedProperties2)) {
                                     AddError($"property type mismatch for '{prefix + property.Key}', expected a map [{property.Value?.GetType().FullName ?? "<null>"}]");
                                 } else {
-                                    ResourceMapping.TryGetPropertyItemType(awsType, propertyType.Type, out ResourceType nestedResource);
+                                    ResourceMapping.TryGetPropertyItemType(awsType, propertyType.Type, out var nestedResource);
                                     ValidateProperties(prefix + property.Key + ".", nestedResource, nestedProperties2);
                                 }
                             }
@@ -1452,7 +1452,7 @@ namespace LambdaSharp.Tool.Model {
                 && ResourceMapping.HasProperty(customResource.AWSTypeName, "Tags")
             ) {
             IList tags = null;
-                if(customResource.TryGetValue("Tags", out object tagsObject)) {
+                if(customResource.TryGetValue("Tags", out var tagsObject)) {
                     tags = tagsObject as IList;
                 } else {
                     tags = new List<object>();
