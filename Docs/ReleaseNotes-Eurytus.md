@@ -340,6 +340,8 @@ The λ# CLI now prevents a module from being published again with the same versi
 
 The λ# CLI now uses [CloudFormation Change Sets](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-changesets.html) to deploy modules. CloudFormation change sets are the preferred way to update infrastructure as they provide an additional review mechanism for detecting unwanted changes.
 
+With [AWS X-Ray going GA just in time](https://aws.amazon.com/blogs/developer/aws-x-ray-support-for-net-core-is-ga/), the λ# CLI now has a new `--xray` option to enable service-call tracing with AWS X-Ray for all functions in the module.
+
 In addition, the λ# CLI now prompts for missing module parameters before creating or updating the CloudFormation stack. This includes parameters required by modules referenced in the `Using` section. If the module was deployed previously, the λ# CLI will only prompt for parameters that were not set previously. Furthermore, the `--parameters` option can be used to supply parameter values for the module being deployed. Parameters with default values are not prompted unless the `--prompt-all` option is used.
 
 Having an interactive prompt in a CI/CD setup is about the worst thing that can happen. To avoid this scenario, use the `--prompts-as-errors` option to convert prompts into reported errors instead. This is another way to catch early that something is amiss before anything happens.

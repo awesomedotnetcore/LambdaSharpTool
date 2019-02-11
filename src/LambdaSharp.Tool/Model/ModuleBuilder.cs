@@ -950,6 +950,11 @@ namespace LambdaSharp.Tool.Model {
                     ["S3Bucket"] = FnRef("DeploymentBucketName")
                 };
             }
+            if(!definition.ContainsKey("TracingConfig")) {
+                definition["TracingConfig"] = new Dictionary<string, object> {
+                    ["Mode"] = FnRef("DeploymentTracing")
+                };
+            }
             AtLocation("Properties", () => ValidateProperties("AWS::Lambda::Function", definition));
 
             // initialize function resource from definition

@@ -25,6 +25,7 @@ using Amazon.SQS;
 using LambdaSharp.ConfigSource;
 
 namespace LambdaSharp {
+
     public class LambdaFunctionConfiguration {
 
         //--- Class Fields ---

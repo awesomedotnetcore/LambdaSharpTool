@@ -455,6 +455,28 @@ namespace LambdaSharp.Tool.Cli.Build {
                 encryptionContext: null,
                 pragmas: null
             );
+            _builder.AddParameter(
+                name: "DeploymentTracing",
+                section: section,
+                label: "X-Ray tracing mode for functions",
+                description: "X-Ray Tracing Mode",
+                type: "String",
+                scope: null,
+                noEcho: null,
+                defaultValue: "PassThrough",
+                constraintDescription: null,
+                allowedPattern: null,
+                allowedValues: new[] { "Active", "PassThrough" },
+                maxLength: null,
+                maxValue: null,
+                minLength: null,
+                minValue: null,
+                allow: null,
+                properties: null,
+                arnAttribute: null,
+                encryptionContext: null,
+                pragmas: null
+            );
 
             // create module IAM role used by all functions
             _builder.AddResource(
@@ -492,7 +514,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 pragmas: null
             ).DiscardIfNotReachable = true;
 
-            // permission needed for writing to log streams (but not for creating log groups!)
+            // permissions needed for writing to log streams (but not for creating log groups!)
             _builder.AddGrant(
                 sid: "ModuleLogStreamAccess",
                 awsType: null,
@@ -502,9 +524,23 @@ namespace LambdaSharp.Tool.Cli.Build {
                     "logs:PutLogEvents"
                 }
             );
-            var functions = _builder.Items.OfType<FunctionItem>().ToList();
+
+            // permissions needed for X-Ray daemon to upload tracing information
+            _builder.AddGrant(
+                sid: "AWSXRayWriteAccess",
+                awsType: null,
+                reference: "*",
+                allow: new[] {
+                    "xray:PutTraceSegments",
+                    "xray:PutTelemetryRecords",
+                    "xray:GetSamplingRules",
+                    "xray:GetSamplingTargets",
+                    "xray:GetSamplingStatisticSummaries"
+                }
+            );
 
             // check if lambdasharp specific resources need to be initialized
+            var functions = _builder.Items.OfType<FunctionItem>().ToList();
             if(_builder.TryGetItem("Module::DeadLetterQueue", out AModuleItem _)) {
                 foreach(var function in functions.Where(f => f.HasDeadLetterQueue)) {
 

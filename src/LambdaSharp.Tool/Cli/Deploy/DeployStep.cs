@@ -64,7 +64,8 @@ namespace LambdaSharp.Tool.Cli.Deploy {
             Dictionary<string, string> parameters,
             bool forceDeploy,
             bool promptAllParameters,
-            bool promptsAsErrors
+            bool promptsAsErrors,
+            bool enableXRayTracing
         ) {
             Console.WriteLine($"Resolving module reference: {moduleReference}");
 
@@ -142,7 +143,8 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                         ToStackName(dependency.Manifest.GetFullName()),
                         allowDataLoos,
                         protectStack,
-                        dependenciesParameters[dependency.Manifest.GetFullName()]
+                        dependenciesParameters[dependency.Manifest.GetFullName()],
+                        enableXRayTracing: false
                     )) {
                         return false;
                     }
@@ -155,7 +157,8 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     stackName,
                     allowDataLoos,
                     protectStack,
-                    deployParameters
+                    deployParameters,
+                    enableXRayTracing
                 );
             }
             return true;
@@ -176,6 +179,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 case "CREATE_COMPLETE":
                 case "ROLLBACK_COMPLETE":
                 case "UPDATE_COMPLETE":
+                case "UPDATE_ROLLBACK_COMPLETE":
 
                     // we're good to go
                     break;

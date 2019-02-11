@@ -30,6 +30,9 @@ If the argument refers to a module definition, the `deploy` command invokes the 
 <dt><code>--protect</code></dt>
 <dd>(optional) Enable termination protection for the CloudFormation stack</dd>
 
+<dt><code>--xray</code></dt>
+<dd>(optional) Enable service-call tracing with AWS X-Ray for all functions in module</dd>
+
 <dt><code>--force-deploy</code></dt>
 <dd>(optional) Force module deployment</dd>
 

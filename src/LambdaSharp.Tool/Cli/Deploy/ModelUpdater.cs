@@ -40,6 +40,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
         //--- Class Fields ---
         private static HashSet<string> _protectedResourceTypes = new HashSet<string> {
             "AWS::ApiGateway::RestApi",
+            "AWS::ApiGatewayV2::Api",
             "AWS::AppSync::GraphQLApi",
             "AWS::DynamoDB::Table",
             "AWS::EC2::Instance",
@@ -64,7 +65,8 @@ namespace LambdaSharp.Tool.Cli.Deploy {
             string stackName,
             bool allowDataLoss,
             bool protectStack,
-            List<CloudFormationParameter> parameters
+            List<CloudFormationParameter> parameters,
+            bool enableXRayTracing
         ) {
             var now = DateTime.UtcNow;
 
@@ -117,6 +119,12 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     new CloudFormationParameter {
                         ParameterKey = "DeploymentBucketName",
                         ParameterValue = location.ModuleBucketName ?? ""
+                    },
+                    new CloudFormationParameter {
+                        ParameterKey = "DeploymentTracing",
+                        ParameterValue = enableXRayTracing
+                            ? "Active"
+                            : "PassThrough"
                     }
                 },
                 StackName = stackName,

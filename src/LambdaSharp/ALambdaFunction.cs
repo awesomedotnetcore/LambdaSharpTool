@@ -178,6 +178,9 @@ namespace LambdaSharp {
 
         protected virtual async Task InitializeAsync(ILambdaConfigSource envSource, ILambdaContext context) {
 
+            // register X-RAY for AWS SDK clients (function tracing must be enabled in CloudFormation)
+            Amazon.XRay.Recorder.Handlers.AwsSdk.AWSSDKHandler.RegisterXRayForAllServices();
+
             // read configuration from environment variables
             ModuleId = envSource.Read("MODULE_ID");
             var moduleInfo = envSource.Read("MODULE_INFO");
@@ -190,7 +193,7 @@ namespace LambdaSharp {
                 _deadLetterQueueUrl = AwsConverters.ConvertQueueArnToUrl(deadLetterQueueArn);
             }
             DefaultSecretKey = envSource.Read("DEFAULTSECRETKEY");
-            FunctionId = AwsConverters.ConvertFunctionArnToName(context.InvokedFunctionArn);
+            FunctionId = envSource.Read("AWS_LAMBDA_FUNCTION_NAME");
             FunctionName = envSource.Read("LAMBDA_NAME");
             var framework = envSource.Read("LAMBDA_RUNTIME");
             LogInfo($"MODULE_ID = {ModuleId}");

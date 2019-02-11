@@ -147,7 +147,8 @@ namespace LambdaSharp.Tool.Cli {
                 inputs: inputs,
                 forceDeploy: forceDeploy,
                 promptAllParameters: promptAllParameters,
-                promptsAsErrors: promptsAsErrors
+                promptsAsErrors: promptsAsErrors,
+                enableXRayTracing: false
             );
         }
     }
