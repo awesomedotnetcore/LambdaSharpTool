@@ -106,6 +106,12 @@ namespace LambdaSharp {
         protected ALambdaFunction() : this(LambdaFunctionConfiguration.Instance) { }
 
         protected ALambdaFunction(LambdaFunctionConfiguration configuration) {
+
+            // NOTE (2019-02-12, bjorg): set environment variable to unwrap aggregate exceptions automatically
+            // see: https://www.reddit.com/r/aws/comments/98witj/we_are_the_aws_net_team_ask_the_experts/e98xinf/
+            Environment.SetEnvironmentVariable("UNWRAP_AGGREGATE_EXCEPTIONS", "1");
+
+            // initialize function fields from configuration
             _now = configuration.UtcNow ?? (() => DateTime.UtcNow);
             _kmsClient = configuration.KmsClient ?? throw new ArgumentNullException(nameof(configuration.KmsClient));
             _sqsClient = configuration.SqsClient ?? throw new ArgumentNullException(nameof(configuration.SqsClient));
