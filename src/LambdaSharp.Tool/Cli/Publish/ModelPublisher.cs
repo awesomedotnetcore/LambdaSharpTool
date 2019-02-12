@@ -73,7 +73,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
             }
             var destinationKey = $"{moduleOwner}/Modules/{moduleName}/Versions/{moduleVersion}/cloudformation.json";
             if(!moduleVersion.IsPreRelease && !forcePublish && await DoesS3ObjectExistsAsync(destinationKey)) {
-                AddError($"{moduleOwner}.{moduleName} (v{moduleVersion}) already exists");
+                AddError($"{moduleOwner}.{moduleName} (v{moduleVersion}) is already published; use --force-publish to proceed anyway");
                 return null;
             }
 
