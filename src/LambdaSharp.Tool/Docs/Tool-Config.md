@@ -15,7 +15,7 @@ The `config` command is used to configure the λ# CLI. The configuration step op
 <dd>(optional) Requested S3 bucket name for module deployments (blank value assigns automatic name)</dd>
 
 <dt><code>--cloudformation-notifications-topic &lt;ARN&gt;</code></dt>
-<dd>(optional) Existing SNS topic ARN for CloudFormation notifications (blank value creates new bucket)</dd>
+<dd>(optional) Existing SNS topic ARN for CloudFormation notifications (blank value creates new topic)</dd>
 
 <dt><code>--protect</code></dt>
 <dd>(optional) Enable termination protection for the CloudFormation stack</dd>
@@ -76,17 +76,17 @@ __Using Bash:__
 ```bash
 lash config \
     --cli-profile Team \
-    --existing-s3-bucket-name="" \
-    --requested-s3-bucket-name="" \
-    --cloudformation-notifications-topic=""
+    --existing-s3-bucket-name "" \
+    --requested-s3-bucket-name "" \
+    --cloudformation-notifications-topic ""
 ```
 __Using PowerShell:__
 ```powershell
 lash config ^
     --cli-profile Team ^
-    --existing-s3-bucket-name="" ^
-    --requested-s3-bucket-name="" ^
-    --cloudformation-notifications-topic=""
+    --existing-s3-bucket-name "" ^
+    --requested-s3-bucket-name "" ^
+    --cloudformation-notifications-topic ""
 ```
 
 Output:

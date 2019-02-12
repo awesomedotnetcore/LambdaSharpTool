@@ -44,7 +44,7 @@ namespace LambdaSharp.Tool.Cli {
                 // tool options
                 var existingS3BucketNameOption = cmd.Option("--existing-s3-bucket-name <NAME>", "(optional) Existing S3 bucket name for module deployments (blank value creates new bucket)", CommandOptionType.SingleValue);
                 var requestedS3BucketNameOption = cmd.Option("--requested-s3-bucket-name <NAME>", "(optional) Requested S3 bucket name for module deployments (blank value assigns automatic name)", CommandOptionType.SingleValue);
-                var cloudFormationNotificationsTopicOption = cmd.Option("--cloudformation-notifications-topic <ARN>", "(optional) Existing SNS topic ARN for CloudFormation notifications ", CommandOptionType.SingleValue);
+                var cloudFormationNotificationsTopicOption = cmd.Option("--cloudformation-notifications-topic <ARN>", "(optional) Existing SNS topic ARN for CloudFormation notifications (blank value creates new topic)", CommandOptionType.SingleValue);
                 var protectStackOption = cmd.Option("--protect", "(optional) Enable termination protection for the CloudFormation stack", CommandOptionType.NoValue);
                 var forceUpdateOption = cmd.Option("--force-update", "(optional) Force CLI profile update", CommandOptionType.NoValue);
                 var initSettingsCallback = CreateSettingsInitializer(cmd, requireDeploymentTier: false);

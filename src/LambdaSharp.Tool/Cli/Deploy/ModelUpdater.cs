@@ -65,8 +65,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
             string stackName,
             bool allowDataLoss,
             bool protectStack,
-            List<CloudFormationParameter> parameters,
-            bool enableXRayTracing
+            List<CloudFormationParameter> parameters
         ) {
             var now = DateTime.UtcNow;
 
@@ -108,12 +107,6 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 Description = $"Stack {updateOrCreate} {location.ModuleFullName} (v{location.ModuleVersion})",
                 NotificationARNs = notificationArns,
                 Parameters = new List<CloudFormationParameter>(parameters) {
-                    new CloudFormationParameter {
-                        ParameterKey = "XRayTracing",
-                        ParameterValue = enableXRayTracing
-                            ? "Active"
-                            : "PassThrough"
-                    },
                     new CloudFormationParameter {
                         ParameterKey = "DeploymentPrefix",
                         ParameterValue = string.IsNullOrEmpty(Settings.Tier) ? "" : (Settings.Tier + "-")

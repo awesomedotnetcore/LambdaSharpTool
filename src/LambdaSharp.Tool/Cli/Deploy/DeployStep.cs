@@ -118,6 +118,18 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     return false;
                 }
 
+                // check if module supports AWS X-Ray for tracing
+                if(
+                    enableXRayTracing
+                    && manifest.GetAllParameters().Any(p => p.Name == "XRayTracing")
+                    && !deployParameters.Any(p => p.ParameterKey == "XRayTracing")
+                ) {
+                    deployParameters.Add(new CloudFormationParameter {
+                        ParameterKey = "XRayTracing",
+                        ParameterValue = "Active"
+                    });
+                }
+
                 // discover and deploy module dependencies
                 var dependencies = await DiscoverDependenciesAsync(manifest);
                 if(HasErrors) {
@@ -143,8 +155,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                         ToStackName(dependency.Manifest.GetFullName()),
                         allowDataLoos,
                         protectStack,
-                        dependenciesParameters[dependency.Manifest.GetFullName()],
-                        enableXRayTracing: false
+                        dependenciesParameters[dependency.Manifest.GetFullName()]
                     )) {
                         return false;
                     }
@@ -157,8 +168,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     stackName,
                     allowDataLoos,
                     protectStack,
-                    deployParameters,
-                    enableXRayTracing
+                    deployParameters
                 );
             }
             return true;
