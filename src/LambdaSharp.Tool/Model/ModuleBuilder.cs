@@ -676,9 +676,6 @@ namespace LambdaSharp.Tool.Model {
                 }
             }
 
-            // add module auto-tags
-            AutoTag(resource);
-
             // create resource
             var result = new ResourceItem(
                 parent: parent,
@@ -776,6 +773,12 @@ namespace LambdaSharp.Tool.Model {
                 resource: new Humidifier.CloudFormation.Stack {
                     NotificationARNs = FnRef("AWS::NotificationARNs"),
                     Parameters = moduleParameters,
+                    Tags = new List<Humidifier.Tag> {
+                        new Humidifier.Tag {
+                            Key = "LambdaSharp:Module",
+                            Value = $"{moduleOwner}.{moduleName}"
+                        }
+                    },
                     TemplateURL = FnSub("https://s3.amazonaws.com/${ModuleBucketName}/${ModuleOwner}/Modules/${ModuleName}/Versions/${ModuleVersion}/cloudformation.json", new Dictionary<string, object> {
                         ["ModuleOwner"] = moduleOwner,
                         ["ModuleName"] = moduleName,
@@ -960,9 +963,6 @@ namespace LambdaSharp.Tool.Model {
             // initialize function resource from definition
             var resource = (Humidifier.Lambda.Function)ConvertJTokenToNative(JObject.FromObject(definition).ToObject<Humidifier.Lambda.Function>());
 
-            // add module auto-tags
-            AutoTag(resource);
-
             // create function item
             var function = new FunctionItem(
                 parent: parent,
@@ -1090,7 +1090,6 @@ namespace LambdaSharp.Tool.Model {
                     ZipFile = code
                 }
             };
-            AutoTag(resource);
 
             // create inline function item
             var function = new FunctionItem(
@@ -1426,52 +1425,6 @@ namespace LambdaSharp.Tool.Model {
                 AddWarning($"ambiguous resource type '{resourceTypeName}'");
                 resourceType = matches[0];
                 return true;
-            }
-        }
-
-        private void AutoTag(Humidifier.Resource resource) {
-            if(resource is Humidifier.Lambda.Function functionResource) {
-                if(functionResource.Tags == null) {
-                    functionResource.Tags = new List<Humidifier.Tag>();
-                }
-                functionResource.Tags.Add(new Humidifier.Tag {
-                    Key = "LambdaSharp:Tier",
-                    Value = FnSub("${DeploymentPrefix}tier")
-                });
-                functionResource.Tags.Add(new Humidifier.Tag {
-                    Key = "LambdaSharp:Module",
-                    Value = FnRef("Module::Name")
-                });
-                functionResource.Tags.Add(new Humidifier.Tag {
-                    Key = "LambdaSharp:RootStack",
-                    Value = FnRef("Module::RootId")
-                });
-            } else if(
-                ResourceMapping.IsCloudFormationType(resource.AWSTypeName)
-                && (resource is Humidifier.CustomResource customResource)
-                && ResourceMapping.HasProperty(customResource.AWSTypeName, "Tags")
-            ) {
-            IList tags = null;
-                if(customResource.TryGetValue("Tags", out var tagsObject)) {
-                    tags = tagsObject as IList;
-                } else {
-                    tags = new List<object>();
-                    customResource["Tags"] = tags;
-                }
-                if(tags != null) {
-                    tags.Add(new Dictionary<string, object> {
-                        ["Key"] = "LambdaSharp:Tier",
-                        ["Value"] = FnSub("${DeploymentPrefix}tier")
-                    });
-                    tags.Add(new Dictionary<string, object> {
-                        ["Key"] = "LambdaSharp:Module",
-                        ["Value"] = FnRef("Module::Name")
-                    });
-                    tags.Add(new Dictionary<string, object> {
-                        ["Key"] = "LambdaSharp:RootStack",
-                        ["Value"] = FnRef("Module::RootId")
-                    });
-                }
             }
         }
     }

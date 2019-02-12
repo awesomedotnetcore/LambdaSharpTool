@@ -1,4 +1,4 @@
-# λ# - Eurytus (v0.5-WIP) - 2019-01-31
+# λ# - Eurytus (v0.5-WIP) - 2019-02-12
 
 > Eurytus was an eminent Pythagorean philosopher. He was a disciple of Philolaus, and Diogenes Laërtius mentions him among the teachers of Plato, though this statement is very doubtful. [(Wikipedia)](https://en.wikipedia.org/wiki/Eurytus_(Pythagorean))
 
@@ -384,7 +384,7 @@ Last, but not least, all in resources in λ# module are not automatically tagged
 |--------|-----------|-------|
 `LambdaSharp:Module`|The full module name without version or source bucket specification.|`My.Module`|
 `LambdaSharp:RootStack`|The name of the root CloudFormation stack under which the resource are created. This is the same as `aws:cloudformation:stack-name` for non-nested modules. Otherwise, it is the stack name of the topmost, non-nested module.|`Sandbox-My-Module-MyResource-1TOI83RQZQZE3`|
-`LambdaSharp:Tier`|The name of the deployment tier with a `tier` suffix.|`Sandbox-tier`|
+`LambdaSharp:Tier`|The name of the deployment tier.|`Sandbox`|
 
 ### Config Command
 

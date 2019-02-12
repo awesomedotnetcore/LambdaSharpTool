@@ -121,7 +121,21 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     }
                 },
                 StackName = stackName,
-                TemplateURL = templateUrl
+                TemplateURL = templateUrl,
+                Tags = new List<Tag> {
+                    new Tag {
+                        Key = "LambdaSharp:Tier",
+                        Value = Settings.Tier
+                    },
+                    new Tag {
+                        Key = "LambdaSharp:Module",
+                        Value = location.ModuleFullName
+                    },
+                    new Tag {
+                        Key = "LambdaSharp:RootStack",
+                        Value = stackName
+                    }
+                }
             });
             try {
                 var changes = await WaitForChangeSetAsync(response.Id);
