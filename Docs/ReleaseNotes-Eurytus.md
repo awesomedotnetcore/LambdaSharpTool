@@ -1,4 +1,4 @@
-# λ# - Eurytus (v0.5) - 2019-02-12
+# λ# - Eurytus (v0.5.0.1) - 2019-02-19
 
 > Eurytus was an eminent Pythagorean philosopher. He was a disciple of Philolaus, and Diogenes Laërtius mentions him among the teachers of Plato, though this statement is very doubtful. [(Wikipedia)](https://en.wikipedia.org/wiki/Eurytus_(Pythagorean))
 
@@ -482,3 +482,8 @@ There wre some additional internal changes listed here for sake of completeness:
 * The default Lambda log group retention period was increased from 7 to 30 days.
 * The `ModuleCloudWatchLogsRole` is now defined once in the λ# Core module and then re-used by all modules.
 * The `ModuleName` and `ModuleVersion` module output values have been combined into a single `Module` output value.
+
+## Fixes
+
+* [Ability to create a package with a Linux executable on Windows](https://github.com/LambdaSharp/LambdaSharpTool/issues/92)
+* [Fix `InvalidCastException` when setting `Secrets` in parameters file](https://github.com/LambdaSharp/LambdaSharpTool/issues/93)
