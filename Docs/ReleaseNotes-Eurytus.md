@@ -485,5 +485,6 @@ There wre some additional internal changes listed here for sake of completeness:
 
 ## Fixes
 
-* [Ability to create a package with a Linux executable on Windows](https://github.com/LambdaSharp/LambdaSharpTool/issues/92)
+* [Add ability to create a package with a Linux executable on Windows](https://github.com/LambdaSharp/LambdaSharpTool/issues/92)
 * [Fix `InvalidCastException` when setting `Secrets` in parameters file](https://github.com/LambdaSharp/LambdaSharpTool/issues/93)
+* [Fix `S3Writer` function runs out of memory on large zip files](https://github.com/LambdaSharp/LambdaSharpTool/issues/94)
