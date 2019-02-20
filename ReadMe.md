@@ -90,6 +90,11 @@ namespace MySampleModule.MyFunction {
 1. [Setup λ#](Docs/ReadMe.md)
 1. [λ# Samples](Samples/ReadMe.md)
 
+### Samples
+
+1. [Create a Static Website with CloudFormation](https://github.com/LambdaSharp/StaticWebsite-Sample)
+1. [Create Animated GIFs from Videos with AWS Lambda](https://github.com/LambdaSharp/GifMaker-Sample)
+
 ### References
 
 1. [λ# CLI Reference](src/LambdaSharp.Tool/ReadMe.md)
