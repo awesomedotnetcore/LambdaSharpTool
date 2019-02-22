@@ -645,8 +645,10 @@ namespace LambdaSharp.Tool.Cli.Build {
 
                         // validate settings
                         AtLocation("BatchSize", () => {
-                            if((source.BatchSize < 1) || (source.BatchSize > 10)) {
-                                AddError($"invalid BatchSize value: {source.BatchSize}");
+                            if(source.BatchSize is string batchSizeText) {
+                                if(!int.TryParse(batchSizeText, out var batchSize) || (batchSize < 1) || (batchSize > 10)) {
+                                    AddError($"invalid BatchSize value: {source.BatchSize}");
+                                }
                             }
                         });
                     } else if(source.Alexa != null) {
@@ -656,38 +658,46 @@ namespace LambdaSharp.Tool.Cli.Build {
 
                         // validate settings
                         AtLocation("BatchSize", () => {
-                            if((source.BatchSize < 1) || (source.BatchSize > 100)) {
-                                AddError($"invalid BatchSize value: {source.BatchSize}");
+                            if(source.BatchSize is string batchSizeText) {
+                                if(!int.TryParse(batchSizeText, out var batchSize) || (batchSize < 1) || (batchSize > 100)) {
+                                    AddError($"invalid BatchSize value: {source.BatchSize}");
+                                }
                             }
                         });
                         AtLocation("StartingPosition", () => {
-                            switch(source.StartingPosition) {
-                            case "TRIM_HORIZON":
-                            case "LATEST":
-                            case null:
-                                break;
-                            default:
-                                AddError($"invalid StartingPosition value: {source.StartingPosition}");
-                                break;
+                            if(source.StartingPosition is string) {
+                                switch(source.StartingPosition) {
+                                case "TRIM_HORIZON":
+                                case "LATEST":
+                                case null:
+                                    break;
+                                default:
+                                    AddError($"invalid StartingPosition value: {source.StartingPosition}");
+                                    break;
+                                }
                             }
                         });
                     } else if(source.Kinesis != null) {
 
                         // validate settings
                         AtLocation("BatchSize", () => {
-                            if((source.BatchSize < 1) || (source.BatchSize > 100)) {
-                                AddError($"invalid BatchSize value: {source.BatchSize}");
+                            if(source.BatchSize is string batchSizeText) {
+                                if(!int.TryParse(batchSizeText, out var batchSize) || (batchSize < 1) || (batchSize > 100)) {
+                                    AddError($"invalid BatchSize value: {source.BatchSize}");
+                                }
                             }
                         });
                         AtLocation("StartingPosition", () => {
-                            switch(source.StartingPosition) {
-                            case "TRIM_HORIZON":
-                            case "LATEST":
-                            case null:
-                                break;
-                            default:
-                                AddError($"invalid StartingPosition value: {source.StartingPosition}");
-                                break;
+                            if(source.StartingPosition is string) {
+                                switch(source.StartingPosition) {
+                                case "TRIM_HORIZON":
+                                case "LATEST":
+                                case null:
+                                    break;
+                                default:
+                                    AddError($"invalid StartingPosition value: {source.StartingPosition}");
+                                    break;
+                                }
                             }
                         });
                     } else {
