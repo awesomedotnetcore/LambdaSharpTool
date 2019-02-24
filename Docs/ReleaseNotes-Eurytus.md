@@ -1,4 +1,4 @@
-# λ# - Eurytus (v0.5.0.1) - 2019-02-19
+# λ# - Eurytus (v0.5.0.2) - TBD
 
 > Eurytus was an eminent Pythagorean philosopher. He was a disciple of Philolaus, and Diogenes Laërtius mentions him among the teachers of Plato, though this statement is very doubtful. [(Wikipedia)](https://en.wikipedia.org/wiki/Eurytus_(Pythagorean))
 
@@ -484,6 +484,14 @@ There wre some additional internal changes listed here for sake of completeness:
 * The `ModuleName` and `ModuleVersion` module output values have been combined into a single `Module` output value.
 
 ## Fixes
+
+### (v0.5.0.2) - TBD
+
+* []()
+* []()
+* []()
+
+### (v0.5.0.1) - 2019-02-19
 
 * [Add ability to create a package with a Linux executable on Windows](https://github.com/LambdaSharp/LambdaSharpTool/issues/92)
 * [Fix `InvalidCastException` when setting `Secrets` in parameters file](https://github.com/LambdaSharp/LambdaSharpTool/issues/93)
