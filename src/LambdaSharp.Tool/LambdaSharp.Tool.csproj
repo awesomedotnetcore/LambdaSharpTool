@@ -36,6 +36,23 @@
     <ProjectReference Include="../../redist/SharpZipLib/src/ICSharpCode.SharpZipLib/ICSharpCode.SharpZipLib.csproj"/>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\..\redist\aws-extensions-for-dotnet-cli\src\Amazon.Common.DotNetCli.Tools\Constants.cs" />
+    <Compile Include="..\..\redist\aws-extensions-for-dotnet-cli\src\Amazon.Common.DotNetCli.Tools\DefaultConfigFile.cs" />
+    <Compile Include="..\..\redist\aws-extensions-for-dotnet-cli\src\Amazon.Common.DotNetCli.Tools\IToolLogger.cs" />
+    <Compile Include="..\..\redist\aws-extensions-for-dotnet-cli\src\Amazon.Common.DotNetCli.Tools\Options\CommandOption.cs" />
+    <Compile Include="..\..\redist\aws-extensions-for-dotnet-cli\src\Amazon.Common.DotNetCli.Tools\Options\CommonDefinedCommandOptions.cs" />
+    <Compile Include="..\..\redist\aws-extensions-for-dotnet-cli\src\Amazon.Common.DotNetCli.Tools\ToolkitConfigFileFetcher.cs" />
+    <Compile Include="..\..\redist\aws-extensions-for-dotnet-cli\src\Amazon.Common.DotNetCli.Tools\ToolsException.cs" />
+    <Compile Include="..\..\redist\aws-extensions-for-dotnet-cli\src\Amazon.Common.DotNetCli.Tools\Utilities.cs" />
+    <Compile Include="..\..\redist\aws-extensions-for-dotnet-cli\src\Amazon.Lambda.Tools\Exceptions.cs" />
+    <Compile Include="..\..\redist\aws-extensions-for-dotnet-cli\src\Amazon.Lambda.Tools\LambdaConstants.cs" />
+    <Compile Include="..\..\redist\aws-extensions-for-dotnet-cli\src\Amazon.Lambda.Tools\LambdaDefinedCommandOptions.cs" />
+    <Compile Include="..\..\redist\aws-extensions-for-dotnet-cli\src\Amazon.Lambda.Tools\LambdaDotNetCLIWrapper.cs" />
+    <Compile Include="..\..\redist\aws-extensions-for-dotnet-cli\src\Amazon.Lambda.Tools\LambdaPackager.cs" />
+    <Compile Include="..\..\redist\aws-extensions-for-dotnet-cli\src\Amazon.Lambda.Tools\LambdaToolsDefaults.cs" />
+    <Compile Include="..\..\redist\aws-extensions-for-dotnet-cli\src\Amazon.Lambda.Tools\LambdaUtilities.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <EmbeddedResource Include="Resources\*"/>
   </ItemGroup>
 </Project>

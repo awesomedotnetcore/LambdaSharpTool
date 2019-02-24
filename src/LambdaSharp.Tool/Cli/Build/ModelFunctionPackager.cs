@@ -28,6 +28,8 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Xml.Linq;
+using Amazon.Common.DotNetCli.Tools;
+using Amazon.Lambda.Tools;
 using LambdaSharp.Tool.Internal;
 using LambdaSharp.Tool.Model;
 using Mono.Cecil;
@@ -229,9 +231,18 @@ namespace LambdaSharp.Tool.Cli.Build {
             // build project (fingers crossed we hit an incremental build)
             var projectDirectory = Path.Combine(Settings.WorkingDirectory, projectName);
             Console.WriteLine($"=> Building function {function.Name} [{targetFramework}, {buildConfiguration}]");
-            if(!DotNetBuild(targetFramework, buildConfiguration, projectDirectory)) {
-                AddError("`dotnet build` command failed");
-                return;
+
+            // only attempt incremental build if a potentially valid function package exists
+            if(_existingPackages.Any(existing =>
+                Path.GetFileName(existing).StartsWith($"function_{function.Name}_", StringComparison.InvariantCulture)
+                && existing.EndsWith(".zip", StringComparison.InvariantCulture)
+            )) {
+                if(!DotNetBuild(targetFramework, buildConfiguration, projectDirectory)) {
+                    AddError("`dotnet build` command failed");
+                    return;
+                }
+            } else if(Settings.VerboseLevel >= VerboseLevel.Detailed) {
+                Console.WriteLine("... no previous package exists");
             }
 
             // compute hash of build folder (this folder contains enough information to compute a representative hash of the final result)
@@ -239,52 +250,71 @@ namespace LambdaSharp.Tool.Cli.Build {
             var hash = Directory.GetFiles(buildFolder, "*", SearchOption.AllDirectories).ComputeHashForFiles(file => Path.GetRelativePath(buildFolder, file));
             var package = Path.Combine(Settings.OutputDirectory, $"function_{function.Name}_{hash}.zip");
             if(!_existingPackages.Remove(package)) {
+                var success = true;
 
-                // compile project
-                var dotnetOutputPackage = Path.Combine(Settings.OutputDirectory, function.Name + ".zip");
-                if(!DotNetLambdaPackage(targetFramework, buildConfiguration, dotnetOutputPackage, projectDirectory)) {
-                    AddError("`dotnet lambda package` command failed");
-                    return;
-                }
-
-                // check if the project zip file was created
-                if(!File.Exists(dotnetOutputPackage)) {
-                    AddError($"could not find project package: {dotnetOutputPackage}");
-                    return;
-                }
-
-                // decompress project zip into temporary folder so we can add the `GITSHAFILE` files
-                var tempDirectory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+                // build project with AWS dotnet CLI lambda tool
+                TextWriter redirectedOutput = null;
                 try {
+                    var originalConsoleOut = Console.Out;
+                    var originalConsoleError = Console.Error;
+                    string publishFolder = null;
+                    try {
 
-                    // extract existing package into temp folder
-                    if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
-                        ZipFile.ExtractToDirectory(dotnetOutputPackage, tempDirectory);
-                        File.Delete(dotnetOutputPackage);
+                        // redirect console standard out and error unless detailed verbose level is set
+                        if(Settings.VerboseLevel < VerboseLevel.Detailed) {
+                            redirectedOutput = new StringWriter();
+                            Console.SetOut(redirectedOutput);
+                            Console.SetError(redirectedOutput);
+                        }
+                        success = LambdaPackager.CreateApplicationBundle(
+                            new LambdaToolsDefaults { },
+                            new ConsoleToolLogger(),
+                            projectDirectory,
+                            projectDirectory,
+                            buildConfiguration,
+                            targetFramework,
+                            msbuildParameters: null,
+                            disableVersionCheck: false,
+                            out publishFolder,
+                            ref package,
+                            publishLocation => {
+                                if((gitSha != null) || (gitBranch != null)) {
+                                    File.WriteAllText(Path.Combine(publishLocation, GIT_INFO_FILE), JObject.FromObject(new ModuleManifestGitInfo {
+                                        SHA = gitSha,
+                                        Branch = gitBranch
+                                    }).ToString(Formatting.None));
+                                }
+                            }
+                        );
+                    } finally {
+
+                        // always restore console standard out and error
+                        Console.SetOut(originalConsoleOut);
+                        Console.SetError(originalConsoleError);
+                    }
+                    if(!success) {
+                        AddError("`dotnet lambda package` command failed");
                     } else {
-                        Directory.CreateDirectory(tempDirectory);
-                        if(!UnzipWithTool(dotnetOutputPackage, tempDirectory)) {
-                            AddError("`unzip` command failed");
-                            return;
-                        }
-                    }
 
-                    // verify the function handler can be found in the compiled assembly
-                    if(function.HasHandlerValidation) {
-                        if(function.Function.Handler is string handler) {
-                            ValidateEntryPoint(tempDirectory, handler);
+                        // verify the function handler can be found in the compiled assembly
+                        if(function.HasHandlerValidation && (function.Function.Handler is string handler)) {
+                            ValidateEntryPoint(publishFolder, handler);
                         }
                     }
-                    CreatePackage(package, gitSha, gitBranch, tempDirectory);
-                } finally {
-                    if(Directory.Exists(tempDirectory)) {
-                        try {
-                            Directory.Delete(tempDirectory, recursive: true);
-                        } catch {
-                            AddWarning($"clean-up failed for temporary directory: {tempDirectory}");
-                        }
-                    }
+                } catch(LambdaToolsException e) {
+                    success = false;
+                    AddError(e.Message);
+                } catch(Exception e) when(e.GetType() == typeof(Exception)) {
+                    success = false;
+                    AddError(e.Message);
                 }
+
+                // show suppressed output on failure
+                if(!success && (redirectedOutput != null)) {
+                    Console.WriteLine(redirectedOutput);
+                }
+            } else if(Settings.VerboseLevel >= VerboseLevel.Detailed) {
+                Console.WriteLine("... no function changes detected");
             }
             _builder.AddAsset($"{function.FullName}::PackageName", package);
         }
@@ -303,20 +333,6 @@ namespace LambdaSharp.Tool.Cli.Build {
             );
         }
 
-        private bool DotNetLambdaPackage(string targetFramework, string buildConfiguration, string outputPackage, string projectDirectory) {
-            var dotNetExe = ProcessLauncher.DotNetExe;
-            if(string.IsNullOrEmpty(dotNetExe)) {
-                AddError("failed to find the \"dotnet\" executable in path.");
-                return false;
-            }
-            return ProcessLauncher.Execute(
-                dotNetExe,
-                new[] { "lambda", "package", "-c", buildConfiguration, "-f", targetFramework, "-o", outputPackage },
-                projectDirectory,
-                Settings.VerboseLevel >= VerboseLevel.Detailed
-            );
-        }
-
         private bool ZipWithTool(string zipArchivePath, string zipFolder) {
             var zipTool = ProcessLauncher.ZipExe;
             if(string.IsNullOrEmpty(zipTool)) {
@@ -327,20 +343,6 @@ namespace LambdaSharp.Tool.Cli.Build {
                 zipTool,
                 new[] { "-r", zipArchivePath, "." },
                 zipFolder,
-                Settings.VerboseLevel >= VerboseLevel.Detailed
-            );
-        }
-
-        private bool UnzipWithTool(string zipArchivePath, string unzipFolder) {
-            var unzipTool = ProcessLauncher.UnzipExe;
-            if(unzipTool == null) {
-                AddError("failed to find the \"unzip\" utility program in path. This program is required to maintain Linux file permissions in the zip archive.");
-                return false;
-            }
-            return ProcessLauncher.Execute(
-                unzipTool,
-                new[] { zipArchivePath, "-d", unzipFolder },
-                Directory.GetCurrentDirectory(),
                 Settings.VerboseLevel >= VerboseLevel.Detailed
             );
         }

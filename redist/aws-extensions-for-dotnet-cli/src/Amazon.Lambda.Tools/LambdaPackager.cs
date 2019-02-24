@@ -36,13 +36,20 @@ namespace Amazon.Lambda.Tools
         /// <param name="disableVersionCheck"></param>
         /// <param name="publishLocation"></param>
         /// <param name="zipArchivePath"></param>
-        public static bool CreateApplicationBundle(LambdaToolsDefaults defaults, IToolLogger logger, string workingDirectory, 
+        public static bool CreateApplicationBundle(LambdaToolsDefaults defaults, IToolLogger logger, string workingDirectory,
             string projectLocation, string configuration, string targetFramework, string msbuildParameters, bool disableVersionCheck,
             out string publishLocation, ref string zipArchivePath)
         {
+            return CreateApplicationBundle(defaults, logger, workingDirectory, projectLocation, configuration, targetFramework, msbuildParameters, disableVersionCheck, out publishLocation, ref zipArchivePath, null);
+        }
+
+        public static bool CreateApplicationBundle(LambdaToolsDefaults defaults, IToolLogger logger, string workingDirectory,
+            string projectLocation, string configuration, string targetFramework, string msbuildParameters, bool disableVersionCheck,
+            out string publishLocation, ref string zipArchivePath, Action<string> preZipOperation)
+        {
             if(string.IsNullOrEmpty(configuration))
                 configuration = LambdaConstants.DEFAULT_BUILD_CONFIGURATION;
-            
+
             string lambdaRuntimePackageStoreManifestContent = null;
             var computedProjectLocation = Utilities.DetermineProjectLocation(workingDirectory, projectLocation);
 
@@ -62,7 +69,7 @@ namespace Amazon.Lambda.Tools
 
             var buildLocation = Utilities.DetermineBuildLocation(workingDirectory, projectLocation, configuration, targetFramework);
 
-            // This is here for legacy reasons. Some older versions of the dotnet CLI were not 
+            // This is here for legacy reasons. Some older versions of the dotnet CLI were not
             // copying the deps.json file into the publish folder.
             foreach(var file in Directory.GetFiles(buildLocation, "*.deps.json", SearchOption.TopDirectoryOnly))
             {
@@ -102,6 +109,7 @@ namespace Amazon.Lambda.Tools
                 new DirectoryInfo(zipArchiveParentDirectory).Create();
             }
 
+            preZipOperation?.Invoke(publishLocation);
 
             BundleDirectory(zipArchivePath, publishLocation, flattenRuntime, logger);
 
@@ -130,7 +138,7 @@ namespace Amazon.Lambda.Tools
             }
 #else
             BundleWithDotNetCompression(zipArchivePath, sourceDirectory, flattenRuntime, logger);
-#endif            
+#endif
         }
 
         public static void BundleFiles(string zipArchivePath, string rootDirectory, string[] files, IToolLogger logger)
@@ -157,7 +165,7 @@ namespace Amazon.Lambda.Tools
             }
 #else
             BundleWithDotNetCompression(zipArchivePath, rootDirectory, includedFiles, logger);
-#endif            
+#endif
         }
 
 
@@ -315,7 +323,7 @@ namespace Amazon.Lambda.Tools
                     }
                 }
 
-                // If disable version check is true still write the warning messages 
+                // If disable version check is true still write the warning messages
                 // but return true to continue deployment.
                 return disableVersionCheck;
             }
@@ -332,8 +340,8 @@ namespace Amazon.Lambda.Tools
         /// <param name="publishLocation"></param>
         /// <param name="depsJsonTargetNode"></param>
         /// <returns>
-        /// Returns true if flattening was successful. If the publishing folder changes in the future then flattening might fail. 
-        /// In that case we want to publish the archive untouched so the tooling doesn't get in the way and let the user see if the  
+        /// Returns true if flattening was successful. If the publishing folder changes in the future then flattening might fail.
+        /// In that case we want to publish the archive untouched so the tooling doesn't get in the way and let the user see if the
         /// Lambda runtime has been updated to support the future changes. Warning messages will be written in case of failures.
         /// </returns>
         private static bool FlattenRuntimeFolder(IToolLogger logger, string publishLocation, JsonData depsJsonTargetNode)
