@@ -103,7 +103,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 });
             }
 
-            // delete remaining packages
+            // delete remaining packages, they are out-of-date
             foreach(var leftoverPackage in _existingPackages) {
                 try {
                     File.Delete(leftoverPackage);
@@ -116,26 +116,22 @@ namespace LambdaSharp.Tool.Cli.Build {
                 var containsElfExecutable = false;
 
                 // compute MD5 hash for package
-                string package;
-                using(var md5 = MD5.Create()) {
-                    var bytes = new List<byte>();
-                    foreach(var file in parameter.Files) {
-                        using(var stream = File.OpenRead(file.Value)) {
+                var bytes = new List<byte>();
+                foreach(var file in parameter.Files) {
 
-                            // check if one of the files in the package is an ELF executable
-                            containsElfExecutable = containsElfExecutable || IsElfExecutable(stream);
-
-                            // compute MD5 of filename and file contents
-                            bytes.AddRange(Encoding.UTF8.GetBytes(file.Key));
-                            var fileHash = md5.ComputeHash(stream);
-                            bytes.AddRange(fileHash);
-                            if(Settings.VerboseLevel >= VerboseLevel.Detailed) {
-                                Console.WriteLine($"... computing md5: {file.Key} => {fileHash.ToHexString()}");
-                            }
+                    // check if one of the files in the package is an ELF executable
+                    using(var stream = File.OpenRead(file.Value)) {
+                        if(IsElfExecutable(stream)) {
+                            containsElfExecutable = true;
+                            break;
                         }
                     }
-                    package = Path.Combine(Settings.OutputDirectory, $"package_{parameter.FullName.Replace("::", "-")}_{md5.ComputeHash(bytes.ToArray()).ToHexString()}.zip");
                 }
+
+                // compute hash for all files
+                var fileValueToFileKey = parameter.Files.ToDictionary(kv => kv.Value, kv => kv.Key);
+                var hash = parameter.Files.Select(kv => kv.Value).ComputeHashForFiles(file => fileValueToFileKey[file]);
+                var package = Path.Combine(Settings.OutputDirectory, $"package_{parameter.FullName.Replace("::", "-")}_{hash}.zip");
 
                 // only build package if it doesn't exist
                 if(!_existingPackages.Remove(package)) {

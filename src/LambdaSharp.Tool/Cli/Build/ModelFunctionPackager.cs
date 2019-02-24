@@ -76,6 +76,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
         //--- Fields ---
         private ModuleBuilder _builder;
+        private HashSet<string> _existingPackages;
 
         //--- Constructors ---
         public ModelFunctionPackager(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
@@ -91,14 +92,31 @@ namespace LambdaSharp.Tool.Cli.Build {
             _builder = builder;
 
             // delete old packages
-            if(Directory.Exists(Settings.OutputDirectory)) {
-                foreach(var file in Directory.GetFiles(Settings.OutputDirectory, $"function*.zip")) {
-                    try {
-                        File.Delete(file);
-                    } catch { }
+            if(noCompile) {
+                if(Directory.Exists(Settings.OutputDirectory)) {
+                    foreach(var file in Directory.GetFiles(Settings.OutputDirectory, "function*.zip")) {
+                        try {
+                            File.Delete(file);
+                        } catch { }
+                    }
                 }
+                return;
             }
-            foreach(var function in builder.Items.OfType<FunctionItem>()) {
+
+            // check if there are any functions to package
+            var functions = builder.Items.OfType<FunctionItem>();
+            if(!functions.Any()) {
+                return;
+            }
+
+            // collect list of previously built functions
+            if(!Directory.Exists(Settings.OutputDirectory)) {
+                Directory.CreateDirectory(Settings.OutputDirectory);
+            }
+            _existingPackages = new HashSet<string>(Directory.GetFiles(Settings.OutputDirectory, "function*.zip"));
+
+            // build each function
+            foreach(var function in functions) {
                 AtLocation(function.FullName, () => {
                     Process(
                         function,
@@ -109,6 +127,13 @@ namespace LambdaSharp.Tool.Cli.Build {
                         buildConfiguration
                     );
                 });
+            }
+
+            // delete remaining built functions, they are out-of-date
+            foreach(var leftoverPackage in _existingPackages) {
+                try {
+                    File.Delete(leftoverPackage);
+                } catch { }
             }
         }
 
@@ -201,65 +226,70 @@ namespace LambdaSharp.Tool.Cli.Build {
                 return;
             }
 
-            // dotnet tools have to be run from the project folder; otherwise specialized tooling is not picked up from the .csproj file
+            // build project (fingers crossed we hit an incremental build)
             var projectDirectory = Path.Combine(Settings.WorkingDirectory, projectName);
             Console.WriteLine($"=> Building function {function.Name} [{targetFramework}, {buildConfiguration}]");
-
-            // restore project dependencies
-            if(!DotNetRestore(projectDirectory)) {
-                AddError("`dotnet restore` command failed");
+            if(!DotNetBuild(targetFramework, buildConfiguration, projectDirectory)) {
+                AddError("`dotnet build` command failed");
                 return;
             }
 
-            // compile project
-            var dotnetOutputPackage = Path.Combine(Settings.OutputDirectory, function.Name + ".zip");
-            if(!DotNetLambdaPackage(targetFramework, buildConfiguration, dotnetOutputPackage, projectDirectory)) {
-                AddError("`dotnet lambda package` command failed");
-                return;
-            }
+            // compute hash of build folder (this folder contains enough information to compute a representative hash of the final result)
+            var buildFolder = Path.Combine(projectDirectory, "bin", buildConfiguration, targetFramework);
+            var hash = Directory.GetFiles(buildFolder, "*", SearchOption.AllDirectories).ComputeHashForFiles(file => Path.GetRelativePath(buildFolder, file));
+            var package = Path.Combine(Settings.OutputDirectory, $"function_{function.Name}_{hash}.zip");
+            if(!_existingPackages.Remove(package)) {
 
-            // check if the project zip file was created
-            if(!File.Exists(dotnetOutputPackage)) {
-                AddError($"could not find project package: {dotnetOutputPackage}");
-                return;
-            }
-
-            // decompress project zip into temporary folder so we can add the `GITSHAFILE` files
-            var tempDirectory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-            try {
-
-                // extract existing package into temp folder
-                if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
-                    ZipFile.ExtractToDirectory(dotnetOutputPackage, tempDirectory);
-                    File.Delete(dotnetOutputPackage);
-                } else {
-                    Directory.CreateDirectory(tempDirectory);
-                    if(!UnzipWithTool(dotnetOutputPackage, tempDirectory)) {
-                        AddError("`unzip` command failed");
-                        return;
-                    }
+                // compile project
+                var dotnetOutputPackage = Path.Combine(Settings.OutputDirectory, function.Name + ".zip");
+                if(!DotNetLambdaPackage(targetFramework, buildConfiguration, dotnetOutputPackage, projectDirectory)) {
+                    AddError("`dotnet lambda package` command failed");
+                    return;
                 }
 
-                // verify the function handler can be found in the compiled assembly
-                if(function.HasHandlerValidation) {
-                    if(function.Function.Handler is string handler) {
-                        ValidateEntryPoint(tempDirectory, handler);
-                    }
+                // check if the project zip file was created
+                if(!File.Exists(dotnetOutputPackage)) {
+                    AddError($"could not find project package: {dotnetOutputPackage}");
+                    return;
                 }
-                var package = CreatePackage(function.Name, gitSha, gitBranch, tempDirectory);
-                _builder.AddAsset($"{function.FullName}::PackageName", package);
-            } finally {
-                if(Directory.Exists(tempDirectory)) {
-                    try {
-                        Directory.Delete(tempDirectory, recursive: true);
-                    } catch {
-                        AddWarning($"clean-up failed for temporary directory: {tempDirectory}");
+
+                // decompress project zip into temporary folder so we can add the `GITSHAFILE` files
+                var tempDirectory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+                try {
+
+                    // extract existing package into temp folder
+                    if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
+                        ZipFile.ExtractToDirectory(dotnetOutputPackage, tempDirectory);
+                        File.Delete(dotnetOutputPackage);
+                    } else {
+                        Directory.CreateDirectory(tempDirectory);
+                        if(!UnzipWithTool(dotnetOutputPackage, tempDirectory)) {
+                            AddError("`unzip` command failed");
+                            return;
+                        }
+                    }
+
+                    // verify the function handler can be found in the compiled assembly
+                    if(function.HasHandlerValidation) {
+                        if(function.Function.Handler is string handler) {
+                            ValidateEntryPoint(tempDirectory, handler);
+                        }
+                    }
+                    CreatePackage(package, gitSha, gitBranch, tempDirectory);
+                } finally {
+                    if(Directory.Exists(tempDirectory)) {
+                        try {
+                            Directory.Delete(tempDirectory, recursive: true);
+                        } catch {
+                            AddWarning($"clean-up failed for temporary directory: {tempDirectory}");
+                        }
                     }
                 }
             }
+            _builder.AddAsset($"{function.FullName}::PackageName", package);
         }
 
-        private bool DotNetRestore(string projectDirectory) {
+        private bool DotNetBuild(string targetFramework, string buildConfiguration, string projectDirectory) {
             var dotNetExe = ProcessLauncher.DotNetExe;
             if(string.IsNullOrEmpty(dotNetExe)) {
                 AddError("failed to find the \"dotnet\" executable in path.");
@@ -267,13 +297,13 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
             return ProcessLauncher.Execute(
                 dotNetExe,
-                new[] { "restore" },
+                new[] { "build", "-c", buildConfiguration, "-f", targetFramework },
                 projectDirectory,
                 Settings.VerboseLevel >= VerboseLevel.Detailed
             );
         }
 
-        private bool DotNetLambdaPackage(string targetFramework, string buildConfiguration, string outputPackagePath, string projectDirectory) {
+        private bool DotNetLambdaPackage(string targetFramework, string buildConfiguration, string outputPackage, string projectDirectory) {
             var dotNetExe = ProcessLauncher.DotNetExe;
             if(string.IsNullOrEmpty(dotNetExe)) {
                 AddError("failed to find the \"dotnet\" executable in path.");
@@ -281,7 +311,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
             return ProcessLauncher.Execute(
                 dotNetExe,
-                new[] { "lambda", "package", "-c", buildConfiguration, "-f", targetFramework, "-o", outputPackagePath },
+                new[] { "lambda", "package", "-c", buildConfiguration, "-f", targetFramework, "-o", outputPackage },
                 projectDirectory,
                 Settings.VerboseLevel >= VerboseLevel.Detailed
             );
@@ -327,15 +357,21 @@ namespace LambdaSharp.Tool.Cli.Build {
                 return;
             }
             Console.WriteLine($"=> Building function {function.Name} [{function.Function.Runtime}]");
-            var package = CreatePackage(function.Name, gitSha, gitBranch, Path.GetDirectoryName(function.Project));
+            var buildFolder = Path.GetDirectoryName(function.Project);
+            var hash = Directory.GetFiles(buildFolder, "*", SearchOption.AllDirectories).ComputeHashForFiles(file => Path.GetRelativePath(buildFolder, file));
+            var package = Path.Combine(Settings.OutputDirectory, $"function_{function.Name}_{hash}.zip");
+            if(!_existingPackages.Remove(package)) {
+                CreatePackage(package, gitSha, gitBranch, buildFolder);
+            }
             _builder.AddAsset($"{function.FullName}::PackageName", package);
         }
 
-        private string CreatePackage(string functionName, string gitSha, string gitBranch, string folder) {
-            string package;
+        private void CreatePackage(string package, string gitSha, string gitBranch, string folder) {
 
             // add `git-info.json` if git sha or git branch is supplied
+            var gitInfoFileCreated = false;
             if((gitSha != null) || (gitBranch != null)) {
+                gitInfoFileCreated = true;
                 File.WriteAllText(Path.Combine(folder, GIT_INFO_FILE), JObject.FromObject(new ModuleManifestGitInfo {
                     SHA = gitSha,
                     Branch = gitBranch
@@ -348,35 +384,10 @@ namespace LambdaSharp.Tool.Cli.Build {
                 File.Delete(zipTempPackage);
             }
 
-            // compute MD5 hash for lambda function
-            var files = new List<string>();
-            using(var md5 = MD5.Create()) {
-                var bytes = new List<byte>();
-                files.AddRange(Directory.GetFiles(folder, "*", SearchOption.AllDirectories));
-                files.Sort();
-                foreach(var file in files) {
-                    var relativeFilePath = Path.GetRelativePath(folder, file);
-                    var filename = Path.GetFileName(file);
-
-                    // don't include the `git-info.json` since it changes with every build
-                    if(filename != GIT_INFO_FILE) {
-                        using(var stream = File.OpenRead(file)) {
-                            bytes.AddRange(Encoding.UTF8.GetBytes(relativeFilePath));
-                            var fileHash = md5.ComputeHash(stream);
-                            bytes.AddRange(fileHash);
-                            if(Settings.VerboseLevel >= VerboseLevel.Detailed) {
-                                Console.WriteLine($"... computing md5: {relativeFilePath} => {fileHash.ToHexString()}");
-                            }
-                        }
-                    }
-                }
-                package = Path.Combine(Settings.OutputDirectory, $"function_{functionName}_{md5.ComputeHash(bytes.ToArray()).ToHexString()}.zip");
-            }
-
             // compress folder contents
             if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
                 using(var zipArchive = ZipFile.Open(zipTempPackage, ZipArchiveMode.Create)) {
-                    foreach(var file in files) {
+                    foreach(var file in Directory.GetFiles(folder, "*", SearchOption.AllDirectories)) {
                         var filename = Path.GetRelativePath(folder, file);
                         zipArchive.CreateEntryFromFile(file, filename);
                     }
@@ -384,10 +395,10 @@ namespace LambdaSharp.Tool.Cli.Build {
             } else {
                 if(!ZipWithTool(zipTempPackage, folder)) {
                     AddError("`zip` command failed");
-                    return null;
+                    return;
                 }
             }
-            if((gitSha != null) || (gitBranch != null)) {
+            if(gitInfoFileCreated) {
                 try {
                     File.Delete(Path.Combine(folder, GIT_INFO_FILE));
                 } catch { }
@@ -396,7 +407,6 @@ namespace LambdaSharp.Tool.Cli.Build {
                 Directory.CreateDirectory(Settings.OutputDirectory);
             }
             File.Move(zipTempPackage, package);
-            return package;
         }
 
         private void ValidateEntryPoint(string directory, string handler) {
