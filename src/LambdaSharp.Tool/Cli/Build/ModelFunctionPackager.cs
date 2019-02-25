@@ -231,18 +231,9 @@ namespace LambdaSharp.Tool.Cli.Build {
             // build project (fingers crossed we hit an incremental build)
             var projectDirectory = Path.Combine(Settings.WorkingDirectory, projectName);
             Console.WriteLine($"=> Building function {function.Name} [{targetFramework}, {buildConfiguration}]");
-
-            // only attempt incremental build if a potentially valid function package exists
-            if(_existingPackages.Any(existing =>
-                Path.GetFileName(existing).StartsWith($"function_{function.Name}_", StringComparison.InvariantCulture)
-                && existing.EndsWith(".zip", StringComparison.InvariantCulture)
-            )) {
-                if(!DotNetBuild(targetFramework, buildConfiguration, projectDirectory)) {
-                    AddError("`dotnet build` command failed");
-                    return;
-                }
-            } else if(Settings.VerboseLevel >= VerboseLevel.Detailed) {
-                Console.WriteLine("... no previous package exists");
+            if(!DotNetBuild(targetFramework, buildConfiguration, projectDirectory)) {
+                AddError("`dotnet build` command failed");
+                return;
             }
 
             // compute hash of build folder (this folder contains enough information to compute a representative hash of the final result)
