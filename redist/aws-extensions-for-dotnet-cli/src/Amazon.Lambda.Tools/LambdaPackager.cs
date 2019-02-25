@@ -494,7 +494,12 @@ namespace Amazon.Lambda.Tools
             {
                 foreach (var kvp in includedFiles)
                 {
-                    zipArchive.CreateEntryFromFile(kvp.Value, kvp.Key);
+                    var entry = zipArchive.CreateEntryFromFile(kvp.Value, kvp.Key);
+                    if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    {
+                        // Set RW-R--R-- permissions attributes on non-Windows operating system
+                        entry.ExternalAttributes = 0b1_000_000_110_100_100 << 16;
+                    }
 
                     logger?.WriteLine($"... zipping: {kvp.Key}");
                 }
