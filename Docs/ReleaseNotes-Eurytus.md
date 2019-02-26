@@ -1,4 +1,4 @@
-# λ# - Eurytus (v0.5.0.2) - TBD
+# λ# - Eurytus (v0.5.0.2) - 2019-02-26
 
 > Eurytus was an eminent Pythagorean philosopher. He was a disciple of Philolaus, and Diogenes Laërtius mentions him among the teachers of Plato, though this statement is very doubtful. [(Wikipedia)](https://en.wikipedia.org/wiki/Eurytus_(Pythagorean))
 
@@ -485,11 +485,11 @@ There wre some additional internal changes listed here for sake of completeness:
 
 ## Fixes
 
-### (v0.5.0.2) - TBD
+### (v0.5.0.2) - 2019-02-26
 
-* []()
-* []()
-* []()
+* [Optimize `lash build` by relying on incremental builds and avoid re-zipping the function package](https://github.com/LambdaSharp/LambdaSharpTool/issues/97)
+* [Allow `BatchSize` and `StartingPosition` attribute for event sources to be expressions](https://github.com/LambdaSharp/LambdaSharpTool/issues/98)
+* [Make `publish` command idempotent](https://github.com/LambdaSharp/LambdaSharpTool/issues/99)
 
 ### (v0.5.0.1) - 2019-02-19
 
